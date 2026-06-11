@@ -1,0 +1,261 @@
+void tts_sidescroller()
+{
+int x=random(0, 20);
+jumping=false;
+bool ttsjumping=false;
+bool ttsjump=true;
+int jumptime=750;
+walktime=250;
+int ttstime=200;
+timer ttstimer, ttshealthtimer, ttsjumptimer, ttsdowntimer, ttsjumpmovetimer;
+int ttshealth=100;
+int ttsx=random(0, 20);
+int ttsjumpmovetime=150;
+int dir=1;
+int ttsjumptime=500;
+int ttsdowntime=75;
+tts_voice voice;
+tts_options2 set;
+set_sound_storage("sounds/tts_sidescroller.dat");
+show_game_window("sammy senter. Tts side scroller");
+string text=input_box("text to speak", "type in text for your enemy to speak");
+if(text=="")
+{
+mainmenu();
+}
+int aq=question("tts sidescroller", "do you want to change voice settings?");
+if(aq==1)
+{
+set.run(voice);
+}
+voice.speak_to_file(DIRECTORY_TEMP+"\\test.ogg", text);
+sound testsound;
+set_sound_storage("");
+testsound.stream(DIRECTORY_TEMP+"\\test.ogg");
+p.pan_step=2;
+p.volume_step=2;
+set_sound_storage("sounds/tts_sidescroller.dat");
+p.play_stationary("amb.ogg", true);
+int what=random(0, 6);
+while(true)
+{
+testsound.play();
+position_sound_1d(testsound, x, ttsx, 2, 2);
+if(what==1)
+{
+if(ttsx > x and ttstimer.elapsed > ttstime)
+{
+ttsx--;
+ttstimer.restart();
+p.play_1d(random(1, 3)+".ogg", x, ttsx, false);
+}
+else if(ttsx < x and ttstimer.elapsed > ttstime)
+{
+ttsx++;
+ttstimer.restart();
+p.play_1d(random(1, 3)+".ogg", x, ttsx, false);
+}
+}
+else if(what==2)
+{
+if(dir==0 and ttstimer.elapsed > ttstime)
+{
+ttsx--;
+ttstimer.restart();
+p.play_1d(random(1, 3)+".ogg", x, ttsx, false);
+}
+else if(dir==1 and ttstimer.elapsed > ttstime)
+{
+ttsx++;
+ttstimer.restart();
+p.play_1d(random(1, 3)+".ogg", x, ttsx, false);
+}
+if(ttsx <= 0)
+{
+dir=1;
+}
+else if(ttsx >= 20)
+{
+dir=0;
+}
+}
+else if(what==3)
+{
+if(ttsjumping==false and ttsdowntimer.elapsed > ttsdowntime)
+{
+p.play_1d("jumpup.ogg", x, ttsx, false);
+ttsjumping=true;
+ttsjumptimer.restart();
+}
+if(ttsjumptimer.elapsed > ttsjumptime and ttsjumping==true)
+{
+ttsjumptimer.restart();
+ttsdowntimer.restart();
+p.play_1d("1.ogg", x, ttsx, false);
+p.play_1d("3.ogg", x, ttsx, false);
+ttsjumping=false;
+}
+}
+else if(what==4)
+{
+if(ttsjumping==false and ttsdowntimer.elapsed > ttsdowntime and ttsx!=x)
+{
+p.play_1d("jumpup.ogg", x, ttsx, false);
+ttsjumping=true;
+ttsjumptimer.restart();
+}
+if(ttsjumping==true)
+{
+if(ttsx > x and ttsjumpmovetimer.elapsed > ttsjumpmovetime)
+{
+ttsx--;
+ttsjumpmovetimer.restart();
+}
+else if(ttsx < x and ttsjumpmovetimer.elapsed > ttsjumpmovetime)
+{
+ttsx++;
+ttsjumpmovetimer.restart();
+}
+}
+if(ttsjumptimer.elapsed > ttsjumptime and ttsjumping==true)
+{
+ttsjumptimer.restart();
+ttsdowntimer.restart();
+p.play_1d("1.ogg", x, ttsx, false);
+p.play_1d("3.ogg", x, ttsx, false);
+ttsjumping=false;
+}
+}
+else if(what==5)
+{
+if(ttsx >= x and ttstimer.elapsed > ttstime and ttsx < 20)
+{
+ttsx++;
+ttstimer.restart();
+p.play_1d(random(1, 3)+".ogg", x, ttsx, false);
+}
+else if(ttsx <= x and ttstimer.elapsed > ttstime and ttsx >1)
+{
+ttsx--;
+ttstimer.restart();
+p.play_1d(random(1, 3)+".ogg", x, ttsx, false);
+}
+}
+else if(what==6)
+{
+if(ttsjumping==false and ttsdowntimer.elapsed > ttsdowntime and ttsx!=x)
+{
+p.play_1d("jumpup.ogg", x, ttsx, false);
+ttsjumping=true;
+ttsjumptimer.restart();
+}
+if(ttsjumping==true)
+{
+if(ttsx >= x and ttsjumpmovetimer.elapsed > ttsjumpmovetime*2 and ttsx < 20)
+{
+ttsx++;
+ttsjumpmovetimer.restart();
+}
+else if(ttsx <= x and ttsjumpmovetimer.elapsed > ttsjumpmovetime*2 and ttsx > 1)
+{
+ttsx--;
+ttsjumpmovetimer.restart();
+}
+}
+if(ttsjumptimer.elapsed > ttsjumptime and ttsjumping==true)
+{
+ttsjumptimer.restart();
+ttsdowntimer.restart();
+p.play_1d("1.ogg", x, ttsx, false);
+p.play_1d("3.ogg", x, ttsx, false);
+ttsjumping=false;
+}
+}
+if(key_pressed(KEY_ESCAPE))
+{
+testsound.stop();
+testsound.close();
+file_delete(DIRECTORY_TEMP+"\\test.wav");
+mainmenu();
+}
+if(key_pressed(KEY_SPACE))
+{
+p.play_stationary("gun.ogg", false);
+if(x==ttsx and jumping==false and ttsjumping==false or x==ttsx and jumping==true and ttsjumping==true)
+{
+p.play_stationary("kill.ogg", false);
+voice.speak_interrupt("ooh!");
+ttshealth-=10;
+}
+if(ttshealth<=0)
+{
+voice.speak_to_file(DIRECTORY_TEMP+"\\die.ogg", "Ooh. OOH. OOH! OOH! How did you do that, you killed me! ouch!");
+set_sound_storage("");
+testsound.stream(DIRECTORY_TEMP+"\\die.ogg");
+testsound.play();
+testsound.pitch=150;
+while(testsound.playing)
+{
+if(key_pressed(KEY_RETURN))
+{
+break;
+}
+if(ttshealthtimer.elapsed > testsound.length/20)
+{
+testsound.pitch = testsound.pitch -5;
+ttshealthtimer.restart();
+}
+}
+set_sound_storage("*");
+p.play_stationary("fall.ogg", false);
+wait(750);
+testsound.stop();
+testsound.close();
+file_delete(DIRECTORY_TEMP+"\\test.wav");
+mainmenu();
+}
+}
+if(key_pressed(KEY_T))
+{
+speak("tts health "+ttshealth);
+}
+if(key_pressed(KEY_UP) and jumping==false)
+{
+p.play_stationary("jumpup.ogg", false);
+jumping=true;
+jumptimer.restart();
+}
+if(jumping==true and jumptimer.elapsed > jumptime)
+{
+p.play_stationary("1.ogg", false);
+p.play_stationary("3.ogg", false);
+jumping=false;
+}
+if(jumping==false)
+{
+if(key_down(KEY_LEFT) and x > 0 and walktimer.elapsed > walktime)
+{
+walktimer.restart();
+x--;
+p.play_stationary(random(1, 3)+".ogg", false);
+}
+else if(key_down(KEY_RIGHT) and x < 20 and walktimer.elapsed > walktime)
+{
+walktimer.restart();
+x++;
+p.play_stationary(random(1, 3)+".ogg", false);
+}
+}
+else
+{
+if(key_pressed(KEY_LEFT) and x >0)
+{
+x--;
+}
+else if(key_pressed(KEY_RIGHT) and x < 20)
+{
+x++;
+}
+}
+}
+}

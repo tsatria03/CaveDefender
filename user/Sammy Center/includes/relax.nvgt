@@ -1,0 +1,188 @@
+void relax()
+{
+show_game_window("Sammy senter. Relax / pause area");
+set_sound_storage("sounds/relax.dat");
+max.x=100;
+max.y=100;
+max.z=100;
+me.x=0;
+me.y=0;
+me.z=0;
+walktime=250;
+airtime=50;
+jumptime=90;
+jumping=false;
+ascending=false;
+maxjump=5;
+defwalktime=walktime;
+spawn_teleporter(10, 10, 0, 0, 0, 25);
+spawn_teleporter(10, 25, 25, 0, 50, 50);
+spawn_teleporter(15, 0, 50, 100, 100, 75);
+spawn_teleporter(15, 0, 100, 15, 10, 0);
+spawn_teleporter(25, 30, 0, 0, 0);
+spawn_teleporter(50, 60, 0, 10, random(0, max.y), 50);
+spawn_teleporter(100, 100, 50, 0, 0, 25);
+spawn_teleporter(25, 100, 50, 0, 0, 0);
+int amb1=p.play_3d("amb0.ogg", me.x, me.y, me.z, 0, 0, 0, true);
+int amb2=p.play_3d("amb25.ogg", me.x, me.y, me.z, 0, 0, 25, true);
+int amb3=p.play_3d("amb50.ogg", me.x, me.y, me.z, 0, 0, 50, true);
+int amb4=p.play_3d("amb75.ogg", me.x, me.y, me.z, 0, 0, 75, true);
+p.play_stationary("start.ogg", false);
+while(true)
+{
+p.update_listener_3d(me.x, me.y, me.z);
+p.update_sound_range_3d(amb1, 0, max.x, 0, max.y, 0, 30);
+p.update_sound_range_3d(amb2, 0, max.x, 0, max.y, 0, 10);
+p.update_sound_range_3d(amb3, 0, max.x, 0, max.y, 0, 10);
+p.update_sound_range_3d(amb4, 0, max.x, 0, max.y, 0, 25);
+telcheckloop();
+if(jumping==true)
+{
+walktime=airtime;
+}
+else
+{
+walktime=defwalktime;
+}
+if(key_pressed(KEY_ESCAPE))
+{
+fade_pool(p);
+mainmenu();
+}
+if(key_pressed(KEY_C))
+{
+speak(me.x+", "+me.y+", "+me.z);
+}
+if(key_pressed(KEY_SPACE) and jumping==false)
+{
+p.play_stationary("jump.ogg", false);
+ascending=true;
+jumping=true;
+bottomz=me.z;
+}
+if(jumping==true)
+{
+if(jumptimer.elapsed > jumptime)
+{
+jumptimer.restart();
+if(ascending==true)
+{
+me.z++;
+}
+else
+{
+me.z--;
+}
+if(ascending==true and me.z>=bottomz+maxjump)
+{
+ascending=false;
+}
+if(me.z<=bottomz and ascending==false)
+{
+if(bottomz==0)
+{
+p.play_stationary("grassland.ogg", false);
+}
+else if(bottomz==25)
+{
+p.play_stationary("concreteland.ogg", false);
+}
+else if(bottomz==50)
+{
+p.play_stationary("cementland.ogg", false);
+}
+else if(bottomz==75)
+{
+p.play_stationary("hardwoodland.ogg", false);
+}
+jumping=false;
+}
+}
+}
+if(key_down(KEY_LEFT) and me.x > 0 and walktimer.elapsed > walktime)
+{
+walktimer.restart();
+me.x--;
+if(me.z==0)
+{
+p.play_stationary("grassstep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==25)
+{
+p.play_stationary("concretestep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==50)
+{
+p.play_stationary("cementstep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==75)
+{
+p.play_stationary("hardwoodstep"+random(1, 5)+".ogg", false);
+}
+}
+else if(key_down(KEY_RIGHT) and me.x < max.x and walktimer.elapsed > walktime)
+{
+walktimer.restart();
+me.x++;
+if(me.z==0)
+{
+p.play_stationary("grassstep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==25)
+{
+p.play_stationary("concretestep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==50)
+{
+p.play_stationary("cementstep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==75)
+{
+p.play_stationary("hardwoodstep"+random(1, 5)+".ogg", false);
+}
+}
+if(key_down(KEY_DOWN) and me.y > 0 and walktimer.elapsed > walktime)
+{
+walktimer.restart();
+me.y--;
+if(me.z==0)
+{
+p.play_stationary("grassstep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==25)
+{
+p.play_stationary("concretestep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==50)
+{
+p.play_stationary("cementstep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==75)
+{
+p.play_stationary("hardwoodstep"+random(1, 5)+".ogg", false);
+}
+}
+else if(key_down(KEY_UP) and me.y < max.y and walktimer.elapsed > walktime)
+{
+walktimer.restart();
+me.y++;
+if(me.z==0)
+{
+p.play_stationary("grassstep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==25)
+{
+p.play_stationary("concretestep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==50)
+{
+p.play_stationary("cementstep"+random(1, 5)+".ogg", false);
+}
+else if(me.z==75)
+{
+p.play_stationary("hardwoodstep"+random(1, 5)+".ogg", false);
+}
+}
+wait(5);
+}
+}

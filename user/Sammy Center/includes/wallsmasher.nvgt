@@ -1,0 +1,120 @@
+timer wallsmashspawntimer;
+int wallsmashspawntime=random(10000, 25000);
+class wallsmash
+{
+int weapon=random(1, 3);
+sound hit;
+timer attacktimer;
+int attacktime=500;
+int ewall;
+wallsmash(int enwall)
+{
+ewall=enwall;
+if(weapon==1)
+{
+attacktime=500;
+hit.load("smashaxe.ogg");
+}
+else if(weapon==2)
+{
+attacktime=1000;
+hit.load("smashhammer.ogg");
+}
+else if(weapon==3)
+{
+attacktime=1500;
+hit.load("smashbar.ogg");
+}
+updatevol();
+}
+void updatevol()
+{
+if(ewall==-1 and wstr < 100)
+{
+hit.volume=string_to_number("-"+wstr);
+hit.pan=-100;
+}
+else if(ewall==1 and estr < 100)
+{
+hit.volume=string_to_number("-"+estr);
+hit.pan=100;
+}
+else if(ewall==0 and sstr < 100)
+{
+hit.volume=string_to_number("-"+sstr);
+}
+else if(ewall==2 and nstr < 100)
+{
+hit.volume=string_to_number("-"+nstr);
+}
+else
+{
+hit.volume=-75;
+}
+}
+void attack()
+{
+hit.stop();
+updatevol();
+hit.play();
+if(ewall==-1)
+{
+if(weapon==1)
+wstr-=random(0, 1);
+else if(weapon==2)
+wstr-=random(0, 2);
+else if(weapon==3)
+wstr-=random(1, 3);
+}
+else if(ewall==1)
+{
+if(weapon==1)
+estr-=random(0, 1);
+else if(weapon==2)
+estr-=random(0, 2);
+else if(weapon==3)
+estr-=random(1, 3);
+}
+if(ewall==0)
+{
+if(weapon==1)
+sstr-=random(0, 1);
+else if(weapon==2)
+sstr-=random(0, 2);
+else if(weapon==3)
+sstr-=random(1, 3);
+}
+else if(ewall==2)
+{
+if(weapon==1)
+nstr-=random(0, 1);
+else if(weapon==2)
+nstr-=random(0, 2);
+else if(weapon==3)
+nstr-=random(1, 3);
+}
+}
+}
+void wloop()
+{
+if(wallsmashspawntimer.elapsed > wallsmashspawntime)
+{
+wallsmashspawntimer.restart();
+wallsmashspawntime=random(10000, 25000);
+spawn_wallsmash(random(-1, 2));
+}
+for(uint i=0; i<wallsmashers.length(); i++)
+{
+wallsmashers[i].updatevol();
+if(wallsmashers[i].attacktimer.elapsed > wallsmashers[i].attacktime)
+{
+wallsmashers[i].attacktimer.restart();
+wallsmashers[i].attack();
+}
+}
+}
+void spawn_wallsmash(int w)
+{
+wallsmash ws(w);
+wallsmashers.insert_last(ws);
+}

@@ -1,0 +1,16 @@
+void pack_dir(string dir) {
+	string[]@ files = find_files(dir + "/*.ogg");
+	if (files.length() < 1) return;
+	pack_file pf;
+	pf.create(dir + ".dat");
+	for (uint i = 0; i < files.length(); i++) pf.add_file(dir + "/" + files[i], files[i]);
+	pf.close();
+}
+void main() {
+	show_window("packing...");
+	string[]@ dirs = find_directories("sounds/*");
+	for (uint i = 0; i < dirs.length(); i++) {
+		wait(5);
+		pack_dir("sounds/" + dirs[i]);
+	}
+}

@@ -1,0 +1,70 @@
+#include "bgt_compat.nvgt"
+#include "includes/avoid_the_beeps.nvgt"
+#include "includes/baloon.nvgt"
+#include "includes/baloon_popper.nvgt"
+#include "includes/car_chase.nvgt"
+#include "includes/cat_and_dog.nvgt"
+#include "includes/cd.nvgt"
+#include "includes/coin.nvgt"
+#include "includes/dateandtime.nvgt"
+#include "includes/debug.nvgt"
+#include "includes/dec.nvgt"
+#include "includes/dlg.nvgt"
+#include "includes/dlgplayer.nvgt"
+#include "includes/fadepool.nvgt"
+#include "includes/fun_exit.nvgt"
+#include "includes/generate_stuff.nvgt"
+#include "includes/gtn.nvgt"
+#include "includes/keyhook.nvgt"
+#include "includes/lightningpower.nvgt"
+#include "includes/m_pro.nvgt"
+#include "includes/math.nvgt"
+#include "includes/menu.nvgt"
+#include "includes/minitimer.nvgt"
+#include "includes/misc.nvgt"
+#include "includes/moneyfall.nvgt"
+#include "includes/object.nvgt"
+#include "includes/options.nvgt"
+#include "includes/optionssave.nvgt"
+#include "includes/piano.nvgt"
+#include "includes/playsound_fadepool.nvgt"
+#include "includes/relax.nvgt"
+#include "includes/reset.nvgt"
+#include "includes/santa_save.nvgt"
+#include "includes/shoot_the_target.nvgt"
+#include "includes/sound_pool.nvgt"
+#include "includes/src.nvgt"
+#include "includes/speech.nvgt"
+#include "includes/teleporter.nvgt"
+#include "includes/textutils.nvgt"
+#include "includes/tts_options.nvgt"
+#include "includes/tts_sidescroller.nvgt"
+#include "includes/viewscore.nvgt"
+#include "includes/wallbreaker.nvgt"
+#include "includes/wallsmasher.nvgt"
+#include "includes/water_escape.nvgt"
+#include "includes/wood.nvgt"
+sound_pool p(1000);
+double version=0.16;
+tts_options ttsopts;
+void main()
+{	
+set_sound_global_hrtf(true);
+loadoptiondata();
+if(use_tts==1)
+{
+ttsopts.load(tts);
+}
+if (!directory_exists("scores"))
+{
+directory_create("scores");
+}
+show_game_window("Sammy Center version "+version);
+keyhookact(install);
+set_sound_storage("sounds/main.dat");
+if(playlogo==1)
+{
+dlgplay("logo.ogg", true, 20);
+}
+mainmenu();
+}

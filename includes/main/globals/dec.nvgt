@@ -1,0 +1,28 @@
+bool hrtf=false, recording = false;
+
+int echomode=1, fademode=1;
+int rectime = 10000;
+int spamtime = 500;
+int voicechat = 1;
+int holdkey = 1;
+int gamxit=1;
+string preffsPath = DIRECTORY_APPDATA + "tsatria03/CaveDefender/preffs/";
+string soundcard="Default";
+string mapmode="2d";
+string outfile = DIRECTORY_TEMP + "\\convert.ogg";
+string motd = "Welcome to the server.";
+string passc="rscs123";
+string name="noName"+random(0,9999);
+string version="1.2";
+timer rectimer;
+timer spamtimer;
+file dockfile, dockver, logfile;
+sound dummy, playback;
+savedata st(DIRECTORY_APPDATA+"tsatria03/CaveDefender/preffs/settings.cvf", "");
+audio_form form;
+form_menu m;
+instance gamstence;
+kh keyhook;
+sound_pool p, pool, spool, temp;
+voicechatting vc;
+virtual_dialogs vd;

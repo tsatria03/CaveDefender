@@ -1,0 +1,40 @@
+New in 1.2.
+Pressing F3 to ping the server now plays a sound when the request is sent and another when the reply arrives, so the gap between them lets you hear the round-trip time. The exact ping is still announced in milliseconds.
+The sounds folder has been reorganized into categorized subfolders for a cleaner, more organized layout.
+Fixed server notifications, such as players coming online or going offline and chat alerts, being announced two or three times instead of once. The chat word filter also works again, so messages containing forbidden words are properly blocked.
+Brought back the ability to save your preferences.
+Brought back the ability to voice chat with other players.
+You can now clear a buffer's contents, which keeps old messages from being included the next time you export that buffer to a log file.
+Introduced a more advanced and flexible buffer system to handle various message types in the chat client. The system includes multiple buffer categories such as alerts, chats, and pm's, which allow messages to be sorted based on their type.
+New in 1.1.
+Made further performance improvements to the server.
+Removed the ability to perform web related actions, such as viewing comments, posting comments, and watching server related events as they come in.
+Removed the ability to save your preferences.
+Improved network performance so the server handles more players and incoming messages more reliably.
+Updated the message of the day system for clearer delivery, and admins can now change it with a simplified /motd command that is saved so it persists for everyone.
+Made some adjustments to ensure that the server uptime is properly announced based on the time passed since startup.
+The server uptime is now more precise and can track multiple time units.
+Fixed crashes and unexpected behavior that could occur while sending and receiving messages.
+Improved tracking of when players log in and disconnect, so everyone gets more responsive notifications.
+The server can no longer play sounds directly on your client for notifications or events; those sounds and commands have been removed.
+New in 1.0.
+Removed the voice chat feature entirely due to issues that could not be fixed; voice recording, playback, and transmission to the server are all gone.
+Added a basic filtering system to the server for banning certain words or phrases written in chat.
+Improved how messages are formatted and made sending and receiving them more reliable.
+Made some adjustments for showing the server uptime dynamically, reflecting the accurate time intervals in days, hours, minutes, and seconds.
+You can now press the F3 key to send a ping request message to the server to measure the average round-trip time.
+You can now measure the server's latency, or round-trip time.
+You can now press the F2 key to request the server's uptime. The server's uptime will be displayed in a human-readable format such as days, hours, minutes, and seconds.
+The server now keeps track of how long it has been running.
+You can now press the F4 key to request the MOTD from the server.
+Admins can now change the message of the day with the /motd command.
+The message of the day is now sent to players whenever they request it.
+Improved messaging so that both public chat and private messages are delivered reliably.
+Improved management of the player list, logging in, and players going online and offline.
+You can no longer have names with spaces!
+Voice clips will no longer play simultaneously. Once a voice/sound clip is received, the old one stops, and a new one plays.
+Sound uploads to the server are now capped at 30 seconds.
+Added sound notifications for chat related events.
+Added a message of the day, or MOTD for short, set on the server.
+Added a basic menu navigation system and the ability to send messages in the chat.
+Added basic networked chat, so players can send messages and read each other's chats.

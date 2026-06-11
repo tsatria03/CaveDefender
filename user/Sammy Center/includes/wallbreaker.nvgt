@@ -1,0 +1,173 @@
+void wallbreaker()
+{
+size=25;
+x=random(0, size);
+y=random(0, size);
+walktime=150;
+wooditems=10;
+wstr=100;
+nstr=90;
+sstr=100;
+estr=100;
+int wall=-101;
+timer el;
+int secs;
+set_sound_storage("sounds/wallbreaker.dat");
+p.behind_pitch_decrease=5;
+show_game_window("wall braker!");
+while(true)
+{
+wait(5);
+woodloop();
+wloop();
+p.update_listener_2d(x, y);
+if(key_pressed(KEY_ESCAPE))
+{
+mainmenu();
+}
+if(key_down(KEY_LEFT) and walktimer.elapsed > walktime)
+{
+walktimer.restart();
+if(x > 0)
+{
+wall=-101;
+x--;
+p.play_stationary("step"+random(1, 5)+".ogg", false);
+}
+else
+{
+wall=-1;
+p.play_stationary("wall.ogg", false);
+}
+}
+else if(key_down(KEY_RIGHT) and walktimer.elapsed > walktime)
+{
+walktimer.restart();
+if(x < size)
+{
+wall=-101;
+x++;
+p.play_stationary("step"+random(1, 5)+".ogg", false);
+}
+else
+{
+wall=1;
+p.play_stationary("wall.ogg", false);
+}
+}
+else if(key_down(KEY_DOWN) and walktimer.elapsed > walktime)
+{
+walktimer.restart();
+if(y > 0)
+{
+wall=-101;
+y--;
+p.play_stationary("step"+random(1, 5)+".ogg", false);
+}
+else
+{
+wall=0;
+p.play_stationary("wall.ogg", false);
+}
+}
+else if(key_down(KEY_UP) and walktimer.elapsed > walktime)
+{
+walktimer.restart();
+if(y < size)
+{
+wall=-101;
+y++;
+p.play_stationary("step"+random(1, 5)+".ogg", false);
+}
+else
+{
+wall=2;
+p.play_stationary("wall.ogg", false);
+}
+}
+if(key_pressed(KEY_C))
+{
+speak(x+", "+y);
+}
+if(key_pressed(KEY_W))
+{
+if(wooditems==1)
+speak("you have 1 piece of wood");
+else
+speak("you have "+wooditems+" pieces of wood");
+}
+if(key_pressed(KEY_S))
+{
+speak("the left wall has "+wstr+"% strength. the right wall has "+estr+"% strength. the north wall has "+nstr+"% strength. and the south wall has "+sstr+"% strength");
+}
+if(key_pressed(KEY_RETURN) and wooditems > 0)
+{
+if(wall==-101)
+{
+speak("you need to be at a wall!");
+}
+else if(wall==-1)
+{
+double encstr=random(0, 3);
+wstr+=encstr;
+wooditems--;
+p.play_stationary("woodplace.ogg", false);
+speak("the left wall just ganed "+encstr+" strength");
+}
+else if(wall==-1)
+{
+double encstr=random(0, 3);
+wstr+=encstr;
+wooditems--;
+p.play_stationary("woodplace.ogg", false);
+speak("the left wall just ganed "+encstr+" strength");
+}
+else if(wall==1)
+{
+double encstr=random(0, 3);
+estr+=encstr;
+wooditems--;
+p.play_stationary("woodplace.ogg", false);
+speak("the right wall just ganed "+encstr+" strength");
+}
+else if(wall==2)
+{
+double encstr=random(0, 3);
+nstr+=encstr;
+wooditems--;
+p.play_stationary("woodplace.ogg", false);
+speak("the north wall just ganed "+encstr+" strength");
+}
+else if(wall==0)
+{
+double encstr=random(0, 3);
+sstr+=encstr;
+wooditems--;
+p.play_stationary("woodplace.ogg", false);
+speak("the south wall just ganed "+encstr+" strength");
+}
+}
+if(wstr < 0 or estr < 0 or nstr < 0 or sstr < 0)
+{
+wallsmashers.resize(0);
+woods.resize(0);
+p.destroy_all();
+p.play_stationary("wallbreak.ogg", false);
+int secs=el.elapsed / 1000;
+string message="and boom! The building that was your mini stronghold crumbles as your killers prepare to asalt you. you had a score of, "+secs+" seconds";
+dlg(message);
+generate_scores("Wallbreaker", message);
+mainmenu();
+}
+if(key_pressed(KEY_SPACE))
+{
+for(uint i=0; i<woods.length(); i++)
+{
+if(woods[i].wx > x-5 and woods[i].wx < x+5 and woods[i].wy > y-5 and woods[i].wy < y+5)
+{
+takewood(i);
+}
+}
+}
+}
+}

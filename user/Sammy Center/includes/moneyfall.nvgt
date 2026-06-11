@@ -1,0 +1,198 @@
+void moneyfall()
+{
+bool spawnable=true;
+bool movingup=false;
+timer uptimer;
+int uptime=45;
+int amb1;
+int amb2;
+sound floor;
+me.x=random(0, 5);
+me.y=random(0, 5);
+me.z=1500;
+max.x=5;
+max.y=5;
+max.z=1500;
+falltime=250;
+spawntime=1000;
+health=100;
+show_game_window("Sammy senter. moneyfall");
+set_sound_storage("sounds/moneyfall.dat");
+floor.stream("hitbottom.ogg");
+dlgplay("begin.ogg");
+amb1=p.play_3d("ambience.ogg", me.x, me.y, me.z, 0, 0, 1500, true);
+amb2=p.play_3d("bottom.ogg", me.x, me.y, me.z, 0, 0, 0, true);
+p.update_sound_range_3d(amb1, 0, max.x, 0, max.y, 4990, 0);
+p.update_sound_range_3d(amb2, 0, max.x, 0, max.y, 0, 0);
+p.play_stationary("fall.ogg", false);
+fallsound=p.play_stationary("falling.ogg", false);
+while(true)
+{
+coinloop();
+p.update_listener_3d(me.x, me.y, me.z);
+if(spawntimer.elapsed > spawntime and coins.length() < 100 and spawnable==true)
+{
+spawntimer.restart();
+spawn_coin(random(0, max.x), random(0, max.y), random(me.z-1000, me.z-10));
+}
+if(coins.length() >= 100)
+{
+spawnable=false;
+}
+if(falltimer.elapsed > falltime)
+{
+falltimer.restart();
+me.z--;
+health++;
+falltime-=0.05;
+}
+if(me.z<=0)
+{
+string endmessage="Durring your fall of 1500 feet, you have managed to collect "+score+" coins! ";
+playsound_fadepool(floor, p);
+dlgplay("end.ogg");
+if(score < 5)
+{
+endmessage+="Pathetic, Lol, I bet you wern't even trying.";
+}
+else if(score >= 5 and score <= 15)
+{
+endmessage+="I honestly hope you can do better than that next time";
+}
+else if(score > 15 and score <=25)
+{
+endmessage+="Good for a first time I guess. well not really.";
+}
+else if(score > 25 and score <= 35)
+{
+endmessage+="Well, that's actually not too bad!";
+}
+else if(score > 35 and score >= 45)
+{
+endmessage+="I think that you've got this!";
+}
+else if(score > 45 and score <= 60)
+{
+endmessage+="That's really good!";
+}
+else if(score > 60 and score <= 80)
+{
+endmessage+="That, that's amazing! amazing I tell you, amazing!";
+}
+else if(score > 80 and score < 100)
+{
+endmessage+="That, that's amazing! amazing I tell you, amazing! It really is, I'm really proud of you!";
+}
+else
+{
+endmessage+="Top, score! Yeah, your one of the best players out there! Every coin on the board, gone! Amazing!";
+}
+dlg(endmessage);
+generate_scores("moneyfall", endmessage);
+mainmenu();
+}
+if(key_pressed(KEY_ESCAPE))
+{
+fade_pool(p);
+mainmenu();
+}
+if(key_pressed(KEY_C))
+{
+speak(me.x+", "+me.y+", "+me.z);
+}
+if(key_pressed(KEY_S))
+{
+speak("You have collected "+score+" coins so far!");
+}
+if(key_pressed(KEY_H))
+{
+speak(health+"health");
+}
+if(key_pressed(KEY_LEFT))
+{
+if(me.x > 0)
+{
+me.x--;
+}
+else
+{
+p.play_stationary("wall.ogg", false);
+}
+}
+else if(key_pressed(KEY_RIGHT))
+{
+movetimer.restart();
+if(me.x < max.x)
+{
+me.x++;
+}
+else
+{
+p.play_stationary("wall.ogg", false);
+}
+}
+if(key_pressed(KEY_DOWN))
+{
+movetimer.restart();
+if(me.y > 0)
+{
+me.y--;
+}
+else
+{
+p.play_stationary("wall.ogg", false);
+}
+}
+else if(key_pressed(KEY_UP))
+{
+movetimer.restart();
+if(me.y < max.y)
+{
+me.y++;
+}
+else
+{
+p.play_stationary("wall.ogg", false);
+}
+}
+if(key_pressed(KEY_SPACE) and me.z < max.z-1 and score > 0 and movingup==false)
+{
+bottomz=me.z;
+movingup=true;
+}
+if(movingup==true and uptimer.elapsed > uptime)
+{
+uptimer.restart();
+me.z++;
+health-=3;
+if(me.z >= (bottomz+score))
+{
+movingup=false;
+}
+}
+if(me.z > max.z)
+{
+me.z=max.z-1;
+movingup=false;
+}
+if(health<=0)
+{
+playsound_fadepool(floor, p);
+dlg("Well, you should have been more...maybe careful?");
+mainmenu();
+}
+if(key_pressed(KEY_F1) and SCRIPT_COMPILED==false)
+{
+for(uint i=0; i<coins.length(); i++)
+{
+score++;
+health+=15;
+p.destroy_sound(coins[i].coinsound);
+coins.remove_at(i);
+p.play_stationary("coinget.ogg", false);
+continue;
+}
+}
+wait(5);
+}
+}

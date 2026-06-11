@@ -1,0 +1,351 @@
+library engine;
+string load_engine()
+{
+//Load the game engine. Must call on start of your script. This function also returns the engine version.
+if(!engine.load("lib/GameEngine64.dll"))
+{
+alert("Error", "Couldn't load the game engine. Make sure GameEngine64.dll is present in the lib folder.");
+exit();
+}
+return game_engine_version();
+}
+string game_engine_version()
+{
+//A standalone function to get the game engine version.
+dictionary d=engine.call("int get_ver1();");
+int e=-1;
+d.get("0",e);
+d=engine.call("int get_ver2();");
+int f=-1;
+d.get("0",f);
+d=engine.call("int get_ver3();");
+int g=-1;
+d.get("0",g);
+d=engine.call("int get_ver4();");
+int h=-1;
+d.get("0",h);
+return e+"."+f+"."+g+"."+h;
+}
+void spawn_platform(int minx, int maxx, int miny, int maxy, string type)
+{
+//Spawn a 2D platform.
+engine.call("void spawn_platform2D(int,int,int,int,char*);",minx,maxx,miny,maxy,type);
+}
+void spawn_platform(int minx, int maxx, int miny, int maxy, int minz, int maxz, string type)
+{
+//Spawn a 3D platform.
+engine.call("void spawn_platform3D(int,int,int,int,int,int,char*);",minx,maxx,miny,maxy,minz,maxz,type);
+}
+void spawn_zone(int minx, int maxx, int miny, int maxy, string text)
+{
+//spawn a 2D zone.
+engine.call("void spawn_zone2D(int,int,int,int,char*);",minx,maxx,miny,maxy,text);
+}
+void spawn_zone(int minx, int maxx, int miny, int maxy, int minz, int maxz, string text)
+{
+//spawn a 3D zzone.
+engine.call("void spawn_zone3D(int,int,int,int,int,int,char*);",minx,maxx,miny,maxy,minz,maxz,text);
+}
+string get_tile_at(int x, int y)
+{
+//Returns the name of the tile at the specified coordinates. Use with a 2D map.
+dictionary@ d=engine.call("char* get_tile_at2D(int, int);",x,y);
+string tile="";
+d.get("0",tile);
+return tile;
+}
+string get_tile_at(int x, int y, int z)
+{
+//Returns the name of the tile at the specified coordinates. Use with a 3D map.
+dictionary@ d=engine.call("char* get_tile_at3D(int, int,int);",x,y,z);
+string tile="";
+d.get("0",tile);
+return tile;
+}
+string get_zone_at(int x, int y)
+{
+//Returns the name of the zone at the specified coordinates. Use with a 2D map.
+dictionary@ d=engine.call("char* get_zone_at2D(int, int);",x,y);
+string tile="";
+d.get("0",tile);
+return tile;
+}
+string get_zone_at(int x, int y, int z)
+{
+//Returns the name of the zone at the specified coordinates. Use with a 3D map.
+dictionary@ d=engine.call("char* get_zone_at3D(int, int,int);",x,y,z);
+string tile="";
+d.get("0",tile);
+return tile;
+}
+void import_map(string mapdata)
+{
+//Imports map data from a string.
+engine.call("void import_map(char* mapdata);",mapdata);
+}
+string export_map()
+{
+//Exports the map into plaintext for saving.
+dictionary@ d=engine.call("char* export_map();");
+string data="";
+d.get("0",data);
+return data;
+}
+string export_zones()
+{
+//Exports the map zone data into plaintext for saving.
+dictionary@ d=engine.call("char* export_zones();");
+string data="";
+d.get("0",data);
+return data;
+}
+void clear_map()
+{
+//resets the map to empty.
+engine.call("void clear_map();");
+}
+void clear_zones()
+{
+//resets the zones to empty.
+engine.call("void clear_zones();");
+}
+int map_length()
+{
+//Get the map size.
+dictionary d=engine.call("int map_length();");
+int e=-1;
+d.get("0",e);
+return e;
+}
+int zones_length()
+{
+//Get the zones size.
+dictionary d=engine.call("int zones_length();");
+int e=-1;
+d.get("0",e);
+return e;
+}
+//recording functions
+void start_recording_audio()
+{
+//Begins recording audio from the default sound card.
+engine.call("void start_recording_audio();");
+}
+void stop_recording_audio(string filename)
+{
+//stops recording audio and saves the result as a wav file.
+int convert=0;
+engine.call("void stop_recording_audio(int, char*);",convert,filename);
+}
+
+//network controls
+void download_file(string url)
+{
+//Downloads a file.
+engine.call("void download_file(char*);",url);
+}
+void download_file_as(string url, string filename)
+{
+//Downloads a file with a custom filename.
+engine.call("void download_file_as(char*, char*);",url,filename);
+}
+string download_file_string(string url)
+{
+//Downloads a file into a string.
+dictionary@ d=engine.call("char* download_file_string(char*);",url);
+string data="";
+d.get("0",data);
+return data;
+}
+//FTP functions
+int ftp_connect(string server, int port=21, string username="", string password="")
+{
+//Connect to an FTP server
+dictionary d=engine.call("int ftp_connect(char*, int, char*, char*);",server,port,username,password);
+int e=-1;
+d.get("0",e);
+return e;
+}
+int ftp_disconnect()
+{
+//Disconnect from the connected FTP server
+dictionary d=engine.call("int ftp_disconnect();");
+int e=-1;
+d.get("0",e);
+return e;
+}
+int ftp_receive(string filename)
+{
+//Receive a file from the connected FTP server.
+dictionary d=engine.call("int ftp_receive(char*);",filename);
+int e=-1;
+d.get("0",e);
+return e;
+}
+int ftp_receive_as(string filename,string target)
+{
+//Receive a file with a custom filename from the connected FTP server.
+dictionary d=engine.call("int ftp_receive_as(char*,char*);",filename,target);
+int e=-1;
+d.get("0",e);
+return e;
+}
+int ftp_send(string filename)
+{
+//Send a file to the FTP server
+dictionary d=engine.call("int ftp_send(char*);",filename);
+int e=-1;
+d.get("0",e);
+return e;
+}
+int ftp_send_as(string filename,string target)
+{
+//Send a file with a custom filename to the FTP server
+dictionary d=engine.call("int ftp_send_as(char*,char*);",filename,target);
+int e=-1;
+d.get("0",e);
+return e;
+}
+int ftp_directory_set(string dir)
+{
+//Set the current FTP directory.
+dictionary d=engine.call("int ftp_directory_set(char*);",dir);
+int e=-1;
+d.get("0",e);
+return e;
+}
+string ftp_directory_get()
+{
+//Get the current FTP directory
+dictionary@ d=engine.call("char* ftp_directory_get();");
+string data="";
+d.get("0",data);
+return data;
+}
+int ftp_directory_create(string dir)
+{
+//Create a new FTP directory.
+dictionary d=engine.call("int ftp_directory_create(char*);",dir);
+int e=-1;
+d.get("0",e);
+return e;
+}
+int ftp_directory_delete(string dir)
+{
+//Delete an FTP directory.
+dictionary d=engine.call("int ftp_directory_delete(char*);",dir);
+int e=-1;
+d.get("0",e);
+return e;
+}
+int ftp_file_delete(string file)
+{
+//Delete an FTP file.
+dictionary d=engine.call("int ftp_file_delete(char*);",file);
+int e=-1;
+d.get("0",e);
+return e;
+}
+int ftp_file_rename(string file, string newfile)
+{
+//Rename or move an FTP file.
+dictionary d=engine.call("int ftp_file_rename(char*,char*);",file,newfile);
+int e=-1;
+d.get("0",e);
+return e;
+}
+string[] ftp_get_directories()
+{
+//Get a list of directories inside the current directory
+dictionary@ d=engine.call("char* ftp_get_directories();");
+string data="";
+d.get("0",data);
+string[] data2=string_split(data,"\r\n",false);
+return data2;
+}
+string[] ftp_get_files()
+{
+//Get a list of files inside the current directory
+dictionary@ d=engine.call("char* ftp_get_files();");
+string data="";
+d.get("0",data);
+string[] data2=string_split(data,"\r\n",false);
+return data2;
+}
+string[] open_file_select(string title, string defaultpath="", string pattern="All files (*.*)|*.*", int position=0)
+{
+//Create a standard open file dialog. Supports multi-selection.
+dictionary@ d=engine.call("char* open_file_select(char*,char*,char*, int);",title,defaultpath,pattern,position);
+string data="";
+d.get("0",data);
+string[] data2=string_split(data,"\r\n",false);
+return data2;
+}
+bool reg_exp_match(string the_string, string pattern)
+{
+//Test if a string contains a regular expression.
+dictionary d=engine.call("int reg_exp_match(char*, char*);",the_string,pattern);
+int e=-1;
+d.get("0",e);
+if (e==1)
+return true;
+else
+return false;
+}
+string reg_exp_replace(string the_string, string pattern, string replacement)
+{
+//Replace a string based on a regular expression.
+dictionary@ d=engine.call("char* reg_exp_match(char*, char*, char*);",the_string,pattern, replacement);
+string data="";
+d.get("0",data);
+return data;
+}
+void show_runtime_errors(int show)
+{
+//show PB runtime errors or not.
+engine.call("void show_runtime_errors(int);",show);
+}
+void zip_create(string filename)
+{
+//Creates a new zip file
+engine.call("void zip_create(char*);",filename);
+}
+void zip_add(string filename)
+{
+//adds a file to the previously created zip file
+engine.call("void zip_add(char*);",filename);
+}
+void zip_add_as(string filename, string filename2)
+{
+//adds a file to the previously created zip file with a filename other than the one selected.
+engine.call("void zip_add_as(char*, char*);",filename, filename2);
+}
+void zip_close()
+{
+//Close the zip file
+engine.call("void zip_close();");
+}
+void zip_open(string filename)
+{
+//Opens an already existing zip file
+engine.call("void zip_open(char*);",filename);
+}
+void zip_extract_file(string filename, string filename2)
+{
+//Extracts a file from the zip
+engine.call("void zip_extract_file(char*, char*);",filename,filename2);
+}
+string[] zip_get_files()
+{
+//Get a list of files in the zip file
+dictionary@ d=engine.call("char* zip_get_files();");
+string data="";
+d.get("0",data);
+string[] data2=string_split(data,"\r\n",false);
+return data2;
+}
+void email_send(string from, string who, string subject, string body, string smtp, string smtpun="", string smtppw="", int smtpport=25)
+{
+//Send an email
+engine.call("void email_send(char*, char*, char*, char*, char*, char*, char*, int);", from, who, subject, body, smtp, smtpun, smtppw, smtpport);
+}

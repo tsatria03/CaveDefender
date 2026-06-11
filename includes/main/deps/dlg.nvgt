@@ -1,0 +1,74 @@
+bool dlg(string message, bool dlgcoppy=true, int timeout=-1)
+{
+timer timeouter;
+speak(message);
+while(true)
+{
+wait(5);
+if (timeout>-1 and timeouter.elapsed>=timeout)
+return false;
+if (key_repeating(KEY_C) and dlgcoppy==true)
+{
+temp.destroy_all();
+temp.play_stationary("sounds/ui/dlg/coppy.ogg", false);
+string clean_message = string_replace(message, " Press enter or space to continue.", "", true);
+clipboard_copy_text(clean_message);
+speak("Text copied");
+}
+if (key_repeating(KEY_LEFT) or key_repeating(KEY_RIGHT) or key_repeating(KEY_UP) or key_repeating(KEY_DOWN))
+{
+temp.play_stationary("sounds/ui/dlg/scroll.ogg", false);
+speak(message);
+}
+if (key_repeating(KEY_ESCAPE))
+{
+temp.destroy_all();
+return true;
+}
+if(key_repeating(KEY_RETURN) or key_repeating(KEY_SPACE)  or key_down(KEY_A))
+{
+temp.destroy_all();
+break;
+}
+}
+return false;
+}
+bool dlg_buffer(string message, string buffer_name="misc", bool dlgcoppy=true, int timeout=-1)
+{
+int buffer_index = get_buffer_index(buffer_name);
+if (buffer_index != -1)
+{
+add_buffer_item(buffer_name, message, false);
+if (buffers[buffer_index].muted)
+{
+return false;
+}
+}
+return dlg(message, dlgcoppy, timeout);
+}
+void dlgmessage(string messages)
+{
+temp.play_stationary("sounds/ui/dlg/open.ogg", false);
+string[] d = string_split(messages, "\r\n", true);
+bool escaped = dlg(d[0]);
+if (escaped)
+{
+temp.play_stationary("sounds/ui/dlg/close.ogg", false);
+return;
+}
+for (uint i = 1; i < d.length(); i++)
+{
+temp.play_stationary("sounds/ui/dlg/scroll.ogg", false);
+escaped = dlg(d[i]);
+if (escaped)
+{
+temp.play_stationary("sounds/ui/dlg/close.ogg", false);
+return;
+}
+}
+temp.play_stationary("sounds/ui/dlg/close.ogg", false);
+}
+void dlgmessage_return(string msg)
+{
+    dlgmessage(msg + " Press enter or space to continue.");
+}

@@ -1,0 +1,123 @@
+void lightningpower()
+{
+int housex=10;
+int housey=100;
+int househealth=100;
+int level=1;
+timer housemovetimer;
+int housemovetime=200;
+int houseorghealth=100;
+x=0;
+jumptime=700;
+size=20;
+movetime=75;
+show_game_window("sammy senter. Lightningpower!");
+set_sound_storage("sounds/lightningpower.dat");
+int house=p.play_2d("housemoving.ogg", x, 0, housex, housey, true);
+p.play_stationary("amb.ogg", true);
+while(true)
+{
+wait(5);
+p.update_sound_2d(house, housex, housey);
+p.update_listener_2d(x, 0);
+if(housemovetimer.elapsed > housemovetime)
+{
+housemovetimer.restart();
+housey--;
+}
+if(housey==0)
+{
+if(x==10)
+{
+sound dest;
+dest.stream("househit.ogg");
+playsound_fadepool(dest, p, true);
+string scoretext="you finished the game at level "+level+". And, the house had "+househealth+" health still remaining. Too bad you couldn't destroy the dang thing!";
+dlg(scoretext);
+generate_scores("lightningpower", scoretext);
+mainmenu();
+}
+else
+{
+p.play_2d("housekill.ogg", x, 0, housex, housey, false);
+housey=100;
+househealth=houseorghealth+5;
+houseorghealth=househealth;
+}
+}
+if(househealth <= 0)
+{
+p.play_2d("housekill.ogg", x, 0, housex, housey, false);
+p.play_stationary("level.ogg", false);
+level+=1;
+househealth=houseorghealth+10;
+houseorghealth=househealth;
+housemovetime-=random(1, 10);
+if(housemovetime < 50)
+{
+housemovetime=50;
+}
+housey=100;
+}
+if(key_pressed(KEY_ESCAPE))
+{
+mainmenu();
+}
+if(key_pressed(KEY_L))
+{
+speak("you are at level "+level);
+}
+if(key_pressed(KEY_C))
+{
+if(housex > x)
+{
+speak("you are at position "+x+", and the house is "+housey+"feet in front, and "+number_distance(x, housex)+" feet to the right of you.");
+}
+else if(housex < x)
+{
+speak("you are at position "+x+", and the house is "+housey+"feet in front, and "+number_distance(x, housex)+" feet to the left of you.");
+}
+else
+{
+speak("you are at position "+x+", and the house is "+housey+"feet in front of you.");
+}
+}
+if(key_pressed(KEY_SPACE))
+{
+p.play_stationary("strike.ogg", false);
+househealth-=random(10, 20)-number_distance(housex, x);
+p.play_2d("housedammage"+random(1, 3)+".ogg", x, 0, housex, housey, false);
+}
+if(key_pressed(KEY_LEFT) and jumping==false and x > 0)
+{
+x--;
+p.play_stationary("step"+random(1, 5)+".ogg", false);
+}
+else if(key_pressed(KEY_RIGHT) and jumping==false and x < 20)
+{
+x++;
+p.play_stationary("step"+random(1, 5)+".ogg", false);
+}
+if(key_down(KEY_LEFT) and x > 0 and jumpmovetimer.elapsed > movetime and jumping==true)
+{
+jumpmovetimer.restart();
+x--;
+}
+else if(key_down(KEY_RIGHT) and x < 20 and jumpmovetimer.elapsed > movetime and jumping==true)
+{
+jumpmovetimer.restart();
+x++;
+}
+if(key_pressed(KEY_UP) and jumping==false)
+{
+jumptimer.restart();
+p.play_stationary("jump.ogg", false);
+jumping=true;
+}
+if(jumping==true and jumptimer.elapsed > jumptime)
+{
+p.play_stationary("land.ogg", false);
+jumping=false;
+}
+}
+}

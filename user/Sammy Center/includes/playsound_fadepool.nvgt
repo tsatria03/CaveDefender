@@ -1,0 +1,16 @@
+void playsound_fadepool(sound@ snd, sound_pool@ sp, bool fadesound=true)
+{
+snd.play();
+fade_pool(sp);
+while(snd.playing)
+{
+if(key_pressed(KEY_RETURN))
+{
+if(fadesound==true)
+{
+fade(snd, -50, 15);
+}
+snd.stop();
+}
+}
+}

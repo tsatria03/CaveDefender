@@ -1,0 +1,92 @@
+class teleporter
+{
+int teleportersound;
+int tx;
+int ty;
+int tz;
+int finishx;
+int finishy;
+int finishz;
+teleporter(int teleporterx, int teleportery=-1, int teleporterz=-1, int telfinishx=-1, int telfinishy=-1, int telfinishz=-1)
+{
+tx=teleporterx;
+ty=teleportery;
+tz=teleporterz;
+finishx=telfinishx;
+finishy=telfinishy;
+finishz=telfinishz;
+if(ty==-1 and tz==-1)
+{
+teleportersound=p.play_1d("teleporter.ogg", me.x, tx, true);
+p.update_sound_1d(teleportersound, tx);
+}
+else if(ty!=-1 and tz==-1)
+{
+teleportersound=p.play_2d("teleporter.ogg", me.x, me.y, tx, ty, true);
+p.update_sound_2d(teleportersound, tx, ty);
+}
+else
+{
+teleportersound=p.play_3d("teleporter.ogg", me.x, me.y, me.z, tx, ty, tz, true);
+p.update_sound_3d(teleportersound, tx, ty, tz);
+}
+}
+}
+void telcheckloop()
+{
+for (uint i=0; i<teleporters.length(); i++)
+{
+if(teleporters[i].ty==-1 and teleporters[i].tz==-1)
+{
+p.update_sound_1d(teleporters[i].teleportersound, teleporters[i].tx);
+if(me.x==teleporters[i].tx)
+{
+teleport(i);
+}
+}
+else if(teleporters[i].ty!=-1 and teleporters[i].tz==-1)
+{
+p.update_sound_2d(teleporters[i].teleportersound, teleporters[i].tx, teleporters[i].ty);
+if(me.x==teleporters[i].tx and me.y==teleporters[i].ty)
+{
+teleport(i);
+}
+}
+else
+{
+p.update_sound_3d(teleporters[i].teleportersound, teleporters[i].tx, teleporters[i].ty, teleporters[i].tz);
+if(me.x==teleporters[i].tx and me.y==teleporters[i].ty and me.z==teleporters[i].tz)
+{
+teleport(i);
+}
+}
+}
+}
+void destroy_all_teleporters()
+{
+for(uint i=0; i<teleporters.length(); i++)
+{
+p.destroy_sound(teleporters[i].teleportersound);
+}
+teleporters.resize(0);
+}
+void spawn_teleporter(int teleporterx, int teleportery=-1, int teleporterz=-1, int finishx=-1, int finishy=-1, int finishz=-1)
+{
+teleporter teleporter1(teleporterx, teleportery, teleporterz, finishx, finishy, finishz);
+teleporters.insert_last(teleporter1);
+}
+void teleport(int i)
+{
+p.play_stationary("teleport.ogg", false);
+wait(300);
+jumping=false;
+me.x = teleporters[i].finishx;
+if(teleporters[i].finishy!=-1)
+{
+me.y = teleporters[i].finishy;
+}
+if(teleporters[i].finishz!=-1)
+{
+me.z = teleporters[i].finishz;
+}
+}

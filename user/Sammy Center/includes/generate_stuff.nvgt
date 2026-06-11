@@ -1,0 +1,10 @@
+void generate_scores(string game_name,string score_text)
+{
+if (!directory_exists("scores/"+game_name))
+{
+directory_create("scores/"+game_name);
+}
+file scores;
+scores.open("scores/"+game_name+"/"+get_date()+".txt","ab");
+scores.write(string_replace(get_time(), "-", ":", true)+": "+score_text+"\r\n");
+}

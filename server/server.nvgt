@@ -1,0 +1,70 @@
+#include"bgt_compat.nvgt"
+#include"sound_pool.nvgt"
+#include"speech.nvgt"
+
+#include"includes/net.nvgt"
+#include"includes/regex.nvgt"
+#include"includes/user.nvgt"
+
+int port=25562;
+int userlimit=200;
+string version="1.2";
+string motd = "Welcome to the server!";
+timer svruptimer;
+file f;
+
+void main()
+{
+svruptimer.restart();
+if(file_exists("data/preffs/conf.svr"))
+{
+f.open("data/preffs/conf.svr", "rb");
+string content=f.read();
+string[] prefs=string_split(content, "\r\n", true);
+string[] values;
+for(uint i=0; i<prefs.length(); i++)
+{
+values.insert_at(i, string_replace(prefs[i], string_left(prefs[i],  string_contains(prefs[i], "=", 1)+1), "", true));
+prefs[i]=string_replace(prefs[i], "="+values[i], "", true);
+}
+if(prefs.find("port")!=-1)
+{
+port=string_to_number(values[prefs.find("port")]);
+}
+else if(prefs.find("userlimit")!=-1)
+{
+userlimit=string_to_number(values[prefs.find("userlimit")]);
+f.close();
+}
+}
+    if(file_exists("data/preffs/motd.svr"))
+    {
+        f.open("data/preffs/motd.svr", "r");
+        motd = f.read();
+        f.close();
+    }
+    else
+    {
+        f.open("data/preffs/motd.svr", "w");
+        f.write(motd);
+        f.close();
+    }
+bool neth=net.setup_server(port, 5, 500);
+show_game_window("anonymous chat server, running on version "+version);
+wait(500);
+speak("server version "+version+", hosted on port "+port+", user limmit "+userlimit);
+while(true)
+{
+wait(5);
+netloop();
+}
+}
+void writeprefs()
+{
+file f;
+f.open("data/preffs/conf.svr", "wb");
+string what;
+what="port="+port+"\r\n"+"userlimit="+userlimit+"\r\n";
+f.write(what);
+f.close();
+}

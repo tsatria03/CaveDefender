@@ -1,0 +1,48 @@
+bool keyhook=false;
+string install="install";
+string install_forced="install_forced";
+string uninstall="uninstall";
+string check="check";
+bool keyhookact(string type)
+{
+if(type==install and screen_reader_is_running(1))
+{
+bool success=install_keyhook();
+if(!success)
+{
+return false;
+}
+else
+{
+keyhook=true;
+return true;
+}
+}
+else if(type==install_forced)
+{
+bool success=install_keyhook();
+if(!success)
+{
+return false;
+}
+else
+{
+keyhook=true;
+return true;
+}
+}
+else if(type==uninstall)
+{
+uninstall_keyhook();
+keyhook=false;
+return true;
+}
+else if(type==check)
+{
+return keyhook;
+}
+else
+{
+return false;
+}
+}

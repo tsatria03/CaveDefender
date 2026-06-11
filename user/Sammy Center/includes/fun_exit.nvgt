@@ -1,0 +1,60 @@
+timer staytimer;
+int staytime=9000;
+void fun_exit()
+{
+sound beep;
+sound success;
+walktime=150;
+set_sound_storage("sounds/fun_exit.dat");
+beep.load("exit.ogg");
+position_sound_2d(beep, x, y, 15, 15, 2, 2, 5);
+beep.play_looped();
+success.load("success.ogg");
+p.play_stationary("amb.ogg", true);
+while(true)
+{
+wait(5);
+position_sound_2d(beep, x, y, 15, 15, 2, 2, 5);
+if(staytimer.elapsed > staytime)
+{
+staytimer.restart();
+x=0;
+y=0;
+}
+if(key_pressed(KEY_ESCAPE))
+{
+beep.stop();
+mainmenu();
+}
+if(key_down(KEY_LEFT) and walktimer.elapsed > walktime and x > 0)
+{
+walktimer.restart();
+p.play_stationary("step"+random(1, 5)+".ogg", false);
+x--;
+}
+if(key_down(KEY_RIGHT) and walktimer.elapsed > walktime and x < 30)
+{
+walktimer.restart();
+p.play_stationary("step"+random(1, 5)+".ogg", false);
+x++;
+}
+if(key_down(KEY_DOWN) and walktimer.elapsed > walktime and y > 0)
+{
+walktimer.restart();
+p.play_stationary("step"+random(1, 5)+".ogg", false);
+y--;
+}
+if(key_down(KEY_UP) and walktimer.elapsed > walktime and y < 30)
+{
+walktimer.restart();
+p.play_stationary("step"+random(1, 5)+".ogg", false);
+y++;
+}
+if(x==15 and y==15)
+{
+beep.stop();
+success.play_wait();
+exit();
+}
+}
+}

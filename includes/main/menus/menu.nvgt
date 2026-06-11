@@ -1,0 +1,56 @@
+void mainmenu()
+{
+	while(true)
+	{
+		setupmenu(true);
+		m.add_item("documentation menu", "help");
+		m.add_item("test speakers", "st");
+		m.add_item("restart game", "rx");
+		m.add_item("exit game", "ex");
+		m.intro_text="Main menu. Use your arrow keys to choose an option, then press enter to activate it.";
+		int mres=m.run();
+		string sel=mres<0?"ex":m.selected_item_id;
+		if(sel=="help")
+		{
+			docksmenu();
+		}
+		else if(sel=="st")
+		{
+			m.fade_music();
+			dlgplay("sounds/ui/menu/speaker.ogg");
+		}
+		else if(sel=="rx")
+		{
+			speak("restarting");
+			m.fade_music();
+			restart("cf.exe");
+		}
+		else if(sel=="ex")
+		{
+			speak("exiting");
+			m.fade_music();
+			exit();
+		}
+	}
+}
+void docksmenu()
+{
+	while(true)
+	{
+		setupmenu(true);
+		m.add_item("changelog", "changelog");
+		m.add_item("credits", "credits");
+		m.add_item("readme", "readme");
+		m.add_item("todo list", "todo");
+		m.add_item("back", "back");
+		m.intro_text="Documentation menu";
+		int mres=m.run();
+		string sel=mres<0?"back":m.selected_item_id;
+		if(sel=="back") return;
+		m.fade_music();
+		if(sel=="changelog") dockread("docks/changelog.txt");
+		else if(sel=="credits") dockread("docks/credits.txt");
+		else if(sel=="readme") dockread("docks/readme.txt");
+		else if(sel=="todo") dockread("docks/todo list.txt");
+	}
+}

@@ -1,0 +1,17 @@
+new in 0.16
+added santa save!
+New in 0.15
+added wallbreaker!
+New in 0.10
+fixxed a couple of buggs with resetting, so now you can play one game multiple times with out restarting the program.
+added a test speakers option!
+added now we have a visiters counter!
+adds baloon popper!
+adds lightningpower!
+new in 0.03
+adds tts config to the options menu and to tts side scroler. 
+new in 0.02
+adds an options menu
+fixed the bug whare cat and dog could not be properly played
+fixed last piano note being out of tune.
+Now you can press arrow keys in moneyfall rather than hold them. 

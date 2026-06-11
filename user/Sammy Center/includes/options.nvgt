@@ -1,0 +1,2 @@
+int playlogo=1;
+int use_tts=0;

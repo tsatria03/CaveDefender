@@ -1,0 +1,24 @@
+void spawn_platform_2d(int leftx, int rightx, int platy, string type)
+{
+for (uint i=leftx; i<=rightx; i++)
+{
+map.set(i+":"+platy, type);
+}
+}
+void spawn_platform_3d(int leftx, int rightx, int miny, int maxy, int z, string plattype)
+{
+for (uint i=leftx; i<=rightx; i++)
+{
+for (uint i2=miny; i2<=maxy; i2++)
+{
+map.set(i+":"+i2+":"+z, plattype);
+}
+}
+}
+void destroyfallsound()
+{
+if(p.sound_is_playing(fallsound))
+{
+p.destroy_sound(fallsound);
+}
+}

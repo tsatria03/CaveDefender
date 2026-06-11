@@ -1,0 +1,15 @@
+void reset()
+{
+p.destroy_all();
+p.volume_step=2;
+p.pan_step=2;
+p.max_distance=50;
+p.behind_pitch_decrease=5;
+destroy_all_teleporters();
+destroy_all_coins();
+destroy_all_sources();
+destroy_all_objects();
+baloons.resize(0);
+jumping=false;
+score=0;
+}

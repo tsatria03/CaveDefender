@@ -1,0 +1,21 @@
+dictionary data;
+void saveoptiondata()
+{
+file savefile;
+savefile.open("settings.dat", "wb");
+data.set("1", playlogo);
+data.set("2", use_tts);
+savefile.write(serialize(data));
+savefile.close();
+}
+void loadoptiondata()
+{
+file savefile;
+savefile.open("settings.dat", "rb");
+data=deserialize(savefile.read());
+if(data.exists("1"))
+data.get("1", playlogo);
+if(data.exists("2"))
+data.get("2", use_tts);
+savefile.close();
+}

@@ -1,0 +1,47 @@
+class coin
+{
+int coinsound;
+int cx;
+int cy;
+int cz;
+coin(int coinx, int coiny, int coinz)
+{
+cx=coinx;
+cy=coiny;
+cz=coinz;
+coinsound=p.play_3d("coin.ogg", me.x, me.y, me.z, cx, cy, cz, true);
+}
+}
+void coinloop()
+{
+for(uint i=0; i<coins.length(); i++)
+{
+p.update_sound_3d(coins[i].coinsound, coins[i].cx, coins[i].cy, coins[i].cz);
+if(me.x==coins[i].cx and me.y==coins[i].cy and me.z==coins[i].cz)
+{
+score++;
+health+=15;
+p.destroy_sound(coins[i].coinsound);
+coins.remove_at(i);
+p.play_stationary("coinget.ogg", false);
+continue;
+}
+if(coins[i].cz<25)
+{
+coins[i].cz=25;
+}
+}
+}
+void spawn_coin(int cx, int cy, int cz)
+{
+coin coin1(cx, cy, cz);
+coins.insert_last(coin1);
+}
+void destroy_all_coins()
+{
+for(uint i=0; i<coins.length(); i++)
+{
+p.destroy_sound(coins[i].coinsound);
+}
+coins.resize(0);
+}

@@ -1,0 +1,13 @@
+double number_distance(double num, double other)
+{
+double result;
+if(other < num)
+{
+result=num-other;
+}
+else
+{
+result=other-num;
+}
+return result;
+}

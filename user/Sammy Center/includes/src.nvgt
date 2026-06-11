@@ -1,0 +1,48 @@
+class source
+{
+int source_sound;
+int lx;
+int rx;
+int miny;
+int maxy;
+int minz;
+int maxz;
+string soundfile;
+source(int source_lx, int source_rx, int source_miny, int source_maxy, int source_minz, int source_maxz, string file)
+{
+lx=source_lx;
+rx = source_rx;
+miny=source_miny;
+maxy= source_maxy;
+minz=source_minz;
+maxz=source_maxz;
+soundfile=file;
+source_sound=p.play_2d(soundfile, lx, miny, me.x, me.y, true);
+}
+}
+void sourcecheckloop()
+{
+for (uint i=0; i<sources.length(); i++)
+{
+p.update_sound_3d(sources[i].source_sound, sources[i].lx, sources[i].miny, sources[i].minz);
+p.update_sound_range_3d(sources[i].source_sound, (me.x-sources[i].lx), (sources[i].rx-sources[i].lx), (me.y-sources[i].miny), (sources[i].maxy-sources[i].miny), (me.z-sources[i].minz), (sources[i].maxz-sources[i].minz));
+}
+}
+void destroy_source(int s)
+{
+p.destroy_sound(sources[s].source_sound);
+sources.remove_at(s);
+}
+void destroy_all_sources()
+{
+for(uint i=0; i<sources.length(); i++)
+{
+p.destroy_sound(sources[i].source_sound);
+}
+sources.resize(0);
+}
+void spawn_source(int source_lx, int source_rx, int source_miny, int source_maxy, int source_minz, int source_maxz, string soundfile)
+{
+source source1(source_lx, source_rx, source_miny, source_maxy, source_minz, source_maxz, soundfile);
+sources.insert_last(source1);
+}

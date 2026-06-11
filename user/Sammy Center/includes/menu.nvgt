@@ -1,0 +1,338 @@
+dynamic_menu_pro m;
+void mainmenu()
+{
+setmenu(true);
+m.add_item_tts("Play cat and dog", "cat and dog");
+m.add_item_tts("Play the tts sidescroller", "ttss");
+m.add_item_tts("Play avoid the beeps", "avoid");
+m.add_item_tts("Play shoot the target", "shoot");
+m.add_item_tts("play car chase", "chase");
+m.add_item_tts("play water escape", "water_escape");
+m.add_item_tts("play guess the number", "gtn");
+m.add_item_tts("play moneyfall", "moneyfall");
+m.add_item_tts("play baloon popper", "popper");
+m.add_item_tts("Play lightningpower", "lightningpower");
+m.add_item_tts("Play wallbreaker", "wallbreaker");
+m.add_item_tts("Play santa save", "santa_save");
+m.add_item_tts("Play the piano!", "piano");
+m.add_item_tts("Relax/pause area", "relax");
+m.add_item_tts("Open minitimer utility", "minitimer");
+m.add_item_tts("Text Utilities", "textutils");
+m.add_item_tts("View Scores", "scores");
+m.add_item_tts("test speakers", "speakertest");
+m.add_item_tts("Options", "options");
+m.add_item_tts("Exit the fun way!", "exitfun");
+m.add_item_tts("exit");
+int mres=m.run("Sammy senter. Main menu", true);
+if(mres==0 or mres==m.get_item_count())
+{
+m.fade_music(30);
+exit();
+}
+else if(m.get_item_name(mres)=="speakertest")
+{
+m.fade_music(10);
+dlgplay("speakertest.ogg", true, 20);
+mainmenu();
+}
+else if(m.get_item_name(mres)=="santa_save")
+{
+m.fade_music(10);
+santa_save();
+}
+else if(m.get_item_name(mres)=="wallbreaker")
+{
+m.fade_music(10);
+wallbreaker();
+}
+else if(m.get_item_name(mres)=="lightningpower")
+{
+m.fade_music(10);
+lightningpower();
+}
+else if(m.get_item_name(mres)=="popper")
+{
+m.fade_music(10);
+baloon_popper();
+}
+else if(m.get_item_name(mres)=="options")
+{
+m.fade_music(10);
+optionsmenu();
+}
+else if(m.get_item_name(mres)=="cat and dog")
+{
+m.fade_music(10);
+cat_and_dog();
+}
+else if(m.get_item_name(mres)=="avoid")
+{
+m.fade_music(10);
+avoid_the_beeps();
+}
+else if(m.get_item_name(mres)=="chase")
+{
+m.fade_music(10);
+car_chase();
+}
+else if(m.get_item_name(mres)=="water_escape")
+{
+m.fade_music(10);
+water_escape();
+}
+else if(m.get_item_name(mres)=="shoot")
+{
+m.fade_music(10);
+shoot_the_target();
+}
+else if(m.get_item_name(mres)=="moneyfall")
+{
+m.fade_music(10);
+moneyfall();
+}
+else if(m.get_item_name(mres)=="gtn")
+{
+m.fade_music(10);
+gtn();
+}
+else if(m.get_item_name(mres)=="textutils")
+{
+m.fade_music(10);
+textutils();
+}
+else if(m.get_item_name(mres)=="minitimer")
+{
+m.fade_music(10);
+minitimer();
+}
+else if(m.get_item_name(mres)=="relax")
+{
+m.fade_music(10);
+relax();
+}
+else if(m.get_item_name(mres)=="ttss")
+{
+m.fade_music(10);
+tts_sidescroller();
+}
+else if(m.get_item_name(mres)=="scores")
+{
+m.fade_music(10);
+viewscores();
+}
+else if(m.get_item_name(mres)=="exitfun")
+{
+m.fade_music(10);
+fun_exit();
+}
+else if (m.get_item_name(mres)=="runs")
+{
+mainmenu();
+}
+else if(m.get_item_name(mres)=="piano")
+{
+m.fade_music(10);
+piano();
+}
+}
+string loadfilesmenu(string intro="select a file", string dir="", string ext="", bool hide_ext=true)
+{
+string[] files=find_files(dir+"/*"+ext);
+if(files.length() <= 0)
+{
+return "0";
+}
+setmenu();
+for(uint i=0; i<files.length(); i++)
+{
+if(hide_ext==false)
+{
+m.add_item_tts(files[i], files[i]);
+}
+else
+{
+m.add_item_tts(string_replace(files[i], ext, "", true), files[i]);
+}
+}
+int mres=m.run(intro, true);
+if(mres==0)
+{
+return "";
+}
+else
+{
+return m.get_item_name(mres);
+}
+}
+string loadfoldersmenu(string intro="select a folder", string dir="")
+{
+string[] folders=find_directories(dir);
+if(folders.length() <= 0)
+{
+return "0";
+}
+setmenu();
+for(uint i=0; i<folders.length(); i++)
+{
+m.add_item_tts(folders[i], folders[i]);
+}
+int mres=m.run(intro, true);
+if(mres==0)
+{
+return "";
+}
+else
+{
+return m.get_item_name(mres);
+}
+}
+void setmenu(bool main=false)
+{
+reset();
+set_sound_storage("sounds/main.dat");
+m.reset(true);
+m.repeat_items_at_edges=true;
+m.edge_sound="menuedge.ogg";
+m.click_sound="menuclick.ogg";
+m.enable_up_and_down=true;
+m.enable_left_and_right=true;
+m.enable_side_scrolling=false;
+m.enter_sound="menuselect.ogg";
+m.enable_home_and_end=true;
+m.wrap=false;
+if(main==true)
+{
+m.add_music("menumus.ogg");
+m.open_sound="menuopen.ogg";
+}
+}
+void textutils()
+{
+setmenu();
+m.add_item_tts("Butcherizer", "butcherize");
+m.add_item_tts("Base64 Decode", "decode");
+m.add_item_tts("Base64 Encode", "encode");
+m.add_item_tts("Capitalizer", "capitalize");
+m.add_item_tts("changer", "change");
+m.add_item_tts("clipboard copier", "clipboardcopy");
+m.add_item_tts("punctuation remover", "punctuation");
+m.add_item_tts("reverser", "reverse");
+m.add_item_tts("Spaces Remover", "removespaces");
+m.add_item_tts("uncapitalizer", "uncapitalize");
+m.add_item_tts("Word to number", "wordtonumber");
+m.add_item_tts("go back");
+int mres=m.run("text utilities menu", true);
+if(mres==0 or mres==m.get_item_count())
+{
+mainmenu();
+}
+else if(m.get_item_name(mres)=="butcherize")
+{
+butcherize();
+textutils();
+}
+else if(m.get_item_name(mres)=="encode")
+{
+encode();
+textutils();
+}
+else if(m.get_item_name(mres)=="decode")
+{
+decode();
+textutils();
+}
+else if(m.get_item_name(mres)=="capitalize")
+{
+capitalize();
+textutils();
+}
+else if(m.get_item_name(mres)=="change")
+{
+change();
+textutils();
+}
+else if(m.get_item_name(mres)=="punctuation")
+{
+remove_punctuation();
+textutils();
+}
+else if(m.get_item_name(mres)=="reverse")
+{
+reverse();
+textutils();
+}
+else if(m.get_item_name(mres)=="removespaces")
+{
+remove_spaces();
+textutils();
+}
+else if(m.get_item_name(mres)=="uncapitalize")
+{
+uncapitalize();
+textutils();
+}
+else if(m.get_item_name(mres)=="wordtonumber")
+{
+word_to_number();
+textutils();
+}
+else if(m.get_item_name(mres)=="clipboardcopy")
+{
+clipboard_copy();
+textutils();
+}
+}
+void optionsmenu()
+{
+setmenu();
+m.add_item_tts("Play logo on startup?");
+m.add_item_tts("Change voice settings");
+m.add_item_tts("Go Back.");
+int mres=m.run("Select an option", true);;
+if(mres==0 or mres==m.get_item_count())
+{
+saveoptiondata();
+mainmenu();
+}
+else if(mres==1)
+{
+options("playlogo");
+}
+else if(mres==2)
+{
+ttsopts.run(tts);
+optionsmenu();
+}
+}
+void options(string option)
+{
+setmenu();
+m.add_item_tts("On");
+m.add_item_tts("Off");
+m.add_item_tts("Go back");
+int mres=m.run("Please select your setting", true);
+if(mres==0)
+{
+optionsmenu();
+}
+else if(mres==1)
+{
+if(option=="playlogo")
+{
+playlogo=1;
+}
+optionsmenu();
+}
+else if(mres==2)
+{
+if(option=="playlogo")
+{
+playlogo=0;
+}
+optionsmenu();
+}
+else if(mres==3)
+{
+optionsmenu();
+}
+}

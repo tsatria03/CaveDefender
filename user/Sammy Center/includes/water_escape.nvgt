@@ -1,0 +1,308 @@
+void water_escape()
+{
+sound win;
+sound death;
+timer sharktimer;
+int sharktime=200;
+timer breathtimer;
+int breathtime=250000;
+timer sinktimer;
+int sinktime=350;
+vector shark(-10, -10, 0);
+int sharksound;
+int amb0;
+int amb1;
+int amb2;
+int boatengine;
+falltime=150;
+falling=false;
+jumping=false;
+me.x=0;
+me.y=0;
+me.z=50;
+max.x=250;
+max.y=260;
+max.z=100;
+airtime=50;
+bool sharkactive=false;
+maxjump=5;
+currenttile="boat";
+show_game_window("Sammy senter. Water escape");
+set_sound_storage("sounds/water_escape.dat");
+win.stream("win.ogg");
+death.stream("death.ogg");
+amb0=p.play_3d("amb0.ogg", me.x, me.y, me.z, 0, 0, 5, true);
+amb1=p.play_3d("amb1.ogg", me.x, me.y, me.z, 0, 0, 0, true);
+amb2=p.play_3d("amb2.ogg", me.x, me.y, me.z, 0, 0, -10, true);
+boatengine=p.play_3d("boatengine.ogg", me.x, me.y, me.z, 0, 0, 50, true);
+sharksound=p.play_3d("shark.ogg", me.x, me.y, me.z, shark.x, shark.y, shark.z, true);
+map.delete_all();
+spawn_platform_3d(0, 10, 0, 10, 50, "boat");
+spawn_platform_3d(0, 250, 0, 250, 0, "swim");
+spawn_platform_3d(0, 250, 251, 260, 0, "sand");
+p.play_stationary("start.ogg", false);
+while(true)
+{
+p.update_sound_range_3d(amb0, 0, 250, 0, 260, 0, 100);
+p.update_sound_range_3d(amb1, 0, 250, 0, 250, 0, 0);
+p.update_sound_range_3d(amb2, 0, 250, 0, 250, 500, 0);
+p.update_sound_range_3d(boatengine, 0, 10, 0, 10, 0, 0);
+p.update_sound_3d(sharksound, shark.x, shark.y, shark.z);
+p.update_listener_3d(me.x, me.y, me.z);
+map.get(me.x+":"+me.y+":"+me.z, currenttile);
+if(me.z<=0 and sharkactive==false)
+{
+sharkactive=true;
+}
+if(me.z < 0)
+{
+currenttile="swim";
+}
+if(me.y > 25 and me.y < 50)
+{
+sharktime=175;
+}
+else if(me.y > 50 and me.y < 75)
+{
+sharktime=150;
+}
+else if(me.y > 75 and me.y < 100)
+{
+sharktime=125;
+}
+else if(me.y > 100 and me.y < 125)
+{
+sharktime=100;
+}
+else if(me.y > 125 and me.y < 150)
+{
+sharktime=75;
+}
+else if(me.y > 200)
+{
+sharktime=50;
+}
+if(sharktimer.elapsed > sharktime and sharkactive==true)
+{
+sharktimer.restart();
+if(shark.x < me.x)
+{
+	shark.x++;
+p.play_extended_3d("swimstep"+random(1, 5)+".ogg", me.x, me.y, me.z, shark.x, shark.y, shark.z, 0, 0, 0, 0, 0, 0, false, 0.0, 0.0, 0.0, 50+shark.z);
+}
+else if(shark.x > me.x)
+{
+shark.x--;
+p.play_extended_3d("swimstep"+random(1, 5)+".ogg", me.x, me.y, me.z, shark.x, shark.y, shark.z, 0, 0, 0, 0, 0, 0, false, 0.0, 0.0, 0.0, 50+shark.z);
+}
+if(shark.y < me.y and shark.y < 250)
+{
+shark.y++;
+p.play_extended_3d("swimstep"+random(1, 5)+".ogg", me.x, me.y, me.z, shark.x, shark.y, shark.z, 0, 0, 0, 0, 0, 0, false, 0.0, 0.0, 0.0, 50+shark.z);
+}
+else if(shark.y > me.y)
+{
+shark.y--;
+p.play_extended_3d("swimstep"+random(1, 5)+".ogg", me.x, me.y, me.z, shark.x, shark.y, shark.z, 0, 0, 0, 0, 0, 0, false, 0.0, 0.0, 0.0, 50+shark.z);
+}
+if(shark.z < me.z)
+{
+shark.z++;
+p.play_extended_3d("swimstep"+random(1, 5)+".ogg", me.x, me.y, me.z, shark.x, shark.y, shark.z, 0, 0, 0, 0, 0, 0, false, 0.0, 0.0, 0.0, 50+shark.z);
+}
+else if(shark.z > me.z)
+{
+shark.z--;
+p.play_extended_3d("swimstep"+random(1, 5)+".ogg", me.x, me.y, me.z, shark.x, shark.y, shark.z, 0, 0, 0, 0, 0, 0, false, 0.0, 0.0, 0.0, 50+shark.z);
+}
+}
+if(key_pressed(KEY_ESCAPE))
+{
+fade_pool(p);
+mainmenu();
+}
+if(key_pressed(KEY_C))
+{
+speak(me.x+", "+me.y+", "+me.z);
+}
+if(key_pressed(KEY_SPACE) and jumping==false and falling==false and me.z >= 0)
+{
+if(currenttile!="swim")
+{
+p.play_stationary("jumpup.ogg", false);
+}
+else
+{
+p.play_stationary("jumpupwater.ogg", false);
+}
+if(currenttile=="swim")
+{
+maxjump=2;
+}
+else
+{
+maxjump=5;
+}
+bottomz=me.z;
+jumping=true;
+ascending=true;
+}
+if(jumping==true)
+{
+if(jumptimer.elapsed > jumptime)
+{
+jumptimer.restart();
+if(ascending==true)
+{
+me.z++;
+}
+else
+{
+me.z--;
+}
+map.get(me.x+":"+me.y+":"+me.z, currenttile);
+if(me.z==bottomz+maxjump and ascending==true)
+{
+ascending=false;
+}
+if(me.z==bottomz and ascending==false)
+{
+p.play_stationary(currenttile+"land.ogg", false);
+jumping=false;
+}
+}
+}
+if(key_pressed(KEY_LEFT) and me.x > 0)
+{
+me.x--;
+map.get(me.x+":"+me.y+":"+me.z, currenttile);
+if(me.z<0)
+{
+p.play_stationary_extended("swimstep"+random(1, 5)+".ogg", false, 0, 0, 0, 100+me.z);
+me.z++;
+}
+else
+{
+p.play_stationary(currenttile+"step"+random(1, 5)+".ogg", false);
+}
+}
+if(key_pressed(KEY_RIGHT) and me.x < max.x)
+{
+me.x++;
+map.get(me.x+":"+me.y+":"+me.z, currenttile);
+if(me.z<0)
+{
+p.play_stationary_extended("swimstep"+random(1, 5)+".ogg", false, 0, 0, 0, 100+me.z);
+me.z++;
+}
+else
+{
+p.play_stationary(currenttile+"step"+random(1, 5)+".ogg", false);
+}
+}
+if(key_pressed(KEY_DOWN) and me.y > 0)
+{
+me.y--;
+map.get(me.x+":"+me.y+":"+me.z, currenttile);
+if(me.z<0)
+{
+p.play_stationary_extended("swimstep"+random(1, 5)+".ogg", false, 0, 0, 0, 100+me.z);
+me.z++;
+}
+else
+{
+p.play_stationary(currenttile+"step"+random(1, 5)+".ogg", false);
+}
+}
+if(key_pressed(KEY_UP) and me.y < max.y)
+{
+me.y++;
+map.get(me.x+":"+me.y+":"+me.z, currenttile);
+if(me.z<0)
+{
+p.play_stationary_extended("swimstep"+random(1, 5)+".ogg", false, 0, 0, 0, 100+me.z);
+me.z++;
+}
+else
+{
+p.play_stationary(currenttile+"step"+random(1, 5)+".ogg", false);
+}
+}
+if(me.z < 0)
+{
+if(breathtimer.elapsed > breathtime)
+{
+fade_pool(p);
+dlg("alas, You've stayed under the water for too long. You have drown at a depth of "+me.z+" feet below the surface of the water. You have been killed!");
+mainmenu();
+}
+}
+else
+{
+breathtimer.restart();
+}
+if(sinktimer.elapsed > sinktime and currenttile=="swim")
+{
+sinktimer.restart();
+me.z--;
+}
+if(currenttile=="" and falling==false and jumping==false and me.z > 0)
+{ 
+p.play_stationary("fall.ogg", false);
+fallsound=p.play_stationary("falling.ogg", false);
+falling=true;
+}
+if(falling==true)
+{
+if(falltimer.elapsed > falltime)
+{
+falltimer.restart();
+me.z--;
+if(me.z >= 0)
+{
+map.get(me.x+":"+me.y+":"+me.z, currenttile);
+}
+else
+{
+currenttile="swim";
+}
+if(currenttile!="")
+{
+p.play_stationary(currenttile+"land.ogg", false);
+destroyfallsound();
+falling=false;
+}
+}
+}
+if(me.x==125 and me.y==255 and me.z==0)
+{
+win.play();
+fade_pool(p);
+while(win.playing)
+{
+if(key_pressed(KEY_RETURN))
+{
+fade(win, -50, 15);
+win.stop();
+}
+}
+mainmenu();
+}
+if(me.x==shark.x and me.y==shark.y and me.z==shark.z)
+{
+death.play();
+fade_pool(p);
+while(death.playing)
+{
+if(key_pressed(KEY_RETURN))
+{
+fade(death, -50, 15);
+death.stop();
+}
+}
+dlg("well, it looks like you were too slow for the shark. I think he had enough fun, and he ate you. Your so so clumzy and slow! You should be ashamed of that. Wait, your not here, you can't, because, you, are, dead! Your blood shows on the sharks lips and I found torn flesh clinging to his teath. Well, see you, never, you slow poke.");
+mainmenu();
+}
+wait(5);
+}
+}
