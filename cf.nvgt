@@ -34,7 +34,6 @@ exit();
 }
 else
 {
-create_buffer("all");
 create_buffer("alerts");
 create_buffer("chats");
 create_buffer("connections");

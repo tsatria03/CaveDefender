@@ -1,7 +1,5 @@
-#include"bgt_compat.nvgt"
-#include"sound_pool.nvgt"
-#include"speech.nvgt"
-
+#include"includes/bgt_compat.nvgt"
+#include"includes/speech.nvgt"
 #include"includes/server_net.nvgt"
 #include"includes/regex.nvgt"
 #include"includes/user.nvgt"

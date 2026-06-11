@@ -81,17 +81,17 @@ st.save();
 }
 void save_last_account()
 {
-accountdata.add("name", name);
-accountdata.add("password", password);
-accountdata.add("gender", gender);
-accountdata.save();
+st.add("name", name);
+st.add("password", password);
+st.add("gender", gender);
+st.save();
 }
 bool load_last_account()
 {
-accountdata.load();
-if(!accountdata.d.exists("name")) return false;
-name=accountdata.read_string("name");
-password=accountdata.read_string("password");
-if(accountdata.d.exists("gender")) gender=accountdata.read_string("gender");
+st.load();
+if(!st.d.exists("name")) return false;
+name=st.read_string("name");
+password=st.read_string("password");
+if(st.d.exists("gender")) gender=st.read_string("gender");
 return true;
 }
