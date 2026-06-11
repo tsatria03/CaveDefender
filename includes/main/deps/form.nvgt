@@ -46,8 +46,6 @@
 	added event callback
 */
 
-int keyboardsounds=1;
-sound_pool formpool;
 //constants
 enum clipboard_flags
 	{
