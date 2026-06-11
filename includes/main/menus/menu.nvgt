@@ -3,6 +3,7 @@ void mainmenu()
 	while(true)
 	{
 		setupmenu(true);
+		m.add_item("connection menu", "connect");
 		m.add_item("documentation menu", "help");
 		m.add_item("test speakers", "st");
 		m.add_item("restart game", "rx");
@@ -10,7 +11,11 @@ void mainmenu()
 		m.intro_text="Main menu. Use your arrow keys to choose an option, then press enter to activate it.";
 		int mres=m.run();
 		string sel=mres<0?"ex":m.selected_item_id;
-		if(sel=="help")
+		if(sel=="connect")
+		{
+			connectionmenu();
+		}
+		else if(sel=="help")
 		{
 			docksmenu();
 		}
@@ -53,4 +58,148 @@ void docksmenu()
 		else if(sel=="readme") dockread("docks/readme.txt");
 		else if(sel=="todo") dockread("docks/todo list.txt");
 	}
+}
+void connectionmenu()
+{
+	while(true)
+	{
+		setupmenu(true);
+		m.add_item("sign in", "signin");
+		m.add_item("sign in as", "signinas");
+		m.add_item("new account", "newaccount");
+		m.add_item("back", "back");
+		m.intro_text="Connection menu. Choose how you'd like to sign in.";
+		int mres=m.run();
+		string sel=mres<0?"back":m.selected_item_id;
+		if(sel=="back") return;
+		m.fade_music();
+		if(sel=="signin")
+		{
+			if(!load_last_account())
+			{
+				dlgmessage("There is no saved account on this computer. Please use new account, or sign in as. Press enter to continue.");
+			}
+			else
+			{
+				registering=false;
+				login();
+			}
+		}
+		else if(sel=="signinas")
+		{
+			if(signinasform())
+			{
+				registering=false;
+				login();
+			}
+		}
+		else if(sel=="newaccount")
+		{
+			if(newaccountform())
+			{
+				registering=true;
+				login();
+			}
+		}
+	}
+}
+bool signinasform()
+{
+	form.reset();
+	form.create_window("Sign in as", false);
+	int unamebox=form.create_input_box("Username", "", "", 20);
+	int passbox=form.create_input_box("Password", "", "*");
+	int signbtn=form.create_button("&Sign in", true);
+	int cancelbtn=form.create_button("&Cancel", false, true);
+	form.focus(unamebox);
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		if(form.is_pressed(cancelbtn) or key_pressed(KEY_ESCAPE))
+		{
+			speak("canceled");
+			return false;
+		}
+		if(form.is_pressed(signbtn))
+		{
+			string uname=form.get_text(unamebox).trim_whitespace();
+			string pass=form.get_text(passbox);
+			if(uname=="")
+			{
+				dlgmessage("Please enter a username. Press enter to continue.");
+				continue;
+			}
+			if(pass=="")
+			{
+				dlgmessage("Please enter a password. Press enter to continue.");
+				continue;
+			}
+			name=uname;
+			password=pass;
+			return true;
+		}
+	}
+	return false;
+}
+bool newaccountform()
+{
+	form.reset();
+	form.create_window("New account", false);
+	int unamebox=form.create_input_box("Username", "", "", 20);
+	int passbox=form.create_input_box("Password", "", "*");
+	int genderlist=form.create_list("Gender");
+	form.add_list_item(genderlist, "Male", "male");
+	form.add_list_item(genderlist, "Female", "female");
+	form.add_list_item(genderlist, "Non binary", "nonbinary");
+	form.set_list_position(genderlist, 0);
+	int createbtn=form.create_button("&Create account", true);
+	int cancelbtn=form.create_button("&Cancel", false, true);
+	form.focus(unamebox);
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		if(form.is_pressed(cancelbtn) or key_pressed(KEY_ESCAPE))
+		{
+			speak("canceled");
+			return false;
+		}
+		if(form.is_pressed(createbtn))
+		{
+			string uname=form.get_text(unamebox).trim_whitespace();
+			string pass=form.get_text(passbox);
+			int gpos=form.get_list_position(genderlist);
+			if(uname.length()<3 or uname.length()>20)
+			{
+				dlgmessage("Usernames must be between 3 and 20 characters. Press enter to continue.");
+				continue;
+			}
+			if(string_contains(uname, " ", 1)>-1)
+			{
+				dlgmessage("Usernames cannot contain spaces. Press enter to continue.");
+				continue;
+			}
+			if(pass.length()<4)
+			{
+				dlgmessage("Passwords must be at least 4 characters. Press enter to continue.");
+				continue;
+			}
+			if(string_contains(pass, " ", 1)>-1)
+			{
+				dlgmessage("Passwords cannot contain spaces. Press enter to continue.");
+				continue;
+			}
+			if(gpos<0)
+			{
+				dlgmessage("Please select a gender. Press enter to continue.");
+				continue;
+			}
+			name=uname;
+			password=pass;
+			gender=form.get_list_item_id(genderlist, gpos);
+			return true;
+		}
+	}
+	return false;
 }

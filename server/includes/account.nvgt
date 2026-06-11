@@ -1,0 +1,73 @@
+// Account storage. One account per file at data/players/<username>.svr (key=value text).
+// Passwords are never stored in plaintext: each account gets a random salt and we store
+// the SHA-256 hash of salt+password.
+
+string account_path(string name)
+{
+return "data/players/" + string_to_lower_case(name) + ".svr";
+}
+
+bool account_exists(string name)
+{
+return file_exists(account_path(name));
+}
+
+string make_salt()
+{
+string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
+string salt = "";
+for(int i=0; i<24; i++)
+{
+salt += charset.substr(random(0, int(charset.length())-1), 1);
+}
+return salt;
+}
+
+bool create_account(string name, string password, string gender)
+{
+if(account_exists(name)) return false;
+if(!directory_exists("data/players")) directory_create("data/players");
+string salt = make_salt();
+string hash = string_hash_sha256(salt + password);
+file f;
+if(!f.open(account_path(name), "wb")) return false;
+string data;
+data  = "name=" + name + "\r\n";
+data += "salt=" + salt + "\r\n";
+data += "password=" + hash + "\r\n";
+data += "gender=" + gender + "\r\n";
+data += "admin=0\r\n";
+f.write(data);
+f.close();
+return true;
+}
+
+dictionary@ load_account(string name)
+{
+dictionary@ d = dictionary();
+if(!account_exists(name)) return d;
+file f;
+f.open(account_path(name), "rb");
+string content = f.read();
+f.close();
+string[] lines = string_split(content, "\r\n", true);
+for(uint i=0; i<lines.length(); i++)
+{
+int eq = string_contains(lines[i], "=", 1);
+if(eq < 1) continue;
+string key = string_left(lines[i], eq);
+string val = lines[i].substr(eq + 1);
+d.set(key, val);
+}
+return d;
+}
+
+bool verify_password(string name, string password)
+{
+if(!account_exists(name)) return false;
+dictionary@ d = load_account(name);
+string salt = "", hash = "";
+d.get("salt", salt);
+d.get("password", hash);
+return string_hash_sha256(salt + password) == hash;
+}

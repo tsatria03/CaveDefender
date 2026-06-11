@@ -79,3 +79,19 @@ st.add("speak_menu_position",speak_menu_position);
 st.add("gamxit",gamxit);
 st.save();
 }
+void save_last_account()
+{
+accountdata.add("name", name);
+accountdata.add("password", password);
+accountdata.add("gender", gender);
+accountdata.save();
+}
+bool load_last_account()
+{
+accountdata.load();
+if(!accountdata.d.exists("name")) return false;
+name=accountdata.read_string("name");
+password=accountdata.read_string("password");
+if(accountdata.d.exists("gender")) gender=accountdata.read_string("gender");
+return true;
+}

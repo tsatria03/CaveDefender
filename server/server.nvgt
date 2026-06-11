@@ -2,9 +2,10 @@
 #include"sound_pool.nvgt"
 #include"speech.nvgt"
 
-#include"includes/net.nvgt"
+#include"includes/server_net.nvgt"
 #include"includes/regex.nvgt"
 #include"includes/user.nvgt"
+#include"includes/account.nvgt"
 
 int port=25562;
 int userlimit=200;
@@ -16,6 +17,10 @@ file f;
 void main()
 {
 svruptimer.restart();
+if(!directory_exists("data")) directory_create("data");
+if(!directory_exists("data/players")) directory_create("data/players");
+if(!directory_exists("data/preffs")) directory_create("data/preffs");
+if(!directory_exists("data/maps")) directory_create("data/maps");
 if(file_exists("data/preffs/conf.svr"))
 {
 f.open("data/preffs/conf.svr", "rb");
@@ -50,7 +55,7 @@ f.close();
         f.close();
     }
 bool neth=net.setup_server(port, 5, 500);
-show_game_window("anonymous chat server, running on version "+version);
+show_game_window("CaveDefender server, running on version "+version);
 wait(500);
 speak("server version "+version+", hosted on port "+port+", user limmit "+userlimit);
 while(true)

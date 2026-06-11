@@ -1,4 +1,6 @@
 New in 1.2.
+Joining the server now requires an account instead of just a name; you can create one from the new connection menu by entering a username and password and choosing your gender. Your password is stored securely and is never saved as plain text.
+Added a connection menu to the main menu, where you can sign in or create an account. The connection menu gives you three ways to get on: sign in with the account you last used on this computer, sign in as a different account by entering its username and password, or create a new account.
 Pressing F3 to ping the server now plays a sound when the request is sent and another when the reply arrives, so the gap between them lets you hear the round-trip time. The exact ping is still announced in milliseconds.
 The sounds folder has been reorganized into categorized subfolders for a cleaner, more organized layout.
 Fixed server notifications, such as players coming online or going offline and chat alerts, being announced two or three times instead of once. The chat word filter also works again, so messages containing forbidden words are properly blocked.

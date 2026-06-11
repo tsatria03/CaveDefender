@@ -136,8 +136,18 @@ return true;
 }
 return false;
 }
-void login(string name, double ver)
+void login(string name, string password, double ver)
 {
+if(!account_exists(name))
+{
+send(event.peer_id, "error: no account with that name exists. Please create one first.", 0,true);
+return;
+}
+if(!verify_password(name, password))
+{
+send(event.peer_id, "error: incorrect password.", 0,true);
+return;
+}
 bool cont=true;
 for(uint i=0; i<users.length(); i++)
 {
@@ -157,10 +167,45 @@ if(cont==true)
 send(event.peer_id, "done", 0,true);
 }
 }
+void register_account(string name, string password, string gender)
+{
+if(name.length()<3 or name.length()>20)
+{
+send(event.peer_id, "error: usernames must be between 3 and 20 characters.", 0,true);
+return;
+}
+if(filterchar(name, true))
+{
+send(event.peer_id, "error: usernames may only contain letters, numbers, hyphens and underscores.", 0,true);
+return;
+}
+if(account_exists(name))
+{
+send(event.peer_id, "error: an account with that name already exists.", 0,true);
+return;
+}
+if(password.length()<4)
+{
+send(event.peer_id, "error: passwords must be at least 4 characters.", 0,true);
+return;
+}
+if(gender!="male" and gender!="female" and gender!="nonbinary")
+{
+send(event.peer_id, "error: invalid gender selection.", 0,true);
+return;
+}
+if(create_account(name, password, gender))
+{
+send(event.peer_id, "registered", 0,true);
+}
+else
+{
+send(event.peer_id, "error: failed to create the account.", 0,true);
+}
+}
 void netloop()
 {
 event = net.request();
-int index=get_user_index(event.peer_id);
 if(writetimer.elapsed>writetime)
 {
 writetimer.restart();
@@ -206,9 +251,13 @@ if(event.type==event_receive and  event.channel==0)
 {
 int index=get_user_index(event.peer_id);
 string[] parsed=string_split(get_event_message(), " ", true);
-if(parsed[0]=="login")
+if(parsed[0]=="login" and parsed.length()>3)
 {
-login(parsed[1], string_to_number(parsed[2]));
+login(parsed[1], parsed[2], string_to_number(parsed[3]));
+}
+else if(parsed[0]=="register" and parsed.length()>3)
+{
+register_account(parsed[1], parsed[2], parsed[3]);
 }
 else  if(parsed[0]=="spawn_user" and parsed.length()>2)
 {
@@ -243,7 +292,7 @@ if(index>-1)
 if(parsed[0]=="welcome")
 {
 send(event.peer_id, "play welcome.ogg", 0,true);
-send(event.peer_id, "welcome to the anonymous chat server. server version "+version, 0,true);
+send(event.peer_id, "welcome to the CaveDefender server. server version "+version, 0,true);
 }
 if(parsed[0]=="dev")
 {
@@ -252,7 +301,6 @@ send(users[index].peer_id, "you are a developer now.", 0,true);
 }
 if(parsed[0]=="who")
 {
-int number_online=users.length();
 string list;
 for(uint i=0; i<users.length(); i++)
 {
