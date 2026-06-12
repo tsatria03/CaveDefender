@@ -1,0 +1,94 @@
+#include"includes/includes.nvgt"
+
+bool preglobals()
+{
+if (!SCREEN_READER_AVAILABLE)
+{
+alert("error", "cannot load screen reader components");
+}
+else if (!SOUND_AVAILABLE)
+{
+alert("error", "cannot load soundsystem");
+}
+else
+{
+return true;
+}
+return false;
+}
+
+void main()
+{
+keyhook.install();
+dummy.load("dummy");
+sound_global_hrtf = hrtf;
+sound_pitch_lower_limit = 0.05;
+sound_pitch_upper_limit = 10.00;
+initialize_sound_pools();
+string ver=load_engine();
+show_game_window("CaveDefender, version "+version);
+if(gamstence.is_already_running)
+{
+alert("error", "You can only have one instence of this game running!");
+exit();
+}
+else
+{
+create_buffer("alerts");
+create_buffer("chats");
+create_buffer("connections");
+create_buffer("pm's");
+create_buffer("misc");
+create_buffer("player events");
+if (!directory_exists(preffsPath)) directory_create(preffsPath);
+readpreffs();
+net.setup_client(5, 500);
+wait(500);
+mainmenu();
+}
+}
+
+void resetpreffs()
+{
+echomode=1;
+menumusvolume=0;
+use_sr = true;
+tts.set_voice(0);
+tts.set_rate(0);
+tts.set_pitch(0);
+tts.set_volume(100);
+soundcard="Default";
+sound_output_device=1;
+fademode=0;
+wallbump=true;
+hrtf=false;
+menuwrap=false;
+first_letter=false;
+side_scrolling=false;
+speak_menu_position=false;
+gamxit=1;
+name="";
+password="";
+gender="";
+}
+
+void restart(string appid, string scriptid="cf.nvgt")
+{
+if(SCRIPT_COMPILED)
+{
+bool success=run(appid,"",false,false);
+if(!success)
+{
+alert("error", "Unable to restart "+appid+"!");
+}
+}
+else
+{
+bool success=run("c:\\nvgt\\nvgtw.exe", scriptid,false,false);
+if(!success)
+{
+alert("error", "Unable to restart "+scriptid+"!");
+}
+}
+exit();
+}
