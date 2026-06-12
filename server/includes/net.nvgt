@@ -304,9 +304,10 @@ if(parsed[0]=="who")
 string list;
 for(uint i=0; i<users.length(); i++)
 {
-list+=users[i].name+",";
+list+=users[i].name;
+if(i<users.length()-1) list+=", ";
 }
-send(event.peer_id, "there are currently "+users.length()+" users on the server. they are: "+list, 0,true);
+send(event.peer_id, "there are currently "+users.length()+" users on the server. they are: "+list+".", 0,true);
 }
 }
 }

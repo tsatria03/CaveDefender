@@ -1,10 +1,11 @@
 int port=25562;
 string ip="localhost";
 
-bool encrypting=true, connected, registering;
+bool encrypting=true, connected, registering, pinging;
 
 timer connectiontimer, pingtimer;
 int connectingtime=10000;
+int pingtimeout=10000;
 uint64 serverpeer=0;
 network net;
 network_event event;
@@ -108,8 +109,9 @@ void netloop()
 		string[] parsed = string_split(message, " ", true);
 		if (message == "ping_response")
 		{
+			pinging=false;
 			p.play_stationary("sounds/ui/misc/pingstop.ogg", false);
-			speak("The ping took " + pingtimer.elapsed + " ms");
+			add_buffer_item("misc", "The ping took " + pingtimer.elapsed + " ms");
 		}
 		else if (parsed[0] == "online" and parsed.length() > 1)
 		{
