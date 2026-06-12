@@ -1,5 +1,6 @@
 bool encryption=true;
 int filterstuff=1;
+int maxvoicebytes=262144; // ~256 KB; the server drops voice packets larger than this (anti-flood).
 int writetime=10000;
 timer writetimer;
 network net;
@@ -136,8 +137,13 @@ return true;
 }
 return false;
 }
-void login(string name, string password, double ver)
+void login(string name, string password, string ver)
 {
+if(ver != version)
+{
+send(event.peer_id, "error: your game version ("+ver+") does not match the server version ("+version+"). Please update your game.", 0,true);
+return;
+}
 if(!account_exists(name))
 {
 send(event.peer_id, "error: no account with that name exists. Please create one first.", 0,true);
@@ -245,7 +251,7 @@ send(event.peer_id, uptime_message, 0, true);
 }
 else if(parsed[0]=="login" and parsed.length()>3)
 {
-login(parsed[1], parsed[2], string_to_number(parsed[3]));
+login(parsed[1], parsed[2], parsed[3]);
 }
 else if(parsed[0]=="register" and parsed.length()>3)
 {
@@ -318,11 +324,18 @@ int index=get_player_index(event.peer_id);
 if(index>-1)
 {
 string audio=get_event_message();
+if(audio.length()>maxvoicebytes)
+{
+send(event.peer_id, "Your voice message was too large to send.", 0,true);
+}
+else
+{
 string out=players[index].name+" "+players[index].x+" "+players[index].y+"\n"+audio;
 for(uint i=0; i<players.length(); i++)
 {
 if(players[i].peer_id==event.peer_id) continue;
 send(players[i].peer_id, out, 3, true);
+}
 }
 }
 }
