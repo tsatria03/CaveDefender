@@ -43,7 +43,7 @@ Built on NVGT's built-in `network` class (enet). The client uses `setup_client` 
 
 ## Accounts
 
-Server-side. Each account is a key=value file at `server/data/players/<username>.svr`: `name`, `salt`, the **SHA-256 hash of salt+password**, `gender`, `admin`. Helpers live in `server/includes/main/globals/account.nvgt` (`account_exists`, `create_account`, `load_account`, `verify_password`). Passwords are **never** stored in plaintext.
+Server-side. Each account is a key=value file at `server/data/players/<username>.usr`: `name`, `salt`, the **SHA-256 hash of salt+password**, `gender`, `rank`. `rank` is one of `player` (default, no powers), `admin`, or `developer` (mutually exclusive); admin and developer are **staff** (see `is_staff`). Helpers live in `server/includes/main/globals/account.nvgt` (`account_exists`, `create_account`, `load_account`, `verify_password`, `get_rank`, `is_staff`). Passwords are **never** stored in plaintext. The on-disk rank is loaded into the in-memory `player` roster at spawn; there is no longer a `dev` backdoor (uncompiled builds used to auto-elevate — removed).
 
 - `register <username> <password> <gender>` creates an account; `login <username> <password> <version>` verifies it — and the server **rejects the login if `<version>` doesn't match its own version**, so client and server must be on the same version to connect. Gender is transmitted space-free (`male` / `female` / `nonbinary`) with friendly labels in the UI.
 - The client **connection menu** (`menus/menu.nvgt`) offers **sign in** (the last-used account, cached locally inside the encrypted `settings.cvf`), **sign in as** (any account, via a form), and **new account** (a form with username, masked password, and a gender list).
@@ -76,7 +76,7 @@ Key client files (under `client/includes/main/`):
 Server files (under `server/`, same `includes/main/{deps,functions,globals}` glob layout as the client):
 - `cfs.nvgt` — entry, config/MOTD load, ensure-dirs, main loop.
 - `includes/main/globals/net.nvgt` — send/receive, message dispatch, `login` / `register_account`, chat broadcast, the word `filter`, admin commands (`/exit`, `/motd`, `/pm`).
-- `includes/main/globals/player.nvgt` — the **in-memory** connected-player roster (the `player` class: `name` / `peer_id` / `admin` / `version` / `x` / `y`, plus `spawn_player` / `get_player_index`), distinct from the on-disk accounts. Renamed from the old `user` / `user.nvgt`.
+- `includes/main/globals/player.nvgt` — the **in-memory** connected-player roster (the `player` class: `name` / `peer_id` / `rank` / `version` / `x` / `y`, plus `spawn_player` / `get_player_index`), distinct from the on-disk accounts. `rank` is set from the account file at spawn. Renamed from the old `user` / `user.nvgt`.
 - `includes/main/globals/account.nvgt` — the on-disk account store.
 - `includes/main/functions/regex.nvgt` — the chat word filter, using NVGT's **native `regexp`** (the old third-party `filter.dll` is gone — see memory).
 

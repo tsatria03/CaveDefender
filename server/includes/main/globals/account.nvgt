@@ -1,10 +1,12 @@
-// Account storage. One account per file at data/players/<username>.svr (key=value text).
+// Account storage. One account per file at data/players/<username>.usr (key=value text).
 // Passwords are never stored in plaintext: each account gets a random salt and we store
-// the SHA-256 hash of salt+password.
+// the SHA-256 hash of salt+password. Each account also stores a rank: player, admin, or
+// developer (mutually exclusive). A player has no special powers; admin and developer are
+// staff (see is_staff).
 
 string account_path(string name)
 {
-return "data/players/" + string_to_lower_case(name) + ".svr";
+return "data/players/" + string_to_lower_case(name) + ".usr";
 }
 
 bool account_exists(string name)
@@ -36,7 +38,7 @@ data  = "name=" + name + "\r\n";
 data += "salt=" + salt + "\r\n";
 data += "password=" + hash + "\r\n";
 data += "gender=" + gender + "\r\n";
-data += "admin=0\r\n";
+data += "rank=player\r\n";
 f.write(data);
 f.close();
 return true;
@@ -70,4 +72,21 @@ string salt = "", hash = "";
 d.get("salt", salt);
 d.get("password", hash);
 return string_hash_sha256(salt + password) == hash;
+}
+
+// Returns the stored rank for an account, defaulting to "player" when the account is
+// missing or has no rank field (e.g. accounts created before ranks existed).
+string get_rank(string name)
+{
+if(!account_exists(name)) return "player";
+dictionary@ d = load_account(name);
+string rank = "player";
+d.get("rank", rank);
+return rank;
+}
+
+// Staff = admin or developer. Use this to gate moderation/admin-only commands.
+bool is_staff(string rank)
+{
+return rank=="admin" or rank=="developer";
 }
