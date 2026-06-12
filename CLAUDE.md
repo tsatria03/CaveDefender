@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 CaveDefender is an **online**, audio-only game written in **NVGT** (Non-Visual Game Toolkit, an AngelScript-based engine). All code is `.nvgt`. There is no visual rendering — output is screen-reader speech plus HRTF spatial audio through NVGT's `sound_pool`.
 
-It is a **client/server** game. The near-term goal is: connect to the server, log into an account, chat with other players, and walk around a shared map. Map objects (platforms, tiles, zones) are spawned through a custom game-engine DLL. Networked voice chat is planned but incomplete — voice currently records and plays back **locally only**, with no transmission to the server.
+It is a **client/server** game. The near-term goal is: connect to the server, log into an account, chat with other players, and walk around a shared map. Map objects (platforms, tiles, zones) are spawned through a custom game-engine DLL. The chat-center milestone is functionally complete: accounts, public/private chat, slash commands, networked player positions with locator beacons, and **spatial voice chat** (push-to-talk clips relayed through the server and played at the speaker's map position).
 
 **Heritage note:** the folder layout and several conventions were borrowed from the **SimpleFighter** project (a separate, *offline* map-builder game), so the structure looks familiar. But CaveDefender is online and very different. Do **not** assume SimpleFighter mechanics exist here — there is no map builder, no `.sif` map format, no NPCs/weapons/shields, and no build pipeline.
 
@@ -37,7 +37,7 @@ They are separate codebases that share only a message protocol and an encryption
 
 Built on NVGT's built-in `network` class (enet). The client uses `setup_client` + `net.connect`; the server uses `setup_server`. Both poll `net.request()` each frame and branch on `event.type` (`event_connect` / `event_disconnect` / `event_receive`).
 
-- **Channels:** 0 = control/system, 1 = public chat, 2 = private messages.
+- **Channels:** 0 = control/system, 1 = public chat, 2 = private messages, 3 = voice. Channels 0–2 carry the space-delimited text protocol; **channel 3 carries raw ogg voice bytes** (the client sends only the audio; the server prepends a `name x y\n` header before relaying to everyone else, and drops anything larger than `maxvoicebytes`). Received clips play through `vpool` at the speaker's position.
 - **Encryption:** every packet is run through `string_encrypt` / `string_decrypt` with the key `"rscs123"`, shared by both sides in `send()` / `get_event_message()`.
 - **The protocol is the contract.** Both sides agree on a set of **space-delimited** message strings (`login`, `register`, `spawn_player`, `who`, `welcome`, `disconnect`, `ping_request`/`ping_response`, `/getmotd`, `/serveruptime`, `online`/`offline`, `move`/`pos` (player position: client sends `move <x> <y>`, server broadcasts `pos <name> <x> <y>`), `play`, `terminate`, `kill`, `/motd`, `/pm`, …). Because messages are space-delimited, usernames / passwords / gender values must contain **no spaces**. **When you change a message on one side, update the matching handler on the other** — a silent client/server mismatch is the classic bug here.
 
@@ -45,7 +45,7 @@ Built on NVGT's built-in `network` class (enet). The client uses `setup_client` 
 
 Server-side. Each account is a key=value file at `server/data/players/<username>.svr`: `name`, `salt`, the **SHA-256 hash of salt+password**, `gender`, `admin`. Helpers live in `server/includes/main/globals/account.nvgt` (`account_exists`, `create_account`, `load_account`, `verify_password`). Passwords are **never** stored in plaintext.
 
-- `register <username> <password> <gender>` creates an account; `login <username> <password> <version>` verifies it. Gender is transmitted space-free (`male` / `female` / `nonbinary`) with friendly labels in the UI.
+- `register <username> <password> <gender>` creates an account; `login <username> <password> <version>` verifies it — and the server **rejects the login if `<version>` doesn't match its own version**, so client and server must be on the same version to connect. Gender is transmitted space-free (`male` / `female` / `nonbinary`) with friendly labels in the UI.
 - The client **connection menu** (`menus/menu.nvgt`) offers **sign in** (the last-used account, cached locally inside the encrypted `settings.cvf`), **sign in as** (any account, via a form), and **new account** (a form with username, masked password, and a gender list).
 
 ## The custom game engine
