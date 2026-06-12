@@ -1,0 +1,55 @@
+// Client-side roster of OTHER players we can currently hear. The local player stays as `me`
+// (map.nvgt) plus the identity globals (name, gender); this class is only for the remote players
+// the server tells us about. Each carries a position so we can place their sounds (footsteps, a
+// locator beacon) in 3D relative to `me`, plus a beacon timer/handle so the beacon can pulse at
+// their spot — the same shape as SimpleFighter's checkpoint/item looping-sound objects.
+player@[] players;
+
+class player
+{
+string name;
+int x, y;            // map position (2D; z is always 0 since the game has no height).
+timer beacontimer;   // paces the periodic beacon, like SimpleFighter's checktimer / objtimer.
+int beaconsound=-1;  // sound_pool handle for this player's beacon; -1 when nothing is playing.
+player(string pname, int px, int py)
+{
+name=pname;
+x=px;
+y=py;
+}
+}
+
+// Find a tracked player by name. Returns -1 if we aren't tracking them.
+int get_player_index(string pname)
+{
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].name==pname) return i;
+}
+return -1;
+}
+
+// Start tracking a remote player (ignored if we already are).
+void add_player(string pname, int px, int py)
+{
+if(get_player_index(pname)>-1) return;
+player p1(pname, px, py);
+players.insert_last(p1);
+}
+
+// Update a tracked player's position; the beacon/footsteps then play at the new spot.
+void set_player_position(string pname, int px, int py)
+{
+int i=get_player_index(pname);
+if(i<0) return;
+players[i].x=px;
+players[i].y=py;
+}
+
+// Stop tracking a remote player (on offline/disconnect).
+void remove_player(string pname)
+{
+int i=get_player_index(pname);
+if(i<0) return;
+players.remove_at(i);
+}

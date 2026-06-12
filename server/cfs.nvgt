@@ -1,9 +1,4 @@
-#include"includes/bgt_compat.nvgt"
-#include"includes/speech.nvgt"
-#include"includes/net.nvgt"
-#include"includes/regex.nvgt"
-#include"includes/player.nvgt"
-#include"includes/account.nvgt"
+#include"includes/includes.nvgt"
 
 int port=25562;
 int userlimit=200;
