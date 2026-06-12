@@ -272,6 +272,7 @@ if(spawnable==true)
 {
 spawn_player(event.peer_id, parsed[1], string_to_number(parsed[2]));
 index=get_player_index(event.peer_id);
+players[index].rank=get_rank(players[index].name);
 send(0, "online "+players[index].name, 0,true);
 // Tell everyone where the new player is, and tell the new player where everyone else is.
 send(0, "pos "+players[index].name+" "+players[index].x+" "+players[index].y, 0,true);
@@ -301,11 +302,6 @@ else if(parsed[0]=="welcome" and index>-1)
 {
 send(event.peer_id, "play welcome.ogg", 0,true);
 send(event.peer_id, "welcome to the CaveDefender server. server version "+version, 0,true);
-}
-else if(parsed[0]=="dev" and index>-1)
-{
-players[index].admin=true;
-send(players[index].peer_id, "you are a developer now.", 0,true);
 }
 else if(parsed[0]=="who" and index>-1)
 {
@@ -359,7 +355,7 @@ if(event.type == event_receive && event.channel == 1)
 {
                 messend = false;
                 string[] parsed = string_split(message, " ", true);
-                if(parsed[0] == "/exit" && players[index].admin)
+                if(parsed[0] == "/exit" && is_staff(players[index].rank))
 {
                     send(0, "The server is going down for maintenance. Exiting all players...", 0, true);
                     wait(3000);
@@ -368,7 +364,7 @@ if(event.type == event_receive && event.channel == 1)
                     speak("Exiting server");
                     exit();
                 }
-else if(parsed[0] == "/motd" && players[index].admin)
+else if(parsed[0] == "/motd" && is_staff(players[index].rank))
 {
     if(parsed.length() > 1)
     {
