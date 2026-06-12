@@ -1,4 +1,6 @@
 New in 1.3.
+Added a basic map system. You can walk around a small map. This will be expanded later on.
+Fixed leaving the server announcing a player going offline twice, and fixed reconnecting right afterward sometimes failing with a "could not reach the server" error until you tried again.
 You can now set which server and port the game connects to from the preferences menu, so you can join servers other than the default.
 You can now press escape while in the chat to leave and return to the main menu. If you have "ask to exit" turned on in preferences it confirms with you first, and the audio fades out as you go.
 New in 1.2.

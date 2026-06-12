@@ -92,7 +92,7 @@ NVGT `sound_pool` with HRTF. Player position is the vector `me`; pools advance p
 - `player/items/<item>/` — e.g. `wood` (`drop`/`loop`/`place`/`take`).
 - `ambience/`, `music/` — empty, for later.
 
-This game does **not** support swappable sound packs (see memory) — paths point directly at the fixed subfolders. **Known stale path:** `map.nvgt` still builds flat names (`objects/walls/<x>.ogg`, `objects/platforms/<x>step<n>.ogg`) from when the layout was flatter; those need updating to the `<type>/clip.ogg` subfolder form when the real wall-breaker map is built.
+This game does **not** support swappable sound packs (see memory) — paths point directly at the fixed subfolders. `map.nvgt` builds the per-type subfolder paths (`objects/walls/<wall>/bump.ogg`, `objects/platforms/<tile>/step<n>.ogg`); `spawn_map()` lays a `wallwood` border around a `cave` interior, with `me` starting at `(1,1)` on the interior.
 
 ## Player-facing docs (docks/)
 
