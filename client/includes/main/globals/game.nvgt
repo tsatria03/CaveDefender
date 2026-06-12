@@ -1,6 +1,6 @@
 void game()
 {
-	send(0, "spawn_user "+name+" "+version, 0,true);
+	send(0, "spawn_player "+name+" "+version, 0,true);
 	send(0, "getversion", 0,true);
 	send(0, "welcome", 0,true);
 	if(!SCRIPT_COMPILED) send(0, "dev", 0,true);
