@@ -195,9 +195,9 @@ void settingsmenu()
 		form.add_list_item(tabs, "Menu");
 		form.add_list_item(tabs, "Speech");
 		int tab_general=0, tab_game=1, tab_sound=2, tab_menu=3, tab_speech=4;
-		int srv = form.create_button("Current server is " + ip + ". Press enter to change.");
+		int srv = form.create_button("Change server IP. Currently set to " + ip);
 		form.assign_to_tab(srv, tabs, tab_general);
-		int prt = form.create_button("Current port is " + port + ". Press enter to change.");
+		int prt = form.create_button("Change server port. Currently set to " + port);
 		form.assign_to_tab(prt, tabs, tab_general);
 		int bml = form.create_checkbox("Enable bumping into walls repeatedly", wallbump);
 		form.assign_to_tab(bml, tabs, tab_game);
@@ -225,7 +225,7 @@ void settingsmenu()
 		form.assign_to_tab(rest, tabs, tab_general);
 		int preffsok = form.create_button("&save settings", true);
 		int preffscn = form.create_button("&cancel");
-		form.focus(rest);
+		form.focus(srv);
 		while(true)
 		{
 			wait(5);
