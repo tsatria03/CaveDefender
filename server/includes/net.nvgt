@@ -64,20 +64,20 @@ string string_join(string[]@ arr, string delimiter, uint start_index = 0, uint e
     }
     return result;
 }
-int get_user_index(int id)
+int get_player_index(int id)
 {
-for(int i=0; i<users.length(); i++)
+for(int i=0; i<players.length(); i++)
 {
-if(users[i].peer_id==id)
+if(players[i].peer_id==id)
 return i;
 }
 return -1;
 }
-int get_user_index_from(string name)
+int get_player_index_from(string name)
 {
-for(int i=0; i<users.length(); i++)
+for(int i=0; i<players.length(); i++)
 {
-if(users[i].name==name)
+if(players[i].name==name)
 return i;
 }
 return -1;
@@ -149,18 +149,18 @@ send(event.peer_id, "error: incorrect password.", 0,true);
 return;
 }
 bool cont=true;
-for(uint i=0; i<users.length(); i++)
+for(uint i=0; i<players.length(); i++)
 {
-if(users[i].name==name)
+if(players[i].name==name)
 {
 send(event.peer_id,"error: a person with that name is already logged in",0,true);
 cont=false;
 }
 }
-if(users.length()>=userlimit)
+if(players.length()>=userlimit)
 {
 cont=false;
-send(event.peer_id, "error: the server has exceeded the limit. the maximum number of users is "+userlimit, 0,true);
+send(event.peer_id, "error: the server has exceeded the limit. the maximum number of players is "+userlimit, 0,true);
 }
 if(cont==true)
 {
@@ -217,18 +217,18 @@ exit();
 }
 if(event.type==event_disconnect)
 {
-int index=get_user_index(event.peer_id);
+int index=get_player_index(event.peer_id);
 if(index>-1)
 {
-send(0, "offline "+users[index].name, 0,true);
-users.remove_at(index);
+send(0, "offline "+players[index].name, 0,true);
+players.remove_at(index);
 }
 }
 if(event.type==event_receive and event.channel==0)
 {
 string message=get_event_message();
 string[] parsed=string_split(message, " ", true);
-int index=get_user_index(event.peer_id);
+int index=get_player_index(event.peer_id);
 if(message=="ping_request")
 {
 send(event.peer_id, "ping_response", 0, true);
@@ -251,31 +251,31 @@ else if(parsed[0]=="register" and parsed.length()>3)
 {
 register_account(parsed[1], parsed[2], parsed[3]);
 }
-else if(parsed[0]=="spawn_user" and parsed.length()>2)
+else if(parsed[0]=="spawn_player" and parsed.length()>2)
 {
 bool spawnable=true;
 string n=parsed[1];
-for(uint i=0; i<users.length(); i++)
+for(uint i=0; i<players.length(); i++)
 {
-if(users[i].name==n)
+if(players[i].name==n)
 {
 spawnable=false;
 }
 }
 if(spawnable==true)
 {
-spawn_user(event.peer_id, parsed[1], string_to_number(parsed[2]));
-index=get_user_index(event.peer_id);
-send(0, "online "+users[index].name, 0,true);
+spawn_player(event.peer_id, parsed[1], string_to_number(parsed[2]));
+index=get_player_index(event.peer_id);
+send(0, "online "+players[index].name, 0,true);
 }
 }
 else if(parsed[0]=="disconnect")
 {
 if(index>-1)
 {
-send(0, "offline "+users[index].name, 0,true);
-send(users[index].peer_id, "terminate", 0,true);
-users.remove_at(index);
+send(0, "offline "+players[index].name, 0,true);
+send(players[index].peer_id, "terminate", 0,true);
+players.remove_at(index);
 }
 }
 else if(parsed[0]=="welcome" and index>-1)
@@ -285,30 +285,30 @@ send(event.peer_id, "welcome to the CaveDefender server. server version "+versio
 }
 else if(parsed[0]=="dev" and index>-1)
 {
-users[index].admin=true;
-send(users[index].peer_id, "you are a developer now.", 0,true);
+players[index].admin=true;
+send(players[index].peer_id, "you are a developer now.", 0,true);
 }
 else if(parsed[0]=="who" and index>-1)
 {
 string list;
-for(uint i=0; i<users.length(); i++)
+for(uint i=0; i<players.length(); i++)
 {
-list+=users[i].name;
-if(i<users.length()-1) list+=", ";
+list+=players[i].name;
+if(i<players.length()-1) list+=", ";
 }
-send(event.peer_id, "there are currently "+users.length()+" users on the server. they are: "+list+".", 0,true);
+send(event.peer_id, "there are currently "+players.length()+" players on the server. they are: "+list+".", 0,true);
 }
 }
 if(event.type == event_receive && event.channel == 1)
 {
     string message = get_event_message();
     bool messend = true;
-    int index = get_user_index(event.peer_id);    
+    int index = get_player_index(event.peer_id);    
     if(index > -1)
 {
         if(message.length() > 0)
 {
-            if(users[index].messagetimer.elapsed < 50) messend = false;            
+            if(players[index].messagetimer.elapsed < 50) messend = false;            
             if(filter(get_event_message()))
 {
                 send(event.peer_id, "Your message contains forbidden words", 1, true);
@@ -319,16 +319,16 @@ if(event.type == event_receive && event.channel == 1)
 {
                 messend = false;
                 string[] parsed = string_split(message, " ", true);
-                if(parsed[0] == "/exit" && users[index].admin)
+                if(parsed[0] == "/exit" && players[index].admin)
 {
-                    send(0, "The server is going down for maintenance. Exiting all users...", 0, true);
+                    send(0, "The server is going down for maintenance. Exiting all players...", 0, true);
                     wait(3000);
                     send(0, "kill", 0, true);
                     wait(3000);
                     speak("Exiting server");
                     exit();
                 }
-else if(parsed[0] == "/motd" && users[index].admin)
+else if(parsed[0] == "/motd" && players[index].admin)
 {
     if(parsed.length() > 1)
     {
@@ -349,11 +349,11 @@ else if(parsed[0] == "/motd" && users[index].admin)
 {
                     string target_user = parsed[1];
                     string pm_message = string_join(parsed, " ", 2, parsed.length());
-                    int target_index = get_user_index_from(target_user);
+                    int target_index = get_player_index_from(target_user);
                     if(target_index > -1)
 {
 send(event.peer_id, "PM to " + target_user + ": " + pm_message, 2, true);
-send(users[target_index].peer_id, "PM from " + users[index].name + ": " + pm_message, 2, true);
+send(players[target_index].peer_id, "PM from " + players[index].name + ": " + pm_message, 2, true);
                     }
 else
 {
@@ -364,9 +364,9 @@ else
         }
         if(messend == true)
 {
-            users[index].messagetimer.restart();
+            players[index].messagetimer.restart();
             string what;
-            what += users[index].name + ": " + message;
+            what += players[index].name + ": " + message;
             send(0, what, 1, true);
         }
     }
