@@ -201,6 +201,10 @@ void settingsmenu()
 		form.assign_to_tab(prt, tabs, tab_general);
 		int bml = form.create_checkbox("Enable bumping into walls repeatedly", wallbump);
 		form.assign_to_tab(bml, tabs, tab_game);
+		int hvc = form.create_checkbox("Hear your voice when sending voice messages", hearvoice);
+		form.assign_to_tab(hvc, tabs, tab_game);
+		int hldk = form.create_checkbox("Require holding of voicechat key", int_to_bool(holdkey));
+		form.assign_to_tab(hldk, tabs, tab_game);
 		int esc = form.create_checkbox("Ask to exit when pressing escape", int_to_bool(gamxit));
 		form.assign_to_tab(esc, tabs, tab_game);
 		int fdv = form.create_checkbox("Enable global volume fading", int_to_bool(fademode));
@@ -231,6 +235,8 @@ void settingsmenu()
 			wait(5);
 			form.monitor();
 			wallbump = form.is_checked(bml);
+			hearvoice = form.is_checked(hvc);
+			holdkey = bool_to_int(form.is_checked(hldk));
 			gamxit = bool_to_int(form.is_checked(esc));
 			fademode = bool_to_int(form.is_checked(fdv));
 			hrtf = form.is_checked(glh);
