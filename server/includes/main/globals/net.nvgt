@@ -209,6 +209,62 @@ else
 send(event.peer_id, "error: failed to create the account.", 0,true);
 }
 }
+// Case-insensitive check of whether a named account is currently connected.
+bool is_online(string name)
+{
+string low=string_to_lower_case(name);
+for(uint i=0; i<players.length(); i++)
+{
+if(string_to_lower_case(players[i].name)==low) return true;
+}
+return false;
+}
+// The capitalized, expanded label shown for a rank in the /staff listing.
+string staff_label(string rank)
+{
+if(rank=="developer") return "Developer";
+if(rank=="admin") return "Administrator";
+return rank;
+}
+// Scans every account on disk for staff (admin/developer) and builds the /staff sentence,
+// listing developers first (top of the hierarchy), then administrators, each tagged
+// (Online) or (Offline) based on the current roster.
+string build_staff_list()
+{
+string[] files=find_files("data/players/*.usr");
+string[] devs, admins;
+for(uint i=0; i<files.length(); i++)
+{
+string acct=files[i].replace(".usr", "", true);
+dictionary@ d=load_account(acct);
+string dispname="", rank="";
+d.get("name", dispname);
+d.get("rank", rank);
+if(dispname=="") dispname=acct;
+if(!is_staff(rank)) continue;
+string status=is_online(dispname)? "Online" : "Offline";
+string entry=staff_label(rank)+" "+dispname+" ("+status+")";
+if(rank=="developer") devs.insert_last(entry);
+else admins.insert_last(entry);
+}
+string[] all;
+for(uint i=0; i<devs.length(); i++) all.insert_last(devs[i]);
+for(uint i=0; i<admins.length(); i++) all.insert_last(admins[i]);
+int total=int(all.length());
+if(total==0) return "There are no staff members on this game.";
+string list;
+if(total==1) list=all[0];
+else if(total==2) list=all[0]+" and "+all[1];
+else
+{
+for(int i=0; i<total-1; i++) list+=all[i]+", ";
+list+="and "+all[total-1];
+}
+string head;
+if(total==1) head="There is 1 staff member on this game. ";
+else head="There are "+total+" staff members on this game. ";
+return head+list+".";
+}
 void netloop()
 {
 event = net.request();
@@ -313,6 +369,10 @@ list+=display_name(i);
 if(i<players.length()-1) list+=", ";
 }
 send(event.peer_id, "there are currently "+players.length()+" players on the server. they are: "+list+".", 0,true);
+}
+else if(parsed[0]=="staff" and index>-1)
+{
+send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
 }
 }
 if(event.type == event_receive && event.channel == 3)

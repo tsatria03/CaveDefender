@@ -37,6 +37,11 @@ void comparse(string text)
 		if(parsed.length() != 1) { syntax_error("/getmotd"); return; }
 		send(0, "/getmotd", 0, true);
 	}
+	else if(base == "/staff")
+	{
+		if(parsed.length() != 1) { syntax_error("/staff"); return; }
+		send(0, "staff", 0, true);
+	}
 	// Chat-channel (1) commands the server parses out of the message itself.
 	else if(base == "/pm")
 	{

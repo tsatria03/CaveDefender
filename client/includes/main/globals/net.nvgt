@@ -167,6 +167,10 @@ void netloop()
 			if(myrank == "admin") add_buffer_item("misc", "You are an admin now.");
 			else if(myrank == "developer") add_buffer_item("misc", "You are a developer now.");
 		}
+		else if (parsed[0] == "stafflist")
+		{
+			add_buffer_item("misc", message.substr(10));
+		}
 		else
 		{
 			speak(message);
