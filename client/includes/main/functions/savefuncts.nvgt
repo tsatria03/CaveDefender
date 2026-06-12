@@ -1,0 +1,107 @@
+void readpreffs()
+{
+st.load();
+if(st.d.exists("echomode"))
+{
+echomode=st.read_int("echomode");
+form.set_default_keyboard_echo(echomode);
+}
+if(st.d.exists("menumusvolume"))
+{
+menumusvolume=st.read_int("menumusvolume");
+}
+if (st.d.exists("tts_config"))
+{
+    string config = st.read_string("tts_config");
+    tts_load_config(config, tts);
+}
+if(st.d.exists("soundcard"))
+{
+soundcard=st.read_string("soundcard");
+string[]@devices=get_sound_output_devices();
+devices.remove_at(0);
+for(uint i=0; i<devices.length(); i++)
+{
+if(devices[i]==soundcard)
+{
+sound_output_device=i+1;
+break;
+}
+}
+}
+if(st.d.exists("fademode"))
+{
+fademode=st.read_int("fademode");
+}
+if(st.d.exists("wallbump"))
+{
+wallbump=st.read_bool("wallbump");
+}
+if(st.d.exists("hrtf"))
+{
+hrtf=st.read_bool("hrtf");
+sound_global_hrtf = hrtf;
+}
+if(st.d.exists("menuwrap"))
+{
+menuwrap=st.read_bool("menuwrap");
+}
+if(st.d.exists("first_letter"))
+{
+first_letter=st.read_bool("first_letter");
+}
+if(st.d.exists("side_scrolling"))
+{
+side_scrolling=st.read_bool("side_scrolling");
+}
+if(st.d.exists("speak_menu_position"))
+{
+speak_menu_position=st.read_bool("speak_menu_position");
+}
+if(st.d.exists("gamxit"))
+{
+gamxit=st.read_int("gamxit");
+}
+if(st.d.exists("ip"))
+{
+ip=st.read_string("ip");
+}
+if(st.d.exists("port"))
+{
+port=st.read_int("port");
+}
+}
+void writepreffs()
+{
+st.add("echomode",echomode);
+st.add("menumusvolume",menumusvolume);
+st.add("tts_config", tts_dump_config(tts, true));
+st.add("soundcard",soundcard);
+st.add("fademode",fademode);
+st.add("wallbump",wallbump);
+st.add("hrtf",hrtf);
+st.add("menuwrap",menuwrap);
+st.add("first_letter",first_letter);
+st.add("side_scrolling",side_scrolling);
+st.add("speak_menu_position",speak_menu_position);
+st.add("gamxit",gamxit);
+st.add("ip",ip);
+st.add("port",port);
+st.save();
+}
+void save_last_account()
+{
+st.add("name", name);
+st.add("password", password);
+st.add("gender", gender);
+st.save();
+}
+bool load_last_account()
+{
+st.load();
+if(!st.d.exists("name")) return false;
+name=st.read_string("name");
+password=st.read_string("password");
+if(st.d.exists("gender")) gender=st.read_string("gender");
+return true;
+}

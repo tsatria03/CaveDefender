@@ -1,0 +1,143 @@
+int port=25562;
+string ip="localhost";
+
+bool encrypting=true, connected, registering;
+
+timer connectiontimer, pingtimer;
+int connectingtime=10000;
+network net;
+network_event event;
+
+bool send(int peer_id,string packet,int channel,bool reliable)
+{
+if(encrypting)
+{
+packet=string_encrypt(packet,"rscs123");
+}
+if(reliable)
+{
+return net.send_reliable(peer_id,packet,channel);
+}
+else
+{
+return net.send_unreliable(peer_id,packet,channel);
+}
+}
+string get_event_message()
+{
+if(encrypting) return string_decrypt(event.message, "rscs123");
+else return event.message;
+}
+
+void login()
+{
+speak("Attempting to connect...");
+net.connect(ip, port);
+connectiontimer.restart();
+while(true)
+{
+wait(5);
+event=net.request();
+if(connectiontimer.elapsed>=connectingtime and connected==false or event.type==event_disconnect)
+{
+alert("error","Could not reach the server.");
+connectiontimer.restart();
+connected=false;
+return;
+}
+else if(event.type==event_connect and connected==false)
+{
+connected=true;
+if(registering)
+{
+speak("creating account");
+send(0, "register "+name+" "+password+" "+gender, 0,true);
+}
+else
+{
+speak("logging in");
+send(0, "login "+name+" "+password+" "+version, 0,true);
+}
+}
+if(event.type==event_receive and get_event_message()=="registered")
+{
+registering=false;
+send(0, "login "+name+" "+password+" "+version, 0,true);
+}
+else if(event.type==event_receive and get_event_message()=="done")
+{
+save_last_account();
+game();
+}
+else if(event.type==event_receive and string_contains(get_event_message(), "error:", 1)>-1)
+{
+dlgmessage(get_event_message());
+registering=false;
+connected=false;
+net.disconnect_peer(event.peer_id);
+return;
+}
+}
+}
+void netloop()
+{
+	event = net.request();
+	// Channel 0: control/system messages. Each message is handled exactly once.
+	if (event.type == event_receive and event.channel == 0)
+	{
+		string message = get_event_message();
+		string[] parsed = string_split(message, " ", true);
+		if (message == "ping_response")
+		{
+			p.play_stationary("sounds/ui/misc/pingstop.ogg", false);
+			speak("The ping took " + pingtimer.elapsed + " ms");
+		}
+		else if (parsed[0] == "online" and parsed.length() > 1)
+		{
+			p.play_stationary("sounds/ui/misc/online.ogg", false);
+			add_buffer_item("connections", parsed[1] + " just came online");
+		}
+		else if (parsed[0] == "offline" and parsed.length() > 1)
+		{
+			p.play_stationary("sounds/ui/misc/offline.ogg", false);
+			add_buffer_item("connections", parsed[1] + " just went offline");
+		}
+		else if (string_left(message, 15) == "Server Uptime: ")
+		{
+			add_buffer_item("misc", message);
+		}
+		else if (parsed[0] == "play" and parsed.length() > 1)
+		{
+			p.play_stationary("sounds/ui/misc/"+parsed[1], false);
+		}
+		else if (parsed[0] == "terminate")
+		{
+			connected = false;
+			net.disconnect_peer(event.peer_id);
+			mainmenu();
+		}
+		else if (parsed[0] == "kill")
+		{
+			send(0, "disconnect", 0, true);
+			exit();
+		}
+		else
+		{
+			speak(message);
+		}
+	}
+	// Channel 1: public chat.
+	if (event.type == event_receive and event.channel == 1)
+	{
+		string message = get_event_message();
+		add_buffer_item("chats", message);
+		p.play_stationary("sounds/ui/misc/chat.ogg", false);
+	}
+	// Channel 2: private messages.
+	if (event.type == event_receive and event.channel == 2)
+	{
+		string message = get_event_message();
+		add_buffer_item("pm's", message);
+		p.play_stationary("sounds/ui/misc/pm.ogg", false);
+	}
+}

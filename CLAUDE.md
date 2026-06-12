@@ -12,26 +12,26 @@ It is a **client/server** game. The near-term goal is: connect to the server, lo
 
 ## Layout
 
-The game lives under **`src/`**, split into two self-contained halves:
-- **`src/client/`** — entry `cf.nvgt`, plus `includes/`, `lib/`, `sounds/`.
-- **`src/server/`** — entry `server.nvgt`, plus `includes/`, `data/`.
+The repo root holds two self-contained halves:
+- **`client/`** — entry `cf.nvgt`, plus `includes/`, `lib/`, `sounds/`, `docks/`.
+- **`server/`** — entry `server.nvgt`, plus `includes/`, `data/`.
 
-Relative paths in code resolve against each side's working directory (client paths against `src/client/`, server paths against `src/server/`). Everything under each side moves together, so the relative paths "just work" as long as you run each from its own folder. `docks/` lives under `src/client/`; `CLAUDE.md` sits at the repo root, outside `src/`.
+Relative paths in code resolve against each side's working directory (client paths against `client/`, server paths against `server/`). Everything under each side moves together, so the relative paths "just work" as long as you run each from its own folder. `CLAUDE.md`, `.gitignore`, etc. sit at the repo root alongside `client/` and `server/`.
 
 ## Running
 
 There is **no test suite, no linter, and no build folder** — compiling and packaging are done manually outside this repo, on purpose. For development, run the two scripts with the NVGT runtime:
 
-- **Client:** `src/client/cf.nvgt`. `main()` installs the keyhook, gates on `SCREEN_READER_AVAILABLE` / `SOUND_AVAILABLE`, blocks a second instance via `gamstence.is_already_running`, loads the game-engine DLL (`load_engine()`), creates the message buffers, reads prefs, sets up the network client, then loops `mainmenu()`.
-- **Server:** `src/server/server.nvgt`. Loads config from `data/preffs/conf.svr` and the MOTD from `data/preffs/motd.svr`, ensures the `data/` folders exist, calls `net.setup_server()`, then loops `netloop()`. **Run it from `src/server/`** so its relative `data/` paths resolve.
+- **Client:** `client/cf.nvgt`. `main()` installs the keyhook, gates on `SCREEN_READER_AVAILABLE` / `SOUND_AVAILABLE`, blocks a second instance via `gamstence.is_already_running`, loads the game-engine DLL (`load_engine()`), creates the message buffers, reads prefs, sets up the network client, then loops `mainmenu()`.
+- **Server:** `server/server.nvgt`. Loads config from `data/preffs/conf.svr` and the MOTD from `data/preffs/motd.svr`, ensures the `data/` folders exist, calls `net.setup_server()`, then loops `netloop()`. **Run it from `server/`** so its relative `data/` paths resolve.
 
 ## Client / server split
 
 Two halves of the same game:
-- **Client** (`src/client/`) — presents the UI, plays sounds, manages the local player and the message buffers, and talks to the server.
-- **Server** (`src/server/`) — holds the connected-user roster and the account store, validates logins, broadcasts chat, and runs admin commands.
+- **Client** (`client/`) — presents the UI, plays sounds, manages the local player and the message buffers, and talks to the server.
+- **Server** (`server/`) — holds the connected-user roster and the account store, validates logins, broadcasts chat, and runs admin commands.
 
-They are separate codebases that share only a message protocol and an encryption key. Each has its own networking file — both named **`net.nvgt`** (`src/client/includes/main/globals/net.nvgt` and `src/server/includes/net.nvgt`) — with near-identical `send()` / `get_event_message()` helpers but mirror-image `netloop()`s (the client *reacts to and presents* server messages; the server *dispatches* client requests).
+They are separate codebases that share only a message protocol and an encryption key. Each has its own networking file — both named **`net.nvgt`** (`client/includes/main/globals/net.nvgt` and `server/includes/net.nvgt`) — with near-identical `send()` / `get_event_message()` helpers but mirror-image `netloop()`s (the client *reacts to and presents* server messages; the server *dispatches* client requests).
 
 ## Networking
 
@@ -43,14 +43,14 @@ Built on NVGT's built-in `network` class (enet). The client uses `setup_client` 
 
 ## Accounts
 
-Server-side. Each account is a key=value file at `src/server/data/players/<username>.svr`: `name`, `salt`, the **SHA-256 hash of salt+password**, `gender`, `admin`. Helpers live in `src/server/includes/account.nvgt` (`account_exists`, `create_account`, `load_account`, `verify_password`). Passwords are **never** stored in plaintext.
+Server-side. Each account is a key=value file at `server/data/players/<username>.svr`: `name`, `salt`, the **SHA-256 hash of salt+password**, `gender`, `admin`. Helpers live in `server/includes/account.nvgt` (`account_exists`, `create_account`, `load_account`, `verify_password`). Passwords are **never** stored in plaintext.
 
 - `register <username> <password> <gender>` creates an account; `login <username> <password> <version>` verifies it. Gender is transmitted space-free (`male` / `female` / `nonbinary`) with friendly labels in the UI.
 - The client **connection menu** (`menus/menu.nvgt`) offers **sign in** (the last-used account, cached locally inside the encrypted `settings.cvf`), **sign in as** (any account, via a form), and **new account** (a form with username, masked password, and a gender list).
 
 ## The custom game engine
 
-Map objects are spawned by a custom engine written in **PureBasic**, shipped as `src/client/lib/GameEngine64.dll` and wrapped in `includes/main/deps/GameEngine.nvgt` (`load_engine()`, `spawn_platform` / `spawn_zone` / `get_tile_at`, plus FTP/zip/download/recording helpers that are part of the engine's surface and not all used yet). The DLL must be present, or the wrapped calls throw `"library is not loaded"`; `load_engine()` checks the load result and shows a clean alert + exits if it fails.
+Map objects are spawned by a custom engine written in **PureBasic**, shipped as `client/lib/GameEngine64.dll` and wrapped in `includes/main/deps/GameEngine.nvgt` (`load_engine()`, `spawn_platform` / `spawn_zone` / `get_tile_at`, plus FTP/zip/download/recording helpers that are part of the engine's surface and not all used yet). The DLL must be present, or the wrapped calls throw `"library is not loaded"`; `load_engine()` checks the load result and shows a clean alert + exits if it fails.
 
 ## Non-stock NVGT engine change
 
@@ -60,7 +60,7 @@ This game depends on a **patched build** of NVGT (the Legacy-NVGT C++ source). `
 
 `cf.nvgt` includes only `includes/includes.nvgt`, which pulls in three NVGT stdlib files (`bgt_compat`, `instance`, `token_gen` — resolved from the NVGT install, not the repo, so don't flag them as missing) then glob-includes every directory under `includes/main/`: `deps/`, `functions/`, `globals/`, `menus/`, `parsers/`. Globbing means every symbol is visible everywhere, and renamed files are picked up automatically (no explicit include to update).
 
-Key client files (under `src/client/includes/main/`):
+Key client files (under `client/includes/main/`):
 - `globals/dec.nvgt` — central client state: player identity (`name`, `password`, `gender`), prefs, sound pools, timers, and the `st` savedata. The cached last account (name/password/gender) is stored inside the same `settings.cvf` as prefs, not a separate file. The version string lives here too.
 - `globals/net.nvgt` — the connect / login / register flow and the `netloop()` that handles incoming server messages.
 - `globals/game.nvgt` — the in-chat loop: movement, voice-chat keys, F1–F4 server keys, the escape-to-leave handler, buffer navigation.
@@ -71,7 +71,7 @@ Key client files (under `src/client/includes/main/`):
 - `menus/menu.nvgt` — `mainmenu()`, the connection menu + account forms, and the preferences menu (`settingsmenu()`). (The in-game documentation menu was removed; `dockread()` remains a utility in `extrafuncts.nvgt`.)
 - `functions/` — `extrafuncts.nvgt` (helper library) and `savefuncts.nvgt` (`readpreffs` / `writepreffs`, `save_last_account` / `load_last_account`).
 
-Server files (under `src/server/`):
+Server files (under `server/`):
 - `server.nvgt` — entry, config/MOTD load, ensure-dirs, main loop.
 - `includes/net.nvgt` — send/receive, message dispatch, `login` / `register_account`, chat broadcast, the word `filter`, admin commands (`/exit`, `/motd`, `/pm`).
 - `includes/user.nvgt` — the **in-memory** connected-user roster (distinct from the on-disk accounts).
@@ -80,11 +80,11 @@ Server files (under `src/server/`):
 
 ## Version
 
-The version string lives in **two** places that must stay in sync: `src/client/includes/main/globals/dec.nvgt` (client) and `src/server/server.nvgt` (server). Bump **both** together when opening a new changelog version block.
+The version string lives in **two** places that must stay in sync: `client/includes/main/globals/dec.nvgt` (client) and `server/server.nvgt` (server). Bump **both** together when opening a new changelog version block.
 
 ## Audio
 
-NVGT `sound_pool` with HRTF. Player position is the vector `me`; pools advance per frame. `src/client/sounds/` is organized by category, with a **per-type subfolder** holding named clips:
+NVGT `sound_pool` with HRTF. Player position is the vector `me`; pools advance per frame. `client/sounds/` is organized by category, with a **per-type subfolder** holding named clips:
 - `ui/` — `buffer/`, `dlg/`, `menu/` (incl. `speaker.ogg` for "test speakers" and `music.ogg`), `misc/` (online, offline, chat, pm, von, voff, pingstart, pingstop, welcome, newmotd, kick).
 - `objects/walls/<wall>/` — e.g. `wallwood/{bump,death,hurt1-3}.ogg`.
 - `objects/platforms/<tile>/` — e.g. `cave/step1-5.ogg`.
@@ -96,7 +96,7 @@ This game does **not** support swappable sound packs (see memory) — paths poin
 
 ## Player-facing docs (docks/)
 
-`docks/` lives under **`src/client/`**: `changelog.txt`, `credits.txt`, `readme.txt`, `todo list.txt`. There is no longer an in-game documentation viewer (the menu was removed), but **`changelog.txt` is still the source of truth for what shipped** and is maintained on every release.
+`docks/` lives under **`client/`**: `changelog.txt`, `credits.txt`, `readme.txt`, `todo list.txt`. There is no longer an in-game documentation viewer (the menu was removed), but **`changelog.txt` is still the source of truth for what shipped** and is maintained on every release.
 
 ## Rules kept in memory (not inline, to keep this file lean)
 

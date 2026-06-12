@@ -6,5 +6,5 @@
 
 New File*.txt
 
-lib/
+src/client/lib/
 releases/
