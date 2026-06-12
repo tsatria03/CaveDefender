@@ -224,34 +224,26 @@ send(0, "offline "+users[index].name, 0,true);
 users.remove_at(index);
 }
 }
-    if (event.type == event_receive and event.channel == 0 and get_event_message() == "ping_request")
-    {
-        send(event.peer_id, "ping_response", 0, true);
-}
-if(event.type == event_receive and event.channel == 0)
+if(event.type==event_receive and event.channel==0)
 {
-    string message = get_event_message();
-    string[] parsed = string_split(message, " ", true);    
-    if(parsed[0] == "/getmotd")
-    {
-        send(event.peer_id, "Message of the Day: " + motd, 0, true);
-    }
-}
-if(event.type == event_receive and event.channel == 0)
-{
-    string message = get_event_message();
-    if(message == "/serveruptime")
-    {
-int uptime_seconds = svruptimer.elapsed / 1000;
-string uptime_message = format_uptime(uptime_seconds);            
-send(event.peer_id, uptime_message, 0, true);
-    }
-}
-if(event.type==event_receive and  event.channel==0)
-{
+string message=get_event_message();
+string[] parsed=string_split(message, " ", true);
 int index=get_user_index(event.peer_id);
-string[] parsed=string_split(get_event_message(), " ", true);
-if(parsed[0]=="login" and parsed.length()>3)
+if(message=="ping_request")
+{
+send(event.peer_id, "ping_response", 0, true);
+}
+else if(parsed[0]=="/getmotd")
+{
+send(event.peer_id, "Message of the Day: " + motd, 0, true);
+}
+else if(message=="/serveruptime")
+{
+int uptime_seconds = svruptimer.elapsed / 1000;
+string uptime_message = format_uptime(uptime_seconds);
+send(event.peer_id, uptime_message, 0, true);
+}
+else if(parsed[0]=="login" and parsed.length()>3)
 {
 login(parsed[1], parsed[2], string_to_number(parsed[3]));
 }
@@ -259,7 +251,7 @@ else if(parsed[0]=="register" and parsed.length()>3)
 {
 register_account(parsed[1], parsed[2], parsed[3]);
 }
-else  if(parsed[0]=="spawn_user" and parsed.length()>2)
+else if(parsed[0]=="spawn_user" and parsed.length()>2)
 {
 bool spawnable=true;
 string n=parsed[1];
@@ -273,13 +265,12 @@ spawnable=false;
 if(spawnable==true)
 {
 spawn_user(event.peer_id, parsed[1], string_to_number(parsed[2]));
-int index=get_user_index(event.peer_id);
+index=get_user_index(event.peer_id);
 send(0, "online "+users[index].name, 0,true);
 }
 }
 else if(parsed[0]=="disconnect")
 {
-int index=get_user_index(event.peer_id);
 if(index>-1)
 {
 send(0, "offline "+users[index].name, 0,true);
@@ -287,19 +278,17 @@ send(users[index].peer_id, "terminate", 0,true);
 users.remove_at(index);
 }
 }
-if(index>-1)
-{
-if(parsed[0]=="welcome")
+else if(parsed[0]=="welcome" and index>-1)
 {
 send(event.peer_id, "play welcome.ogg", 0,true);
 send(event.peer_id, "welcome to the CaveDefender server. server version "+version, 0,true);
 }
-if(parsed[0]=="dev")
+else if(parsed[0]=="dev" and index>-1)
 {
 users[index].admin=true;
 send(users[index].peer_id, "you are a developer now.", 0,true);
 }
-if(parsed[0]=="who")
+else if(parsed[0]=="who" and index>-1)
 {
 string list;
 for(uint i=0; i<users.length(); i++)
@@ -308,7 +297,6 @@ list+=users[i].name;
 if(i<users.length()-1) list+=", ";
 }
 send(event.peer_id, "there are currently "+users.length()+" users on the server. they are: "+list+".", 0,true);
-}
 }
 }
 if(event.type == event_receive && event.channel == 1)
@@ -369,7 +357,7 @@ send(users[target_index].peer_id, "PM from " + users[index].name + ": " + pm_mes
                     }
 else
 {
-                        send(event.peer_id, "Pm failed. User not found", 2, true);
+                        send(event.peer_id, "Pm failed. User not found", 0, true);
                     }
                 }
             }
