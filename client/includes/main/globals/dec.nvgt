@@ -25,6 +25,6 @@ audio_form form;
 form_menu m;
 instance gamstence;
 kh keyhook;
-sound_pool p, pool, spool, temp;
+sound_pool p, pool, spool, temp, beaconpool;
 voicechatting vc;
 virtual_dialogs vd;

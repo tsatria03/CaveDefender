@@ -53,3 +53,24 @@ int i=get_player_index(pname);
 if(i<0) return;
 players.remove_at(i);
 }
+
+bool beacons_enabled=true; // toggled with F5; when false beaconloop() stays silent.
+int beacontime=500;        // ms between a player's beacon pulses.
+int lastx=1, lasty=1;      // last position reported to the server, so we only send when we actually move.
+
+// Pulse a positional beacon at each tracked player's spot, relative to `me`, so you can hear where
+// everyone is. Re-fires per player on its own timer (same shape as SimpleFighter's cploop/objloop),
+// with the pitch jittered each pulse. Plays through beaconpool, whose listener update_sound_pools()
+// keeps anchored to `me`.
+void beaconloop()
+{
+if(!beacons_enabled) return;
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].beacontimer.elapsed>=beacontime)
+{
+players[i].beaconsound=beaconpool.play_extended_3d("sounds/ui/misc/beacon.ogg", me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, random(80, 120), false);
+players[i].beacontimer.restart();
+}
+}
+}

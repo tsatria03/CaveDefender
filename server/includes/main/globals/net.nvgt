@@ -267,7 +267,20 @@ if(spawnable==true)
 spawn_player(event.peer_id, parsed[1], string_to_number(parsed[2]));
 index=get_player_index(event.peer_id);
 send(0, "online "+players[index].name, 0,true);
+// Tell everyone where the new player is, and tell the new player where everyone else is.
+send(0, "pos "+players[index].name+" "+players[index].x+" "+players[index].y, 0,true);
+for(uint i=0; i<players.length(); i++)
+{
+if(i==uint(index)) continue;
+send(event.peer_id, "pos "+players[i].name+" "+players[i].x+" "+players[i].y, 0,true);
 }
+}
+}
+else if(parsed[0]=="move" and parsed.length()>2 and index>-1)
+{
+players[index].x=string_to_number(parsed[1]);
+players[index].y=string_to_number(parsed[2]);
+send(0, "pos "+players[index].name+" "+players[index].x+" "+players[index].y, 0,true);
 }
 else if(parsed[0]=="disconnect")
 {
