@@ -309,7 +309,7 @@ else if(parsed[0]=="who" and index>-1)
 string list;
 for(uint i=0; i<players.length(); i++)
 {
-list+=players[i].name;
+list+=display_name(i);
 if(i<players.length()-1) list+=", ";
 }
 send(event.peer_id, "there are currently "+players.length()+" players on the server. they are: "+list+".", 0,true);
