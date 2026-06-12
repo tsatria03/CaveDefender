@@ -1,4 +1,5 @@
 New in 1.4.
+Server staff now stand out. When an admin or developer signs in they're told their rank, and their rank now appears in front of their name in public chat and private messages, so everyone can see who is staff.
 If you run your own server, player accounts now store a rank of player, admin, or developer, saved in each account's file. Set someone to admin or developer to give them staff powers, and that rank now sticks between sessions instead of resetting each time they sign in.
 The server now checks that your game is up to date when you sign in. If your version does not match the server's, you'll be told to update rather than running into problems later on.
 Voice chat now reaches other players. When you send a voice message it plays for everyone else from your position on the map, so you can hear who is talking and where they are. Whether you also hear your own voice is controlled by the option in the game settings.
