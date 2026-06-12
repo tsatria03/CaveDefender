@@ -1,5 +1,5 @@
-const int port=25562;
-const string ip="localhost";
+int port=25562;
+string ip="localhost";
 
 bool encrypting=true, connected, registering;
 

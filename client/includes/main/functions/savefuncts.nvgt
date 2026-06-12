@@ -62,6 +62,14 @@ if(st.d.exists("gamxit"))
 {
 gamxit=st.read_int("gamxit");
 }
+if(st.d.exists("ip"))
+{
+ip=st.read_string("ip");
+}
+if(st.d.exists("port"))
+{
+port=st.read_int("port");
+}
 }
 void writepreffs()
 {
@@ -77,6 +85,8 @@ st.add("first_letter",first_letter);
 st.add("side_scrolling",side_scrolling);
 st.add("speak_menu_position",speak_menu_position);
 st.add("gamxit",gamxit);
+st.add("ip",ip);
+st.add("port",port);
 st.save();
 }
 void save_last_account()

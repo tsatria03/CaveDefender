@@ -189,12 +189,16 @@ void settingsmenu()
 		form.reset();
 		form.create_window("preferences", false);
 		int tabs = form.create_tab_panel("Category");
+		form.add_list_item(tabs, "General");
 		form.add_list_item(tabs, "Game");
 		form.add_list_item(tabs, "Sound");
 		form.add_list_item(tabs, "Menu");
 		form.add_list_item(tabs, "Speech");
-		form.add_list_item(tabs, "General");
-		int tab_game=0, tab_sound=1, tab_menu=2, tab_speech=3, tab_general=4;
+		int tab_general=0, tab_game=1, tab_sound=2, tab_menu=3, tab_speech=4;
+		int srv = form.create_button("Current server is " + ip + ". Press enter to change.");
+		form.assign_to_tab(srv, tabs, tab_general);
+		int prt = form.create_button("Current port is " + port + ". Press enter to change.");
+		form.assign_to_tab(prt, tabs, tab_general);
 		int bml = form.create_checkbox("Enable bumping into walls repeatedly", wallbump);
 		form.assign_to_tab(bml, tabs, tab_game);
 		int esc = form.create_checkbox("Ask to exit when pressing escape", int_to_bool(gamxit));
@@ -221,7 +225,7 @@ void settingsmenu()
 		form.assign_to_tab(rest, tabs, tab_general);
 		int preffsok = form.create_button("&save settings", true);
 		int preffscn = form.create_button("&cancel");
-		form.focus(bml);
+		form.focus(rest);
 		while(true)
 		{
 			wait(5);
@@ -242,6 +246,23 @@ void settingsmenu()
 				writepreffs();
 				dlgmessage("Settings saved. Press enter to continue.");
 				return;
+			}
+			if(form.is_pressed(srv))
+			{
+				string newip=vd.input_box("Server", "Enter the new server.", ip);
+				if(newip!="") ip=newip;
+				break;
+			}
+			if(form.is_pressed(prt))
+			{
+				string newport=vd.input_box("Port", "Enter the new port.", ""+port);
+				if(newport!="")
+				{
+					int p=string_to_number(newport);
+					if(p>=1 and p<=65535) port=p;
+					else dlgmessage("That is not a valid port. Please enter a number between 1 and 65535. Press enter to continue.");
+				}
+				break;
 			}
 			if(form.is_pressed(ttscfg))
 			{

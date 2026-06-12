@@ -34,11 +34,11 @@ if(prefs.find("port")!=-1)
 {
 port=string_to_number(values[prefs.find("port")]);
 }
-else if(prefs.find("userlimit")!=-1)
+if(prefs.find("userlimit")!=-1)
 {
 userlimit=string_to_number(values[prefs.find("userlimit")]);
-f.close();
 }
+f.close();
 }
     if(file_exists("data/preffs/motd.svr"))
     {
