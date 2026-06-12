@@ -5,6 +5,7 @@ int rectime = 10000;
 int spamtime = 500;
 int voicechat = 1;
 int holdkey = 1;
+bool hearvoice=true;
 int gamxit=1;
 string preffsPath = DIRECTORY_APPDATA + "tsatria03/CaveDefender/preffs/";
 string soundcard="Default";

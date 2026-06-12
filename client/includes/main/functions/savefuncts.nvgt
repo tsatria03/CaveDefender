@@ -37,6 +37,14 @@ if(st.d.exists("wallbump"))
 {
 wallbump=st.read_bool("wallbump");
 }
+if(st.d.exists("hearvoice"))
+{
+hearvoice=st.read_bool("hearvoice");
+}
+if(st.d.exists("holdkey"))
+{
+holdkey=st.read_int("holdkey");
+}
 if(st.d.exists("hrtf"))
 {
 hrtf=st.read_bool("hrtf");
@@ -79,6 +87,8 @@ st.add("tts_config", tts_dump_config(tts, true));
 st.add("soundcard",soundcard);
 st.add("fademode",fademode);
 st.add("wallbump",wallbump);
+st.add("hearvoice",hearvoice);
+st.add("holdkey",holdkey);
 st.add("hrtf",hrtf);
 st.add("menuwrap",menuwrap);
 st.add("first_letter",first_letter);

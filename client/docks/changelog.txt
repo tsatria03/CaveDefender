@@ -1,4 +1,5 @@
 New in 1.3.
+Added two voice chat options to the game settings. You can now choose whether to hear your own voice when sending a voice message, and whether the voice chat key needs to be held down to record or simply toggles recording on and off.
 You can now hear where other players are on the map. Each player gives off a beacon that pulses from their spot, so you can hear them move around you as they walk, and you can turn player beacons on or off at any time with F5.
 Slash commands typed in the chat now work properly. You can use /who to hear who's online, /uptime for how long the server has been running, /getmotd for the message of the day, and /pm to send someone a private message. Anything the game doesn't recognize is now reported as an unknown command instead of quietly doing nothing.
 Pressing F3 to ping no longer starts a second ping while one is still waiting, and if the server doesn't answer within ten seconds you'll hear that the ping was lost. Ping results are now also saved to the misc buffer.
