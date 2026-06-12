@@ -1,0 +1,28 @@
+####These are the things that need to be finished for future versions of the game.
+
+****Unfinished. Build the actual cave defender gameplay, where players defend the cave.
+****Unfinished. Expand the map system beyond the current small starter cave.
+****Unfinished. Add staff moderation commands, such as kick, ban, mute, promote, and demote.
+****Unfinished. Implement a way to submit bug reports, feature requests, and other game feedback.
+****Unfinished. Add a map uploader and downloader using the game engine's transfer helpers.
+
+##These are the things that are already finished from earlier versions of the game.
+
+**Finished. Add persistent player ranks of player, admin, and developer, with staff names shown in chat, private messages, and the who list.
+**Finished. Reject signing in when your game version does not match the server's.
+**Finished. Add networked voice chat that plays for other players from your spot on the map.
+**Finished. Add voice chat options for hearing your own voice and for holding the voice key to record.
+**Finished. Add player beacons so you can hear where other players are, toggled with F5.
+**Finished. Add networked player positions so players can hear each other move around the map.
+**Finished. Add a basic walkable map.
+**Finished. Add a client side slash command parser.
+**Finished. Press slash to type a chat message or run a command.
+**Finished. Add private messages between players.
+**Finished. Add a ping system with sent and received sounds and a lost ping timeout.
+**Finished. Add server uptime requests.
+**Finished. Add a message of the day that staff can change.
+**Finished. Add a chat word filter.
+**Finished. Add a multi category buffer system for reviewing messages by type.
+**Finished. Add an account system with secure hashed passwords and a connection menu.
+**Finished. Add a preferences menu with sound device selection.
+**Finished. Add networked public chat.
