@@ -21,9 +21,9 @@ result+="\r\n"+send_command("close voice wait");
 if (convert==true)
 {
 if (channels==2)
-run("oggenc2.exe","-q3 --resample 32000 -b 64 \""+this.filename+"\" -o \""+convertfilename+"\"",true,true);
+run("lib/oggenc2.exe","-q3 --resample 32000 -b 64 \""+this.filename+"\" -o \""+convertfilename+"\"",true,true);
 else
-run("oggenc2.exe","-q3 --downmix --resample 32000 -s0 \""+this.filename+"\" -o \""+convertfilename+"\"",true,true);
+run("lib/oggenc2.exe","-q3 --downmix --resample 32000 -s0 \""+this.filename+"\" -o \""+convertfilename+"\"",true,true);
     if(file_exists(this.filename))
     {
         file_delete(this.filename);
@@ -36,7 +36,7 @@ if(!dll.active)
 {
 if(!dll.load("winmm.dll"))
 {
-alert("DLL Faltante", "");
+alert("error", "DLL failed to load.");
 return "DLL load failure";
 }
 }
