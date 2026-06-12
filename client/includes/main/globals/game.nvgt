@@ -65,7 +65,7 @@ void game()
 				if(rectimer.elapsed < 300)
 				{
 					speak("Recording too short");
-					return;
+					continue;
 				}
 				if(file_exists(outfile))
 				{
