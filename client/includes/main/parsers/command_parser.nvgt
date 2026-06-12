@@ -42,6 +42,18 @@ void comparse(string text)
 		if(parsed.length() != 1) { syntax_error("/staff"); return; }
 		send(0, "staff", 0, true);
 	}
+	else if(base == "/restart" or base == "/rt")
+	{
+		if(parsed.length() != 2) { syntax_error("/restart seconds (30-3600)"); return; }
+		int secs = string_to_number(parsed[1]);
+		if(secs < 30 or secs > 3600) { syntax_error("/restart seconds (30-3600)"); return; }
+		send(0, "restart "+secs, 0, true);
+	}
+	else if(base == "/fastrestart" or base == "/ft")
+	{
+		if(parsed.length() != 1) { syntax_error("/fastrestart"); return; }
+		send(0, "fastrestart", 0, true);
+	}
 	// Chat-channel (1) commands the server parses out of the message itself.
 	else if(base == "/pm")
 	{

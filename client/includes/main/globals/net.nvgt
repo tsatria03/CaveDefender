@@ -171,6 +171,18 @@ void netloop()
 		{
 			add_buffer_item("misc", message.substr(10));
 		}
+		else if (parsed[0] == "restartnotice")
+		{
+			add_buffer_item("alerts", message.substr(14));
+		}
+		else if (parsed[0] == "restartnow")
+		{
+			speak("Restarting, please wait", true);
+			wait(2000);
+			fade_multi_pool(fademode);
+			net.disconnect_peer_forcefully(serverpeer);
+			connected=false;
+		}
 		else
 		{
 			speak(message);
