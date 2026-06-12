@@ -122,6 +122,7 @@ void netloop()
 		{
 			p.play_stationary("sounds/ui/misc/offline.ogg", false);
 			add_buffer_item("connections", parsed[1] + " just went offline");
+			remove_player(parsed[1]);
 		}
 		else if (string_left(message, 15) == "Server Uptime: ")
 		{
@@ -140,6 +141,16 @@ void netloop()
 		{
 			send(0, "disconnect", 0, true);
 			exit();
+		}
+		else if (parsed[0] == "pos" and parsed.length() > 3)
+		{
+			if(parsed[1] != name)
+			{
+				int px = string_to_number(parsed[2]);
+				int py = string_to_number(parsed[3]);
+				add_player(parsed[1], px, py);
+				set_player_position(parsed[1], px, py);
+			}
 		}
 		else
 		{

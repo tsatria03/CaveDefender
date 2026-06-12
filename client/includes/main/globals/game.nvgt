@@ -6,12 +6,15 @@ void game()
 	if(!SCRIPT_COMPILED) send(0, "dev", 0,true);
 	spawn_map();
 	pinging=false;
+	players.resize(0);
 	while(true)
 	{
 		wait(5);
 buffercheck();
 		netloop();
 		if(!connected) return;
+		update_sound_pools();
+		beaconloop();
 		if (key_down(KEY_LMENU) or key_down(KEY_RMENU))
 			movetime=runtime;
 		else
@@ -47,6 +50,12 @@ buffercheck();
 			movetimer.restart();
 			me.y--;
 			playstep();
+		}
+		if(int(me.x)!=lastx or int(me.y)!=lasty)
+		{
+			lastx=int(me.x);
+			lasty=int(me.y);
+			send(0, "move "+lastx+" "+lasty, 0, true);
 		}
 		if(key_pressed(KEY_O) && spamtimer.elapsed >= spamtime && voicechat == 1)
 		{
@@ -155,6 +164,20 @@ buffercheck();
 		if(key_pressed(KEY_F4))
 		{
 			send(0, "/getmotd", 0, true);
+		}
+		if(key_pressed(KEY_F5))
+		{
+			beacons_enabled=!beacons_enabled;
+			if(beacons_enabled)
+			{
+				p.play_stationary("sounds/ui/misc/toggleon.ogg", false);
+				speak("beacons enabled");
+			}
+			else
+			{
+				p.play_stationary("sounds/ui/misc/toggleoff.ogg", false);
+				speak("beacons disabled");
+			}
 		}
 		if(key_pressed(KEY_SLASH))
 		{
