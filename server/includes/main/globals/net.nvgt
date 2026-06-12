@@ -273,6 +273,7 @@ if(spawnable==true)
 spawn_player(event.peer_id, parsed[1], string_to_number(parsed[2]));
 index=get_player_index(event.peer_id);
 players[index].rank=get_rank(players[index].name);
+send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 send(0, "online "+players[index].name, 0,true);
 // Tell everyone where the new player is, and tell the new player where everyone else is.
 send(0, "pos "+players[index].name+" "+players[index].x+" "+players[index].y, 0,true);
@@ -326,11 +327,11 @@ send(event.peer_id, "Your voice message was too large to send.", 0,true);
 }
 else
 {
-string out=players[index].name+" "+players[index].x+" "+players[index].y+"\n"+audio;
+string relay=players[index].name+" "+players[index].x+" "+players[index].y+"\n"+audio;
 for(uint i=0; i<players.length(); i++)
 {
 if(players[i].peer_id==event.peer_id) continue;
-send(players[i].peer_id, out, 3, true);
+send(players[i].peer_id, relay, 3, true);
 }
 }
 }
@@ -388,8 +389,8 @@ else if(parsed[0] == "/motd" && is_staff(players[index].rank))
                     int target_index = get_player_index_from(target_user);
                     if(target_index > -1)
 {
-send(event.peer_id, "PM to " + target_user + ": " + pm_message, 2, true);
-send(players[target_index].peer_id, "PM from " + players[index].name + ": " + pm_message, 2, true);
+send(event.peer_id, "PM to " + display_name(target_index) + ": " + pm_message, 2, true);
+send(players[target_index].peer_id, "PM from " + display_name(index) + ": " + pm_message, 2, true);
                     }
 else
 {
@@ -402,7 +403,7 @@ else
 {
             players[index].messagetimer.restart();
             string what;
-            what += players[index].name + ": " + message;
+            what += display_name(index) + ": " + message;
             send(0, what, 1, true);
         }
     }

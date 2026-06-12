@@ -16,6 +16,7 @@ string passc="rscs123";
 string name="";
 string password="";
 string gender="";
+string myrank="player";
 string version="1.4";
 timer rectimer;
 timer spamtimer;

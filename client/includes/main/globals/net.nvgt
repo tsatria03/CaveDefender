@@ -161,6 +161,12 @@ void netloop()
 				set_player_position(parsed[1], px, py);
 			}
 		}
+		else if (parsed[0] == "yourrank" and parsed.length() > 1)
+		{
+			myrank = parsed[1];
+			if(myrank == "admin") add_buffer_item("misc", "You are an admin now.");
+			else if(myrank == "developer") add_buffer_item("misc", "You are a developer now.");
+		}
 		else
 		{
 			speak(message);
