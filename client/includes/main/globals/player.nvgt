@@ -11,6 +11,7 @@ string name;
 int x, y;            // map position (2D; z is always 0 since the game has no height).
 timer beacontimer;   // paces the periodic beacon, like SimpleFighter's checktimer / objtimer.
 int beaconsound=-1;  // sound_pool handle for this player's beacon; -1 when nothing is playing.
+int voicesound=-1;   // sound_pool handle for this player's current voice clip; -1 when none.
 player(string pname, int px, int py)
 {
 name=pname;

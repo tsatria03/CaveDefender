@@ -99,6 +99,15 @@ wait(5);
 net.disconnect_peer_forcefully(serverpeer);
 connected=false;
 }
+void transmit_voice()
+{
+if(!file_exists(outfile)) return;
+file vf;
+if(!vf.open(outfile, "rb")) return;
+string data=vf.read();
+vf.close();
+if(data!="") send(0, data, 3, true);
+}
 void netloop()
 {
 	event = net.request();
@@ -170,5 +179,30 @@ void netloop()
 		string message = get_event_message();
 		add_buffer_item("pm's", message);
 		p.play_stationary("sounds/ui/misc/pm.ogg", false);
+	}
+	// Channel 3: incoming voice (header "name x y\n" then the ogg bytes).
+	if (event.type == event_receive and event.channel == 3)
+	{
+		string msg = get_event_message();
+		int nl = string_contains(msg, "\n", 1);
+		if(nl > 0)
+		{
+			string[] h = string_split(string_left(msg, nl), " ", true);
+			string audio = msg.substr(nl + 1);
+			if(h.length() >= 3 and h[0] != name)
+			{
+				int vx = string_to_number(h[1]);
+				int vy = string_to_number(h[2]);
+				string vt = DIRECTORY_TEMP + "\\cvf_voice_" + h[0] + ".ogg";
+				add_player(h[0], vx, vy);
+				int vi = get_player_index(h[0]);
+				if(vi > -1 and players[vi].voicesound != -1) vpool.destroy_sound(players[vi].voicesound);
+				file vf;
+				vf.open(vt, "wb");
+				vf.write(audio);
+				vf.close();
+				if(vi > -1) players[vi].voicesound = vpool.play_extended_3d(vt, me.x, me.y, me.z, vx, vy, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+			}
+		}
 	}
 }
