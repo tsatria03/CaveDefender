@@ -5,6 +5,7 @@ bool encrypting=true, connected, registering;
 
 timer connectiontimer, pingtimer;
 int connectingtime=10000;
+uint64 serverpeer=0;
 network net;
 network_event event;
 
@@ -29,10 +30,10 @@ if(encrypting) return string_decrypt(event.message, "rscs123");
 else return event.message;
 }
 
-void login()
+bool login()
 {
 speak("Attempting to connect...");
-net.connect(ip, port);
+serverpeer=net.connect(ip, port);
 connectiontimer.restart();
 while(true)
 {
@@ -43,7 +44,8 @@ if(connectiontimer.elapsed>=connectingtime and connected==false or event.type==e
 alert("error","Could not reach the server.");
 connectiontimer.restart();
 connected=false;
-return;
+net.disconnect_peer_forcefully(serverpeer);
+return false;
 }
 else if(event.type==event_connect and connected==false)
 {
@@ -68,16 +70,33 @@ else if(event.type==event_receive and get_event_message()=="done")
 {
 save_last_account();
 game();
+return true;
 }
 else if(event.type==event_receive and string_contains(get_event_message(), "error:", 1)>-1)
 {
 dlgmessage(get_event_message());
 registering=false;
 connected=false;
-net.disconnect_peer(event.peer_id);
-return;
+net.disconnect_peer_forcefully(serverpeer);
+return false;
 }
 }
+return false;
+}
+void leave_server()
+{
+send(0, "disconnect", 0, true);
+timer leavetimer;
+leavetimer.restart();
+while(leavetimer.elapsed<1000)
+{
+event=net.request();
+if(event.type==event_receive and get_event_message()=="terminate") break;
+if(event.type==event_disconnect) break;
+wait(5);
+}
+net.disconnect_peer_forcefully(serverpeer);
+connected=false;
 }
 void netloop()
 {
@@ -113,8 +132,7 @@ void netloop()
 		else if (parsed[0] == "terminate")
 		{
 			connected = false;
-			net.disconnect_peer(event.peer_id);
-			mainmenu();
+			net.disconnect_peer_forcefully(serverpeer);
 		}
 		else if (parsed[0] == "kill")
 		{

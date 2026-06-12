@@ -9,7 +9,8 @@ void game()
 	{
 		wait(5);
 		netloop();
-		if (key_down(KEY_LCONTROL) or key_down(KEY_RCONTROL))
+		if(!connected) return;
+		if (key_down(KEY_LMENU) or key_down(KEY_RMENU))
 			movetime=runtime;
 		else
 			movetime=walktime;
@@ -165,7 +166,8 @@ void game()
 			if(doexit)
 			{
 				fade_multi_pool(fademode);
-				send(0, "disconnect", 0, true);
+				leave_server();
+				return;
 			}
 		}
 		if(key_repeating(KEY_COMMA))
