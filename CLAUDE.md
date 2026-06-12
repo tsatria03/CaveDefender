@@ -70,6 +70,7 @@ Key client files (under `client/includes/main/`):
 - `deps/` — vendored libraries shared with SimpleFighter: `form.nvgt` (audio form), `form_menu.nvgt`, `setupmenu.nvgt`, `dlg.nvgt` / `dlgplayer.nvgt`, `sound_pool.nvgt`, `savedata.nvgt`, `speech.nvgt`, `voicechat.nvgt`, `GameEngine.nvgt`, etc. **Use `dlgmessage()` for player-facing dialogs** (the nicer wrapper), not raw `dlg()`.
 - `menus/menu.nvgt` — `mainmenu()`, the connection menu + account forms, and the preferences menu (`settingsmenu()`). (The in-game documentation menu was removed; `dockread()` remains a utility in `extrafuncts.nvgt`.)
 - `functions/` — `extrafuncts.nvgt` (helper library) and `savefuncts.nvgt` (`readpreffs` / `writepreffs`, `save_last_account` / `load_last_account`).
+- `parsers/command_parser.nvgt` — `comparse()`, the in-chat slash-command **router** (called from `game.nvgt` on `/`). Because the game is online it does not execute commands locally (unlike SimpleFighter's `comparse()`) — it sends chat on channel 1 and forwards each recognized command on the channel the server expects. **Rule for new commands:** validate the argument count and call `syntax_error("usage")` on bad syntax (the "Invalid command syntax. Usage: …" style); route all command feedback to the `misc` buffer via `add_buffer_item`. See memory.
 
 Server files (under `server/`):
 - `server.nvgt` — entry, config/MOTD load, ensure-dirs, main loop.

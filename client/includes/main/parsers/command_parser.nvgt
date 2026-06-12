@@ -1,0 +1,60 @@
+// Client-side slash-command router for the in-chat input.
+// CaveDefender is online, so authoritative commands run on the SERVER. Unlike SimpleFighter's
+// offline comparse(), this parser does not execute commands locally — it only decides how typed
+// text leaves the client: plain text is public chat, and each recognised slash command is
+// forwarded to the server on the channel its handler expects (0 = control, 1 = chat).
+// Each command validates its own argument count first and reports usage via syntax_error() when
+// it's wrong, the same way SimpleFighter's commands do. New commands should follow that pattern.
+void syntax_error(string usage)
+{
+	add_buffer_item("misc", "Invalid command syntax. Usage: " + usage + ".");
+}
+void comparse(string text)
+{
+	text = text.trim_whitespace();
+	if(text == "") return;
+	// No leading slash: ordinary public chat.
+	if(text[0] != "/")
+	{
+		send(0, text, 1, true);
+		return;
+	}
+	string[] parsed = string_split(text, " ", true);
+	string base = string_to_lower_case(parsed[0]);
+	// Control-channel (0) requests the server answers from.
+	if(base == "/who")
+	{
+		if(parsed.length() != 1) { syntax_error("/who"); return; }
+		send(0, "who", 0, true);
+	}
+	else if(base == "/uptime" or base == "/serveruptime")
+	{
+		if(parsed.length() != 1) { syntax_error("/uptime"); return; }
+		send(0, "/serveruptime", 0, true);
+	}
+	else if(base == "/getmotd")
+	{
+		if(parsed.length() != 1) { syntax_error("/getmotd"); return; }
+		send(0, "/getmotd", 0, true);
+	}
+	// Chat-channel (1) commands the server parses out of the message itself.
+	else if(base == "/pm")
+	{
+		if(parsed.length() < 3) { syntax_error("/pm user message"); return; }
+		send(0, text, 1, true);
+	}
+	else if(base == "/motd")
+	{
+		if(parsed.length() < 2) { syntax_error("/motd message"); return; }
+		send(0, text, 1, true);
+	}
+	else if(base == "/exit")
+	{
+		if(parsed.length() != 1) { syntax_error("/exit"); return; }
+		send(0, text, 1, true);
+	}
+	else
+	{
+		add_buffer_item("misc", "Unknown command: " + parsed[0]);
+	}
+}

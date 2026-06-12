@@ -5,6 +5,7 @@ void game()
 	send(0, "welcome", 0,true);
 	if(!SCRIPT_COMPILED) send(0, "dev", 0,true);
 	spawn_map();
+	pinging=false;
 	while(true)
 	{
 		wait(5);
@@ -137,12 +138,18 @@ void game()
 		{
 			send(0, "/serveruptime", 0, true);
 		}
-		if(key_pressed(KEY_F3))
+		if(key_pressed(KEY_F3) and !pinging)
 		{
+			pinging=true;
 			pingtimer.restart();
 			send(0, "ping_request", 0, true);
 			p.play_stationary("sounds/ui/misc/pingstart.ogg", false);
-			speak("Pinging");
+			add_buffer_item("misc", "Pinging");
+		}
+		if(pinging and pingtimer.elapsed>=pingtimeout)
+		{
+			pinging=false;
+			add_buffer_item("misc", "Ping lost");
 		}
 		if(key_pressed(KEY_F4))
 		{
@@ -151,7 +158,7 @@ void game()
 		if(key_pressed(KEY_SLASH))
 		{
 			string msg=vd.input_box("Chat", "Type a message to send. Begin with a slash to run a command.", "");
-			if(msg!="") send(0, msg, 1, true);
+			if(msg!="") comparse(msg);
 		}
 		if(key_pressed(KEY_ESCAPE))
 		{
