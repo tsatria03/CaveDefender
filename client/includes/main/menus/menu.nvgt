@@ -28,7 +28,7 @@ void mainmenu()
 		{
 			speak("restarting");
 			m.fade_music();
-			restart("cf.exe");
+			restart("cfc.exe");
 		}
 		else if(sel=="ex")
 		{
@@ -285,7 +285,7 @@ void settingsmenu()
 					resetpreffs();
 					speak("restarting");
 					wait(500);
-					restart("cf.exe");
+					restart("cfc.exe");
 				}
 				break;
 			}
