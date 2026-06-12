@@ -27,7 +27,7 @@ speak("This buffer can not be muted.",true);
 else
 {
 muted = !muted;
-spool.play_stationary(muted ? "sounds/ui/buffer/off.ogg" : "sounds/ui/buffer/on.ogg", false);
+spool.play_stationary(muted ? "sounds/ui/misc/toggleoff.ogg" : "sounds/ui/misc/toggleon.ogg", false);
 speak(name + " " + (muted ? "muted" : "unmuted"), true);
 writepreffs();
 }
@@ -257,7 +257,8 @@ buffers[i].items.resize(0);
 buffers[i].bpos = 0;
 }
 }
-void buffer_check_keys()
+
+void buffercheck()
 {
 if (key_repeating(KEY_COMMA))
 {
