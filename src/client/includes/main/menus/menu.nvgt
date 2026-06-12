@@ -1,0 +1,289 @@
+void mainmenu()
+{
+	while(true)
+	{
+		setupmenu(true);
+		m.add_item("connection menu", "connect");
+		m.add_item("preferences menu", "settings");
+		m.add_item("test speakers", "st");
+		m.add_item("restart game", "rx");
+		m.add_item("exit game", "ex");
+		m.intro_text="Main menu. Use your arrow keys to choose an option, then press enter to activate it.";
+		int mres=m.run();
+		string sel=mres<0?"ex":m.selected_item_id;
+		if(sel=="connect")
+		{
+			connectionmenu();
+		}
+		else if(sel=="settings")
+		{
+			settingsmenu();
+		}
+		else if(sel=="st")
+		{
+			m.fade_music();
+			dlgplay("sounds/ui/menu/speaker.ogg");
+		}
+		else if(sel=="rx")
+		{
+			speak("restarting");
+			m.fade_music();
+			restart("cf.exe");
+		}
+		else if(sel=="ex")
+		{
+			speak("exiting");
+			m.fade_music();
+			exit();
+		}
+	}
+}
+void connectionmenu()
+{
+	while(true)
+	{
+		setupmenu(true);
+		m.add_item("sign in", "signin");
+		m.add_item("sign in as", "signinas");
+		m.add_item("new account", "newaccount");
+		m.add_item("back", "back");
+		m.intro_text="Connection menu. Choose how you'd like to sign in.";
+		int mres=m.run();
+		string sel=mres<0?"back":m.selected_item_id;
+		if(sel=="back") return;
+		m.fade_music();
+		if(sel=="signin")
+		{
+			if(!load_last_account())
+			{
+				dlgmessage("There is no saved account on this computer. Please use new account, or sign in as. Press enter to continue.");
+			}
+			else
+			{
+				registering=false;
+				login();
+			}
+		}
+		else if(sel=="signinas")
+		{
+			if(signinasform())
+			{
+				registering=false;
+				login();
+			}
+		}
+		else if(sel=="newaccount")
+		{
+			if(newaccountform())
+			{
+				registering=true;
+				login();
+			}
+		}
+	}
+}
+bool signinasform()
+{
+	form.reset();
+	form.create_window("Sign in as", false);
+	int unamebox=form.create_input_box("Username", "", "", 20);
+	int passbox=form.create_input_box("Password", "", "*");
+	int signbtn=form.create_button("&Sign in", true);
+	int cancelbtn=form.create_button("&Cancel", false, true);
+	form.focus(unamebox);
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		if(form.is_pressed(cancelbtn) or key_pressed(KEY_ESCAPE))
+		{
+			speak("canceled");
+			return false;
+		}
+		if(form.is_pressed(signbtn))
+		{
+			string uname=form.get_text(unamebox).trim_whitespace();
+			string pass=form.get_text(passbox);
+			if(uname=="")
+			{
+				dlgmessage("Please enter a username. Press enter to continue.");
+				continue;
+			}
+			if(pass=="")
+			{
+				dlgmessage("Please enter a password. Press enter to continue.");
+				continue;
+			}
+			name=uname;
+			password=pass;
+			return true;
+		}
+	}
+	return false;
+}
+bool newaccountform()
+{
+	form.reset();
+	form.create_window("New account", false);
+	int unamebox=form.create_input_box("Username", "", "", 20);
+	int passbox=form.create_input_box("Password", "", "*");
+	int genderlist=form.create_list("Gender");
+	form.add_list_item(genderlist, "Male", "male");
+	form.add_list_item(genderlist, "Female", "female");
+	form.add_list_item(genderlist, "Non binary", "nonbinary");
+	form.set_list_position(genderlist, 0);
+	int createbtn=form.create_button("&Create account", true);
+	int cancelbtn=form.create_button("&Cancel", false, true);
+	form.focus(unamebox);
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		if(form.is_pressed(cancelbtn) or key_pressed(KEY_ESCAPE))
+		{
+			speak("canceled");
+			return false;
+		}
+		if(form.is_pressed(createbtn))
+		{
+			string uname=form.get_text(unamebox).trim_whitespace();
+			string pass=form.get_text(passbox);
+			int gpos=form.get_list_position(genderlist);
+			if(uname.length()<3 or uname.length()>20)
+			{
+				dlgmessage("Usernames must be between 3 and 20 characters. Press enter to continue.");
+				continue;
+			}
+			if(string_contains(uname, " ", 1)>-1)
+			{
+				dlgmessage("Usernames cannot contain spaces. Press enter to continue.");
+				continue;
+			}
+			if(pass.length()<4)
+			{
+				dlgmessage("Passwords must be at least 4 characters. Press enter to continue.");
+				continue;
+			}
+			if(string_contains(pass, " ", 1)>-1)
+			{
+				dlgmessage("Passwords cannot contain spaces. Press enter to continue.");
+				continue;
+			}
+			if(gpos<0)
+			{
+				dlgmessage("Please select a gender. Press enter to continue.");
+				continue;
+			}
+			name=uname;
+			password=pass;
+			gender=form.get_list_item_id(genderlist, gpos);
+			return true;
+		}
+	}
+	return false;
+}
+void settingsmenu()
+{
+	while(true)
+	{
+		form.reset();
+		form.create_window("preferences", false);
+		int tabs = form.create_tab_panel("Category");
+		form.add_list_item(tabs, "Game");
+		form.add_list_item(tabs, "Sound");
+		form.add_list_item(tabs, "Menu");
+		form.add_list_item(tabs, "Speech");
+		form.add_list_item(tabs, "General");
+		int tab_game=0, tab_sound=1, tab_menu=2, tab_speech=3, tab_general=4;
+		int bml = form.create_checkbox("Enable bumping into walls repeatedly", wallbump);
+		form.assign_to_tab(bml, tabs, tab_game);
+		int esc = form.create_checkbox("Ask to exit when pressing escape", int_to_bool(gamxit));
+		form.assign_to_tab(esc, tabs, tab_game);
+		int fdv = form.create_checkbox("Enable global volume fading", int_to_bool(fademode));
+		form.assign_to_tab(fdv, tabs, tab_sound);
+		int glh = form.create_checkbox("Enable global HRTF support", hrtf);
+		form.assign_to_tab(glh, tabs, tab_sound);
+		int sdm = form.create_button("Select sound &device. Currently set to " + soundcard);
+		form.assign_to_tab(sdm, tabs, tab_sound);
+		int mrp = form.create_checkbox("Enable wrapping in menus", menuwrap);
+		form.assign_to_tab(mrp, tabs, tab_menu);
+		int flt = form.create_checkbox("Enable first letter navigation in menus", first_letter);
+		form.assign_to_tab(flt, tabs, tab_menu);
+		int spn = form.create_checkbox("Enable position information in menus", speak_menu_position);
+		form.assign_to_tab(spn, tabs, tab_menu);
+		int scr = form.create_checkbox("Enable side scrolling in menus", side_scrolling);
+		form.assign_to_tab(scr, tabs, tab_menu);
+		int ttscfg = form.create_button("&Configure voice");
+		form.assign_to_tab(ttscfg, tabs, tab_speech);
+		int speechtest = form.create_button("&Preview voice");
+		form.assign_to_tab(speechtest, tabs, tab_speech);
+		int rest = form.create_button("&Reset settings");
+		form.assign_to_tab(rest, tabs, tab_general);
+		int preffsok = form.create_button("&save settings", true);
+		int preffscn = form.create_button("&cancel");
+		form.focus(bml);
+		while(true)
+		{
+			wait(5);
+			form.monitor();
+			wallbump = form.is_checked(bml);
+			gamxit = bool_to_int(form.is_checked(esc));
+			fademode = bool_to_int(form.is_checked(fdv));
+			hrtf = form.is_checked(glh);
+			sound_global_hrtf = hrtf;
+			menuwrap = form.is_checked(mrp);
+			first_letter = form.is_checked(flt);
+			speak_menu_position = form.is_checked(spn);
+			side_scrolling = form.is_checked(scr);
+			if(key_pressed(KEY_ESCAPE)) return;
+			if(form.is_pressed(preffscn)) return;
+			if(form.is_pressed(preffsok))
+			{
+				writepreffs();
+				dlgmessage("Settings saved. Press enter to continue.");
+				return;
+			}
+			if(form.is_pressed(ttscfg))
+			{
+				tts_config(tts, true);
+			}
+			if(form.is_pressed(speechtest))
+			{
+				speak("This is your current voice configuration.");
+			}
+			if(form.is_pressed(rest))
+			{
+				setupmenu();
+				m.add_item("yes");
+				m.add_item("no");
+				m.intro_text="Are you sure you want to reset all of your settings?";
+				int mres=m.run();
+				if(mres==0)
+				{
+					if(file_exists(DIRECTORY_APPDATA+"tsatria03/CaveDefender/preffs/settings.cvf")) file_delete(DIRECTORY_APPDATA+"tsatria03/CaveDefender/preffs/settings.cvf");
+					resetpreffs();
+					speak("restarting");
+					wait(500);
+					restart("cf.exe");
+				}
+				break;
+			}
+			if(form.is_pressed(sdm))
+			{
+				string[]@ devices = get_sound_output_devices();
+				devices.remove_at(0);
+				setupmenu();
+				for(uint i=0; i<devices.length(); i++) m.add_item(devices[i], devices[i]);
+				m.intro_text="Choose a sound device you'd like to use in the game.";
+				int dres=m.run();
+				if(dres>=0 and dres<int(devices.length()))
+				{
+					soundcard=devices[dres];
+					sound_output_device=dres+1;
+					dlgmessage("Sound device set to "+soundcard+". Press enter to continue.");
+				}
+				break;
+			}
+		}
+	}
+}
