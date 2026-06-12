@@ -1,3 +1,5 @@
+New in 1.4.
+Voice chat now reaches other players. When you send a voice message it plays for everyone else from your position on the map, so you can hear who is talking and where they are. Whether you also hear your own voice is controlled by the option in the game settings.
 New in 1.3.
 Added two voice chat options to the game settings. You can now choose whether to hear your own voice when sending a voice message, and whether the voice chat key needs to be held down to record or simply toggles recording on and off.
 You can now hear where other players are on the map. Each player gives off a beacon that pulses from their spot, so you can hear them move around you as they walk, and you can turn player beacons on or off at any time with F5.

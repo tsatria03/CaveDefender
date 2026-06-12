@@ -312,6 +312,20 @@ if(i<players.length()-1) list+=", ";
 send(event.peer_id, "there are currently "+players.length()+" players on the server. they are: "+list+".", 0,true);
 }
 }
+if(event.type == event_receive && event.channel == 3)
+{
+int index=get_player_index(event.peer_id);
+if(index>-1)
+{
+string audio=get_event_message();
+string out=players[index].name+" "+players[index].x+" "+players[index].y+"\n"+audio;
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].peer_id==event.peer_id) continue;
+send(players[i].peer_id, out, 3, true);
+}
+}
+}
 if(event.type == event_receive && event.channel == 1)
 {
     string message = get_event_message();
