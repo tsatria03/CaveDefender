@@ -60,7 +60,6 @@ tts.set_volume(100);
 soundcard="Default";
 sound_output_device=1;
 fademode=0;
-wallbump=true;
 hearvoice=true;
 holdkey=1;
 hrtf=false;
