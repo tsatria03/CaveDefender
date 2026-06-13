@@ -619,6 +619,39 @@ else
                         send(event.peer_id, "Usage: /demote <username>", 0, true);
                     }
                 }
+                else if((parsed[0] == "/notifyplayer" || parsed[0] == "/notplayer") && is_staff(players[index].rank))
+                {
+                    if(parsed.length() >= 3)
+                    {
+                        int ti = get_online_index(parsed[1]);
+                        if(ti > -1)
+                        {
+                            string nmsg = string_join(parsed, " ", 2, parsed.length());
+                            send(players[ti].peer_id, "notify "+nmsg, 0, true);
+                            send(event.peer_id, "Notification sent to "+players[ti].name+".", 0, true);
+                        }
+                        else
+                        {
+                            send(event.peer_id, "There is no player named "+parsed[1]+" online.", 0, true);
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /notifyplayer <username> <message>", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/notify" && is_staff(players[index].rank))
+                {
+                    if(parsed.length() >= 2)
+                    {
+                        string nmsg = string_join(parsed, " ", 1, parsed.length());
+                        send(0, "notify "+nmsg, 0, true);
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /notify <message>", 0, true);
+                    }
+                }
             }
         }
         if(messend == true)

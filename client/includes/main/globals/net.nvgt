@@ -217,6 +217,11 @@ void netloop()
 		{
 			add_buffer_item("alerts", message.substr(14));
 		}
+		else if (parsed[0] == "notify" and parsed.length() > 1)
+		{
+			p.play_stationary("sounds/ui/misc/notify"+random(1, 5)+".ogg", false);
+			add_buffer_item("alerts", message.substr(7));
+		}
 		else
 		{
 			speak(message);
