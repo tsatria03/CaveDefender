@@ -1,4 +1,5 @@
 New in 1.5.
+When someone creates a new account and joins for the first time, everyone now hears a sound and is told that the player just created a new account, instead of the usual coming-online message.
 Staff can now send notifications that play an attention sound. Use /notify followed by a message to alert everyone on the server, or /notifyplayer, also /notplayer, followed by a player's name and a message to alert just that one player.
 New in 1.4.
 Administrators and developers can now change a player's rank with the /promote and /demote commands, and there is a new moderator rank that sits below administrator. Anyone whose rank changes is told what they were promoted or demoted from and to.

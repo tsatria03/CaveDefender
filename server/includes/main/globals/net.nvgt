@@ -377,7 +377,8 @@ spawn_player(event.peer_id, parsed[1], string_to_number(parsed[2]));
 index=get_player_index(event.peer_id);
 players[index].rank=get_rank(players[index].name);
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
-send(0, "online "+players[index].name, 0,true);
+if(parsed.length()>3 and parsed[3]=="new") send(0, "newchar "+players[index].name, 0,true);
+else send(0, "online "+players[index].name, 0,true);
 // Tell everyone where the new player is, and tell the new player where everyone else is.
 send(0, "pos "+players[index].name+" "+players[index].x+" "+players[index].y, 0,true);
 for(uint i=0; i<players.length(); i++)
