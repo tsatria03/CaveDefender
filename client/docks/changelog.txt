@@ -1,4 +1,5 @@
 New in 1.5.
+Staff can now silence a player with /mute, followed by their name and, optionally, a number of seconds; leave the time off for an indefinite mute, and lift it early with /unmute. A muted player can't use chat or voice, hears a sound when muted and unmuted, and the mute is remembered even if they leave and come back.
 Moderators can now use /promote and /demote as well, but only to move players to and from the moderator rank; changing anyone to or from a higher rank is still limited to administrators and developers.
 Staff who use /promote and /demote now choose the exact rank to set, for example /demote name administrator, so a player can be moved up or down to a specific rank rather than always dropping straight to player.
 When someone creates a new account and joins for the first time, everyone now hears a sound and is told that the player just created a new account, instead of the usual coming-online message.

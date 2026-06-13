@@ -320,6 +320,17 @@ if(restart_pending and restart_timer.elapsed>=restart_delay)
 restart_pending=false;
 do_restart();
 }
+int64 nowmute = now_epoch();
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].muted and players[i].muteuntil > 0 and nowmute >= players[i].muteuntil)
+{
+clear_mute(players[i].name);
+players[i].muted = false;
+players[i].muteuntil = 0;
+send(players[i].peer_id, "unmuted", 0,true);
+}
+}
 if(key_pressed(KEY_ESCAPE))
 {
 exit();
@@ -379,6 +390,27 @@ players[index].rank=get_rank(players[index].name);
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 if(parsed.length()>3 and parsed[3]=="new") send(0, "newchar "+players[index].name, 0,true);
 else send(0, "online "+players[index].name, 0,true);
+int64 mu = get_mute_until(players[index].name);
+if(mu == 0)
+{
+players[index].muted = true;
+players[index].muteuntil = 0;
+send(event.peer_id, "muted 0", 0,true);
+}
+else if(mu > 0)
+{
+int64 nowsec = now_epoch();
+if(nowsec >= mu)
+{
+clear_mute(players[index].name);
+}
+else
+{
+players[index].muted = true;
+players[index].muteuntil = mu;
+send(event.peer_id, "muted "+int(mu - nowsec), 0,true);
+}
+}
 // Tell everyone where the new player is, and tell the new player where everyone else is.
 send(0, "pos "+players[index].name+" "+players[index].x+" "+players[index].y, 0,true);
 for(uint i=0; i<players.length(); i++)
@@ -440,7 +472,7 @@ do_restart();
 if(event.type == event_receive && event.channel == 3)
 {
 int index=get_player_index(event.peer_id);
-if(index>-1)
+if(index>-1 && !players[index].muted)
 {
 string audio=get_event_message();
 if(audio.length()>maxvoicebytes)
@@ -653,14 +685,87 @@ else
                         send(event.peer_id, "Usage: /notify <message>", 0, true);
                     }
                 }
+                else if(parsed[0] == "/mute" && rank_level(players[index].rank) >= 1)
+                {
+                    if(parsed.length() >= 2)
+                    {
+                        string tname = parsed[1];
+                        if(!account_exists(tname))
+                        {
+                            send(event.peer_id, "There is no account named "+tname+".", 0, true);
+                        }
+                        else if(is_staff(get_rank(tname)))
+                        {
+                            send(event.peer_id, "You can only mute regular players, not staff.", 0, true);
+                        }
+                        else
+                        {
+                            int dur = (parsed.length() >= 3) ? int(string_to_number(parsed[2])) : 0;
+                            if(dur < 0) dur = 0;
+                            int64 until = (dur > 0) ? (now_epoch() + dur) : 0;
+                            set_mute(tname, until);
+                            int ti = get_online_index(tname);
+                            if(ti > -1)
+                            {
+                                players[ti].muted = true;
+                                players[ti].muteuntil = until;
+                                send(players[ti].peer_id, "muted "+dur, 0, true);
+                            }
+                            if(dur > 0) send(event.peer_id, tname+" has been muted for "+dur+" seconds.", 0, true);
+                            else send(event.peer_id, tname+" has been muted indefinitely.", 0, true);
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /mute <username> [seconds, 0 or omitted for indefinite]", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/unmute" && rank_level(players[index].rank) >= 1)
+                {
+                    if(parsed.length() >= 2)
+                    {
+                        string tname = parsed[1];
+                        if(!account_exists(tname))
+                        {
+                            send(event.peer_id, "There is no account named "+tname+".", 0, true);
+                        }
+                        else if(get_mute_until(tname) == -1)
+                        {
+                            send(event.peer_id, tname+" is not muted.", 0, true);
+                        }
+                        else
+                        {
+                            clear_mute(tname);
+                            int ti = get_online_index(tname);
+                            if(ti > -1)
+                            {
+                                players[ti].muted = false;
+                                players[ti].muteuntil = 0;
+                                send(players[ti].peer_id, "unmuted", 0, true);
+                            }
+                            send(event.peer_id, tname+" has been unmuted.", 0, true);
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /unmute <username>", 0, true);
+                    }
+                }
             }
         }
         if(messend == true)
 {
+            if(players[index].muted)
+            {
+                send(event.peer_id, "You are muted.", 0, true);
+            }
+            else
+            {
             players[index].messagetimer.restart();
             string what;
             what += display_name(index) + ": " + message;
             send(0, what, 1, true);
+            }
         }
     }
 }
