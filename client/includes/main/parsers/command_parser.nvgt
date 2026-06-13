@@ -90,6 +90,16 @@ void comparse(string text)
 		if(parsed.length() < 3) { syntax_error("/notifyplayer username message"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/mute")
+	{
+		if(parsed.length() < 2) { syntax_error("/mute username, or /mute username seconds"); return; }
+		send(0, text, 1, true);
+	}
+	else if(base == "/unmute")
+	{
+		if(parsed.length() != 2) { syntax_error("/unmute username"); return; }
+		send(0, text, 1, true);
+	}
 	else
 	{
 		add_buffer_item("misc", "Unknown command: " + parsed[0]);

@@ -39,6 +39,8 @@ data += "salt=" + salt + "\r\n";
 data += "password=" + hash + "\r\n";
 data += "gender=" + gender + "\r\n";
 data += "rank=player\r\n";
+data += "muted=0\r\n";
+data += "muteuntil=0\r\n";
 f.write(data);
 f.close();
 return true;
@@ -101,26 +103,74 @@ bool is_staff(string rank)
 return rank_level(rank) >= 1;
 }
 
-// Persists a new rank to an account's file, preserving its other fields. Used by /promote and
-// /demote. Returns false if the account doesn't exist.
-bool set_rank(string name, string rank)
+// Rewrites an account file from a dictionary, writing every known field (missing keys fall back
+// to defaults, so older files gain new fields on their next write). Used by set_rank/set_mute.
+bool write_account(dictionary@ d)
 {
-if(!account_exists(name)) return false;
-dictionary@ d = load_account(name);
-string nm="", salt="", pass="", gender="";
+string nm="", salt="", pass="", gender="", rank="player", muted="0", until="0";
 d.get("name", nm);
 d.get("salt", salt);
 d.get("password", pass);
 d.get("gender", gender);
+d.get("rank", rank);
+d.get("muted", muted);
+d.get("muteuntil", until);
 file f;
-if(!f.open(account_path(name), "wb")) return false;
+if(!f.open(account_path(nm), "wb")) return false;
 string data;
 data  = "name=" + nm + "\r\n";
 data += "salt=" + salt + "\r\n";
 data += "password=" + pass + "\r\n";
 data += "gender=" + gender + "\r\n";
 data += "rank=" + rank + "\r\n";
+data += "muted=" + muted + "\r\n";
+data += "muteuntil=" + until + "\r\n";
 f.write(data);
 f.close();
 return true;
+}
+// Persists a new rank to an account's file, preserving its other fields. Used by /promote and /demote.
+bool set_rank(string name, string rank)
+{
+if(!account_exists(name)) return false;
+dictionary@ d = load_account(name);
+d.set("rank", rank);
+return write_account(d);
+}
+// Current time as whole seconds since the Unix epoch, used for absolute mute expiry. NVGT's
+// Poco-backed timestamp converts implicitly to int64 microseconds since 1970 (UTC).
+int64 now_epoch()
+{
+timestamp ts;
+int64 micros = ts;
+return micros / 1000000;
+}
+// Mute state: -1 = not muted, 0 = muted indefinitely, >0 = absolute epoch the mute expires at.
+int64 get_mute_until(string name)
+{
+if(!account_exists(name)) return -1;
+dictionary@ d = load_account(name);
+string muted="0", until="0";
+d.get("muted", muted);
+d.get("muteuntil", until);
+if(muted != "1") return -1;
+return int64(string_to_number(until));
+}
+// Persists a mute (until = 0 for indefinite, otherwise an absolute epoch from now_epoch()).
+bool set_mute(string name, int64 until)
+{
+if(!account_exists(name)) return false;
+dictionary@ d = load_account(name);
+d.set("muted", "1");
+d.set("muteuntil", "" + until);
+return write_account(d);
+}
+// Clears any mute on an account.
+bool clear_mute(string name)
+{
+if(!account_exists(name)) return false;
+dictionary@ d = load_account(name);
+d.set("muted", "0");
+d.set("muteuntil", "0");
+return write_account(d);
 }

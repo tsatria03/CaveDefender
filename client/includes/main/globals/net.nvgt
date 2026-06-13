@@ -189,11 +189,6 @@ void netloop()
 			connected = false;
 			net.disconnect_peer_forcefully(serverpeer);
 		}
-		else if (parsed[0] == "kill")
-		{
-			send(0, "disconnect", 0, true);
-			exit();
-		}
 		else if (parsed[0] == "pos" and parsed.length() > 3)
 		{
 			if(parsed[1] != name)
@@ -230,6 +225,18 @@ void netloop()
 		{
 			p.play_stationary("sounds/ui/misc/notify"+random(1, 5)+".ogg", false);
 			add_buffer_item("alerts", message.substr(7));
+		}
+		else if (parsed[0] == "muted" and parsed.length() > 1)
+		{
+			p.play_stationary("sounds/ui/misc/playermute.ogg", false);
+			int rem = string_to_number(parsed[1]);
+			if(rem > 0) add_buffer_item("alerts", "You have been muted for " + rem + " seconds.");
+			else add_buffer_item("alerts", "You have been muted indefinitely.");
+		}
+		else if (parsed[0] == "unmuted")
+		{
+			p.play_stationary("sounds/ui/misc/playerspeak.ogg", false);
+			add_buffer_item("alerts", "You can speak again.");
 		}
 		else
 		{
