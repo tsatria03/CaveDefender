@@ -157,6 +157,25 @@ if(!verify_password(name, password))
 send(event.peer_id, "error: incorrect password.", 0,true);
 return;
 }
+int64 bu = get_ban_until(name);
+if(bu == 0)
+{
+send(event.peer_id, "error: you are banned from this server.", 0,true);
+return;
+}
+else if(bu > 0)
+{
+int64 nowsec = now_epoch();
+if(nowsec >= bu)
+{
+clear_ban(name);
+}
+else
+{
+send(event.peer_id, "error: you are banned for another "+int(bu - nowsec)+" seconds.", 0,true);
+return;
+}
+}
 bool cont=true;
 for(uint i=0; i<players.length(); i++)
 {
@@ -542,7 +561,7 @@ else
                         send(event.peer_id, "Pm failed. User not found", 0, true);
                     }
                 }
-                else if(parsed[0] == "/kick" && is_staff(players[index].rank))
+                else if(parsed[0] == "/kick" && rank_level(players[index].rank) >= 2)
                 {
                     if(parsed.length() >= 2)
                     {
@@ -749,6 +768,74 @@ else
                     else
                     {
                         send(event.peer_id, "Usage: /unmute <username>", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/ban" && rank_level(players[index].rank) >= 2)
+                {
+                    if(parsed.length() >= 2)
+                    {
+                        string tname = parsed[1];
+                        if(!account_exists(tname))
+                        {
+                            send(event.peer_id, "There is no account named "+tname+".", 0, true);
+                        }
+                        else if(string_to_lower_case(tname) == string_to_lower_case(players[index].name))
+                        {
+                            send(event.peer_id, "You can't ban yourself.", 0, true);
+                        }
+                        else if(rank_level(get_rank(tname)) > rank_level(players[index].rank))
+                        {
+                            send(event.peer_id, "You can't ban someone above your own rank.", 0, true);
+                        }
+                        else
+                        {
+                            int dur = (parsed.length() >= 3) ? int(string_to_number(parsed[2])) : 0;
+                            if(dur < 0) dur = 0;
+                            int64 until = (dur > 0) ? (now_epoch() + dur) : 0;
+                            set_ban(tname, until);
+                            int ti = get_online_index(tname);
+                            if(ti > -1)
+                            {
+                                int tpeer = players[ti].peer_id;
+                                string realname = players[ti].name;
+                                players.remove_at(ti);
+                                send(tpeer, "banned "+dur, 0, true);
+                                for(uint i=0; i<players.length(); i++)
+                                {
+                                    send(players[i].peer_id, "banannounce "+realname, 0, true);
+                                }
+                            }
+                            if(dur > 0) send(event.peer_id, tname+" has been banned for "+dur+" seconds.", 0, true);
+                            else send(event.peer_id, tname+" has been banned permanently.", 0, true);
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /ban <username>, or /ban <username> seconds", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/unban" && rank_level(players[index].rank) >= 2)
+                {
+                    if(parsed.length() >= 2)
+                    {
+                        string tname = parsed[1];
+                        if(!account_exists(tname))
+                        {
+                            send(event.peer_id, "There is no account named "+tname+".", 0, true);
+                        }
+                        else if(get_ban_until(tname) == -1)
+                        {
+                            send(event.peer_id, tname+" is not banned.", 0, true);
+                        }
+                        else
+                        {
+                            clear_ban(tname);
+                            send(event.peer_id, tname+" has been unbanned.", 0, true);
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /unban <username>", 0, true);
                     }
                 }
             }

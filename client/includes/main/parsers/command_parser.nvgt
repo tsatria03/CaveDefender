@@ -100,6 +100,16 @@ void comparse(string text)
 		if(parsed.length() != 2) { syntax_error("/unmute username"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/ban")
+	{
+		if(parsed.length() < 2) { syntax_error("/ban username, or /ban username seconds"); return; }
+		send(0, text, 1, true);
+	}
+	else if(base == "/unban")
+	{
+		if(parsed.length() != 2) { syntax_error("/unban username"); return; }
+		send(0, text, 1, true);
+	}
 	else
 	{
 		add_buffer_item("misc", "Unknown command: " + parsed[0]);

@@ -41,6 +41,8 @@ data += "gender=" + gender + "\r\n";
 data += "rank=player\r\n";
 data += "muted=0\r\n";
 data += "muteuntil=0\r\n";
+data += "banned=0\r\n";
+data += "banuntil=0\r\n";
 f.write(data);
 f.close();
 return true;
@@ -107,14 +109,16 @@ return rank_level(rank) >= 1;
 // to defaults, so older files gain new fields on their next write). Used by set_rank/set_mute.
 bool write_account(dictionary@ d)
 {
-string nm="", salt="", pass="", gender="", rank="player", muted="0", until="0";
+string nm="", salt="", pass="", gender="", rank="player", muted="0", muteuntil="0", banned="0", banuntil="0";
 d.get("name", nm);
 d.get("salt", salt);
 d.get("password", pass);
 d.get("gender", gender);
 d.get("rank", rank);
 d.get("muted", muted);
-d.get("muteuntil", until);
+d.get("muteuntil", muteuntil);
+d.get("banned", banned);
+d.get("banuntil", banuntil);
 file f;
 if(!f.open(account_path(nm), "wb")) return false;
 string data;
@@ -124,7 +128,9 @@ data += "password=" + pass + "\r\n";
 data += "gender=" + gender + "\r\n";
 data += "rank=" + rank + "\r\n";
 data += "muted=" + muted + "\r\n";
-data += "muteuntil=" + until + "\r\n";
+data += "muteuntil=" + muteuntil + "\r\n";
+data += "banned=" + banned + "\r\n";
+data += "banuntil=" + banuntil + "\r\n";
 f.write(data);
 f.close();
 return true;
@@ -172,5 +178,34 @@ if(!account_exists(name)) return false;
 dictionary@ d = load_account(name);
 d.set("muted", "0");
 d.set("muteuntil", "0");
+return write_account(d);
+}
+// Ban state: -1 = not banned, 0 = banned permanently, >0 = absolute epoch the ban expires at.
+int64 get_ban_until(string name)
+{
+if(!account_exists(name)) return -1;
+dictionary@ d = load_account(name);
+string banned="0", until="0";
+d.get("banned", banned);
+d.get("banuntil", until);
+if(banned != "1") return -1;
+return int64(string_to_number(until));
+}
+// Persists a ban (until = 0 for permanent, otherwise an absolute epoch from now_epoch()).
+bool set_ban(string name, int64 until)
+{
+if(!account_exists(name)) return false;
+dictionary@ d = load_account(name);
+d.set("banned", "1");
+d.set("banuntil", "" + until);
+return write_account(d);
+}
+// Clears any ban on an account.
+bool clear_ban(string name)
+{
+if(!account_exists(name)) return false;
+dictionary@ d = load_account(name);
+d.set("banned", "0");
+d.set("banuntil", "0");
 return write_account(d);
 }
