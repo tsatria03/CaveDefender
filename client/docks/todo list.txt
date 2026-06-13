@@ -2,13 +2,18 @@
 
 ****Unfinished. Build the actual cave defender gameplay, where players defend the cave.
 ****Unfinished. Expand the map system beyond the current small starter cave.
-****Unfinished. Add staff moderation commands, such as kick, ban, mute, promote, and demote.
+****Unfinished. Add the staff moderation commands to ban and mute players.
 ****Unfinished. Implement a way to submit bug reports, feature requests, and other game feedback.
 ****Unfinished. Add a map uploader and downloader using the game engine's transfer helpers.
 
 ##These are the things that are already finished from earlier versions of the game.
 
-**Finished. Add persistent player ranks of player, admin, and developer, with staff names shown in chat, private messages, and the who list.
+**Finished. Add staff commands to kick a player, and to promote or demote players between the moderator, administrator, and developer ranks.
+**Finished. Add the staff command to list every moderator, administrator, and developer, online or offline.
+**Finished. Add staff notification commands to alert everyone, or a single player, with a sound.
+**Finished. Add staff commands to restart or shut down the server, and send players back to the connection menu whenever the server goes offline.
+**Finished. Announce when a player creates a new account and joins for the first time.
+**Finished. Add persistent player ranks of player, moderator, administrator, and developer, with staff names shown in chat, private messages, and the staff and who lists.
 **Finished. Reject signing in when your game version does not match the server's.
 **Finished. Add networked voice chat that plays for other players from your spot on the map.
 **Finished. Add voice chat options for hearing your own voice and for holding the voice key to record.
