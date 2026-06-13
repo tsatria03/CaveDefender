@@ -70,6 +70,11 @@ void comparse(string text)
 		if(parsed.length() != 1) { syntax_error("/exit"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/kick")
+	{
+		if(parsed.length() != 2) { syntax_error("/kick username"); return; }
+		send(0, text, 1, true);
+	}
 	else
 	{
 		add_buffer_item("misc", "Unknown command: " + parsed[0]);

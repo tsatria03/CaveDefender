@@ -510,6 +510,32 @@ else
                         send(event.peer_id, "Pm failed. User not found", 0, true);
                     }
                 }
+                else if(parsed[0] == "/kick" && is_staff(players[index].rank))
+                {
+                    if(parsed.length() >= 2)
+                    {
+                        int kick_index = get_player_index_from(parsed[1]);
+                        if(kick_index > -1)
+                        {
+                            string kname = players[kick_index].name;
+                            int kpeer = players[kick_index].peer_id;
+                            players.remove_at(kick_index);
+                            send(kpeer, "kicked", 0, true);
+                            for(uint i=0; i<players.length(); i++)
+                            {
+                                send(players[i].peer_id, "kickannounce "+kname, 0, true);
+                            }
+                        }
+                        else
+                        {
+                            send(event.peer_id, "There is no player named "+parsed[1]+" online.", 0, true);
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /kick <username>", 0, true);
+                    }
+                }
             }
         }
         if(messend == true)
