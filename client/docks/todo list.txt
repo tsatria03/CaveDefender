@@ -1,13 +1,11 @@
 ####These are the things that need to be finished for future versions of the game.
 
 ****Unfinished. Build the actual cave defender gameplay, where players defend the cave.
-****Unfinished. Expand the map system beyond the current small starter cave.
-****Unfinished. Add the staff moderation command to ban players.
-****Unfinished. Implement a way to submit bug reports, feature requests, and other game feedback.
-****Unfinished. Add a map uploader and downloader using the game engine's transfer helpers.
+****Unfinished. Expand the map system beyond the current small starter lobby.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add staff commands to ban and unban players, for a set time or permanently, saved so the ban blocks them from signing back in.
 **Finished. Add staff commands to mute and unmute a player's chat and voice, for a set time or indefinitely, saved so the mute survives reconnects and restarts.
 **Finished. Add staff commands to kick a player, and to promote or demote players between the moderator, administrator, and developer ranks.
 **Finished. Add the staff command to list every moderator, administrator, and developer, online or offline.
