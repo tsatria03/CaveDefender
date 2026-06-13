@@ -243,30 +243,36 @@ wait(5);
 }
 exit();
 }
-// Case-insensitive check of whether a named account is currently connected.
-bool is_online(string name)
+// Case-insensitive roster lookup by name; returns -1 if the player isn't connected.
+int get_online_index(string name)
 {
 string low=string_to_lower_case(name);
 for(uint i=0; i<players.length(); i++)
 {
-if(string_to_lower_case(players[i].name)==low) return true;
+if(string_to_lower_case(players[i].name)==low) return i;
 }
-return false;
+return -1;
+}
+// Case-insensitive check of whether a named account is currently connected.
+bool is_online(string name)
+{
+return get_online_index(name)>-1;
 }
 // The capitalized, expanded label shown for a rank in the /staff listing.
 string staff_label(string rank)
 {
 if(rank=="developer") return "Developer";
-if(rank=="admin") return "Administrator";
+if(rank=="administrator") return "Administrator";
+if(rank=="moderator") return "Moderator";
 return rank;
 }
-// Scans every account on disk for staff (admin/developer) and builds the /staff sentence,
-// listing developers first (top of the hierarchy), then administrators, each tagged
-// (Online) or (Offline) based on the current roster.
+// Scans every account on disk for staff and builds the /staff sentence, listing top of the
+// hierarchy first (developers, then administrators, then moderators), each tagged (Online) or
+// (Offline) based on the current roster.
 string build_staff_list()
 {
 string[] files=find_files("data/players/*.usr");
-string[] devs, admins;
+string[] devs, admins, mods;
 for(uint i=0; i<files.length(); i++)
 {
 string acct=files[i].replace(".usr", "", true);
@@ -279,11 +285,13 @@ if(!is_staff(rank)) continue;
 string status=is_online(dispname)? "Online" : "Offline";
 string entry=staff_label(rank)+" "+dispname+" ("+status+")";
 if(rank=="developer") devs.insert_last(entry);
-else admins.insert_last(entry);
+else if(rank=="administrator") admins.insert_last(entry);
+else mods.insert_last(entry);
 }
 string[] all;
 for(uint i=0; i<devs.length(); i++) all.insert_last(devs[i]);
 for(uint i=0; i<admins.length(); i++) all.insert_last(admins[i]);
+for(uint i=0; i<mods.length(); i++) all.insert_last(mods[i]);
 int total=int(all.length());
 if(total==0) return "There are no staff members on this game.";
 string list;
@@ -413,7 +421,7 @@ else if(parsed[0]=="staff" and index>-1)
 {
 send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
 }
-else if(parsed[0]=="restart" and index>-1 and is_staff(players[index].rank) and parsed.length()>1)
+else if(parsed[0]=="restart" and index>-1 and rank_level(players[index].rank)>=2 and parsed.length()>1)
 {
 int secs=string_to_number(parsed[1]);
 if(secs<30) secs=30;
@@ -423,7 +431,7 @@ restart_pending=true;
 restart_delay=secs*1000;
 restart_timer.restart();
 }
-else if(parsed[0]=="fastrestart" and index>-1 and is_staff(players[index].rank))
+else if(parsed[0]=="fastrestart" and index>-1 and rank_level(players[index].rank)>=2)
 {
 do_restart();
 }
@@ -469,7 +477,7 @@ if(event.type == event_receive && event.channel == 1)
 {
                 messend = false;
                 string[] parsed = string_split(message, " ", true);
-                if(parsed[0] == "/exit" && is_staff(players[index].rank))
+                if(parsed[0] == "/exit" && rank_level(players[index].rank)>=2)
 {
                     send(0, "The server is going down for maintenance. Exiting all players...", 0, true);
                     wait(3000);
@@ -478,7 +486,7 @@ if(event.type == event_receive && event.channel == 1)
                     speak("Exiting server");
                     exit();
                 }
-else if(parsed[0] == "/motd" && is_staff(players[index].rank))
+else if(parsed[0] == "/motd" && rank_level(players[index].rank)>=2)
 {
     if(parsed.length() > 1)
     {
@@ -534,6 +542,81 @@ else
                     else
                     {
                         send(event.peer_id, "Usage: /kick <username>", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/promote" && rank_level(players[index].rank) >= 2)
+                {
+                    if(parsed.length() >= 3)
+                    {
+                        string tname = parsed[1];
+                        string newrank = string_to_lower_case(parsed[2]);
+                        if(newrank != "moderator" && newrank != "administrator" && newrank != "developer")
+                        {
+                            send(event.peer_id, "Invalid rank. Choose moderator, administrator, or developer.", 0, true);
+                        }
+                        else if(rank_level(newrank) > rank_level(players[index].rank))
+                        {
+                            send(event.peer_id, "You can't promote someone above your own rank.", 0, true);
+                        }
+                        else if(!account_exists(tname))
+                        {
+                            send(event.peer_id, "There is no account named "+tname+".", 0, true);
+                        }
+                        else if(rank_level(get_rank(tname)) >= rank_level(players[index].rank))
+                        {
+                            send(event.peer_id, "You can't change the rank of someone at or above your own rank.", 0, true);
+                        }
+                        else
+                        {
+                            string oldrank = get_rank(tname);
+                            set_rank(tname, newrank);
+                            int ti = get_online_index(tname);
+                            if(ti > -1)
+                            {
+                                players[ti].rank = newrank;
+                                send(players[ti].peer_id, "rankchange promoted "+oldrank+" "+newrank, 0, true);
+                            }
+                            send(event.peer_id, tname+" has been promoted to "+newrank+".", 0, true);
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /promote <username> <moderator, administrator, or developer>", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/demote" && rank_level(players[index].rank) >= 2)
+                {
+                    if(parsed.length() >= 2)
+                    {
+                        string tname = parsed[1];
+                        if(!account_exists(tname))
+                        {
+                            send(event.peer_id, "There is no account named "+tname+".", 0, true);
+                        }
+                        else if(!is_staff(get_rank(tname)))
+                        {
+                            send(event.peer_id, tname+" is not a staff member.", 0, true);
+                        }
+                        else if(rank_level(get_rank(tname)) >= rank_level(players[index].rank))
+                        {
+                            send(event.peer_id, "You can't demote someone at or above your own rank.", 0, true);
+                        }
+                        else
+                        {
+                            string oldrank = get_rank(tname);
+                            set_rank(tname, "player");
+                            int ti = get_online_index(tname);
+                            if(ti > -1)
+                            {
+                                players[ti].rank = "player";
+                                send(players[ti].peer_id, "rankchange demoted "+oldrank+" player", 0, true);
+                            }
+                            send(event.peer_id, tname+" has been demoted to player.", 0, true);
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /demote <username>", 0, true);
                     }
                 }
             }

@@ -1,4 +1,5 @@
 New in 1.4.
+Administrators and developers can now change a player's rank with the /promote and /demote commands, and there is a new moderator rank that sits below administrator. Anyone whose rank changes is told what they were promoted or demoted from and to.
 Staff can now remove a player with the /kick command, followed by that player's name. The kicked player is told they've been kicked and returned to the connection menu, and everyone else is told who was kicked.
 If the server ever goes offline, whether from one of those commands or an unexpected drop, the game now notices, tells you the server has gone offline, and returns you to the connection menu so you can sign back in once it is up again.
 Staff can now shut the server down with two new commands. Use /restart, or /rt, followed by a number of seconds from 30 to 3600 to warn everyone with a countdown that announces the minutes or seconds remaining, or use /fastrestart, or /ft, to shut down right away with no warning.

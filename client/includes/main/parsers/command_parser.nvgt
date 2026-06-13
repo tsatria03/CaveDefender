@@ -75,6 +75,16 @@ void comparse(string text)
 		if(parsed.length() != 2) { syntax_error("/kick username"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/promote")
+	{
+		if(parsed.length() != 3) { syntax_error("/promote username rank"); return; }
+		send(0, text, 1, true);
+	}
+	else if(base == "/demote")
+	{
+		if(parsed.length() != 2) { syntax_error("/demote username"); return; }
+		send(0, text, 1, true);
+	}
 	else
 	{
 		add_buffer_item("misc", "Unknown command: " + parsed[0]);

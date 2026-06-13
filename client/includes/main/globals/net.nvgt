@@ -200,8 +200,14 @@ void netloop()
 		else if (parsed[0] == "yourrank" and parsed.length() > 1)
 		{
 			myrank = parsed[1];
-			if(myrank == "admin") add_buffer_item("misc", "You are an admin now.");
-			else if(myrank == "developer") add_buffer_item("misc", "You are a developer now.");
+			if(myrank == "moderator") add_buffer_item("misc", "You are a moderator.");
+			else if(myrank == "administrator") add_buffer_item("misc", "You are an administrator.");
+			else if(myrank == "developer") add_buffer_item("misc", "You are a developer.");
+		}
+		else if (parsed[0] == "rankchange" and parsed.length() > 3)
+		{
+			myrank = parsed[3];
+			add_buffer_item("misc", "You have been " + parsed[1] + " from " + parsed[2] + " to " + parsed[3] + ".");
 		}
 		else if (parsed[0] == "stafflist")
 		{

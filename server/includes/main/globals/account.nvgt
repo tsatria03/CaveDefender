@@ -1,8 +1,8 @@
 // Account storage. One account per file at data/players/<username>.usr (key=value text).
 // Passwords are never stored in plaintext: each account gets a random salt and we store
-// the SHA-256 hash of salt+password. Each account also stores a rank: player, admin, or
-// developer (mutually exclusive). A player has no special powers; admin and developer are
-// staff (see is_staff).
+// the SHA-256 hash of salt+password. Each account also stores a rank: player, moderator,
+// administrator, or developer (mutually exclusive, full words only). A player has no special
+// powers; moderator, administrator, and developer are staff (see is_staff/rank_level).
 
 string account_path(string name)
 {
@@ -85,8 +85,42 @@ d.get("rank", rank);
 return rank;
 }
 
-// Staff = admin or developer. Use this to gate moderation/admin-only commands.
+// Rank hierarchy as a number, used to gate commands by minimum level.
+// player(0) < moderator(1) < administrator(2) < developer(3).
+int rank_level(string rank)
+{
+if(rank=="developer") return 3;
+if(rank=="administrator") return 2;
+if(rank=="moderator") return 1;
+return 0;
+}
+// Staff = any rank above player (moderator, administrator, developer). Used for DISPLAY
+// (chat-name prefix, /staff listing, the "you are now..." notice), not command gating.
 bool is_staff(string rank)
 {
-return rank=="admin" or rank=="developer";
+return rank_level(rank) >= 1;
+}
+
+// Persists a new rank to an account's file, preserving its other fields. Used by /promote and
+// /demote. Returns false if the account doesn't exist.
+bool set_rank(string name, string rank)
+{
+if(!account_exists(name)) return false;
+dictionary@ d = load_account(name);
+string nm="", salt="", pass="", gender="";
+d.get("name", nm);
+d.get("salt", salt);
+d.get("password", pass);
+d.get("gender", gender);
+file f;
+if(!f.open(account_path(name), "wb")) return false;
+string data;
+data  = "name=" + nm + "\r\n";
+data += "salt=" + salt + "\r\n";
+data += "password=" + pass + "\r\n";
+data += "gender=" + gender + "\r\n";
+data += "rank=" + rank + "\r\n";
+f.write(data);
+f.close();
+return true;
 }
