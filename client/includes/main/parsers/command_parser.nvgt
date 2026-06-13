@@ -82,7 +82,7 @@ void comparse(string text)
 	}
 	else if(base == "/demote")
 	{
-		if(parsed.length() != 2) { syntax_error("/demote username"); return; }
+		if(parsed.length() != 3) { syntax_error("/demote username rank"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/notify")

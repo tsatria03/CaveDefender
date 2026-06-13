@@ -563,9 +563,13 @@ else
                         {
                             send(event.peer_id, "There is no account named "+tname+".", 0, true);
                         }
-                        else if(rank_level(get_rank(tname)) >= rank_level(players[index].rank))
+                        else if(rank_level(get_rank(tname)) > rank_level(players[index].rank))
                         {
-                            send(event.peer_id, "You can't change the rank of someone at or above your own rank.", 0, true);
+                            send(event.peer_id, "You can't change the rank of someone above your own rank.", 0, true);
+                        }
+                        else if(rank_level(newrank) <= rank_level(get_rank(tname)))
+                        {
+                            send(event.peer_id, tname+" is already that rank or higher. Use /demote to lower a rank.", 0, true);
                         }
                         else
                         {
@@ -587,37 +591,42 @@ else
                 }
                 else if(parsed[0] == "/demote" && rank_level(players[index].rank) >= 2)
                 {
-                    if(parsed.length() >= 2)
+                    if(parsed.length() >= 3)
                     {
                         string tname = parsed[1];
-                        if(!account_exists(tname))
+                        string newrank = string_to_lower_case(parsed[2]);
+                        if(newrank != "player" && newrank != "moderator" && newrank != "administrator")
+                        {
+                            send(event.peer_id, "Invalid rank. Choose player, moderator, or administrator.", 0, true);
+                        }
+                        else if(!account_exists(tname))
                         {
                             send(event.peer_id, "There is no account named "+tname+".", 0, true);
                         }
-                        else if(!is_staff(get_rank(tname)))
+                        else if(rank_level(get_rank(tname)) > rank_level(players[index].rank))
                         {
-                            send(event.peer_id, tname+" is not a staff member.", 0, true);
+                            send(event.peer_id, "You can't demote someone above your own rank.", 0, true);
                         }
-                        else if(rank_level(get_rank(tname)) >= rank_level(players[index].rank))
+                        else if(rank_level(newrank) >= rank_level(get_rank(tname)))
                         {
-                            send(event.peer_id, "You can't demote someone at or above your own rank.", 0, true);
+                            send(event.peer_id, tname+" is already that rank or lower. Use /promote to raise a rank.", 0, true);
                         }
                         else
                         {
                             string oldrank = get_rank(tname);
-                            set_rank(tname, "player");
+                            set_rank(tname, newrank);
                             int ti = get_online_index(tname);
                             if(ti > -1)
                             {
-                                players[ti].rank = "player";
-                                send(players[ti].peer_id, "rankchange demoted "+oldrank+" player", 0, true);
+                                players[ti].rank = newrank;
+                                send(players[ti].peer_id, "rankchange demoted "+oldrank+" "+newrank, 0, true);
                             }
-                            send(event.peer_id, tname+" has been demoted to player.", 0, true);
+                            send(event.peer_id, tname+" has been demoted to "+newrank+".", 0, true);
                         }
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /demote <username>", 0, true);
+                        send(event.peer_id, "Usage: /demote <username> <player, moderator, or administrator>", 0, true);
                     }
                 }
                 else if((parsed[0] == "/notifyplayer" || parsed[0] == "/notplayer") && is_staff(players[index].rank))
