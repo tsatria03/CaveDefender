@@ -199,8 +199,6 @@ void settingsmenu()
 		form.assign_to_tab(srv, tabs, tab_general);
 		int prt = form.create_button("Change server port. Currently set to " + port);
 		form.assign_to_tab(prt, tabs, tab_general);
-		int bml = form.create_checkbox("Enable bumping into walls repeatedly", wallbump);
-		form.assign_to_tab(bml, tabs, tab_game);
 		int hvc = form.create_checkbox("Hear your voice when sending voice messages", hearvoice);
 		form.assign_to_tab(hvc, tabs, tab_game);
 		int hldk = form.create_checkbox("Require holding of voicechat key", int_to_bool(holdkey));
@@ -234,7 +232,6 @@ void settingsmenu()
 		{
 			wait(5);
 			form.monitor();
-			wallbump = form.is_checked(bml);
 			hearvoice = form.is_checked(hvc);
 			holdkey = bool_to_int(form.is_checked(hldk));
 			gamxit = bool_to_int(form.is_checked(esc));

@@ -3,23 +3,14 @@ const int Right=2;
 const int Forward=3;
 const int Backward=4;
 
-bool wallbump=true, wall_hit_once = false;
-
-double minx, maxx, miny, maxy, minz, maxz;
 double me_rotation=0;
 
-int tileslot, wallslot;
 int facing=Right;
 
 int movetime;
 int runtime=100, walktime=200;
-string mapdata;
-string mapname;
 
-file mapper;
-sound_pool mpool;
-
-timer movetimer, runtimer, walktimer;
+timer movetimer;
 vector me(1, 1);
 
 string gmt()
