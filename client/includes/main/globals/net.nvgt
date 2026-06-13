@@ -232,6 +232,20 @@ void netloop()
 		{
 			add_buffer_item("misc", message.substr(10));
 		}
+		else if (parsed[0] == "helptext")
+		{
+			int nl = string_contains(message, "\n", 1);
+			if(nl > 0)
+			{
+				string which = message.substr(9, nl - 9);
+				string content = message.substr(nl + 1);
+				dockread(which + " help.txt", content);
+			}
+		}
+		else if (parsed[0] == "showmenu")
+		{
+			show_server_menu(message);
+		}
 		else if (parsed[0] == "restartnotice")
 		{
 			add_buffer_item("alerts", message.substr(14));

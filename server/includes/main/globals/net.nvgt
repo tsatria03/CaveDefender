@@ -473,6 +473,30 @@ else if(parsed[0]=="staff" and index>-1)
 {
 send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
 }
+else if(parsed[0]=="help" and index>-1 and parsed.length()>1)
+{
+string which=string_to_lower_case(parsed[1]);
+if(which!="player" and which!="staff")
+{
+send(event.peer_id, "No help page named "+parsed[1]+". Try player or staff.", 0,true);
+}
+else if(!file_exists("docks/"+which+" help.txt"))
+{
+send(event.peer_id, "The "+which+" help page is missing on the server.", 0,true);
+}
+else
+{
+file hf;
+hf.open("docks/"+which+" help.txt", "rb");
+string content=hf.read();
+hf.close();
+send(event.peer_id, "helptext "+which+"\n"+content, 0,true);
+}
+}
+else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
+{
+on_menu_result(index, parsed[1], int(string_to_number(parsed[2])));
+}
 else if(parsed[0]=="restart" and index>-1 and rank_level(players[index].rank)>=2 and parsed.length()>1)
 {
 int secs=string_to_number(parsed[1]);

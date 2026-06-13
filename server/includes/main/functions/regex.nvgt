@@ -1,7 +1,0 @@
-// Returns true if "message" matches the PCRE pattern "pattern".
-// Uses NVGT's built-in regexp class (no external filter.dll/regex.dll required).
-bool regex(string message, string pattern)
-{
-	regexp re(pattern);
-	return re.match(message);
-}

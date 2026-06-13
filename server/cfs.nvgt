@@ -1,12 +1,5 @@
 #include"includes/includes.nvgt"
 
-int port=25562;
-int userlimit=200;
-string version="1.5";
-string motd = "Welcome to the server!";
-timer svruptimer;
-file f;
-
 void main()
 {
 svruptimer.restart();
