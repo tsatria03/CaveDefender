@@ -27,7 +27,7 @@ speak("This buffer can not be muted.",true);
 else
 {
 muted = !muted;
-spool.play_stationary(muted ? "sounds/ui/misc/toggleoff.ogg" : "sounds/ui/misc/toggleon.ogg", false);
+spool.play_stationary(muted ? "sounds/interface/misc/toggleoff.ogg" : "sounds/interface/misc/toggleon.ogg", false);
 speak(name + " " + (muted ? "muted" : "unmuted"), true);
 writepreffs();
 }
@@ -134,7 +134,7 @@ void next_buffer()
 {
 if(bufferpos>=buffers.length()-1) return;
 bufferpos++;
-spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
+spool.play_stationary_extended("sounds/interface/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
 string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
 if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
 speak(binfo, true);
@@ -143,7 +143,7 @@ void previous_buffer()
 {
 if(bufferpos<=0) return;
 bufferpos--;
-spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
+spool.play_stationary_extended("sounds/interface/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
 string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
 if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
 speak(binfo, true);
@@ -152,7 +152,7 @@ void top_buffer()
 {
 if(bufferpos==0) return;
 bufferpos=0;
-spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
+spool.play_stationary_extended("sounds/interface/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
 string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
 if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
 speak(binfo, true);
@@ -161,7 +161,7 @@ void bottom_buffer()
 {
 if(bufferpos==int(buffers.length()-1)) return;
 bufferpos=buffers.length()-1;
-spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
+spool.play_stationary_extended("sounds/interface/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
 string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
 if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
 speak(binfo, true);
@@ -183,7 +183,7 @@ else
 {
 buffers[bufferpos].bpos++;
 }
-spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
+spool.play_stationary_extended("sounds/interface/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
 void previous_buffer_item()
@@ -203,7 +203,7 @@ else
 {
 buffers[bufferpos].bpos--;
 }
-spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
+spool.play_stationary_extended("sounds/interface/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
 void top_buffer_item()
@@ -216,7 +216,7 @@ return;
 }
 if(buffers[bufferpos].bpos==0) return;
 buffers[bufferpos].bpos=0;
-spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
+spool.play_stationary_extended("sounds/interface/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
 void bottom_buffer_item()
@@ -229,7 +229,7 @@ return;
 }
 if(buffers[bufferpos].bpos==int(buffers[bufferpos].items.length()-1)) return;
 buffers[bufferpos].bpos=buffers[bufferpos].items.length()-1;
-spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
+spool.play_stationary_extended("sounds/interface/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
 void copy_buffer_item()

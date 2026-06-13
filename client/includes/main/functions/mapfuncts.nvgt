@@ -1,0 +1,15 @@
+// The spoken name of a facing direction (the Left/Right/Forward/Backward consts from map.nvgt),
+// so readouts say "left" instead of "1".
+string facing_name(int f)
+{
+if(f==Left) return "left";
+if(f==Right) return "right";
+if(f==Forward) return "forward";
+if(f==Backward) return "backward";
+return "unknown";
+}
+// The tile the player is currently standing on (the map's name for it, e.g. "carpet" or "wallwood").
+string gmt()
+{
+return get_tile_at(me.x,me.y);
+}

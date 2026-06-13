@@ -88,12 +88,11 @@ The version string lives in **two** places that must stay in sync: `client/inclu
 ## Audio
 
 NVGT `sound_pool` with HRTF. Player position is the vector `me`; pools advance per frame. `client/sounds/` is organized by category, with a **per-type subfolder** holding named clips:
-- `ui/` — `buffer/`, `dlg/`, `menu/` (incl. `speaker.ogg` for "test speakers" and `music.ogg`), `misc/` (online, offline, chat, pm, von, voff, pingstart, pingstop, welcome, newmotd, kick).
-- `objects/walls/<wall>/` — e.g. `wallwood/{bump,death,hurt1-3}.ogg`.
-- `objects/platforms/<tile>/` — e.g. `cave/step1-5.ogg`.
-- `player/weapons/<weapon>/` — e.g. `axe`, `crowbar`, `hammer` (`draw`/`fire`/`hit`).
-- `player/items/<item>/` — e.g. `wood` (`drop`/`loop`/`place`/`take`).
-- `ambience/`, `music/` — empty, for later.
+- `interface/` — `buffer/`, `dlg/`, `menu/`, `misc/` (online, offline, playerchat, privchat, von, voff, pingstart, pingstop, welcome, newmotd, kick, ban, promote/demote, notify1-5, etc.).
+- `objects/walls/<wall>/` — e.g. `wallwood/{bump,death,hurt1-3}.ogg`; also `wallbuilding/bump.ogg` (lobby) and `wallgeneric/bump.ogg` (office room).
+- `objects/platforms/<tile>/` — e.g. `cave/step1-5.ogg`; also `carpet` (lobby) and `cement` (office room).
+- `objects/items/<item>/` — e.g. `wood` (`drop`/`loop`/`place`/`take`).
+- `weapons/<weapon>/` — e.g. `axe`, `crowbar`, `hammer` (`draw`/`fire`/`hit`).
 
 This game does **not** support swappable sound packs (see memory) — paths point directly at the fixed subfolders. `map.nvgt` builds the per-type subfolder paths (`objects/walls/<wall>/bump.ogg`, `objects/platforms/<tile>/step<n>.ogg`); `spawn_map()` lays a `wallwood` border around a `cave` interior, with `me` starting at `(1,1)` on the interior.
 

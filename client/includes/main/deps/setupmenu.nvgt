@@ -2,7 +2,7 @@ void setupmenu(bool music_added = false, string musicpath = "", string clicksoun
 {
 m.reset(true);
 if (music_added) {
-m.add_music(musicpath != "" ? musicpath : "sounds/ui/menu/music.ogg");
+m.add_music(musicpath != "" ? musicpath : "sounds/interface/menu/music.ogg");
 m.play_music();
 }
 else m.add_music("");
@@ -12,10 +12,10 @@ m.first_letter_navigation=first_letter;
 m.side_scrolling=side_scrolling;
 m.speak_position_information=speak_menu_position;
 
-m.click_sound = clicksound != "" ? clicksound : "sounds/ui/menu/click.ogg";
-m.close_sound = closesound != "" ? closesound : "sounds/ui/menu/close.ogg";
-m.edge_sound = edgesound != "" ? edgesound : "sounds/ui/menu/edge.ogg";
-m.enter_sound = entersound != "" ? entersound : "sounds/ui/menu/enter.ogg";
-m.open_sound = opensound != "" ? opensound : "sounds/ui/menu/open.ogg";
-m.wrap_sound = wrapsound != "" ? wrapsound : "sounds/ui/menu/wrap.ogg";
+m.click_sound = clicksound != "" ? clicksound : "sounds/interface/menu/click.ogg";
+m.close_sound = closesound != "" ? closesound : "sounds/interface/menu/close.ogg";
+m.edge_sound = edgesound != "" ? edgesound : "sounds/interface/menu/edge.ogg";
+m.enter_sound = entersound != "" ? entersound : "sounds/interface/menu/enter.ogg";
+m.open_sound = opensound != "" ? opensound : "sounds/interface/menu/open.ogg";
+m.wrap_sound = wrapsound != "" ? wrapsound : "sounds/interface/menu/wrap.ogg";
 }

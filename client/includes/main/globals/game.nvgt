@@ -3,7 +3,7 @@ void game()
 	send(0, "spawn_player "+name+" "+version+(justregistered?" new":""), 0,true);
 	justregistered=false;
 	send(0, "welcome", 0,true);
-	spawn_map();
+	draw_map("lobby");
 	pinging=false;
 	players.resize(0);
 	while(true)
@@ -14,13 +14,13 @@ buffercheck();
 		if(!connected) return;
 		update_sound_pools();
 		beaconloop();
-		if (key_down(KEY_LMENU) or key_down(KEY_RMENU))
+		if (alt_is_down())
 			movetime=runtime;
 		else
 			movetime=walktime;
 		if (key_pressed(KEY_C))
 		{
-			speak(me.x+", "+me.y, true);
+			speak(me.x+", "+me.y+" on "+gmt()+". Facing "+facing_name(facing)+".");
 		}
 		if (key_down(KEY_LEFT) and movetimer.elapsed>=movetime)
 		{
@@ -62,13 +62,13 @@ buffercheck();
 			{
 				spamtimer.restart();
 				vc.record();
-				p.play_stationary("sounds/ui/misc/von.ogg", false);
+				p.play_stationary("sounds/interface/misc/von.ogg", false);
 				recording = true;
 				rectimer.restart();
 			}
 			else if(recording && holdkey == 0)
 			{
-				p.play_stationary("sounds/ui/misc/voff.ogg", false);
+				p.play_stationary("sounds/interface/misc/voff.ogg", false);
 				vc.stop(true, outfile);
 				recording = false;
 				spamtimer.restart();
@@ -97,7 +97,7 @@ buffercheck();
 		}
 		if(recording && rectimer.elapsed >= rectime)
 		{
-			p.play_stationary("sounds/ui/misc/voff.ogg", false);
+			p.play_stationary("sounds/interface/misc/voff.ogg", false);
 			vc.stop(true, outfile);
 			recording = false;
 			spamtimer.restart();
@@ -125,7 +125,7 @@ buffercheck();
 		}
 		if(key_released(KEY_O) && recording && voicechat == 1 && holdkey == 1)
 		{
-			p.play_stationary("sounds/ui/misc/voff.ogg", false);
+			p.play_stationary("sounds/interface/misc/voff.ogg", false);
 			vc.stop(true, outfile);
 			recording = false;
 			spamtimer.restart();
@@ -164,7 +164,7 @@ buffercheck();
 			pinging=true;
 			pingtimer.restart();
 			send(0, "ping_request", 0, true);
-			p.play_stationary("sounds/ui/misc/pingstart.ogg", false);
+			p.play_stationary("sounds/interface/misc/pingstart.ogg", false);
 			add_buffer_item("misc", "Pinging");
 		}
 		if(pinging and pingtimer.elapsed>=pingtimeout)
@@ -181,12 +181,12 @@ buffercheck();
 			beacons_enabled=!beacons_enabled;
 			if(beacons_enabled)
 			{
-				p.play_stationary("sounds/ui/misc/toggleon.ogg", false);
+				p.play_stationary("sounds/interface/misc/toggleon.ogg", false);
 				speak("beacons enabled");
 			}
 			else
 			{
-				p.play_stationary("sounds/ui/misc/toggleoff.ogg", false);
+				p.play_stationary("sounds/interface/misc/toggleoff.ogg", false);
 				speak("beacons disabled");
 			}
 		}
