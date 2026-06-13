@@ -1,3 +1,5 @@
+New in 1.6.
+Staff are now called out when they connect. When a staff member comes online, goes offline, is kicked, or is banned, their rank is shown in front of their name, so everyone can see who is staff coming and going.
 New in 1.5.
 Staff commands you don't have the rank to use are now reported as unknown commands, the same as a command that doesn't exist, so the commands meant for staff stay hidden from regular players.
 You can now type /me followed by an action to send it to everyone with your name, and your rank if you are staff, in front of it, for example /me waves.

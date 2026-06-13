@@ -18,7 +18,7 @@ string password="";
 string gender="";
 string myrank="player";
 string last_pm_sender=""; // the most recent player to PM us, used by /reply (/r)
-string version="1.5";
+string version="1.6";
 timer rectimer;
 timer spamtimer;
 file dockfile, dockver, logfile;
