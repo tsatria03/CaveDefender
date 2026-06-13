@@ -86,7 +86,7 @@ bool signinasform()
 {
 	form.reset();
 	form.create_window("Sign in as", false);
-	int unamebox=form.create_input_box("Username", "", "", 20);
+	int unamebox=form.create_input_box("Username", "", "");
 	int passbox=form.create_input_box("Password", "", "*");
 	int signbtn=form.create_button("&Sign in", true);
 	int cancelbtn=form.create_button("&Cancel", false, true);
@@ -107,11 +107,13 @@ bool signinasform()
 			if(uname=="")
 			{
 				dlgmessage("Please enter a username. Press enter to continue.");
+				form.focus(unamebox);
 				continue;
 			}
 			if(pass=="")
 			{
 				dlgmessage("Please enter a password. Press enter to continue.");
+				form.focus(passbox);
 				continue;
 			}
 			name=uname;
@@ -125,7 +127,7 @@ bool newaccountform()
 {
 	form.reset();
 	form.create_window("New account", false);
-	int unamebox=form.create_input_box("Username", "", "", 20);
+	int unamebox=form.create_input_box("Username", "", "");
 	int passbox=form.create_input_box("Password", "", "*");
 	int genderlist=form.create_list("Gender");
 	form.add_list_item(genderlist, "Male", "male");
@@ -149,29 +151,34 @@ bool newaccountform()
 			string uname=form.get_text(unamebox).trim_whitespace();
 			string pass=form.get_text(passbox);
 			int gpos=form.get_list_position(genderlist);
-			if(uname.length()<3 or uname.length()>20)
+			if(uname.length()<6 or uname.length()>24)
 			{
-				dlgmessage("Usernames must be between 3 and 20 characters. Press enter to continue.");
+				dlgmessage("Usernames must be between 6 and 24 characters. Press enter to continue.");
+				form.focus(unamebox);
 				continue;
 			}
 			if(string_contains(uname, " ", 1)>-1)
 			{
 				dlgmessage("Usernames cannot contain spaces. Press enter to continue.");
+				form.focus(unamebox);
 				continue;
 			}
-			if(pass.length()<4)
+			if(pass.length()<6 or pass.length()>24)
 			{
-				dlgmessage("Passwords must be at least 4 characters. Press enter to continue.");
+				dlgmessage("Passwords must be between 6 and 24 characters. Press enter to continue.");
+				form.focus(passbox);
 				continue;
 			}
 			if(string_contains(pass, " ", 1)>-1)
 			{
 				dlgmessage("Passwords cannot contain spaces. Press enter to continue.");
+				form.focus(passbox);
 				continue;
 			}
 			if(gpos<0)
 			{
 				dlgmessage("Please select a gender. Press enter to continue.");
+				form.focus(genderlist);
 				continue;
 			}
 			name=uname;

@@ -197,9 +197,9 @@ send(event.peer_id, "done", 0,true);
 }
 void register_account(string name, string password, string gender)
 {
-if(name.length()<3 or name.length()>20)
+if(name.length()<6 or name.length()>24)
 {
-send(event.peer_id, "error: usernames must be between 3 and 20 characters.", 0,true);
+send(event.peer_id, "error: usernames must be between 6 and 24 characters.", 0,true);
 return;
 }
 if(filterchar(name, true))
@@ -212,9 +212,9 @@ if(account_exists(name))
 send(event.peer_id, "error: an account with that name already exists.", 0,true);
 return;
 }
-if(password.length()<4)
+if(password.length()<6 or password.length()>24)
 {
-send(event.peer_id, "error: passwords must be at least 4 characters.", 0,true);
+send(event.peer_id, "error: passwords must be between 6 and 24 characters.", 0,true);
 return;
 }
 if(gender!="male" and gender!="female" and gender!="nonbinary")
@@ -356,6 +356,7 @@ exit();
 }
 if(event.type==event_disconnect)
 {
+handle_disconnect_rooms(event.peer_id);
 int index=get_player_index(event.peer_id);
 if(index>-1)
 {
@@ -500,6 +501,41 @@ send(event.peer_id, "helptext "+which+"\n"+content, 0,true);
 else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
 {
 on_menu_result(index, parsed[1], int(string_to_number(parsed[2])));
+}
+else if(parsed[0]=="createroom" and index>-1 and parsed.length()>1)
+{
+if(players[index].room_id != 0)
+{
+send(event.peer_id, "You are already in a room.", 0,true);
+}
+else if(get_hosted_room_index(event.peer_id) > -1)
+{
+send(event.peer_id, "You already have a room. Use Join to return to it.", 0,true);
+}
+else
+{
+bool priv = (parsed[1]=="private");
+string pass = (priv and parsed.length()>2) ? parsed[2] : "";
+if(priv and (pass.length()<6 or pass.length()>24))
+{
+send(event.peer_id, "Room passwords must be between 6 and 24 characters.", 0,true);
+}
+else
+{
+int rid = create_room(players[index].name, event.peer_id, priv, pass);
+players[index].room_id = rid;
+send(event.peer_id, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name, 0,true);
+}
+}
+}
+else if(parsed[0]=="leaveroom" and index>-1)
+{
+if(players[index].room_id != 0)
+{
+remove_member(event.peer_id);
+players[index].room_id = 0;
+send(event.peer_id, "roomleft", 0,true);
+}
 }
 else if(parsed[0]=="restart" and index>-1 and rank_level(players[index].rank)>=2 and parsed.length()>1)
 {

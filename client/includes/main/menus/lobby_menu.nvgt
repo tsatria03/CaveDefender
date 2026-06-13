@@ -1,0 +1,41 @@
+// The lobby menu, opened with Enter while you're in the main lobby. It is client-rendered; the
+// actual work happens on the server. Section 1 wires up "Create a public room"; the rest are
+// stubbed and fill in over the next sections.
+void lobby_menu()
+{
+string[] opts;
+opts.insert_last("Create a public room");
+opts.insert_last("Create a private room");
+opts.insert_last("Join a public room");
+opts.insert_last("Join a private room");
+opts.insert_last("Back");
+setupmenu();
+for(uint i=0; i<opts.length(); i++) m.add_item(opts[i]);
+m.intro_text = "Lobby menu";
+int choice = m.run();
+if(choice < 0) return;
+string sel = opts[choice];
+if(sel == "Create a public room") send(0, "createroom public", 0, true);
+else if(sel == "Create a private room")
+{
+while(true)
+{
+string pw = vd.password_box("Create a private room", "Enter a password for your room (at least 6 characters). Others will need it to join.");
+if(pw == "") return; // cancelled
+if(pw.length() < 6 or pw.length() > 24)
+{
+dlgmessage("Room passwords must be between 6 and 24 characters. Press enter to continue.");
+continue;
+}
+if(string_contains(pw, " ", 1) > -1)
+{
+dlgmessage("Room passwords can't contain spaces. Press enter to continue.");
+continue;
+}
+send(0, "createroom private " + pw, 0, true);
+return;
+}
+}
+else if(sel == "Back") return;
+else add_buffer_item("misc", sel + " is coming soon.");
+}
