@@ -65,11 +65,6 @@ void comparse(string text)
 		if(parsed.length() < 2) { syntax_error("/motd message"); return; }
 		send(0, text, 1, true);
 	}
-	else if(base == "/exit")
-	{
-		if(parsed.length() != 1) { syntax_error("/exit"); return; }
-		send(0, text, 1, true);
-	}
 	else if(base == "/kick")
 	{
 		if(parsed.length() != 2) { syntax_error("/kick username"); return; }

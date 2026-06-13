@@ -478,16 +478,7 @@ if(event.type == event_receive && event.channel == 1)
 {
                 messend = false;
                 string[] parsed = string_split(message, " ", true);
-                if(parsed[0] == "/exit" && rank_level(players[index].rank)>=2)
-{
-                    send(0, "The server is going down for maintenance. Exiting all players...", 0, true);
-                    wait(3000);
-                    send(0, "kill", 0, true);
-                    wait(3000);
-                    speak("Exiting server");
-                    exit();
-                }
-else if(parsed[0] == "/motd" && rank_level(players[index].rank)>=2)
+                if(parsed[0] == "/motd" && rank_level(players[index].rank)>=2)
 {
     if(parsed.length() > 1)
     {
@@ -545,7 +536,7 @@ else
                         send(event.peer_id, "Usage: /kick <username>", 0, true);
                     }
                 }
-                else if(parsed[0] == "/promote" && rank_level(players[index].rank) >= 2)
+                else if(parsed[0] == "/promote" && rank_level(players[index].rank) >= 1)
                 {
                     if(parsed.length() >= 3)
                     {
@@ -589,7 +580,7 @@ else
                         send(event.peer_id, "Usage: /promote <username> <moderator, administrator, or developer>", 0, true);
                     }
                 }
-                else if(parsed[0] == "/demote" && rank_level(players[index].rank) >= 2)
+                else if(parsed[0] == "/demote" && rank_level(players[index].rank) >= 1)
                 {
                     if(parsed.length() >= 3)
                     {

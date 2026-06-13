@@ -26,10 +26,11 @@ string gmt()
 {
 return get_tile_at(me.x,me.y);
 }
+
 void spawn_map()
 {
-spawn_platform(0, 100, 0, 100, "wallwood");
-spawn_platform(1, 99, 1, 99, "cave");
+spawn_platform(0, 100, 0, 100, "wallbuilding");
+spawn_platform(1, 99, 1, 99, "carpet");
 }
 
 void playstep()
