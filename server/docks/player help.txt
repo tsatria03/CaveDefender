@@ -9,4 +9,4 @@ This is the list of commands every player can use, no matter their rank. Press s
 /pm <player> <message>: Sends a private message to a single player.
 /reply <message>, or /r <message>: Sends a private message to the last person who sent you one, so you don't have to type their name.
 /me <message>: Sends an action to everyone, with your name in front, for example /me waves becomes a message reading your name then waves. If you are staff, your rank is shown too.
-/help <player or staff>: Opens the player help, or the staff help, in a readable window. For example, /help player or /help staff. The staff help is only available to staff.
+/help: Opens this player help in a readable window. Just type /help on its own. Staff can also choose a page with /help player or /help staff.
