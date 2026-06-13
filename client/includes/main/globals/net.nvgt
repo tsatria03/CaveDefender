@@ -144,44 +144,44 @@ void netloop()
 		if (message == "ping_response")
 		{
 			pinging=false;
-			p.play_stationary("sounds/ui/misc/pingstop.ogg", false);
+			p.play_stationary("sounds/interface/misc/pingstop.ogg", false);
 			add_buffer_item("misc", "The ping took " + pingtimer.elapsed + " ms");
 		}
 		else if (parsed[0] == "online" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/online.ogg", false);
+			p.play_stationary("sounds/interface/misc/online.ogg", false);
 			string ondisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + parsed[1] : parsed[1];
 				add_buffer_item("connections", ondisp + " just came online");
 		}
 		else if (parsed[0] == "newchar" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/newchar.ogg", false);
+			p.play_stationary("sounds/interface/misc/newchar.ogg", false);
 			add_buffer_item("connections", parsed[1] + " just created a new account");
 		}
 		else if (parsed[0] == "offline" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/offline.ogg", false);
+			p.play_stationary("sounds/interface/misc/offline.ogg", false);
 			string offdisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + parsed[1] : parsed[1];
 				add_buffer_item("connections", offdisp + " just went offline");
 			remove_player(parsed[1]);
 		}
 		else if (parsed[0] == "kicked")
 		{
-			p.play_stationary("sounds/ui/misc/kick.ogg", false);
+			p.play_stationary("sounds/interface/misc/kick.ogg", false);
 			speak("You have been kicked from the server.", true);
 			kicked = true;
 			connected = false;
 		}
 		else if (parsed[0] == "kickannounce" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/kick.ogg", false);
+			p.play_stationary("sounds/interface/misc/kick.ogg", false);
 			string kdisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + parsed[1] : parsed[1];
 				add_buffer_item("connections", kdisp + " was kicked from the server");
 			remove_player(parsed[1]);
 		}
 		else if (parsed[0] == "banned" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/ban.ogg", false);
+			p.play_stationary("sounds/interface/misc/ban.ogg", false);
 			int rem = string_to_number(parsed[1]);
 			if(rem > 0) add_buffer_item("alerts", "You have been banned for " + rem + " seconds.");
 			else add_buffer_item("alerts", "You have been banned permanently.");
@@ -190,7 +190,7 @@ void netloop()
 		}
 		else if (parsed[0] == "banannounce" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/ban.ogg", false);
+			p.play_stationary("sounds/interface/misc/ban.ogg", false);
 			string bdisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + parsed[1] : parsed[1];
 				add_buffer_item("connections", bdisp + " was banned from the server");
 			remove_player(parsed[1]);
@@ -205,7 +205,7 @@ void netloop()
 			}
 			else if (parsed[0] == "play" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/"+parsed[1], false);
+			p.play_stationary("sounds/interface/misc/"+parsed[1], false);
 		}
 		else if (parsed[0] == "terminate")
 		{
@@ -229,8 +229,8 @@ void netloop()
 		else if (parsed[0] == "rankchange" and parsed.length() > 3)
 		{
 			myrank = parsed[3];
-			if(parsed[1] == "promoted") p.play_stationary("sounds/ui/misc/promote.ogg", false);
-			else if(parsed[1] == "demoted") p.play_stationary("sounds/ui/misc/demote.ogg", false);
+			if(parsed[1] == "promoted") p.play_stationary("sounds/interface/misc/promote.ogg", false);
+			else if(parsed[1] == "demoted") p.play_stationary("sounds/interface/misc/demote.ogg", false);
 			add_buffer_item("misc", "You have been " + parsed[1] + " from " + parsed[2] + " to " + parsed[3] + ".");
 		}
 		else if (parsed[0] == "stafflist")
@@ -257,19 +257,19 @@ void netloop()
 		}
 		else if (parsed[0] == "notify" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/notify"+random(1, 5)+".ogg", false);
+			p.play_stationary("sounds/interface/misc/notify"+random(1, 5)+".ogg", false);
 			add_buffer_item("alerts", message.substr(7));
 		}
 		else if (parsed[0] == "muted" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/playermute.ogg", false);
+			p.play_stationary("sounds/interface/misc/playermute.ogg", false);
 			int rem = string_to_number(parsed[1]);
 			if(rem > 0) add_buffer_item("alerts", "You have been muted for " + rem + " seconds.");
 			else add_buffer_item("alerts", "You have been muted indefinitely.");
 		}
 		else if (parsed[0] == "unmuted")
 		{
-			p.play_stationary("sounds/ui/misc/playerspeak.ogg", false);
+			p.play_stationary("sounds/interface/misc/playerspeak.ogg", false);
 			add_buffer_item("alerts", "You can speak again.");
 		}
 		else
@@ -282,14 +282,14 @@ void netloop()
 	{
 		string message = get_event_message();
 		add_buffer_item("chats", message);
-		p.play_stationary("sounds/ui/misc/playerchat.ogg", false);
+		p.play_stationary("sounds/interface/misc/playerchat.ogg", false);
 	}
 	// Channel 2: private messages.
 	if (event.type == event_receive and event.channel == 2)
 	{
 		string message = get_event_message();
 		add_buffer_item("pm's", message);
-		p.play_stationary("sounds/ui/misc/privchat.ogg", false);
+		p.play_stationary("sounds/interface/misc/privchat.ogg", false);
 		// Remember who PM'd us so /reply (/r) can answer them. The message reads
 		// "PM from <display name>: ..."; the real username is the last word of the display name
 		// (staff carry a rank prefix). Our own sent copies start with "PM to " and are ignored.

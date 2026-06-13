@@ -11,19 +11,31 @@ int movetime;
 int runtime=100, walktime=200;
 
 timer movetimer;
-vector me(1, 1);
+vector me;
 
-string gmt()
+// Draws one of the named maps at any size. The bounds (minx..maxx, miny..maxy) set the overall
+// grid: the outer ring is the wall border, and the floor is laid one tile inside it. The player
+// spawns at the center, so the same call works for a 25x25, 50x50, or 100x100 map.
+void draw_map(string mapname, double minx=0, double maxx=50, double miny=0, double maxy=50)
 {
-return get_tile_at(me.x,me.y);
-}
-
-void spawn_map()
+me.x=int((minx+maxx)/2);
+me.y=int((miny+maxy)/2);
+if(mapname=="lobby")
 {
-spawn_platform(0, 100, 0, 100, "wallbuilding");
-spawn_platform(1, 99, 1, 99, "carpet");
+spawn_platform(minx, maxx, miny, maxy, "wallbuilding");
+spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "carpet");
 }
-
+if(mapname=="office")
+{
+spawn_platform(minx, maxx, miny, maxy, "wallgeneric");
+spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "cement");
+}
+if(mapname=="cavern")
+{
+spawn_platform(minx, maxx, miny, maxy, "wallwood");
+spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "cave");
+}
+}
 void playstep()
 {
 if (string_contains(gmt(),"wall",1)>-1)
