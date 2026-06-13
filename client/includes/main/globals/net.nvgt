@@ -285,6 +285,19 @@ void netloop()
 		string message = get_event_message();
 		add_buffer_item("pm's", message);
 		p.play_stationary("sounds/ui/misc/privchat.ogg", false);
+		// Remember who PM'd us so /reply (/r) can answer them. The message reads
+		// "PM from <display name>: ..."; the real username is the last word of the display name
+		// (staff carry a rank prefix). Our own sent copies start with "PM to " and are ignored.
+		if(string_left(message, 8) == "PM from ")
+		{
+			int colon = string_contains(message, ":", 1);
+			if(colon > 8)
+			{
+				string sender = message.substr(8, colon - 8);
+				string[] sw = string_split(sender, " ", true);
+				last_pm_sender = sw[sw.length() - 1];
+			}
+		}
 	}
 	// Channel 3: incoming voice (header "name x y\n" then the ogg bytes).
 	if (event.type == event_receive and event.channel == 3)

@@ -9,6 +9,20 @@ void syntax_error(string usage)
 {
 	add_buffer_item("misc", "Invalid command syntax. Usage: " + usage + ".");
 }
+// Our own rank as a number, mirroring the server's rank_level (player 0 ... developer 3).
+int my_rank_level()
+{
+	if(myrank == "developer") return 3;
+	if(myrank == "administrator") return 2;
+	if(myrank == "moderator") return 1;
+	return 0;
+}
+// Reports a command we can't use as unknown, exactly like one that doesn't exist, so staff-only
+// commands stay hidden from players who aren't allowed to use them.
+void unknown_command(string cmd)
+{
+	add_buffer_item("misc", "Unknown command: " + cmd);
+}
 void comparse(string text)
 {
 	text = text.trim_whitespace();
@@ -40,6 +54,8 @@ void comparse(string text)
 	else if(base == "/help")
 	{
 		if(parsed.length() != 2) { syntax_error("/help player, or /help staff"); return; }
+		// The staff help is staff-only: a normal player asking for it does nothing at all.
+		if(string_to_lower_case(parsed[1]) == "staff" and myrank == "player") return;
 		send(0, "help "+parsed[1], 0, true);
 	}
 	else if(base == "/staff")
@@ -49,6 +65,7 @@ void comparse(string text)
 	}
 	else if(base == "/restart" or base == "/rt")
 	{
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 2) { syntax_error("/restart seconds (30-3600)"); return; }
 		int secs = string_to_number(parsed[1]);
 		if(secs < 30 or secs > 3600) { syntax_error("/restart seconds (30-3600)"); return; }
@@ -56,6 +73,7 @@ void comparse(string text)
 	}
 	else if(base == "/fastrestart" or base == "/ft")
 	{
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 1) { syntax_error("/fastrestart"); return; }
 		send(0, "fastrestart", 0, true);
 	}
@@ -65,58 +83,82 @@ void comparse(string text)
 		if(parsed.length() < 3) { syntax_error("/pm user message"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/me")
+	{
+		if(parsed.length() < 2) { syntax_error("/me message"); return; }
+		send(0, text, 1, true);
+	}
+	else if(base == "/reply" or base == "/r")
+	{
+		if(parsed.length() < 2) { syntax_error("/reply message"); return; }
+		if(last_pm_sender == "") { add_buffer_item("misc", "You have not received a private message to reply to yet."); return; }
+		// Rebuild as a /pm to whoever last messaged us: everything after the first word is the reply.
+		int sp = string_contains(text, " ", 1);
+		string body = text.substr(sp + 1);
+		send(0, "/pm " + last_pm_sender + " " + body, 1, true);
+	}
 	else if(base == "/motd")
 	{
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
 		if(parsed.length() < 2) { syntax_error("/motd message"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/kick")
 	{
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 2) { syntax_error("/kick username"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/promote")
 	{
+		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 3) { syntax_error("/promote username rank"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/demote")
 	{
+		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 3) { syntax_error("/demote username rank"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/notify")
 	{
+		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
 		if(parsed.length() < 2) { syntax_error("/notify message"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/notifyplayer" or base == "/notplayer")
 	{
+		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
 		if(parsed.length() < 3) { syntax_error("/notifyplayer username message"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/mute")
 	{
+		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
 		if(parsed.length() < 2) { syntax_error("/mute username, or /mute username seconds"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/unmute")
 	{
+		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 2) { syntax_error("/unmute username"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/ban")
 	{
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
 		if(parsed.length() < 2) { syntax_error("/ban username, or /ban username seconds"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/unban")
 	{
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 2) { syntax_error("/unban username"); return; }
 		send(0, text, 1, true);
 	}
 	else
 	{
-		add_buffer_item("misc", "Unknown command: " + parsed[0]);
+		unknown_command(parsed[0]);
 	}
 }
