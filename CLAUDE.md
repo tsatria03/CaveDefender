@@ -83,7 +83,7 @@ Server files (under `server/`, same `includes/main/{deps,functions,globals}` glo
 
 ## Version
 
-The version string lives in **two** places that must stay in sync: `client/includes/main/globals/dec.nvgt` (client) and `server/cfs.nvgt` (server). Bump **both** together when opening a new changelog version block.
+The version string lives in **two** places that must stay in sync: `client/includes/main/globals/dec.nvgt` (client) and `server/includes/main/globals/dec.nvgt` (server). Bump **both** together when opening a new changelog version block.
 
 ## Audio
 

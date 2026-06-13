@@ -359,7 +359,7 @@ if(event.type==event_disconnect)
 int index=get_player_index(event.peer_id);
 if(index>-1)
 {
-send(0, "offline "+players[index].name, 0,true);
+send(0, "offline "+players[index].name+" "+players[index].rank, 0,true);
 players.remove_at(index);
 }
 }
@@ -408,7 +408,7 @@ index=get_player_index(event.peer_id);
 players[index].rank=get_rank(players[index].name);
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 if(parsed.length()>3 and parsed[3]=="new") send(0, "newchar "+players[index].name, 0,true);
-else send(0, "online "+players[index].name, 0,true);
+else send(0, "online "+players[index].name+" "+players[index].rank, 0,true);
 int64 mu = get_mute_until(players[index].name);
 if(mu == 0)
 {
@@ -449,7 +449,7 @@ else if(parsed[0]=="disconnect")
 {
 if(index>-1)
 {
-send(0, "offline "+players[index].name, 0,true);
+send(0, "offline "+players[index].name+" "+players[index].rank, 0,true);
 send(players[index].peer_id, "terminate", 0,true);
 players.remove_at(index);
 }
@@ -609,12 +609,13 @@ else
                         if(kick_index > -1)
                         {
                             string kname = players[kick_index].name;
+                            string krank = players[kick_index].rank;
                             int kpeer = players[kick_index].peer_id;
                             players.remove_at(kick_index);
                             send(kpeer, "kicked", 0, true);
                             for(uint i=0; i<players.length(); i++)
                             {
-                                send(players[i].peer_id, "kickannounce "+kname, 0, true);
+                                send(players[i].peer_id, "kickannounce "+kname+" "+krank, 0, true);
                             }
                         }
                         else
@@ -838,11 +839,12 @@ else
                             {
                                 int tpeer = players[ti].peer_id;
                                 string realname = players[ti].name;
+                                string trank = players[ti].rank;
                                 players.remove_at(ti);
                                 send(tpeer, "banned "+dur, 0, true);
                                 for(uint i=0; i<players.length(); i++)
                                 {
-                                    send(players[i].peer_id, "banannounce "+realname, 0, true);
+                                    send(players[i].peer_id, "banannounce "+realname+" "+trank, 0, true);
                                 }
                             }
                             if(dur > 0) send(event.peer_id, tname+" has been banned for "+dur+" seconds.", 0, true);

@@ -43,7 +43,7 @@ wait(5);
 event=net.request();
 if(connectiontimer.elapsed>=connectingtime and connected==false or event.type==event_disconnect)
 {
-alert("error","Could not reach the server.");
+dlgmessage("Could not reach the server. Please try again.");
 connectiontimer.restart();
 connected=false;
 net.disconnect_peer_forcefully(serverpeer);
@@ -150,7 +150,8 @@ void netloop()
 		else if (parsed[0] == "online" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/online.ogg", false);
-			add_buffer_item("connections", parsed[1] + " just came online");
+			string ondisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + parsed[1] : parsed[1];
+				add_buffer_item("connections", ondisp + " just came online");
 		}
 		else if (parsed[0] == "newchar" and parsed.length() > 1)
 		{
@@ -160,7 +161,8 @@ void netloop()
 		else if (parsed[0] == "offline" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/offline.ogg", false);
-			add_buffer_item("connections", parsed[1] + " just went offline");
+			string offdisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + parsed[1] : parsed[1];
+				add_buffer_item("connections", offdisp + " just went offline");
 			remove_player(parsed[1]);
 		}
 		else if (parsed[0] == "kicked")
@@ -173,7 +175,8 @@ void netloop()
 		else if (parsed[0] == "kickannounce" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/kick.ogg", false);
-			add_buffer_item("connections", parsed[1] + " was kicked from the server");
+			string kdisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + parsed[1] : parsed[1];
+				add_buffer_item("connections", kdisp + " was kicked from the server");
 			remove_player(parsed[1]);
 		}
 		else if (parsed[0] == "banned" and parsed.length() > 1)
@@ -188,14 +191,19 @@ void netloop()
 		else if (parsed[0] == "banannounce" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/ban.ogg", false);
-			add_buffer_item("connections", parsed[1] + " was banned from the server");
+			string bdisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + parsed[1] : parsed[1];
+				add_buffer_item("connections", bdisp + " was banned from the server");
 			remove_player(parsed[1]);
 		}
 		else if (string_left(message, 15) == "Server Uptime: ")
 		{
 			add_buffer_item("misc", message);
 		}
-		else if (parsed[0] == "play" and parsed.length() > 1)
+		else if (parsed[0] == "welcome")
+			{
+				add_buffer_item("misc", message);
+			}
+			else if (parsed[0] == "play" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/"+parsed[1], false);
 		}
@@ -217,9 +225,6 @@ void netloop()
 		else if (parsed[0] == "yourrank" and parsed.length() > 1)
 		{
 			myrank = parsed[1];
-			if(myrank == "moderator") add_buffer_item("misc", "You are a moderator.");
-			else if(myrank == "administrator") add_buffer_item("misc", "You are an administrator.");
-			else if(myrank == "developer") add_buffer_item("misc", "You are a developer.");
 		}
 		else if (parsed[0] == "rankchange" and parsed.length() > 3)
 		{
