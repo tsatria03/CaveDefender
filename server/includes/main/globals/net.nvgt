@@ -480,6 +480,10 @@ if(which!="player" and which!="staff")
 {
 send(event.peer_id, "No help page named "+parsed[1]+". Try player or staff.", 0,true);
 }
+else if(which=="staff" and rank_level(players[index].rank)<1)
+{
+// Staff help is staff-only; a non-staff request is silently ignored.
+}
 else if(!file_exists("docks/"+which+" help.txt"))
 {
 send(event.peer_id, "The "+which+" help page is missing on the server.", 0,true);
@@ -583,6 +587,18 @@ send(players[target_index].peer_id, "PM from " + display_name(index) + ": " + pm
 else
 {
                         send(event.peer_id, "Pm failed. User not found", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/me" && parsed.length() >= 2)
+                {
+                    if(players[index].muted)
+                    {
+                        send(event.peer_id, "You are muted.", 0, true);
+                    }
+                    else
+                    {
+                        string action = string_join(parsed, " ", 1, parsed.length());
+                        send(0, display_name(index) + " " + action, 1, true);
                     }
                 }
                 else if(parsed[0] == "/kick" && rank_level(players[index].rank) >= 2)

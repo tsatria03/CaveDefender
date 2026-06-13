@@ -7,4 +7,6 @@ This is the list of commands every player can use, no matter their rank. Press s
 /getmotd: Reads out the server's message of the day.
 /staff: Lists every staff member, online or offline, along with their rank.
 /pm <player> <message>: Sends a private message to a single player.
-/help <player or staff>: Opens the player help, or the staff help, in a readable window. For example, /help player or /help staff.
+/reply <message>, or /r <message>: Sends a private message to the last person who sent you one, so you don't have to type their name.
+/me <message>: Sends an action to everyone, with your name in front, for example /me waves becomes a message reading your name then waves. If you are staff, your rank is shown too.
+/help <player or staff>: Opens the player help, or the staff help, in a readable window. For example, /help player or /help staff. The staff help is only available to staff.
