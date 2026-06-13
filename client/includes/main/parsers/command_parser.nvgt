@@ -53,10 +53,18 @@ void comparse(string text)
 	}
 	else if(base == "/help")
 	{
-		if(parsed.length() != 2) { syntax_error("/help player, or /help staff"); return; }
-		// The staff help is staff-only: a normal player asking for it does nothing at all.
-		if(string_to_lower_case(parsed[1]) == "staff" and myrank == "player") return;
-		send(0, "help "+parsed[1], 0, true);
+		// Normal players just type /help and go straight to the player help. Staff get a choice and
+		// must say which page they want.
+		if(my_rank_level() < 1)
+		{
+			if(parsed.length() != 1) { syntax_error("/help"); return; }
+			send(0, "help player", 0, true);
+		}
+		else
+		{
+			if(parsed.length() != 2) { syntax_error("/help player, or /help staff"); return; }
+			send(0, "help "+parsed[1], 0, true);
+		}
 	}
 	else if(base == "/staff")
 	{
