@@ -33,6 +33,12 @@ l.load("shell32.dll");
 dictionary@ d = l.call("bool IsUserAnAdmin()");
 return bool(d["0"]);
 }
+bool regex(string message, string pattern)
+{
+	regexp re(pattern);
+	return re.match(message);
+}
+
 bool array_contains(const string[]& arr, const string& value)
 {
 for (uint i = 0; i < arr.length(); i++)
@@ -799,7 +805,14 @@ string[] clean_lines(string filepath)
         return result;
     }
 
-void dockread(const string&in filename)
+void dockread(const string&in filename, const string&in text="")
+{
+string docktext;
+if(text != "")
+{
+docktext = text;
+}
+else
 {
 if(!file_exists(filename))
 {
@@ -807,8 +820,9 @@ alert("Error","Could not find "+string_replace(filename, "docks/", "", true));
 return;
 }
 dockfile.open(filename,"rb");
-string docktext=dockfile.read();
+docktext=dockfile.read();
 dockfile.close();
+}
 form.reset();
 form.create_window("Viewing "+string_replace(filename, "docks/", "", true),false,false,false);
 int dockbox=form.create_input_box(string_replace(filename, "docks/", "", true), docktext, read_only:true, multiline:true);

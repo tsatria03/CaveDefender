@@ -72,10 +72,11 @@ Key client files (under `client/includes/main/`):
 - `menus/menu.nvgt` — `mainmenu()`, the connection menu + account forms, and the preferences menu (`settingsmenu()`). (The in-game documentation menu was removed; `dockread()` remains a utility in `extrafuncts.nvgt`.)
 - `functions/` — `extrafuncts.nvgt` (helper library) and `savefuncts.nvgt` (`readpreffs` / `writepreffs`, `save_last_account` / `load_last_account`).
 - `parsers/command_parser.nvgt` — `comparse()`, the in-chat slash-command **router** (called from `game.nvgt` on `/`). Because the game is online it does not execute commands locally (unlike SimpleFighter's `comparse()`) — it sends chat on channel 1 and forwards each recognized command on the channel the server expects. **Rule for new commands:** validate the argument count and call `syntax_error("usage")` on bad syntax (the "Invalid command syntax. Usage: …" style); route all command feedback to the `misc` buffer via `add_buffer_item`. See memory.
+- `parsers/menu_parser.nvgt` — `show_server_menu()`, which renders a **server-pushed** menu. Server-initiated, client-rendered: the server (`server/.../globals/menu.nvgt`, `broadcast_menu()`) broadcasts `showmenu <id>\n<title>\n<option>…` on channel 0; the client builds it with `setupmenu`/`m`, runs it (modal), and replies `menuresult <id> <choice>` (0-based option index, -1 = cancelled), which the server hands to `on_menu_result()` (a hook feature code fills in). The server draws no player UI — it only describes the menu; only in-game clients receive it.
 
 Server files (under `server/`, same `includes/main/{deps,functions,globals}` glob layout as the client):
 - `cfs.nvgt` — entry, config/MOTD load, ensure-dirs, main loop.
-- `includes/main/globals/net.nvgt` — send/receive, message dispatch, `login` / `register_account`, chat broadcast, the word `filter`, and the staff/moderation commands gated by `rank_level` (`/kick`, `/ban`, `/unban`, `/motd`, `/restart`, `/fastrestart`, `/promote`, `/demote`, `/mute`, `/unmute`, `/notify`, `/notifyplayer`; plus the public `/pm`, `/who`, `/staff`).
+- `includes/main/globals/net.nvgt` — send/receive, message dispatch, `login` / `register_account`, chat broadcast, the word `filter`, and the staff/moderation commands gated by `rank_level` (`/kick`, `/ban`, `/unban`, `/motd`, `/restart`, `/fastrestart`, `/promote`, `/demote`, `/mute`, `/unmute`, `/notify`, `/notifyplayer`; plus the public `/pm`, `/who`, `/staff`, `/help`).
 - `includes/main/globals/player.nvgt` — the **in-memory** connected-player roster (the `player` class: `name` / `peer_id` / `rank` / `version` / `x` / `y`, plus `spawn_player` / `get_player_index`), distinct from the on-disk accounts. `rank` is set from the account file at spawn. Renamed from the old `user` / `user.nvgt`.
 - `includes/main/globals/account.nvgt` — the on-disk account store.
 - `includes/main/functions/regex.nvgt` — the chat word filter, using NVGT's **native `regexp`** (the old third-party `filter.dll` is gone — see memory).
@@ -99,6 +100,8 @@ This game does **not** support swappable sound packs (see memory) — paths poin
 ## Player-facing docs (docks/)
 
 `docks/` lives under **`client/`**: `changelog.txt`, `credits.txt`, `readme.txt`, `todo list.txt`. There is no longer an in-game documentation viewer (the menu was removed), but **`changelog.txt` is still the source of truth for what shipped** and is maintained on every release.
+
+There is **also a server-side `server/docks/`** (`player help.txt`, `staff help.txt`), bundled into the server via `#pragma document docks`. Help is **server-authoritative**: `/help player` / `/help staff` (client) → server reads `docks/<which> help.txt` and sends `helptext <which>\n<content>` → the client shows it with `dockread(title, text)` (the text overload added so received content needs no temp file). Keep these two files updated when commands change, since they document every command and its rank.
 
 ## Rules kept in memory (not inline, to keep this file lean)
 

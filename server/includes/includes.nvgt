@@ -1,9 +1,7 @@
 #pragma asset data
+#pragma document docks
 
 #include"main/deps/*"
-#include"main/functions/*"
 #include"main/globals/*"
-//#include"main/menus/*"
-//#include"main/parsers/*"
 
 typedef uint8 usmall; typedef int8 small;

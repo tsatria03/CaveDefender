@@ -1,0 +1,21 @@
+// Server-initiated, client-rendered menus. The server never draws UI on a player's screen; it
+// describes a menu and each client renders it with its own menu code (see the client's
+// menu_parser.nvgt). Call broadcast_menu() to push a menu to everyone who is in-game; each client
+// replies "menuresult <id> <choice>", which lands in on_menu_result() below.
+//
+// id    : a short, space-free tag you choose, so results map back to the right menu.
+// title : the menu's intro text.
+// options : the items, in order; the client returns the 0-based index of the one picked.
+void broadcast_menu(string id, string title, string[] options)
+{
+string payload = "showmenu " + id + "\n" + title;
+for(uint i = 0; i < options.length(); i++) payload += "\n" + options[i];
+send(0, payload, 0, true);
+}
+
+// Called when a player answers a server menu. player_index is their roster index, id is the menu's
+// id, choice is the 0-based option index they picked (or -1 if they cancelled). This is the hook
+// feature code fills in — e.g. tally a poll, apply a choice, etc. Empty for now.
+void on_menu_result(int player_index, string id, int choice)
+{
+}

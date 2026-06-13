@@ -1,0 +1,21 @@
+Staff help.
+
+These commands are only available to staff. Each one lists the lowest rank that can use it. The staff ranks, from lowest to highest, are moderator, administrator, and developer, and a higher rank can always use everything a lower rank can. Words in angle brackets are things you fill in yourself; don't type the brackets.
+
+Moderator and up.
+
+/mute <player>, or /mute <player> <seconds>: Silences a player's chat and voice. Leave the time off, or use 0, for an indefinite mute. Only regular players can be muted, never other staff. The mute is remembered even if the player leaves and comes back.
+/unmute <player>: Lifts a mute early.
+/promote <player> <rank>: Raises a player to a higher rank, for example /promote bob moderator. You can only grant a rank at or below your own, and only act on someone at or below your own rank, so a moderator can promote a player up to moderator.
+/demote <player> <rank>: Lowers a player to a lower rank, down to player. The same rank limits as promote apply.
+/notify <message>: Sends a notification, with a sound, to everyone on the server.
+/notifyplayer <player> <message>, or /notplayer <player> <message>: Sends a notification, with a sound, to a single player.
+
+Administrator and up.
+
+/kick <player>: Removes a player from the server. They can sign back in right away. A kick can target anyone, including other staff.
+/ban <player>, or /ban <player> <seconds>: Bans a player so they can't sign in. Leave the time off for a permanent ban. You can't ban someone above your own rank, and you can't ban yourself.
+/unban <player>: Lifts a ban.
+/motd <message>: Changes the server's message of the day.
+/restart <seconds>, or /rt <seconds>: Warns everyone with a countdown, then shuts the server down. The time can be from 30 to 3600 seconds.
+/fastrestart, or /ft: Shuts the server down right away, with no warning.

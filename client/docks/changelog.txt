@@ -1,4 +1,5 @@
 New in 1.5.
+You can now type /help player or /help staff to open a help page listing the commands you can use, what each one does, and which rank it needs.
 Administrators and developers can now ban a player with /ban, followed by their name and, optionally, a number of seconds; leave the time off for a permanent ban, and lift it early with /unban. A banned player is removed from the server and can't sign back in until the ban ends. Kicking and banning are now limited to administrators and developers.
 Staff can now silence a player with /mute, followed by their name and, optionally, a number of seconds; leave the time off for an indefinite mute, and lift it early with /unmute. A muted player can't use chat or voice, hears a sound when muted and unmuted, and the mute is remembered even if they leave and come back.
 Moderators can now use /promote and /demote as well, but only to move players to and from the moderator rank; changing anyone to or from a higher rank is still limited to administrators and developers.

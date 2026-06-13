@@ -1,0 +1,17 @@
+// Renders a server-pushed menu. The server broadcasts, on channel 0:
+//   showmenu <id>\n<title>\n<option>\n<option>...
+// We build the menu, run it, and reply "menuresult <id> <choice>", where choice is the 0-based
+// index of the option the player picked, or -1 if they cancelled. Called from netloop on "showmenu".
+// Note: this is modal — it pauses the game loop until the player answers, the same as any menu.
+void show_server_menu(string message)
+{
+	string[] lines = string_split(message, "\n", true);
+	if(lines.length() < 3) return; // need the header line, a title, and at least one option
+	string[] header = string_split(lines[0], " ", true);
+	string menuid = header.length() > 1 ? header[1] : "0";
+	setupmenu();
+	for(uint i = 2; i < lines.length(); i++) m.add_item(lines[i]);
+	m.intro_text = lines[1];
+	int choice = m.run();
+	send(0, "menuresult " + menuid + " " + choice, 0, true);
+}
