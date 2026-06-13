@@ -1,3 +1,5 @@
+New in 1.5.
+Staff can now send notifications that play an attention sound. Use /notify followed by a message to alert everyone on the server, or /notifyplayer, also /notplayer, followed by a player's name and a message to alert just that one player.
 New in 1.4.
 Administrators and developers can now change a player's rank with the /promote and /demote commands, and there is a new moderator rank that sits below administrator. Anyone whose rank changes is told what they were promoted or demoted from and to.
 Staff can now remove a player with the /kick command, followed by that player's name. The kicked player is told they've been kicked and returned to the connection menu, and everyone else is told who was kicked.

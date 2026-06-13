@@ -85,6 +85,16 @@ void comparse(string text)
 		if(parsed.length() != 2) { syntax_error("/demote username"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/notify")
+	{
+		if(parsed.length() < 2) { syntax_error("/notify message"); return; }
+		send(0, text, 1, true);
+	}
+	else if(base == "/notifyplayer" or base == "/notplayer")
+	{
+		if(parsed.length() < 3) { syntax_error("/notifyplayer username message"); return; }
+		send(0, text, 1, true);
+	}
 	else
 	{
 		add_buffer_item("misc", "Unknown command: " + parsed[0]);
