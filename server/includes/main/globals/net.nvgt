@@ -224,27 +224,24 @@ return "The server will restart in "+mins+" minutes.";
 }
 return "The server will restart in "+seconds+" seconds.";
 }
-// Relaunches the server process and exits the current one. Mirrors the client's restart().
-void restart_server()
-{
-if(SCRIPT_COMPILED) run("cfs.exe", "", false, false);
-else run("c:\\nvgt\\nvgtw.exe", "cfs.nvgt", false, false);
-exit();
-}
-// Tells every client to announce "restarting, please wait" and close, pumps the network for a
-// moment so that message actually flushes out, then relaunches the server. Used by both
-// /restart (after its countdown) and /fastrestart (immediately).
+// Closes the server. Forcefully disconnects every client first so each one's enet sees the drop
+// immediately and bounces back to its connection menu, pumps the host briefly so those
+// disconnects actually flush out, then exits the process. Used by both /restart (after its
+// countdown) and /fastrestart (immediately). Bringing the server back up is handled externally.
 void do_restart()
 {
-send(0, "restartnow", 0,true);
+for(uint i=0; i<players.length(); i++)
+{
+net.disconnect_peer_forcefully(players[i].peer_id);
+}
 timer flush;
 flush.restart();
-while(flush.elapsed<1000)
+while(flush.elapsed<300)
 {
 net.request();
 wait(5);
 }
-restart_server();
+exit();
 }
 // Case-insensitive check of whether a named account is currently connected.
 bool is_online(string name)

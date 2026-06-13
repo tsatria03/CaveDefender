@@ -1,7 +1,7 @@
 int port=25562;
 string ip="localhost";
 
-bool encrypting=true, connected, registering, pinging;
+bool encrypting=true, connected, registering, pinging, connection_dropped;
 
 timer connectiontimer, pingtimer;
 int connectingtime=10000;
@@ -71,6 +71,14 @@ else if(event.type==event_receive and get_event_message()=="done")
 {
 save_last_account();
 game();
+if(connection_dropped)
+{
+connection_dropped=false;
+fade_multi_pool(fademode);
+net.disconnect_peer_forcefully(serverpeer);
+dlgmessage("The server has gone offline.");
+return false;
+}
 return true;
 }
 else if(event.type==event_receive and string_contains(get_event_message(), "error:", 1)>-1)
@@ -111,6 +119,14 @@ if(data!="") send(0, data, 3, true);
 void netloop()
 {
 	event = net.request();
+	// The server dropped us (it shut down/restarted, or the link was lost). Bounce out of the
+	// game; login() will report it and send us back to the connection menu.
+	if (event.type == event_disconnect)
+	{
+		connection_dropped = true;
+		connected = false;
+		return;
+	}
 	// Channel 0: control/system messages. Each message is handled exactly once.
 	if (event.type == event_receive and event.channel == 0)
 	{
@@ -174,14 +190,6 @@ void netloop()
 		else if (parsed[0] == "restartnotice")
 		{
 			add_buffer_item("alerts", message.substr(14));
-		}
-		else if (parsed[0] == "restartnow")
-		{
-			speak("Restarting, please wait", true);
-			wait(2000);
-			fade_multi_pool(fademode);
-			net.disconnect_peer_forcefully(serverpeer);
-			connected=false;
 		}
 		else
 		{
