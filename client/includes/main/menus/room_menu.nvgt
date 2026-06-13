@@ -1,0 +1,28 @@
+// The room menu, opened with Enter while you're inside a room. Client-rendered. Section 1 wires up
+// "Leave room"; the game options and host tools are stubbed and fill in over the next sections.
+// Set password / Retrieve password only appear for private rooms.
+void room_menu()
+{
+string[] opts;
+opts.insert_last("Start game");
+opts.insert_last("Join game");
+opts.insert_last("Stop game");
+opts.insert_last("Kick a player");
+if(current_room_private)
+{
+opts.insert_last("Set password");
+opts.insert_last("Retrieve password");
+}
+opts.insert_last("Delete room");
+opts.insert_last("Leave room");
+opts.insert_last("Back");
+setupmenu();
+for(uint i=0; i<opts.length(); i++) m.add_item(opts[i]);
+m.intro_text = "Room menu";
+int choice = m.run();
+if(choice < 0) return;
+string sel = opts[choice];
+if(sel == "Leave room") send(0, "leaveroom", 0, true);
+else if(sel == "Back") return;
+else add_buffer_item("misc", sel + " is coming soon.");
+}

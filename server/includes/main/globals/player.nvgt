@@ -9,6 +9,7 @@ string rank="player";
 bool muted=false;
 int64 muteuntil=0; // when muted: 0 = indefinite, otherwise the epoch the mute expires at.
 int x=1, y=1; // map position; defaults to the client's spawn at (1,1) until a position update arrives.
+int room_id=0; // 0 = main lobby; otherwise the id of the room this player is currently in.
 player(int id, string username, double ver)
 {
 name=username;

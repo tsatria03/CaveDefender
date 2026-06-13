@@ -158,6 +158,33 @@ break;
 this.destroy_window();
 return result;
 }
+// Like input_box, but the typed text is masked with * (for passwords). Returns "" if cancelled.
+string password_box(const string title, const string text, const string default_text = "")
+{
+string result;
+int text_box, ok_button, cancel_button;
+this.form.reset();
+this.create_dialog(title);
+text_box = this.form.create_input_box(text, default_text, "*");
+ok_button = this.form.create_button("&OK", true);
+cancel_button = this.form.create_button("&Cancel", cancel = true);
+this.form.focus(text_box);
+while (true)
+{
+wait(5);
+this.monitor();
+if (this.form.is_pressed(ok_button))
+{
+result = this.form.get_text(text_box);
+if(result.length()==0) speak("input is required");
+if(result.length()>=1) break;
+}
+else if (this.form.is_pressed(cancel_button))
+break;
+}
+this.destroy_window();
+return result;
+}
 int message_box(const string title, const string caption, string[]@ buttons, int flags = 0) {
 int control;
 int[] controls;

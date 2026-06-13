@@ -1,4 +1,8 @@
 New in 1.6.
+New accounts now require a username and a password that are each between 6 and 24 characters.
+When creating an account or signing in, if a field is left empty or filled in incorrectly, the cursor now returns to the field you need to fix instead of leaving you to find it.
+You can now create a private room as well, protected by a password between 6 and 24 characters that you set when you make it; others will need that password to join.
+You can now press Enter in the lobby to open a menu and create a public room, then press Enter inside the room to open its menu and leave.
 Staff are now called out when they connect. When a staff member comes online, goes offline, is kicked, or is banned, their rank is shown in front of their name, so everyone can see who is staff coming and going.
 New in 1.5.
 Staff commands you don't have the rank to use are now reported as unknown commands, the same as a command that doesn't exist, so the commands meant for staff stay hidden from regular players.
