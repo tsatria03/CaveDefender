@@ -20,8 +20,8 @@ void spawn_player(int id, string name, double version)
 player p1(id, name, version);
 players.insert_last(p1);
 }
-// The name as other players should see it: staff (admin/developer) get their rank
-// prefixed (e.g. "admin bob"); regular players show just their name.
+// The name as other players should see it: staff (moderator/administrator/developer) get their
+// rank prefixed (e.g. "administrator bob"); regular players show just their name.
 string display_name(int index)
 {
 if(index<0 or index>=int(players.length())) return "";
