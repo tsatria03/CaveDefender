@@ -1,7 +1,7 @@
 int port=25562;
 string ip="localhost";
 
-bool encrypting=true, connected, registering, pinging, connection_dropped, kicked;
+bool encrypting=true, connected, registering, pinging, connection_dropped, kicked, justregistered;
 
 timer connectiontimer, pingtimer;
 int connectingtime=10000;
@@ -33,6 +33,7 @@ else return event.message;
 
 bool login()
 {
+justregistered=false;
 speak("Attempting to connect...");
 serverpeer=net.connect(ip, port);
 connectiontimer.restart();
@@ -65,6 +66,7 @@ send(0, "login "+name+" "+password+" "+version, 0,true);
 if(event.type==event_receive and get_event_message()=="registered")
 {
 registering=false;
+justregistered=true;
 send(0, "login "+name+" "+password+" "+version, 0,true);
 }
 else if(event.type==event_receive and get_event_message()=="done")
@@ -150,6 +152,11 @@ void netloop()
 			p.play_stationary("sounds/ui/misc/online.ogg", false);
 			add_buffer_item("connections", parsed[1] + " just came online");
 		}
+		else if (parsed[0] == "newchar" and parsed.length() > 1)
+		{
+			p.play_stationary("sounds/ui/misc/newchar.ogg", false);
+			add_buffer_item("connections", parsed[1] + " just created a new account");
+		}
 		else if (parsed[0] == "offline" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/offline.ogg", false);
@@ -207,6 +214,8 @@ void netloop()
 		else if (parsed[0] == "rankchange" and parsed.length() > 3)
 		{
 			myrank = parsed[3];
+			if(parsed[1] == "promoted") p.play_stationary("sounds/ui/misc/promote.ogg", false);
+			else if(parsed[1] == "demoted") p.play_stationary("sounds/ui/misc/demote.ogg", false);
 			add_buffer_item("misc", "You have been " + parsed[1] + " from " + parsed[2] + " to " + parsed[3] + ".");
 		}
 		else if (parsed[0] == "stafflist")
@@ -232,14 +241,14 @@ void netloop()
 	{
 		string message = get_event_message();
 		add_buffer_item("chats", message);
-		p.play_stationary("sounds/ui/misc/chat.ogg", false);
+		p.play_stationary("sounds/ui/misc/playerchat.ogg", false);
 	}
 	// Channel 2: private messages.
 	if (event.type == event_receive and event.channel == 2)
 	{
 		string message = get_event_message();
 		add_buffer_item("pm's", message);
-		p.play_stationary("sounds/ui/misc/pm.ogg", false);
+		p.play_stationary("sounds/ui/misc/privchat.ogg", false);
 	}
 	// Channel 3: incoming voice (header "name x y\n" then the ogg bytes).
 	if (event.type == event_receive and event.channel == 3)

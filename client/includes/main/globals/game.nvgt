@@ -1,6 +1,7 @@
 void game()
 {
-	send(0, "spawn_player "+name+" "+version, 0,true);
+	send(0, "spawn_player "+name+" "+version+(justregistered?" new":""), 0,true);
+	justregistered=false;
 	send(0, "welcome", 0,true);
 	spawn_map();
 	pinging=false;
