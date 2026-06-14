@@ -69,3 +69,87 @@ return;
 if(sel == "Back") { resume_pools(); speak("canceled"); return; }
 resume_pools(); // Resume: just unpause and return to the game
 }
+// Ask the server for the games in our current room and wait for the reply, pumping netloop so other
+// messages keep flowing. Returns the raw "gamelist ..." payload, or "" on timeout / lost connection.
+string get_game_list()
+{
+gamelist_received = false;
+pending_gamelist = "";
+send(0, "listgames", 0, true);
+timer t;
+t.restart();
+while(t.elapsed < 3000)
+{
+wait(5);
+netloop();
+if(!connected) return "";
+if(gamelist_received) return pending_gamelist;
+}
+return "";
+}
+// Join an open game in the current room. Lists only open games that still have a free slot (solo and
+// full games are left out), then sends joingame for the picked one.
+void join_game_menu()
+{
+string raw = get_game_list();
+if(!connected) return;
+string[] lines = string_split(raw, "\n", true);
+int[] ids;
+string[] labels;
+for(uint i = 1; i < lines.length(); i++)
+{
+string[] f = string_split(lines[i], " ", true);
+if(f.length() < 5) continue;
+int members = string_to_number(f[2]);
+int size = string_to_number(f[3]);
+if(f[4] == "solo") continue;    // can't join a single-player game
+if(members >= 4) continue;      // full
+ids.insert_last(string_to_number(f[0]));
+labels.insert_last(f[1] + "'s game, " + members + (members == 1 ? " player" : " players") + ", " + size + " by " + size);
+}
+if(ids.length() == 0)
+{
+add_buffer_item("misc", "There are no open games to join.");
+return;
+}
+setupmenu();
+for(uint i = 0; i < labels.length(); i++) m.add_item(labels[i]);
+m.add_item("Back");
+m.intro_text = "Join a game";
+int choice = m.run();
+if(choice < 0 or choice >= int(ids.length())) { speak("canceled"); return; }
+send(0, "joingame " + ids[choice], 0, true);
+}
+// Stop a game in the current room. Staff see every game; a non-staff player sees only games they host
+// (e.g. one they left running). Picking one sends stopgame for that id; the server enforces permission.
+void stop_game_menu()
+{
+bool staff = (myrank != "player");
+string raw = get_game_list();
+if(!connected) return;
+string[] lines = string_split(raw, "\n", true);
+int[] ids;
+string[] labels;
+for(uint i = 1; i < lines.length(); i++)
+{
+string[] f = string_split(lines[i], " ", true);
+if(f.length() < 5) continue;
+string host = f[1];
+if(!staff and host != name) continue; // non-staff can only stop their own game
+int members = string_to_number(f[2]);
+ids.insert_last(string_to_number(f[0]));
+labels.insert_last(host + "'s game, " + members + (members == 1 ? " player" : " players") + ", " + ((f[4] == "solo") ? "solo" : "open"));
+}
+if(ids.length() == 0)
+{
+add_buffer_item("misc", staff ? "There are no games to stop." : "You have no games to stop.");
+return;
+}
+setupmenu();
+for(uint i = 0; i < labels.length(); i++) m.add_item(labels[i]);
+m.add_item("Back");
+m.intro_text = "Stop a game";
+int choice = m.run();
+if(choice < 0 or choice >= int(ids.length())) { speak("canceled"); return; }
+send(0, "stopgame " + ids[choice], 0, true);
+}

@@ -29,6 +29,8 @@ bool have_public_room=false, have_private_room=false; // whether we own a saved 
 bool in_game=false; // true while we're inside a game cavern (Escape/Enter open the game menu)
 int current_game=0; // the id of the game we're in (0 = none); a space id in the room_id namespace
 string current_game_host=""; // host of the game we're in, so we know whether we may Stop it
+string pending_gamelist=""; // last game-list payload from the server (used by the join / stop menus)
+bool gamelist_received=false;
 string version="1.8";
 timer rectimer;
 timer spamtimer;

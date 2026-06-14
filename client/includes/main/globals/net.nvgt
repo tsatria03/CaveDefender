@@ -338,6 +338,11 @@ void netloop()
 			pending_roomlist = message;
 			roomlist_received = true;
 		}
+		else if (parsed[0] == "gamelist")
+		{
+			pending_gamelist = message;
+			gamelist_received = true;
+		}
 		else if (parsed[0] == "roommemberlist")
 		{
 			pending_roommembers = message;
@@ -365,6 +370,9 @@ void netloop()
 		else if (parsed[0] == "roomkicked" and parsed.length() > 2)
 		{
 			clear_players();
+			in_game = false;
+			current_game = 0;
+			current_game_host = "";
 			current_room = 0;
 			current_room_private = false;
 			current_room_host = "";
@@ -382,6 +390,9 @@ void netloop()
 		else if (parsed[0] == "roomdeleted" and parsed.length() > 2)
 		{
 			clear_players();
+			in_game = false;
+			current_game = 0;
+			current_game_host = "";
 			current_room = 0;
 			current_room_private = false;
 			current_room_host = "";

@@ -1,4 +1,5 @@
 New in 1.8.
+You can now join and stop games from your room menu. Join a game lists the open games that still have a free slot so you can jump in, and stop a game lets you end a game you host, while staff can stop any game.
 You can now start a game from inside your room, choosing a game mode and a map size, and you'll be taken into its cavern. While in a game, press escape for a pause menu where you can leave or stop it.
 New in 1.7.
 You can now hear other players moving around you. Their footsteps, and the sound of them bumping into walls, play from their spot on the map on whatever surface they are walking on, so you can tell where people are as they move.
