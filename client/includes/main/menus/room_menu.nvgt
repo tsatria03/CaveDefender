@@ -5,8 +5,8 @@
 void room_menu()
 {
 string[] opts;
-opts.insert_last("Start game");
 opts.insert_last("Join game");
+opts.insert_last("Start game");
 opts.insert_last("Stop game");
 opts.insert_last("Kick a player");
 if(current_room_private)
@@ -64,6 +64,35 @@ if(!connected) return "";
 if(roommembers_received) return pending_roommembers;
 }
 return "";
+}
+// Ask the server who shares our current space (lobby, room, or game) and wait for the reply, pumping
+// netloop meanwhile. Returns the raw "scopememberlist ..." payload, or "" on timeout / lost connection.
+string get_scope_members()
+{
+scopemembers_received = false;
+pending_scopemembers = "";
+send(0, "scopemembers", 0, true);
+timer t;
+t.restart();
+while(t.elapsed < 3000)
+{
+wait(5);
+netloop();
+if(!connected) return "";
+if(scopemembers_received) return pending_scopemembers;
+}
+return "";
+}
+// Speak a roster of everyone in our current space, e.g. "there are currently 2 players in this room.
+// they are: ..." The `where` phrase is supplied by the caller ("in this room", "in the lobby", ...).
+void announce_scope(string where)
+{
+string roster = get_scope_members();
+if(!connected) return;
+string[] f = string_split(roster, " ", true);
+string[] names;
+for(uint i = 1; i < f.length(); i++) names.insert_last(f[i]);
+speak("there are currently " + names.length() + " players " + where + ". they are: " + oxford_join(names) + ".");
 }
 // Host tool: pick a player in the room to eject back to the lobby.
 void kick_menu()

@@ -366,6 +366,11 @@ void netloop()
 			pending_roommembers = message;
 			roommembers_received = true;
 		}
+		else if (parsed[0] == "scopememberlist")
+		{
+			pending_scopemembers = message;
+			scopemembers_received = true;
+		}
 		else if (parsed[0] == "roompassword" and parsed.length() > 1)
 		{
 			dlgmessage("Your room's password is: " + parsed[1]);
