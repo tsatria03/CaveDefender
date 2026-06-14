@@ -374,6 +374,26 @@ void netloop()
 		{
 			show_server_menu(message);
 		}
+		else if (parsed[0] == "askinput")
+		{
+			// A server-driven flow needs a typed value. Format: askinput\n<prompt>\n<command prefix>\n<mask>.
+			// We show a local box (masked when <mask> is 1) and send "<prefix> <text>"; the matching
+			// command handler on the server does the validation and the work. Text entry stays local.
+			string[] alines = string_split(message, "\n", true);
+			if (alines.length() >= 3)
+			{
+				bool amask = (alines.length() > 3 and alines[3] == "1");
+				string aval = amask ? vd.password_box("Input", alines[1]) : vd.input_box("Input", alines[1], "");
+				if (aval == "") speak("canceled");
+				else send(0, alines[2] + " " + aval, 0, true);
+			}
+		}
+		else if (parsed[0] == "runcommand")
+		{
+			// The server relays one of its own commands back through us to run (a menu choice that needs no
+			// typed input). Keeps the decision server-side while reusing the existing command handlers.
+			if (message.length() > 11) send(0, message.substr(11), 0, true);
+		}
 		else if (parsed[0] == "restartnotice")
 		{
 			add_buffer_item("alerts", message.substr(14));

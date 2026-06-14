@@ -25,6 +25,63 @@ password = pass;
 // enter it (createroom adds them), so a room recreated on login stays empty until someone joins.
 }
 }
+// Create a room for a player, validating that they aren't already in one and don't already host this
+// type, plus the private-room password length. Sends feedback on failure. Shared by the createroom
+// command and the lobby menu so the rules live in one place.
+void do_create_room(int index, int peer, bool priv, string pass)
+{
+if(players[index].room_id != 0)
+{
+int cr=get_room_index(players[index].room_id);
+send(peer, "You are already in a "+((cr>-1 and rooms[cr].is_private)?"private":"public")+" room.", 0,true);
+return;
+}
+if(hosts_type(peer, priv))
+{
+send(peer, "You already have a "+(priv?"private":"public")+" room. Use Join to return to it.", 0,true);
+return;
+}
+if(priv and (pass.length()<6 or pass.length()>24))
+{
+send(peer, "Room passwords must be between 6 and 24 characters.", 0,true);
+return;
+}
+int rid = create_room(players[index].name, peer, priv, pass);
+int cri = get_room_index(rid);
+if(cri>-1) rooms[cri].members.insert_last(peer); // the creator is now inside their new room.
+if(priv) set_saved_private(players[index].name, pass);
+else set_saved_public(players[index].name, true);
+send_yourrooms(peer, players[index].name);
+send(peer, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name, 0,true);
+set_room_scope(index, rid);
+send(peer, "play roomcreate.ogg", 0,true);
+}
+// Try to put a player into a room by id, validating presence, existence, and (for private rooms) the
+// password. Sends feedback on failure. Shared by the joinroom command and the lobby join menus.
+void do_join_room(int index, int peer, int roomid, string password)
+{
+if(players[index].room_id != 0)
+{
+send(peer, "You are already in a room.", 0,true);
+return;
+}
+int ri=get_room_index(roomid);
+if(ri==-1)
+{
+send(peer, "That room no longer exists.", 0,true);
+return;
+}
+if(rooms[ri].is_private and password!=rooms[ri].password)
+{
+send(peer, "Incorrect room password.", 0,true);
+return;
+}
+bool already=false;
+for(uint k=0; k<rooms[ri].members.length(); k++) if(rooms[ri].members[k]==peer) already=true;
+if(!already) rooms[ri].members.insert_last(peer);
+send(peer, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"private":"public")+" "+rooms[ri].host, 0,true);
+set_room_scope(index, rooms[ri].id);
+}
 // The rooms[] index of the room with this id, or -1 if there isn't one.
 int get_room_index(int id)
 {

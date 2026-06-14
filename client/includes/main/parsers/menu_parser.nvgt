@@ -12,6 +12,14 @@ void show_server_menu(string message)
 	setupmenu();
 	for(uint i = 2; i < lines.length(); i++) m.add_item(lines[i]);
 	m.intro_text = lines[1];
+	// The pause menu pauses this player's own audio while it's open (a purely local convenience), the
+	// way the old client pause_menu() did; it resumes however the menu is dismissed.
+	bool ispause = (menuid == "pause");
+	if(ispause) pause_pools();
 	int choice = m.run();
+	if(ispause) resume_pools();
+	// Confirmation menus (id "confirm:<cmd>") treat anything but Yes (option 0) as a cancel.
+	bool isconfirm = (string_left(menuid, 8) == "confirm:");
+	if(choice < 0 or (isconfirm and choice != 0)) speak("canceled");
 	send(0, "menuresult " + menuid + " " + choice, 0, true);
 }

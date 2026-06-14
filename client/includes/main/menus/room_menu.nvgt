@@ -1,73 +1,9 @@
-// The room menu, opened with Enter while you're inside a room. Client-rendered. Wires up Leave room,
-// Kick a player (host only), and Delete room (staff can delete any room; a non-staff host only when
-// no one else is inside). The remaining game options are stubbed and fill in over the next sections.
-// Set password / Retrieve password only appear for private rooms.
-void room_menu()
-{
-string[] opts;
-opts.insert_last("Join game");
-opts.insert_last("Start game");
-opts.insert_last("Stop game");
-opts.insert_last("Kick a player");
-if(current_room_private)
-{
-opts.insert_last("Set password");
-opts.insert_last("Retrieve password");
-}
-opts.insert_last("Delete room");
-opts.insert_last("Leave room");
-opts.insert_last("Back");
-setupmenu();
-for(uint i=0; i<opts.length(); i++) m.add_item(opts[i]);
-m.intro_text = "Room menu";
-int choice = m.run();
-if(choice < 0) { speak("canceled"); return; }
-string sel = opts[choice];
-if(sel == "Leave room") send(0, "leaveroom", 0, true);
-else if(sel == "Start game") start_game_flow();
-else if(sel == "Join game") join_game_menu();
-else if(sel == "Stop game") stop_game_menu();
-else if(sel == "Kick a player")
-{
-if(current_room_host != name) add_buffer_item("misc", "Only the host can kick players from the room.");
-else kick_menu();
-}
-else if(sel == "Delete room") delete_room_flow();
-else if(sel == "Set password")
-{
-if(current_room_host != name) add_buffer_item("misc", "Only the host can change the room's password.");
-else set_password_flow();
-}
-else if(sel == "Retrieve password")
-{
-if(current_room_host != name) add_buffer_item("misc", "Only the host can view the room's password.");
-else send(0, "getroompassword", 0, true);
-}
-else if(sel == "Back") { speak("canceled"); return; }
-else add_buffer_item("misc", sel + " is coming soon.");
-}
-// Ask the server for the current room's member list and wait for the reply, pumping netloop so other
-// incoming messages are still handled. Returns the raw "roommemberlist ..." payload, or "" on
-// timeout / lost connection.
-string get_room_member_list()
-{
-roommembers_received = false;
-pending_roommembers = "";
-send(0, "roommembers", 0, true);
-timer t;
-t.restart();
-while(t.elapsed < 3000)
-{
-wait(5);
-netloop();
-if(!connected) return "";
-if(roommembers_received) return pending_roommembers;
-}
-return "";
-}
-// Ask the server for a roster (e.g. "scopemembers", "scopemembers 0", "roomgamemembers") and wait for
-// the reply, pumping netloop meanwhile. Returns the raw "scopememberlist ..." payload, or "" on
-// timeout / lost connection.
+// The room menu itself is now server-authoritative (Enter sends "openmenu"; the server builds and
+// pushes it — see server menu.nvgt / net.nvgt). What remains here are the R / L / G "glance" helpers,
+// which speak who/what is around (they are spoken announcements, not menus). Called from game.nvgt.
+
+// Ask the server for a roster (e.g. "scopemembers", "scopemembers 0") and wait for the reply, pumping
+// netloop meanwhile. Returns the raw "scopememberlist ..." payload, or "" on timeout / lost connection.
 string get_members(string request)
 {
 scopemembers_received = false;
@@ -84,8 +20,8 @@ if(scopemembers_received) return pending_scopemembers;
 }
 return "";
 }
-// Speak a roster, e.g. "there are currently 2 players in this room. they are: ..." The request is the
-// server query to run and `where` is the spoken phrase ("in this room", "in the lobby", ...).
+// Speak a roster, e.g. "There are 2 players in this room: ..." The request is the server query to run
+// and `where` is the spoken phrase ("in this room", "in the lobby", ...).
 void announce_members(string request, string where)
 {
 string roster = get_members(request);
@@ -153,83 +89,4 @@ int rc = (f.length() > 1) ? int(string_to_number(f[1])) : 0; // f[0]="roomsoverv
 string[] names;
 for(uint i = 2; i < f.length(); i++) names.insert_last(f[i]);
 speak(rooms_sentence(rc, names));
-}
-// Host tool: pick a player in the room to eject back to the lobby.
-void kick_menu()
-{
-string list = get_room_member_list();
-if(!connected) return;
-string[] f = string_split(list, " ", true);
-string[] names;
-for(uint i = 1; i < f.length(); i++)
-{
-if(f[i] == name) continue; // can't kick yourself
-names.insert_last(f[i]);
-}
-if(names.length() == 0)
-{
-add_buffer_item("misc", "There is no one else in your room to kick.");
-return;
-}
-setupmenu();
-for(uint i = 0; i < names.length(); i++) m.add_item(names[i]);
-m.add_item("Back");
-m.intro_text = "Kick a player";
-int choice = m.run();
-if(choice < 0) { speak("canceled"); return; }
-if(choice >= int(names.length())) { speak("canceled"); return; }
-send(0, "kickfromroom " + names[choice], 0, true);
-}
-// Delete the current room. Staff may delete any room; a non-staff host may only delete when alone.
-void delete_room_flow()
-{
-bool staff = (myrank != "player");
-if(!staff && current_room_host != name)
-{
-add_buffer_item("misc", "Only the host can delete the room.");
-return;
-}
-string list = get_room_member_list();
-if(!connected) return;
-if(list == "")
-{
-add_buffer_item("misc", "Couldn't reach the server.");
-return;
-}
-string[] f = string_split(list, " ", true);
-int count = int(f.length()) - 1; // minus the leading "roommemberlist" token
-if(!staff && count > 1)
-{
-add_buffer_item("misc", "You can't delete the room while other players are in it.");
-return;
-}
-setupmenu();
-m.add_item("Yes");
-m.add_item("No");
-string consequence = (count > 1) ? "Everyone in it will be sent back to the lobby." : "You will be sent back to the lobby.";
-m.intro_text = "Are you sure you want to delete this room? " + consequence;
-int c = m.run();
-if(c == 0) send(0, "deleteroom", 0, true);
-else speak("canceled");
-}
-// Host tool (private rooms): change the room's password. Mirrors the create-private rules.
-void set_password_flow()
-{
-while(true)
-{
-string pw = vd.password_box("Set room password", "Enter the new password (at least 6 characters).");
-if(pw == "") { speak("canceled"); return; }
-if(pw.length() < 6 or pw.length() > 24)
-{
-dlgmessage("Room passwords must be between 6 and 24 characters. Press enter to continue.");
-continue;
-}
-if(string_contains(pw, " ", 1) > -1)
-{
-dlgmessage("Room passwords can't contain spaces. Press enter to continue.");
-continue;
-}
-send(0, "setroompassword " + pw, 0, true);
-return;
-}
 }

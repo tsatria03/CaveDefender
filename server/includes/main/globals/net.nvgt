@@ -592,38 +592,38 @@ else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
 {
 on_menu_result(index, parsed[1], int(string_to_number(parsed[2])));
 }
+else if(parsed[0]=="openmenu" and index>-1)
+{
+// The client asks the server to open the menu for wherever they are; the server is the authority on
+// the options. Lobby and rooms are server-driven now; the in-game menu is still client-rendered.
+if(players[index].room_id==0)
+{
+string[] opts;
+opts.insert_last("Create a public room");
+opts.insert_last("Create a private room");
+opts.insert_last("Join a public room");
+opts.insert_last("Join a private room");
+send_menu(event.peer_id, "lobby", "Lobby menu", opts);
+}
+else if(get_room_index(players[index].room_id)>-1)
+{
+push_room_menu(index);
+}
+else if(get_game_index(players[index].room_id)>-1)
+{
+push_game_menu(index); // Enter in a game = round controls
+}
+}
+else if(parsed[0]=="openpausemenu" and index>-1)
+{
+// Escape in a game = the pause menu (Resume/Leave/Stop). Only meaningful when actually in a game.
+if(get_game_index(players[index].room_id)>-1) push_pause_menu(index);
+}
 else if(parsed[0]=="createroom" and index>-1 and parsed.length()>1)
 {
 bool priv = (parsed[1]=="private");
-if(players[index].room_id != 0)
-{
-int cr=get_room_index(players[index].room_id);
-send(event.peer_id, "You are already in a "+((cr>-1 and rooms[cr].is_private)?"private":"public")+" room.", 0,true);
-}
-else if(hosts_type(event.peer_id, priv))
-{
-send(event.peer_id, "You already have a "+(priv?"private":"public")+" room. Use Join to return to it.", 0,true);
-}
-else
-{
 string pass = (priv and parsed.length()>2) ? parsed[2] : "";
-if(priv and (pass.length()<6 or pass.length()>24))
-{
-send(event.peer_id, "Room passwords must be between 6 and 24 characters.", 0,true);
-}
-else
-{
-int rid = create_room(players[index].name, event.peer_id, priv, pass);
-int cri = get_room_index(rid);
-if(cri>-1) rooms[cri].members.insert_last(event.peer_id); // the creator is now inside their new room.
-if(priv) set_saved_private(players[index].name, pass);
-else set_saved_public(players[index].name, true);
-send_yourrooms(event.peer_id, players[index].name);
-send(event.peer_id, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name, 0,true);
-set_room_scope(index, rid);
-send(event.peer_id, "play roomcreate.ogg", 0,true);
-}
-}
+do_create_room(index, event.peer_id, priv, pass);
 }
 else if(parsed[0]=="leaveroom" and index>-1)
 {
@@ -805,30 +805,8 @@ send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="joinroom" and index>-1 and parsed.length()>1)
 {
-if(players[index].room_id != 0)
-{
-send(event.peer_id, "You are already in a room.", 0,true);
-}
-else
-{
-int ri=get_room_index(string_to_number(parsed[1]));
-if(ri==-1)
-{
-send(event.peer_id, "That room no longer exists.", 0,true);
-}
-else if(rooms[ri].is_private and (parsed.length()<3 or parsed[2]!=rooms[ri].password))
-{
-send(event.peer_id, "Incorrect room password.", 0,true);
-}
-else
-{
-bool already=false;
-for(uint k=0; k<rooms[ri].members.length(); k++) if(rooms[ri].members[k]==event.peer_id) already=true;
-if(!already) rooms[ri].members.insert_last(event.peer_id);
-send(event.peer_id, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"private":"public")+" "+rooms[ri].host, 0,true);
-set_room_scope(index, rooms[ri].id);
-}
-}
+string pw = (parsed.length()>2) ? parsed[2] : "";
+do_join_room(index, event.peer_id, int(string_to_number(parsed[1])), pw);
 }
 else if(parsed[0]=="roommembers" and index>-1)
 {

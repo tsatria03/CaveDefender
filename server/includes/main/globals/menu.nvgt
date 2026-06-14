@@ -13,9 +13,299 @@ for(uint i = 0; i < options.length(); i++) payload += "\n" + options[i];
 send(0, payload, 0, true);
 }
 
+// Unicast a menu to a single player (broadcast_menu goes to everyone). Same showmenu wire format; the
+// client renders it and replies "menuresult <id> <choice>".
+void send_menu(int peer, string id, string title, string[] options)
+{
+string payload = "showmenu " + id + "\n" + title;
+for(uint i = 0; i < options.length(); i++) payload += "\n" + options[i];
+send(peer, payload, 0, true);
+}
+
+// Ask a player to type a value to finish a server-driven flow. The client shows a local box with
+// `prompt` (masked when `masked`), then sends "<prefix> <text>" back, which an existing command
+// handler processes. This keeps text entry client-side while the decision/action stay on the server.
+void ask_input(int peer, string prompt, string prefix, bool masked)
+{
+send(peer, "askinput\n" + prompt + "\n" + prefix + "\n" + (masked ? "1" : "0"), 0, true);
+}
+
+// A Yes/No confirmation menu. The id is "confirm:<command>"; on Yes the client relays that command back.
+// The client recognises the "confirm:" prefix and says "canceled" on No or escape.
+void confirm_menu(int peer, string command, string title)
+{
+string[] opts;
+opts.insert_last("Yes");
+opts.insert_last("No");
+send_menu(peer, "confirm:" + command, title, opts);
+}
+
+// Push the list of joinable rooms (public or private) to a player as a server menu, recording the room
+// ids behind the options in their menu_targets so the returned choice maps back to a room.
+void push_join_list(int index, bool priv)
+{
+int peer = players[index].peer_id;
+players[index].menu_targets.resize(0);
+string[] opts;
+for(uint i = 0; i < rooms.length(); i++)
+{
+if(rooms[i].is_private != priv) continue;
+int gc = 0;
+for(uint g = 0; g < games.length(); g++) if(games[g].parent_room == rooms[i].id) gc++;
+players[index].menu_targets.insert_last("" + rooms[i].id);
+opts.insert_last(rooms[i].host + "'s room, " + rooms[i].members.length() + (rooms[i].members.length() == 1 ? " player" : " players") + ", " + gc + (gc == 1 ? " game" : " games") + " in progress");
+}
+if(opts.length() == 0)
+{
+send(peer, "There are no " + (priv ? "private" : "public") + " rooms right now.", 0, true);
+return;
+}
+send_menu(peer, priv ? "joinprivate" : "joinpublic", priv ? "Private rooms" : "Public rooms", opts);
+}
+
+// The room menu (Enter while in a room). Heterogeneous, so each option's action key is recorded in
+// menu_actions. Password items appear only for a private room.
+void push_room_menu(int index)
+{
+int peer = players[index].peer_id;
+int ri = get_room_index(players[index].room_id);
+if(ri < 0) return;
+players[index].menu_actions.resize(0);
+string[] opts;
+opts.insert_last("Join game"); players[index].menu_actions.insert_last("joingame");
+opts.insert_last("Start game"); players[index].menu_actions.insert_last("startgame");
+opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stopgame");
+opts.insert_last("Kick a player"); players[index].menu_actions.insert_last("kick");
+if(rooms[ri].is_private)
+{
+opts.insert_last("Set password"); players[index].menu_actions.insert_last("setpw");
+opts.insert_last("Retrieve password"); players[index].menu_actions.insert_last("getpw");
+}
+opts.insert_last("Delete room"); players[index].menu_actions.insert_last("delete");
+opts.insert_last("Leave room"); players[index].menu_actions.insert_last("leave");
+send_menu(peer, "room", "Room menu", opts);
+}
+
+// The list of players the host can kick (everyone else actually in the office, not off in a game).
+void push_kick_list(int index)
+{
+int peer = players[index].peer_id;
+int ri = get_room_index(players[index].room_id);
+if(ri < 0) return;
+players[index].menu_targets.resize(0);
+string[] opts;
+for(uint j = 0; j < rooms[ri].members.length(); j++)
+{
+int pi = get_player_index(rooms[ri].members[j]);
+if(pi < 0) continue;
+if(rooms[ri].members[j] == peer) continue;            // not yourself
+if(players[pi].room_id != rooms[ri].id) continue;     // in a game, can't be kicked
+players[index].menu_targets.insert_last(players[pi].name);
+opts.insert_last(players[pi].name);
+}
+if(opts.length() == 0)
+{
+send(peer, "There is no one in your room to kick.", 0, true);
+return;
+}
+send_menu(peer, "kick", "Kick a player", opts);
+}
+
+// The list of games in the player's room for either joining or stopping. mode = "join" (skip full and
+// others' solo games) or "stop" (staff see all, others only their own). Game ids go in menu_targets;
+// the actual join/stop is enforced by the existing joingame/stopgame handlers.
+void push_game_list(int index, string mode)
+{
+int peer = players[index].peer_id;
+int rid = players[index].room_id;
+bool staff = is_staff(players[index].rank);
+players[index].menu_targets.resize(0);
+string[] opts;
+for(uint i = 0; i < games.length(); i++)
+{
+if(games[i].parent_room != rid) continue;
+if(mode == "join")
+{
+if(games[i].solo and games[i].host != players[index].name) continue; // others can't join a solo game
+if(games[i].members.length() >= 4) continue;                          // full
+}
+else if(!staff and games[i].host != players[index].name) continue;      // stop: non-staff only their own
+players[index].menu_targets.insert_last("" + games[i].id);
+string label;
+if(mode == "join" and games[i].solo) label = "Your single-player game, " + games[i].size + " by " + games[i].size;
+else label = games[i].host + "'s " + (games[i].solo ? "single-player" : "open") + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
+if(games[i].phase != "idle") label += ", in progress";
+opts.insert_last(label);
+}
+if(opts.length() == 0)
+{
+send(peer, (mode == "join") ? "There are no games to join in this room." : (staff ? "There are no games to stop in this room." : "You have no games to stop in this room."), 0, true);
+return;
+}
+send_menu(peer, (mode == "join") ? "joingame" : "stopgame", (mode == "join") ? "Choose a game to join" : "Choose a game to stop", opts);
+}
+
+// The in-game round-control menu (Enter while in a game). The host gets "Begin round" (idle) or, if
+// also staff, "Skip build phase" (build); the title carries the round status. If there's nothing to do
+// (e.g. a non-host), we just speak the status instead of an empty menu.
+void push_game_menu(int index)
+{
+int peer = players[index].peer_id;
+int gi = get_game_index(players[index].room_id);
+if(gi < 0) return;
+bool host = (games[gi].host_peer == peer);
+bool staff = is_staff(players[index].rank);
+string phase = games[gi].phase;
+string status;
+if(phase == "build")
+{
+int rem = games[gi].buildduration - int(games[gi].phasetimer.elapsed / 1000);
+if(rem < 0) rem = 0;
+status = "Build phase, " + rem + " seconds remaining.";
+}
+else if(phase == "wave") status = "The enemies are attacking.";
+else status = "Waiting to start.";
+players[index].menu_actions.resize(0);
+string[] opts;
+if(host and phase == "idle") { opts.insert_last("Begin round"); players[index].menu_actions.insert_last("beginround"); }
+else if(host and phase == "build" and staff) { opts.insert_last("Skip build phase"); players[index].menu_actions.insert_last("skipbuild"); }
+if(opts.length() == 0)
+{
+send(peer, status, 0, true); // nothing actionable; just report where the round is
+return;
+}
+send_menu(peer, "game", "Game menu. " + status, opts);
+}
+
+// The pause menu (Escape while in a game): Resume, Leave game, and (host or staff) Stop game. The
+// client pauses this player's local audio while it's open. Leave/Stop confirm before acting.
+void push_pause_menu(int index)
+{
+int peer = players[index].peer_id;
+int gi = get_game_index(players[index].room_id);
+if(gi < 0) return;
+bool canstop = (games[gi].host_peer == peer or is_staff(players[index].rank));
+players[index].menu_actions.resize(0);
+string[] opts;
+opts.insert_last("Resume"); players[index].menu_actions.insert_last("resume");
+opts.insert_last("Leave game"); players[index].menu_actions.insert_last("leave");
+if(canstop) { opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stop"); }
+send_menu(peer, "pause", "Pause menu", opts);
+}
+
+// Start-game cascade: pick a mode, then a size; the chosen mode rides in menu_pending across the two.
+void push_start_mode(int index)
+{
+string[] opts;
+opts.insert_last("Solo, single player");
+opts.insert_last("Open, up to four players");
+send_menu(players[index].peer_id, "startmode", "Choose a game mode", opts);
+}
+void push_start_size(int index)
+{
+string[] opts;
+opts.insert_last("Small, 25 by 25");
+opts.insert_last("Medium, 50 by 50");
+opts.insert_last("Large, 100 by 100");
+send_menu(players[index].peer_id, "startsize", "Choose the map size", opts);
+}
+
 // Called when a player answers a server menu. player_index is their roster index, id is the menu's
 // id, choice is the 0-based option index they picked (or -1 if they cancelled). This is the hook
 // feature code fills in — e.g. tally a poll, apply a choice, etc. Empty for now.
 void on_menu_result(int player_index, string id, int choice)
 {
+if(player_index < 0 or player_index >= int(players.length())) return;
+int peer = players[player_index].peer_id;
+if(id == "lobby")
+{
+if(choice == 0) do_create_room(player_index, peer, false, ""); // Create a public room
+else if(choice == 1) ask_input(peer, "Enter a password for your room (at least 6 characters). Others will need it to join.", "createroom private", true);
+else if(choice == 2) push_join_list(player_index, false); // Join a public room
+else if(choice == 3) push_join_list(player_index, true);  // Join a private room
+}
+else if(id == "joinpublic" or id == "joinprivate")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+string rid = players[player_index].menu_targets[choice];
+if(id == "joinpublic") do_join_room(player_index, peer, int(string_to_number(rid)), "");
+else ask_input(peer, "Enter the room's password.", "joinroom " + rid, true); // private: ask, then joinroom <id> <pw>
+}
+else if(id == "room")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) return; // cancelled
+string act = players[player_index].menu_actions[choice];
+if(act == "leave") send(peer, "runcommand leaveroom", 0, true);
+else if(act == "getpw") send(peer, "runcommand getroompassword", 0, true);
+else if(act == "setpw")
+{
+int ri = get_room_index(players[player_index].room_id);
+if(ri > -1 and rooms[ri].host_peer != peer) send(peer, "Only the host can change the room's password.", 0, true);
+else ask_input(peer, "Enter the new room password (at least 6 characters).", "setroompassword", true);
+}
+else if(act == "kick")
+{
+int ri = get_room_index(players[player_index].room_id);
+if(ri > -1 and rooms[ri].host_peer != peer) send(peer, "Only the host can kick players from the room.", 0, true);
+else push_kick_list(player_index);
+}
+else if(act == "delete")
+{
+int ri = get_room_index(players[player_index].room_id);
+bool staff = is_staff(players[player_index].rank);
+bool host = (ri > -1 and rooms[ri].host_peer == peer);
+if(!staff and !host) send(peer, "Only the host can delete the room.", 0, true);
+else if(!staff and ri > -1 and rooms[ri].members.length() > 1) send(peer, "You can't delete the room while other players are in it.", 0, true);
+else confirm_menu(peer, "deleteroom", "Are you sure you want to delete this room? Everyone in it will be sent back to the lobby.");
+}
+else if(act == "joingame") push_game_list(player_index, "join");
+else if(act == "stopgame") push_game_list(player_index, "stop");
+else if(act == "startgame") push_start_mode(player_index);
+}
+else if(id == "kick")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return;
+send(peer, "runcommand kickfromroom " + players[player_index].menu_targets[choice], 0, true);
+}
+else if(id == "joingame")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return;
+send(peer, "runcommand joingame " + players[player_index].menu_targets[choice], 0, true);
+}
+else if(id == "stopgame")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return;
+send(peer, "runcommand stopgame " + players[player_index].menu_targets[choice], 0, true);
+}
+else if(id == "game")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) return;
+string act = players[player_index].menu_actions[choice];
+if(act == "beginround") send(peer, "runcommand beginround", 0, true);
+else if(act == "skipbuild") send(peer, "runcommand skipbuild", 0, true);
+}
+else if(id == "pause")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) return; // escape = resume
+string act = players[player_index].menu_actions[choice];
+if(act == "leave") confirm_menu(peer, "leavegame", "Are you sure you want to leave the game?");
+else if(act == "stop") confirm_menu(peer, "stopgame", "Are you sure you want to stop the game? It will end for everyone.");
+// "resume" does nothing here; the client already resumed its audio when the menu closed.
+}
+else if(id == "startmode")
+{
+if(choice < 0) return;
+players[player_index].menu_pending = (choice == 0) ? "solo" : "open";
+push_start_size(player_index);
+}
+else if(id == "startsize")
+{
+if(choice < 0) return;
+int size = (choice == 0) ? 25 : (choice == 2) ? 100 : 50;
+send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending, 0, true);
+}
+else if(id.substr(0, 8) == "confirm:")
+{
+if(choice == 0) send(peer, "runcommand " + id.substr(8), 0, true); // Yes
+}
 }
