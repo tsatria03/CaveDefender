@@ -164,8 +164,23 @@ send(0, "login "+name+" "+password+" "+version, 0,true);
 if(event.type==event_receive and get_event_message()=="registered")
 {
 registering=false;
+save_last_account(); // remember the new account locally so "sign in" can use it whether or not we log in now.
+setupmenu();
+m.add_item("yes");
+m.add_item("no");
+m.intro_text="Your account has been created. Would you like to log in now?";
+if(m.run()==0)
+{
 justregistered=true;
 send(0, "login "+name+" "+password+" "+version, 0,true);
+}
+else
+{
+// Don't log in; just drop the connection and head back to the connection menu (the account is saved).
+net.disconnect_peer_forcefully(serverpeer);
+connected=false;
+return false;
+}
 }
 else if(event.type==event_receive and get_event_message()=="done")
 {
