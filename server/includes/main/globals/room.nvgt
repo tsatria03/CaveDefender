@@ -71,8 +71,8 @@ for(uint j=0; j<rooms[i].members.length(); j++)
 int mp = rooms[i].members[j];
 if(mp == peer) continue;
 int pi = get_player_index(mp);
-if(pi > -1) players[pi].room_id = 0;
 send(mp, "roomleft", 0, true);
+if(pi > -1) set_room_scope(pi, 0);
 }
 rooms.remove_at(i);
 }

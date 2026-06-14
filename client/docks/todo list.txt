@@ -1,12 +1,13 @@
 ####These are the things that need to be finished for future versions of the game.
 
-****Unfinished. Make each room its own space: draw the room's map and keep its players, chat, and voice separate from the lobby and from other rooms.
 ****Unfinished. Build the cave defender gameplay that runs inside a room, where you gather wood, build and repair the four walls, and survive waves of bots, on small, medium, or large maps.
 ****Unfinished. Add the start a game, join a game, and stop a game options inside a room.
 ****Unfinished. Expand the map system beyond the current starter lobby.
+****Unfinished. Play other players' footsteps as they move, so you hear their steps on the tile they're walking on, not just their locator beacon.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Make each room its own space, drawing the room's own map and keeping its players, positions, footstep beacons, and voice chat separate from the lobby and from other rooms.
 **Finished. Add local chat on the backslash key, so you can talk to everyone in your current space, the lobby or your room, separate from global chat.
 **Finished. Add staff chat on the apostrophe key, a private channel only other staff can see and send to, collected in its own buffer hidden from regular players.
 **Finished. Make every chat input accept slash commands and /me, scoped to that channel, and rename the chat buffers to global chats and private chats.

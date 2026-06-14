@@ -222,6 +222,10 @@ void netloop()
 				set_player_position(parsed[1], px, py);
 			}
 		}
+		else if (parsed[0] == "despawn" and parsed.length() > 1)
+		{
+			remove_player(parsed[1]);
+		}
 		else if (parsed[0] == "yourrank" and parsed.length() > 1)
 		{
 			myrank = parsed[1];
@@ -278,17 +282,25 @@ void netloop()
 		}
 		else if (parsed[0] == "roomjoined" and parsed.length() > 3)
 		{
+			clear_players();
 			current_room = string_to_number(parsed[1]);
 			current_room_private = (parsed[2] == "private");
 			current_room_host = parsed[3];
 			add_buffer_item("misc", "You are now in " + parsed[3] + "'s " + parsed[2] + " room.");
+			draw_map("office");
+			lastx = int(me.x);
+			lasty = int(me.y);
 		}
 		else if (parsed[0] == "roomleft")
 		{
+			clear_players();
 			current_room = 0;
 			current_room_private = false;
 			current_room_host = "";
 			add_buffer_item("misc", "You left the room.");
+			draw_map("lobby");
+			lastx = int(me.x);
+			lasty = int(me.y);
 		}
 		else if (parsed[0] == "roomlist")
 		{
@@ -321,11 +333,15 @@ void netloop()
 		}
 		else if (parsed[0] == "roomkicked" and parsed.length() > 2)
 		{
+			clear_players();
 			current_room = 0;
 			current_room_private = false;
 			current_room_host = "";
 			p.play_stationary("sounds/ui/misc/kick.ogg", false);
 			add_buffer_item("misc", "You have been kicked from " + parsed[1] + "'s " + parsed[2] + " room.");
+			draw_map("lobby");
+			lastx = int(me.x);
+			lasty = int(me.y);
 		}
 		else if (parsed[0] == "roomkickannounce" and parsed.length() > 3)
 		{
@@ -334,10 +350,14 @@ void netloop()
 		}
 		else if (parsed[0] == "roomdeleted" and parsed.length() > 2)
 		{
+			clear_players();
 			current_room = 0;
 			current_room_private = false;
 			current_room_host = "";
 			add_buffer_item("misc", parsed[1] + "'s " + parsed[2] + " room has been deleted.");
+			draw_map("lobby");
+			lastx = int(me.x);
+			lasty = int(me.y);
 		}
 		else
 		{
