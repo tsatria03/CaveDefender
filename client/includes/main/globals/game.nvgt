@@ -238,13 +238,11 @@ buffercheck();
 		}
 		if(key_pressed(KEY_RETURN))
 		{
-			if(in_game) game_menu();
-			else if(current_room==0) lobby_menu();
-			else room_menu();
+			send(0, "openmenu", 0, true); // server builds and pushes the right menu (lobby, room, or in-game) for where you are
 		}
 		if(key_pressed(KEY_ESCAPE))
 		{
-			if(in_game) { pause_menu(); continue; }
+			if(in_game) { send(0, "openpausemenu", 0, true); continue; } // server pushes the pause menu
 			bool doexit=true;
 			if(gamxit==1)
 			{
