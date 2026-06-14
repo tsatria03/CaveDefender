@@ -24,6 +24,7 @@ int choice = m.run();
 if(choice < 0) { speak("canceled"); return; }
 string sel = opts[choice];
 if(sel == "Leave room") send(0, "leaveroom", 0, true);
+else if(sel == "Start game") start_game_flow();
 else if(sel == "Kick a player")
 {
 if(current_room_host != name) add_buffer_item("misc", "Only the host can kick players from the room.");

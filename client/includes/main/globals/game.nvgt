@@ -17,6 +17,7 @@ buffercheck();
 		if(!connected) return;
 		update_sound_pools();
 		beaconloop();
+		wallcheck();
 		if (alt_is_down() or control_is_down() or shift_is_down())
 			movetime=runtime;
 		else
@@ -213,11 +214,13 @@ buffercheck();
 		}
 		if(key_pressed(KEY_RETURN))
 		{
-			if(current_room==0) lobby_menu();
+			if(in_game) pause_menu();
+			else if(current_room==0) lobby_menu();
 			else room_menu();
 		}
 		if(key_pressed(KEY_ESCAPE))
 		{
+			if(in_game) { pause_menu(); continue; }
 			bool doexit=true;
 			if(gamxit==1)
 			{
