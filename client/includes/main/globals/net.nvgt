@@ -314,6 +314,11 @@ void netloop()
 			p.play_stationary("sounds/ui/misc/staffchat.ogg", false);
 			add_buffer_item("staff chats", message.substr(9));
 		}
+		else if (parsed[0] == "localmsg")
+		{
+			p.play_stationary("sounds/ui/misc/localchat.ogg", false);
+			add_buffer_item("local chats", message.substr(9));
+		}
 		else if (parsed[0] == "roomkicked" and parsed.length() > 2)
 		{
 			current_room = 0;

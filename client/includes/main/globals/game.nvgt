@@ -205,6 +205,12 @@ buffercheck();
 			if(msg!="") comparse(msg, "staff");
 			else speak("canceled");
 		}
+		if(key_pressed(KEY_BACKSLASH))
+		{
+			string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "");
+			if(msg!="") comparse(msg, "local");
+			else speak("canceled");
+		}
 		if(key_pressed(KEY_RETURN))
 		{
 			if(current_room==0) lobby_menu();
