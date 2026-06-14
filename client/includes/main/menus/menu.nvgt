@@ -22,7 +22,7 @@ void mainmenu()
 		else if(sel=="st")
 		{
 			m.fade_music();
-			dlgplay("sounds/interface/menu/speaker.ogg");
+			dlgplay("sounds/ui/menu/speaker.ogg");
 		}
 		else if(sel=="rx")
 		{

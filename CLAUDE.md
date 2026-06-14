@@ -67,7 +67,7 @@ Key client files (under `client/includes/main/`):
 - `globals/map.nvgt` — the map (`spawn_map()` via the engine), stepping / wall-bounce, and the `me` / `cam` vectors and bounds.
 - `globals/player.nvgt` — the client-side roster (`players`, an array of the `player` class: `name`, `x`, `y`, a `beacontimer` and `beaconsound` handle) of **other** players the server reports, for placing their sounds in 3D. The local player stays `me` + identity globals. `netloop()` keeps it current via `add_player` / `set_player_position` / `remove_player` (keyed by `get_player_index`), skipping your own name. Also holds the beacon system: `beaconloop()` pulses `beacon.ogg` at each player's spot every `beacontime` (500 ms) on the `beaconpool`, pitch jittered 80–120, gated by `beacons_enabled` (F5).
 - `globals/decpool.nvgt` — the `all_pools` `sound_pool` array (`p` and `beaconpool`) and `initialize` / `update` / `pause` / `resume` helpers. `update_sound_pools()` positions the 3D listener at `me` and is now called every frame from `game()`'s loop (needed for the beacons to pan).
-- `deps/buffer.nvgt` — the message-buffer system: categories (`alerts`, `chats`, `connections`, `pm's`, `misc`, `player events`) the player navigates (comma/period to move within a buffer, brackets to switch buffers) to review messages by type. Exported logs go under appdata `.../CaveDefender/logs`.
+- `deps/buffer.nvgt` — the message-buffer system: categories (`alerts`, `global chats`, `connections`, `private chats`, `misc`, `player events`) the player navigates (comma/period to move within a buffer, brackets to switch buffers) to review messages by type. Exported logs go under appdata `.../CaveDefender/logs`.
 - `deps/` — vendored libraries shared with SimpleFighter: `form.nvgt` (audio form), `form_menu.nvgt`, `setupmenu.nvgt`, `dlg.nvgt` / `dlgplayer.nvgt`, `sound_pool.nvgt`, `savedata.nvgt`, `speech.nvgt`, `voicechat.nvgt`, `GameEngine.nvgt`, etc. **Use `dlgmessage()` for player-facing dialogs** (the nicer wrapper), not raw `dlg()`.
 - `menus/menu.nvgt` — `mainmenu()`, the connection menu + account forms, and the preferences menu (`settingsmenu()`). (The in-game documentation menu was removed; `dockread()` remains a utility in `extrafuncts.nvgt`.)
 - `functions/` — `extrafuncts.nvgt` (helper library) and `savefuncts.nvgt` (`readpreffs` / `writepreffs`, `save_last_account` / `load_last_account`).
@@ -88,7 +88,7 @@ The version string lives in **two** places that must stay in sync: `client/inclu
 ## Audio
 
 NVGT `sound_pool` with HRTF. Player position is the vector `me`; pools advance per frame. `client/sounds/` is organized by category, with a **per-type subfolder** holding named clips:
-- `interface/` — `buffer/`, `dlg/`, `menu/`, `misc/` (online, offline, playerchat, privchat, von, voff, pingstart, pingstop, welcome, newmotd, kick, ban, promote/demote, notify1-5, etc.).
+- `ui/` — `buffer/`, `dlg/`, `menu/`, `misc/` (online, offline, playerchat, privchat, von, voff, pingstart, pingstop, welcome, newmotd, kick, ban, promote/demote, notify1-5, etc.).
 - `objects/walls/<wall>/` — e.g. `wallwood/{bump,death,hurt1-3}.ogg`; also `wallbuilding/bump.ogg` (lobby) and `wallgeneric/bump.ogg` (office room).
 - `objects/platforms/<tile>/` — e.g. `cave/step1-5.ogg`; also `carpet` (lobby) and `cement` (office room).
 - `objects/items/<item>/` — e.g. `wood` (`drop`/`loop`/`place`/`take`).
