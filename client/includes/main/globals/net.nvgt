@@ -320,6 +320,11 @@ void netloop()
 		{
 			add_buffer_item("misc", message);
 		}
+		else if (parsed[0] == "misc" and message.length() > 5)
+		{
+			// Server feedback routed to the misc buffer (and spoken), e.g. command confirmations.
+			add_buffer_item("misc", message.substr(5));
+		}
 		else if (parsed[0] == "welcome")
 			{
 				add_buffer_item("misc", message);

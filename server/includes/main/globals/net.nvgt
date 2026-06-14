@@ -172,7 +172,7 @@ clear_ban(name);
 }
 else
 {
-send(event.peer_id, "error: you are banned for another "+int(bu - nowsec)+" seconds.", 0,true);
+send(event.peer_id, "error: you are banned for "+int(bu - nowsec)+" seconds.", 0,true);
 return;
 }
 }
@@ -1219,7 +1219,7 @@ else
                         {
                             string nmsg = string_join(parsed, " ", 2, parsed.length());
                             send(players[ti].peer_id, "notify "+nmsg, 0, true);
-                            send(event.peer_id, "Notification sent to "+players[ti].name+".", 0, true);
+                            send(event.peer_id, "misc Notification sent to "+players[ti].name+".", 0, true);
                         }
                         else
                         {

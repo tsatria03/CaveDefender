@@ -139,13 +139,27 @@ int64 micros = ts;
 return micros / 1000000;
 }
 
+// Parse a non-negative integer string to int64 exactly, digit by digit. Mute/ban expiries are absolute
+// epochs (~1.7 billion); string_to_number returns a 32-bit float that can't hold that precisely, so a
+// round-trip through it could be off by tens of seconds. This stays exact. Stops at the first non-digit.
+int64 parse_epoch(string s)
+{
+int64 result = 0;
+for(uint i = 0; i < s.length(); i++)
+{
+uint8 c = s[i];
+if(c < 48 or c > 57) break; // 0-9 are byte values 48-57
+result = result * 10 + int64(c - 48);
+}
+return result;
+}
 // Mute state: -1 = not muted, 0 = muted indefinitely, >0 = absolute epoch the mute expires at.
 int64 get_mute_until(string name)
 {
 if(!account_exists(name)) return -1;
 string m = read_field(name, "muted");
 if(m == "") return -1;
-return int64(string_to_number(m));
+return parse_epoch(m);
 }
 // Persists a mute (until = 0 for indefinite, otherwise an absolute epoch from now_epoch()).
 bool set_mute(string name, int64 until)
@@ -166,7 +180,7 @@ int64 get_ban_until(string name)
 if(!account_exists(name)) return -1;
 string b = read_field(name, "banned");
 if(b == "") return -1;
-return int64(string_to_number(b));
+return parse_epoch(b);
 }
 // Persists a ban (until = 0 for permanent, otherwise an absolute epoch from now_epoch()).
 bool set_ban(string name, int64 until)

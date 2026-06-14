@@ -20,6 +20,7 @@ void draw_map(string mapname, double minx=0, double maxx=50, double miny=0, doub
 {
 clear_map(); // wipe the previous map first so switching spaces (lobby <-> office) doesn't stack tiles.
 clear_ambiences(); // drop the previous space's ambient bed before laying the new one.
+clear_musics(); // and its music track, same as the ambience.
 me.x=int((minx+maxx)/2);
 me.y=int((miny+maxy)/2);
 if(mapname=="lobby")
@@ -27,18 +28,21 @@ if(mapname=="lobby")
 spawn_platform(minx, maxx, miny, maxy, "wallbuilding");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "carpet");
 spawn_ambience(minx, maxx, miny, maxy, "lobby", -10); // sounds/ambience/lobby.ogg across the whole lobby.
+spawn_music(minx, maxx, miny, maxy, "lobby", -20); // sounds/music/lobby.ogg across the whole lobby.
 }
 if(mapname=="office")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallgeneric");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "cement");
 spawn_ambience(minx, maxx, miny, maxy, "office", -10); // sounds/ambience/office.ogg across the whole office.
+spawn_music(minx, maxx, miny, maxy, "office", -20); // sounds/music/office.ogg across the whole office (add the file).
 }
 if(mapname=="cavern")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallwood");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "cave");
 spawn_ambience(minx, maxx, miny, maxy, "cavern", -10); // sounds/ambience/cavern.ogg across the whole cavern.
+spawn_music(minx, maxx, miny, maxy, "cavern", -20); // sounds/music/cavern.ogg across the whole cavern.
 }
 }
 void playstep()
