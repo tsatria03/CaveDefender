@@ -327,6 +327,12 @@ if(total==1) head="There is 1 staff member on this game. ";
 else head="There are "+total+" staff members on this game. ";
 return head+list+".";
 }
+// Tells a player which of their saved rooms exist so the client can warn before the create flow.
+// Sends "yourrooms <0/1 public> <0/1 private>".
+void send_yourrooms(int peer, string name)
+{
+send(peer, "yourrooms "+(get_saved_public(name)?"1":"0")+" "+(get_saved_private(name)!=""?"1":"0"), 0,true);
+}
 void netloop()
 {
 event = net.request();
@@ -432,6 +438,12 @@ players[index].muteuntil = mu;
 send(event.peer_id, "muted "+int(mu - nowsec), 0,true);
 }
 }
+// Recreate this host's saved rooms (recreate-on-login). They sit ready in the lobby's room list;
+// the player themselves stays in the lobby until they Join one.
+if(get_saved_public(players[index].name)) create_room(players[index].name, event.peer_id, false, "");
+string savedpriv = get_saved_private(players[index].name);
+if(savedpriv != "") create_room(players[index].name, event.peer_id, true, savedpriv);
+send_yourrooms(event.peer_id, players[index].name);
 // Tell everyone where the new player is, and tell the new player where everyone else is.
 send(0, "pos "+players[index].name+" "+players[index].x+" "+players[index].y, 0,true);
 for(uint i=0; i<players.length(); i++)
@@ -526,6 +538,9 @@ else
 {
 int rid = create_room(players[index].name, event.peer_id, priv, pass);
 players[index].room_id = rid;
+if(priv) set_saved_private(players[index].name, pass);
+else set_saved_public(players[index].name, true);
+send_yourrooms(event.peer_id, players[index].name);
 send(event.peer_id, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name, 0,true);
 }
 }
@@ -665,7 +680,11 @@ int pi=get_player_index(rooms[ri].members[j]);
 if(pi>-1) players[pi].room_id=0;
 send(rooms[ri].members[j], "roomdeleted "+disp+" "+kind, 0,true);
 }
+if(rooms[ri].is_private) set_saved_private(rooms[ri].host, "");
+else set_saved_public(rooms[ri].host, false);
 rooms.remove_at(ri);
+int hpi=get_online_index(disp);
+if(hpi>-1) send_yourrooms(players[hpi].peer_id, disp);
 }
 }
 }
@@ -711,6 +730,7 @@ send(event.peer_id, "Room passwords must be between 6 and 24 characters.", 0,tru
 else
 {
 rooms[ri].password = parsed[1];
+set_saved_private(rooms[ri].host, parsed[1]);
 send(event.peer_id, "Your room's password has been changed successfully.", 0,true);
 }
 }

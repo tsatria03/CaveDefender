@@ -300,6 +300,11 @@ void netloop()
 		{
 			dlgmessage("Your room's password is: " + parsed[1]);
 		}
+		else if (parsed[0] == "yourrooms" and parsed.length() > 2)
+		{
+			have_public_room = (parsed[1] == "1");
+			have_private_room = (parsed[2] == "1");
+		}
 		else if (parsed[0] == "roomkicked" and parsed.length() > 2)
 		{
 			current_room = 0;

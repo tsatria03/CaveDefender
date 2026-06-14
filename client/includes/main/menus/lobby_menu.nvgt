@@ -15,9 +15,14 @@ m.intro_text = "Lobby menu";
 int choice = m.run();
 if(choice < 0) { speak("canceled"); return; }
 string sel = opts[choice];
-if(sel == "Create a public room") send(0, "createroom public", 0, true);
+if(sel == "Create a public room")
+{
+if(have_public_room) { add_buffer_item("misc", "You already have a public room. Use Join to return to it."); return; }
+send(0, "createroom public", 0, true);
+}
 else if(sel == "Create a private room")
 {
+if(have_private_room) { add_buffer_item("misc", "You already have a private room. Use Join to return to it."); return; }
 while(true)
 {
 string pw = vd.password_box("Private room", "Enter a password for your room (at least 6 characters). Others will need it to join.");

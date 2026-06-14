@@ -7,6 +7,8 @@ void game()
 	pinging=false;
 	players.resize(0);
 	current_room=0;
+	have_public_room=false;
+	have_private_room=false;
 	while(true)
 	{
 		wait(5);
