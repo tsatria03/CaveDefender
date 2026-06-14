@@ -614,6 +614,8 @@ send(event.peer_id, "Room passwords must be between 6 and 24 characters.", 0,tru
 else
 {
 int rid = create_room(players[index].name, event.peer_id, priv, pass);
+int cri = get_room_index(rid);
+if(cri>-1) rooms[cri].members.insert_last(event.peer_id); // the creator is now inside their new room.
 if(priv) set_saved_private(players[index].name, pass);
 else set_saved_public(players[index].name, true);
 send_yourrooms(event.peer_id, players[index].name);
@@ -794,7 +796,9 @@ string payload="roomlist "+which;
 for(uint i=0; i<rooms.length(); i++)
 {
 if(rooms[i].is_private != wantpriv) continue;
-payload+="\n"+rooms[i].id+" "+rooms[i].host+" "+rooms[i].members.length()+" 0";
+int gc=0;
+for(uint g=0; g<games.length(); g++) if(games[g].parent_room==rooms[i].id) gc++;
+payload+="\n"+rooms[i].id+" "+rooms[i].host+" "+rooms[i].members.length()+" "+gc;
 }
 send(event.peer_id, payload, 0,true);
 }

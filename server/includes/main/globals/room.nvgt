@@ -21,7 +21,8 @@ host = hostname;
 host_peer = hostpeer;
 is_private = priv;
 password = pass;
-members.insert_last(hostpeer);
+// NOTE: the creator is NOT auto-added to members here. They're only "in" the room when they actually
+// enter it (createroom adds them), so a room recreated on login stays empty until someone joins.
 }
 }
 // The rooms[] index of the room with this id, or -1 if there isn't one.
