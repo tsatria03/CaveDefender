@@ -1,0 +1,44 @@
+// Map music: a looping music track that fills a rectangular area of the map. Works exactly like the
+// ambience class (see ambience.nvgt) but plays from sounds/music/ on its own musicpool: the track
+// plays at the min corner with its range spanning to the max corner, and pauses while the listener is
+// outside the rectangle.
+music@[] musics(0);
+class music
+{
+double minx, maxx, miny, maxy;
+double volume;
+string source; // the type only, e.g. "lobby" -> sounds/music/lobby.ogg (the class adds the path + .ogg)
+int handle = -1;
+bool is_playing = false;
+music(double x1, double x2, double y1, double y2, string src, double vol)
+{
+minx = x1; maxx = x2; miny = y1; maxy = y2; source = src; volume = vol;
+handle = musicpool.play_extended_3d("sounds/music/" + source + ".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, true, 0, 0, volume, 100, false);
+musicpool.update_sound_3d(handle, minx, miny, 0);
+musicpool.update_sound_range_3d(handle, 0, maxx - minx, 0, maxy - miny, 0, 0);
+is_playing = true;
+}
+// Pause the track when the listener leaves the rectangle, resume it on re-entry.
+void update(double lx, double ly)
+{
+bool in_range = (lx >= minx and lx <= maxx and ly >= miny and ly <= maxy);
+if(in_range and !is_playing) { musicpool.resume_sound(handle); is_playing = true; }
+else if(!in_range and is_playing) { musicpool.pause_sound(handle); is_playing = false; }
+}
+}
+// Spawn music over a rectangle. Pass the source type without ".ogg" (the class adds it), e.g.
+// spawn_music(0, 100, 0, 100, "lobby", -10).
+void spawn_music(double x1, double x2, double y1, double y2, string src, double vol)
+{
+music m(x1, x2, y1, y2, src, vol);
+musics.insert_last(m);
+}
+void update_musics(double lx, double ly)
+{
+for(uint i = 0; i < musics.length(); i++) musics[i].update(lx, ly);
+}
+void clear_musics()
+{
+for(uint i = 0; i < musics.length(); i++) musicpool.destroy_sound(musics[i].handle);
+musics.resize(0);
+}

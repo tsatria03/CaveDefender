@@ -1,4 +1,6 @@
 New in 1.9.
+Fixed timed mutes and bans being off by up to a couple of minutes, so a mute or ban now lasts exactly as long as it was set for, and the remaining time is reported accurately.
+The lobby, the rooms, and the game caverns now play their own background music over the ambience.
 Each space now has its own background ambience that plays across the whole map, so the lobby, the rooms, and the game caverns each have their own atmosphere as you move around them.
 The lobby, room, and in-game menus are now handled by the server. If the server is briefly down or busy when you open one, the menu now waits for it and then appears, the same way chat does, instead of failing to open or coming up empty.
 If the connection drops while you are signed in, the game now keeps running and spends up to thirty seconds quietly trying to reconnect and sign you back in, rather than reporting the server offline right away; if it gets back on you return to the lobby, and you can press escape at any time to stop waiting.
