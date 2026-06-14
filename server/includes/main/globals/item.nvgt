@@ -1,0 +1,66 @@
+// An item lying in a game's cavern — for now, wood to gather and feed into the walls. Items are scoped
+// by room_id exactly like walls (every cavern shares the same 0..N grid, so a space id keeps them
+// apart), and authoritative here on the server; the client mirrors them for audio (an ambient loop at
+// the item's spot, a pickup sound). Each carries a unique id so a pickup can name exactly which item
+// was taken. Modeled on SimpleFighter's ground-item and Sammy Center's wood, rebuilt lean. Nothing
+// spawns or picks these up yet — the spawning/gather wiring lands in 6c.
+int next_item_id=1;
+item@[] items;
+class item
+{
+int id;
+int room_id;
+int x, y;
+string type;   // e.g. "wood"
+item(int iid, int rid, int ix, int iy, string ty)
+{
+id=iid;
+room_id=rid;
+x=ix;
+y=iy;
+type=ty;
+}
+}
+// Spawn an item in a space and return its id.
+int spawn_item(int room_id, int x, int y, string type)
+{
+item it(next_item_id, room_id, x, y, type);
+next_item_id++;
+items.insert_last(it);
+return it.id;
+}
+// The items[] index of the item with this id, or -1.
+int get_item_index(int id)
+{
+for(uint i=0; i<items.length(); i++)
+{
+if(@items[i]==null) continue;
+if(items[i].id==id) return i;
+}
+return -1;
+}
+// The items[] index of an item sitting on this cell in the given space, or -1 (first match).
+int item_at(int room_id, int x, int y)
+{
+for(uint i=0; i<items.length(); i++)
+{
+if(@items[i]==null) continue;
+if(items[i].room_id==room_id and items[i].x==x and items[i].y==y) return i;
+}
+return -1;
+}
+// Remove an item by its id (on pickup).
+void remove_item(int id)
+{
+int i=get_item_index(id);
+if(i>-1) items.remove_at(i);
+}
+// Remove every item in a space (when a game ends).
+void clear_items(int room_id)
+{
+for(int i=int(items.length())-1; i>=0; i--)
+{
+if(@items[i]==null) continue;
+if(items[i].room_id==room_id) items.remove_at(i);
+}
+}

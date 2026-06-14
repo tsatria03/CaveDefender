@@ -48,6 +48,7 @@ while(true)
 {
 wait(5);
 netloop();
+gametick();
 }
 }
 void writeprefs()

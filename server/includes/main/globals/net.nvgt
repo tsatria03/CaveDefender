@@ -647,11 +647,57 @@ bool solo=(parsed[2]=="solo");
 int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo);
 send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+players[index].name, 0,true);
 set_room_scope(index, gid);
+send(event.peer_id, "gamephase idle 0", 0,true);
 }
 }
 else if(parsed[0]=="leavegame" and index>-1)
 {
 leave_game(event.peer_id);
+}
+else if(parsed[0]=="beginround" and index>-1)
+{
+int gi=get_game_index(players[index].room_id);
+if(gi==-1)
+{
+send(event.peer_id, "You are not in a game.", 0,true);
+}
+else if(games[gi].host_peer != event.peer_id)
+{
+send(event.peer_id, "Only the host can begin the round.", 0,true);
+}
+else if(games[gi].phase != "idle")
+{
+send(event.peer_id, "The round has already started.", 0,true);
+}
+else
+{
+games[gi].buildduration = build_seconds(games[gi].size);
+set_game_phase(gi, "build");
+}
+}
+else if(parsed[0]=="skipbuild" and index>-1)
+{
+int gi=get_game_index(players[index].room_id);
+if(gi==-1)
+{
+send(event.peer_id, "You are not in a game.", 0,true);
+}
+else if(games[gi].host_peer != event.peer_id)
+{
+send(event.peer_id, "Only the host can skip the build phase.", 0,true);
+}
+else if(!is_staff(players[index].rank))
+{
+send(event.peer_id, "Only staff can skip the build phase.", 0,true);
+}
+else if(games[gi].phase != "build")
+{
+send(event.peer_id, "There is no build phase to skip.", 0,true);
+}
+else
+{
+set_game_phase(gi, "wave");
+}
 }
 else if(parsed[0]=="stopgame" and index>-1 and parsed.length()>1)
 {
@@ -725,11 +771,18 @@ else if(games[gi].members.length() >= 4)
 {
 send(event.peer_id, "That game is full.", 0,true);
 }
+else if(games[gi].phase != "idle" and games[gi].phase != "build")
+{
+send(event.peer_id, "That game is already in progress.", 0,true);
+}
 else
 {
 games[gi].members.insert_last(event.peer_id);
 send(event.peer_id, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].host, 0,true);
 set_room_scope(index, games[gi].id);
+int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
+if(rem<0) rem=0;
+send(event.peer_id, "gamephase "+games[gi].phase+" "+rem, 0,true);
 }
 }
 }

@@ -28,6 +28,36 @@ else if(sizechoice == 1) size = 50;
 else size = 100;
 send(0, "startgame " + size + " " + kind, 0, true);
 }
+// Seconds left in the build phase, from the duration the server sent and our local phase timer.
+int build_remaining()
+{
+int r = int(game_build_seconds) - int(game_phasetimer.elapsed / 1000);
+return r < 0 ? 0 : r;
+}
+// The game menu, opened with Enter while in a game. Shows the round status, and for the host the
+// round controls: Begin round when idle, Skip build phase during build. (Shift+Enter to place wood on
+// a wall comes in 6c.)
+void game_menu()
+{
+string[] opts;
+bool host = (current_game_host == name);
+if(host and game_phase == "idle") opts.insert_last("Begin round");
+else if(host and game_phase == "build" and myrank != "player") opts.insert_last("Skip build phase");
+opts.insert_last("Back");
+string status;
+if(game_phase == "build") status = "Build phase, " + build_remaining() + " seconds remaining.";
+else if(game_phase == "wave") status = "The enemies are attacking.";
+else status = "Waiting to start.";
+setupmenu();
+for(uint i = 0; i < opts.length(); i++) m.add_item(opts[i]);
+m.intro_text = "Game menu. " + status;
+int choice = m.run();
+if(choice < 0) { speak("canceled"); return; }
+string sel = opts[choice];
+if(sel == "Begin round") send(0, "beginround", 0, true);
+else if(sel == "Skip build phase") send(0, "skipbuild", 0, true);
+else speak("canceled"); // Back
+}
 void pause_menu()
 {
 pause_pools();

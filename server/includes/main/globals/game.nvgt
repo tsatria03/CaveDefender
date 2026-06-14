@@ -15,6 +15,9 @@ int host_peer;
 int size;         // grid size: 25 (small), 50 (medium), or 100 (large)
 bool solo;        // true = private/unjoinable; false = Open (others in the room may join)
 int[] members;    // peer ids of everyone currently in the cavern
+string phase="idle"; // round phase: idle -> build -> wave -> over -> idle (host begins from idle)
+timer phasetimer;    // times the current phase (drives the build-phase countdown)
+int buildduration=0; // how many seconds the build phase lasts (set per map size when the round begins)
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl)
 {
 id=gid;
@@ -113,5 +116,32 @@ games[i].host_peer=games[i].members[0];
 int npi=get_player_index(games[i].host_peer);
 if(npi>-1) games[i].host=players[npi].name;
 }
+}
+}
+// How long the build phase runs for a given map size (difficulty: bigger maps get more prep time).
+int build_seconds(int size)
+{
+if(size==25) return 30;
+if(size==100) return 90;
+return 60;
+}
+// Set a game's round phase and tell everyone in it, so their clients announce the change and run the
+// build countdown. The seconds value is the build duration when entering build, 0 otherwise.
+void set_game_phase(int gindex, string phase)
+{
+if(gindex<0 or gindex>=int(games.length())) return;
+games[gindex].phase=phase;
+if(phase=="build") games[gindex].phasetimer.restart();
+int secs = (phase=="build") ? games[gindex].buildduration : 0;
+for(uint i=0; i<games[gindex].members.length(); i++)
+send(games[gindex].members[i], "gamephase "+phase+" "+secs, 0, true);
+}
+// Called every server tick: any game whose build phase has run out advances to the wave phase.
+void gametick()
+{
+for(uint i=0; i<games.length(); i++)
+{
+if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
+set_game_phase(int(i), "wave");
 }
 }
