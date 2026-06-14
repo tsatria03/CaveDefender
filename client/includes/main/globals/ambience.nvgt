@@ -1,0 +1,44 @@
+// Map ambience: a looping sound bed that fills a rectangular area of the map, tied to each space
+// (lobby/office/cavern). draw_map() spawns the matching one across the whole map. Modeled on
+// SimpleFighter's ambsource: the sound plays at the min corner with its range spanning to the max
+// corner, and pauses while the listener is outside the rectangle. Plays on its own ambpool.
+ambience@[] ambiences(0);
+class ambience
+{
+double minx, maxx, miny, maxy;
+double volume;
+string source; // the type only, e.g. "lobby" -> sounds/ambience/lobby.ogg (the class adds the path + .ogg)
+int handle = -1;
+bool is_playing = false;
+ambience(double x1, double x2, double y1, double y2, string src, double vol)
+{
+minx = x1; maxx = x2; miny = y1; maxy = y2; source = src; volume = vol;
+handle = ambpool.play_extended_3d("sounds/ambience/" + source + ".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, true, 0, 0, volume, 100, false);
+ambpool.update_sound_3d(handle, minx, miny, 0);
+ambpool.update_sound_range_3d(handle, 0, maxx - minx, 0, maxy - miny, 0, 0);
+is_playing = true;
+}
+// Pause the bed when the listener leaves the rectangle, resume it on re-entry.
+void update(double lx, double ly)
+{
+bool in_range = (lx >= minx and lx <= maxx and ly >= miny and ly <= maxy);
+if(in_range and !is_playing) { ambpool.resume_sound(handle); is_playing = true; }
+else if(!in_range and is_playing) { ambpool.pause_sound(handle); is_playing = false; }
+}
+}
+// Spawn an ambience over a rectangle. Pass the source type without ".ogg" (the class adds it), e.g.
+// spawn_ambience(0, 100, 0, 100, "lobby", -10).
+void spawn_ambience(double x1, double x2, double y1, double y2, string src, double vol)
+{
+ambience a(x1, x2, y1, y2, src, vol);
+ambiences.insert_last(a);
+}
+void update_ambiences(double lx, double ly)
+{
+for(uint i = 0; i < ambiences.length(); i++) ambiences[i].update(lx, ly);
+}
+void clear_ambiences()
+{
+for(uint i = 0; i < ambiences.length(); i++) ambpool.destroy_sound(ambiences[i].handle);
+ambiences.resize(0);
+}
