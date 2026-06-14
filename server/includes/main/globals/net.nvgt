@@ -181,8 +181,16 @@ for(uint i=0; i<players.length(); i++)
 {
 if(players[i].name==name)
 {
-send(event.peer_id,"error: a person with that name is already logged in",0,true);
-cont=false;
+// Already in the roster -- usually a ghost session whose disconnect wasn't detected yet, or the
+// same person reconnecting. Drop the old session and let this login take over, so a dropped or
+// abruptly-closed connection never locks you out with "already logged in".
+int oldpeer=players[i].peer_id;
+string oldrank=players[i].rank;
+handle_disconnect_rooms(oldpeer);
+players.remove_at(i);
+send(0, "offline "+name+" "+oldrank, 0,true);
+net.disconnect_peer_forcefully(oldpeer);
+break;
 }
 }
 if(players.length()>=userlimit)
@@ -332,6 +340,14 @@ return head+list+".";
 void send_yourrooms(int peer, string name)
 {
 send(peer, "yourrooms "+(get_saved_public(name)?"1":"0")+" "+(get_saved_private(name)!=""?"1":"0"), 0,true);
+}
+// Sends a message to every online staff member (used by staff chat).
+void relay_to_staff(string msg)
+{
+for(uint i=0; i<players.length(); i++)
+{
+if(is_staff(players[i].rank)) send(players[i].peer_id, msg, 0, true);
+}
 }
 void netloop()
 {
@@ -486,6 +502,16 @@ send(event.peer_id, "there are currently "+players.length()+" players on the ser
 else if(parsed[0]=="staff" and index>-1)
 {
 send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
+}
+else if(parsed[0]=="staffchat" and index>-1 and is_staff(players[index].rank) and parsed.length()>1)
+{
+string msg=string_join(parsed, " ", 1, parsed.length());
+relay_to_staff("staffmsg "+display_name(index)+": "+msg);
+}
+else if(parsed[0]=="staffme" and index>-1 and is_staff(players[index].rank) and parsed.length()>1)
+{
+string action=string_join(parsed, " ", 1, parsed.length());
+relay_to_staff("staffmsg "+display_name(index)+" "+action);
 }
 else if(parsed[0]=="help" and index>-1 and parsed.length()>1)
 {

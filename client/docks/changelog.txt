@@ -1,4 +1,6 @@
 New in 1.7.
+Fixed being unable to reconnect with an "already logged in" error after a connection dropped or the game was closed. Signing in now takes over your old session instead of being blocked by it.
+Staff can now talk privately with staff chat: press the apostrophe key to send a message only other staff see. You can run slash commands and /me from it too, just like normal chat, and staff messages collect in their own staff chats buffer.
 The chat buffers have been renamed for clarity: chats is now global chats, and pm's is now private chats, making room for more chat types to come.
 Creating a room now plays a sound.
 Your public and private rooms are now saved to your account and come back automatically the next time you sign in, with your private room's password remembered.

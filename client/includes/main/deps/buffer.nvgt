@@ -51,6 +51,21 @@ buffers.insert_last(allbuffer);
 buffer buffer1(name);
 buffers.insert_last(buffer1);
 }
+// Creates a buffer only if it doesn't already exist (used for rank-gated buffers like staff chats).
+void ensure_buffer(string name)
+{
+if(get_buffer_index(name) <= -1) create_buffer(name);
+}
+// Removes a buffer by name if present, keeping bufferpos in range. Used to hide rank-gated buffers
+// (e.g. staff chats) from players who shouldn't see them.
+void remove_buffer(string name)
+{
+int b = get_buffer_index(name);
+if(b <= -1) return;
+buffers.remove_at(b);
+if(bufferpos >= int(buffers.length())) bufferpos = int(buffers.length()) - 1;
+if(bufferpos < 0) bufferpos = 0;
+}
 void add_buffer_item(string buffername, string itemname, bool speakMessage = true)
 {
 int b = get_buffer_index(buffername);
