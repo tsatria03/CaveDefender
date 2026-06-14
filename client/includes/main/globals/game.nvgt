@@ -195,6 +195,7 @@ buffercheck();
 		{
 			string msg=vd.input_box("Chat", "Type a message to send. Begin with a slash to run a command.", "");
 			if(msg!="") comparse(msg);
+			else speak("canceled");
 		}
 		if(key_pressed(KEY_RETURN))
 		{

@@ -21,7 +21,7 @@ setupmenu();
 for(uint i=0; i<opts.length(); i++) m.add_item(opts[i]);
 m.intro_text = "Room menu";
 int choice = m.run();
-if(choice < 0) return;
+if(choice < 0) { speak("canceled"); return; }
 string sel = opts[choice];
 if(sel == "Leave room") send(0, "leaveroom", 0, true);
 else if(sel == "Kick a player")
@@ -30,7 +30,17 @@ if(current_room_host != name) add_buffer_item("misc", "Only the host can kick pl
 else kick_menu();
 }
 else if(sel == "Delete room") delete_room_flow();
-else if(sel == "Back") return;
+else if(sel == "Set password")
+{
+if(current_room_host != name) add_buffer_item("misc", "Only the host can change the room's password.");
+else set_password_flow();
+}
+else if(sel == "Retrieve password")
+{
+if(current_room_host != name) add_buffer_item("misc", "Only the host can view the room's password.");
+else send(0, "getroompassword", 0, true);
+}
+else if(sel == "Back") { speak("canceled"); return; }
 else add_buffer_item("misc", sel + " is coming soon.");
 }
 // Ask the server for the current room's member list and wait for the reply, pumping netloop so other
@@ -74,7 +84,8 @@ for(uint i = 0; i < names.length(); i++) m.add_item(names[i]);
 m.add_item("Back");
 m.intro_text = "Kick a player";
 int choice = m.run();
-if(choice < 0 or choice >= int(names.length())) return;
+if(choice < 0) { speak("canceled"); return; }
+if(choice >= int(names.length())) { speak("canceled"); return; }
 send(0, "kickfromroom " + names[choice], 0, true);
 }
 // Delete the current room. Staff may delete any room; a non-staff host may only delete when alone.
@@ -108,4 +119,26 @@ m.add_item("No");
 m.intro_text = "Are you sure you want to delete this room? Everyone in it will be sent back to the lobby.";
 int c = m.run();
 if(c == 0) send(0, "deleteroom", 0, true);
+else speak("canceled");
+}
+// Host tool (private rooms): change the room's password. Mirrors the create-private rules.
+void set_password_flow()
+{
+while(true)
+{
+string pw = vd.password_box("Set room password", "Enter the new password (at least 6 characters).");
+if(pw == "") { speak("canceled"); return; }
+if(pw.length() < 6 or pw.length() > 24)
+{
+dlgmessage("Room passwords must be between 6 and 24 characters. Press enter to continue.");
+continue;
+}
+if(string_contains(pw, " ", 1) > -1)
+{
+dlgmessage("Room passwords can't contain spaces. Press enter to continue.");
+continue;
+}
+send(0, "setroompassword " + pw, 0, true);
+return;
+}
 }
