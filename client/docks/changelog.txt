@@ -1,3 +1,5 @@
+New in 1.8.
+You can now start a game from inside your room, choosing a game mode and a map size, and you'll be taken into its cavern. While in a game, press escape for a pause menu where you can leave or stop it.
 New in 1.7.
 You can now hear other players moving around you. Their footsteps, and the sound of them bumping into walls, play from their spot on the map on whatever surface they are walking on, so you can tell where people are as they move.
 Each room is now its own space. When you are in a room you stand on the room's own map and only hear, locate, and voice chat with the other players in that room, kept separate from the lobby and from other rooms; leaving a room puts you back in the lobby with everyone there.

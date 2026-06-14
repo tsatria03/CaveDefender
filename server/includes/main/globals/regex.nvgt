@@ -1,5 +1,0 @@
-bool regex(string message, string pattern)
-{
-	regexp re(pattern);
-	return re.match(message);
-}

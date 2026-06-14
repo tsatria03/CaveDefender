@@ -308,6 +308,31 @@ void netloop()
 			lastx = int(me.x);
 			lasty = int(me.y);
 		}
+		else if (parsed[0] == "gamejoined" and parsed.length() > 4)
+		{
+			clear_players();
+			int gsize = string_to_number(parsed[2]);
+			in_game = true;
+			current_game = string_to_number(parsed[1]);
+			current_game_host = parsed[4];
+			add_buffer_item("misc", "You are now in " + parsed[4] + "'s " + parsed[3] + " game.");
+			draw_map("cavern", 0, gsize, 0, gsize);
+			setup_cavern_walls(gsize);
+			lastx = int(me.x);
+			lasty = int(me.y);
+		}
+		else if (parsed[0] == "gameleft")
+		{
+			clear_players();
+			clear_walls();
+			in_game = false;
+			current_game = 0;
+			current_game_host = "";
+			add_buffer_item("misc", "You left the game.");
+			draw_map("office");
+			lastx = int(me.x);
+			lasty = int(me.y);
+		}
 		else if (parsed[0] == "roomlist")
 		{
 			pending_roomlist = message;

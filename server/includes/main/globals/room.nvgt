@@ -45,6 +45,7 @@ int create_room(string hostname, int hostpeer, bool priv, string pass)
 room r(next_room_id, hostname, hostpeer, priv, pass);
 rooms.insert_last(r);
 next_room_id++;
+spawn_border_walls(r.id, 50, 100, 100, false); // an office (the room's map) has indestructible structural walls.
 return r.id;
 }
 // Remove a peer from whatever room they're inside, WITHOUT closing the room (used by "Leave room").
@@ -74,6 +75,7 @@ int pi = get_player_index(mp);
 send(mp, "roomleft", 0, true);
 if(pi > -1) set_room_scope(pi, 0);
 }
+clear_walls(rooms[i].id); // the office is gone, so drop its walls.
 rooms.remove_at(i);
 }
 remove_member(peer);

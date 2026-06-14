@@ -1,0 +1,117 @@
+// A game is a defense round running inside a room — the cavern where the Wallbreaker gameplay happens.
+// Games are SPACES in the same id namespace as rooms (they draw ids from next_room_id), so a player's
+// room_id can point at a game exactly like it points at a room, and all of Section 5's scoping
+// (position, local chat, voice, footsteps) plus the wall system work on a game with no extra code.
+// Each game remembers its parent_room so leaving returns the player to that office. Capacity is up to
+// 4 (one defender per wall); Solo games are private/unjoinable, Open games anyone in the room can join.
+// The build phase, wood, and bots come in later sub-sections (6b-6d); this file is the space + lifecycle.
+game@[] games;
+class game
+{
+int id;
+int parent_room;  // the room (office) this game lives in; leaving returns the player here
+string host;
+int host_peer;
+int size;         // grid size: 25 (small), 50 (medium), or 100 (large)
+bool solo;        // true = private/unjoinable; false = Open (others in the room may join)
+int[] members;    // peer ids of everyone currently in the cavern
+game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl)
+{
+id=gid;
+parent_room=proom;
+host=hostname;
+host_peer=hostpeer;
+size=sz;
+solo=sl;
+members.insert_last(hostpeer);
+}
+}
+// The games[] index of the game with this id, or -1.
+int get_game_index(int id)
+{
+for(uint i=0; i<games.length(); i++)
+if(games[i].id==id) return i;
+return -1;
+}
+// Create a game inside a room and return its id. Uses the shared room_id namespace so a player's
+// room_id can point at a game just like a room, and spawns the four destroyable cavern walls.
+int create_game(int parent_room, string hostname, int hostpeer, int size, bool solo)
+{
+int gid=next_room_id;
+next_room_id++;
+game g(gid, parent_room, hostname, hostpeer, size, solo);
+games.insert_last(g);
+spawn_border_walls(gid, size, 100, 100, true); // the four destroyable cavern walls (placeholder hp).
+return gid;
+}
+// End a game for everyone: return each member to the parent room (office), drop the cavern walls, and
+// remove the game. Used by Stop game and when the last player leaves.
+void end_game(int gindex)
+{
+if(gindex<0 or gindex>=int(games.length())) return;
+int proom=games[gindex].parent_room;
+int gid=games[gindex].id;
+for(uint i=0; i<games[gindex].members.length(); i++)
+{
+int pi=get_player_index(games[gindex].members[i]);
+if(pi<0) continue;
+send(games[gindex].members[i], "gameleft", 0, true);
+set_room_scope(pi, proom);
+}
+clear_walls(gid);
+games.remove_at(gindex);
+}
+// One player leaves a game while it continues for others: solo or last-out ends it; if the host leaves
+// an Open game with others still inside, the host migrates to another player.
+void leave_game(int peer)
+{
+int gi=-1, mi=-1;
+for(uint i=0; i<games.length() and gi<0; i++)
+for(uint j=0; j<games[i].members.length(); j++)
+if(games[i].members[j]==peer){ gi=int(i); mi=int(j); break; }
+if(gi<0) return;
+int pi=get_player_index(peer);
+int proom=games[gi].parent_room;
+games[gi].members.remove_at(mi);
+if(games[gi].members.length()==0)
+{
+clear_walls(games[gi].id);
+games.remove_at(gi);
+}
+else if(games[gi].host_peer==peer)
+{
+games[gi].host_peer=games[gi].members[0];
+int npi=get_player_index(games[gi].host_peer);
+if(npi>-1) games[gi].host=players[npi].name;
+}
+if(pi>-1)
+{
+send(peer, "gameleft", 0, true);
+set_room_scope(pi, proom);
+}
+}
+// Called when a peer disconnects: drop them from any game they were in, ending it if they were the
+// last player or migrating the host if they hosted an Open game with others still inside. (Remaining
+// members keep their game scope, so no rescoping is needed here.)
+void handle_disconnect_games(int peer)
+{
+for(int i=int(games.length())-1; i>=0; i--)
+{
+int mi=-1;
+for(uint j=0; j<games[i].members.length(); j++)
+if(games[i].members[j]==peer){ mi=int(j); break; }
+if(mi<0) continue;
+games[i].members.remove_at(mi);
+if(games[i].members.length()==0)
+{
+clear_walls(games[i].id);
+games.remove_at(i);
+}
+else if(games[i].host_peer==peer)
+{
+games[i].host_peer=games[i].members[0];
+int npi=get_player_index(games[i].host_peer);
+if(npi>-1) games[i].host=players[npi].name;
+}
+}
+}

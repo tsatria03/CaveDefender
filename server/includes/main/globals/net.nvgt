@@ -186,6 +186,7 @@ if(players[i].name==name)
 // abruptly-closed connection never locks you out with "already logged in".
 int oldpeer=players[i].peer_id;
 string oldrank=players[i].rank;
+handle_disconnect_games(oldpeer);
 handle_disconnect_rooms(oldpeer);
 players.remove_at(i);
 send(0, "offline "+name+" "+oldrank, 0,true);
@@ -322,14 +323,7 @@ for(uint i=0; i<admins.length(); i++) all.insert_last(admins[i]);
 for(uint i=0; i<mods.length(); i++) all.insert_last(mods[i]);
 int total=int(all.length());
 if(total==0) return "There are no staff members on this game.";
-string list;
-if(total==1) list=all[0];
-else if(total==2) list=all[0]+" and "+all[1];
-else
-{
-for(int i=0; i<total-1; i++) list+=all[i]+", ";
-list+="and "+all[total-1];
-}
+string list=oxford_join(all);
 string head;
 if(total==1) head="There is 1 staff member on this game. ";
 else head="There are "+total+" staff members on this game. ";
@@ -370,8 +364,13 @@ int oldroom = players[pindex].room_id;
 for(uint i=0; i<players.length(); i++)
 if(i!=uint(pindex) and players[i].room_id==oldroom) send(players[i].peer_id, "despawn "+nm, 0, true);
 players[pindex].room_id = newroom;
-players[pindex].x = 25; // every room scope (lobby and office) is 50x50, so the spawn is the center.
-players[pindex].y = 25;
+// Spawn at the center of the new space: the lobby and offices are 50x50 (center 25); a game cavern is
+// sized by its map, so its center is size/2 (matching the client's draw_map centering).
+int center = 25;
+int gi = get_game_index(newroom);
+if(gi > -1) center = games[gi].size / 2;
+players[pindex].x = center;
+players[pindex].y = center;
 for(uint i=0; i<players.length(); i++)
 {
 if(i==uint(pindex) or players[i].room_id!=newroom) continue;
@@ -415,6 +414,7 @@ exit();
 }
 if(event.type==event_disconnect)
 {
+handle_disconnect_games(event.peer_id);
 handle_disconnect_rooms(event.peer_id);
 int index=get_player_index(event.peer_id);
 if(index>-1)
@@ -524,6 +524,7 @@ if(index>-1)
 {
 send(0, "offline "+players[index].name+" "+players[index].rank, 0,true);
 send(players[index].peer_id, "terminate", 0,true);
+handle_disconnect_games(event.peer_id);
 handle_disconnect_rooms(event.peer_id); // close any rooms they host now, not a beat later when enet drops them.
 players.remove_at(index);
 }
@@ -535,13 +536,9 @@ send(event.peer_id, "welcome to the CaveDefender server. server version "+versio
 }
 else if(parsed[0]=="who" and index>-1)
 {
-string list;
-for(uint i=0; i<players.length(); i++)
-{
-list+=display_name(i);
-if(i<players.length()-1) list+=", ";
-}
-send(event.peer_id, "there are currently "+players.length()+" players on the server. they are: "+list+".", 0,true);
+string[] names;
+for(uint i=0; i<players.length(); i++) names.insert_last(display_name(i));
+send(event.peer_id, "there are currently "+players.length()+" players on the server. they are: "+oxford_join(names)+".", 0,true);
 }
 else if(parsed[0]=="staff" and index>-1)
 {
@@ -633,6 +630,43 @@ if(players[index].room_id != 0)
 remove_member(event.peer_id);
 send(event.peer_id, "roomleft", 0,true);
 set_room_scope(index, 0);
+}
+}
+else if(parsed[0]=="startgame" and index>-1 and parsed.length()>2)
+{
+int ri=get_room_index(players[index].room_id);
+if(ri==-1)
+{
+send(event.peer_id, "You must be in a room to start a game.", 0,true);
+}
+else
+{
+int size=int(string_to_number(parsed[1]));
+if(size!=25 and size!=50 and size!=100) size=50;
+bool solo=(parsed[2]=="solo");
+int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo);
+send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+players[index].name, 0,true);
+set_room_scope(index, gid);
+}
+}
+else if(parsed[0]=="leavegame" and index>-1)
+{
+leave_game(event.peer_id);
+}
+else if(parsed[0]=="stopgame" and index>-1)
+{
+int gi=get_game_index(players[index].room_id);
+if(gi==-1)
+{
+send(event.peer_id, "You are not in a game.", 0,true);
+}
+else if(games[gi].host_peer != event.peer_id)
+{
+send(event.peer_id, "Only the host can stop the game.", 0,true);
+}
+else
+{
+end_game(gi);
 }
 }
 else if(parsed[0]=="listrooms" and index>-1 and parsed.length()>1)
@@ -763,6 +797,7 @@ if(pi>-1) set_room_scope(pi, 0);
 }
 if(rooms[ri].is_private) set_saved_private(rooms[ri].host, "");
 else set_saved_public(rooms[ri].host, false);
+clear_walls(rooms[ri].id); // the office is gone, so drop its walls.
 rooms.remove_at(ri);
 int hpi=get_online_index(disp);
 if(hpi>-1) send_yourrooms(players[hpi].peer_id, disp);

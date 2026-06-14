@@ -43,6 +43,7 @@ bool neth=net.setup_server(port, 5, 500);
 show_game_window("CaveDefender server, running on version "+version);
 wait(500);
 speak("server version "+version+", hosted on port "+port+", user limmit "+userlimit);
+spawn_border_walls(0, 50, 100, 100, false); // the lobby (room_id 0) has indestructible structural walls.
 while(true)
 {
 wait(5);

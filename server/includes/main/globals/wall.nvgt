@@ -1,0 +1,79 @@
+// Walls are rectangular regions with health — the breakable backbone of the four-wall defense game.
+// They exist in EVERY space (the lobby, each office, and later each game cavern). Because every space
+// shares the same 0..50 coordinate grid, each wall is tagged with the room_id of the space it belongs
+// to (0 = lobby), so a lookup never confuses one space's wall for another's. The `destroyable` flag is
+// the single rule for "can this wall be hurt?": structural lobby/office borders are destroyable=false
+// and shrug off all damage, while a game's four cavern walls are destroyable=true — they take damage
+// from bots and are repaired with wood. Health is authoritative here on the server; the client only
+// renders the tiles and plays the hurt/death sounds. Mirrors SimpleFighter's wall idea, rebuilt lean
+// (no 3D/z, no transparency, no debris platforms, no map-builder form, no .sif IO).
+wall@[] walls;
+class wall
+{
+int room_id;
+double minx, maxx, miny, maxy;
+double health, maxhealth;
+bool destroyable;
+wall(int rid, double mnx, double mxx, double mny, double mxy, double hp, double maxhp, bool dtb)
+{
+room_id=rid;
+minx=mnx;
+maxx=mxx;
+miny=mny;
+maxy=mxy;
+health=hp;
+maxhealth=maxhp;
+destroyable=dtb;
+}
+}
+// Add one wall to a space and return its index in walls[].
+int spawn_wall(int room_id, double minx, double maxx, double miny, double maxy, double health, double maxhealth, bool destroyable)
+{
+wall w(room_id, minx, maxx, miny, maxy, health, maxhealth, destroyable);
+walls.insert_last(w);
+return walls.length()-1;
+}
+// Spawn the four edge walls (west, east, north, south) bordering a `size` x `size` space. Pass
+// destroyable=false for a structural lobby/office border, true for a game cavern.
+void spawn_border_walls(int room_id, double size, double health, double maxhealth, bool destroyable)
+{
+spawn_wall(room_id, 0, 0, 0, size, health, maxhealth, destroyable);       // west  (x = 0)
+spawn_wall(room_id, size, size, 0, size, health, maxhealth, destroyable); // east  (x = size)
+spawn_wall(room_id, 0, size, size, size, health, maxhealth, destroyable); // north (y = size)
+spawn_wall(room_id, 0, size, 0, 0, health, maxhealth, destroyable);       // south (y = 0)
+}
+// The walls[] index of the wall covering this cell in the given space, or -1 if there isn't one.
+int wall_at(int room_id, double x, double y)
+{
+for(uint i=0; i<walls.length(); i++)
+{
+if(@walls[i]==null) continue;
+if(walls[i].room_id!=room_id) continue;
+if(x>=walls[i].minx and x<=walls[i].maxx and y>=walls[i].miny and y<=walls[i].maxy) return i;
+}
+return -1;
+}
+// Apply damage to a wall. Indestructible walls ignore it; health never drops below 0.
+void damage_wall(int id, double amount)
+{
+if(id<0 or id>=int(walls.length()) or @walls[id]==null) return;
+if(!walls[id].destroyable) return;
+walls[id].health-=amount;
+if(walls[id].health<0) walls[id].health=0;
+}
+// Repair a wall with wood; health never rises above its maximum.
+void repair_wall(int id, double amount)
+{
+if(id<0 or id>=int(walls.length()) or @walls[id]==null) return;
+walls[id].health+=amount;
+if(walls[id].health>walls[id].maxhealth) walls[id].health=walls[id].maxhealth;
+}
+// Remove every wall belonging to a space (when a game ends or a room closes).
+void clear_walls(int room_id)
+{
+for(int i=int(walls.length())-1; i>=0; i--)
+{
+if(@walls[i]==null) continue;
+if(walls[i].room_id==room_id) walls.remove_at(i);
+}
+}

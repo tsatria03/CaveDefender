@@ -1,6 +1,6 @@
 int port=25562;
 int userlimit=200;
-string version="1.7";
+string version="1.8";
 string motd = "Welcome to the server!";
 timer svruptimer;
 file f;
