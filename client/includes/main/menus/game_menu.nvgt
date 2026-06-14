@@ -64,7 +64,7 @@ pause_pools();
 string[] opts;
 opts.insert_last("Resume");
 opts.insert_last("Leave game");
-if(current_game_host == name) opts.insert_last("Stop game");
+if(current_game_host == name or myrank != "player") opts.insert_last("Stop game");
 opts.insert_last("Back");
 setupmenu();
 for(uint i = 0; i < opts.length(); i++) m.add_item(opts[i]);

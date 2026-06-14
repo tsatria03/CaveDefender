@@ -724,9 +724,9 @@ if(gi==-1)
 {
 send(event.peer_id, "You are not in a game.", 0,true);
 }
-else if(games[gi].host_peer != event.peer_id)
+else if(games[gi].host_peer != event.peer_id and !is_staff(players[index].rank))
 {
-send(event.peer_id, "Only the host can stop the game.", 0,true);
+send(event.peer_id, "Only the host or staff can stop the game.", 0,true);
 }
 else
 {
