@@ -92,9 +92,7 @@ send(0, "kickfromroom " + names[choice], 0, true);
 void delete_room_flow()
 {
 bool staff = (myrank != "player");
-if(!staff)
-{
-if(current_room_host != name)
+if(!staff && current_room_host != name)
 {
 add_buffer_item("misc", "Only the host can delete the room.");
 return;
@@ -107,16 +105,17 @@ add_buffer_item("misc", "Couldn't reach the server.");
 return;
 }
 string[] f = string_split(list, " ", true);
-if(int(f.length()) - 1 > 1)
+int count = int(f.length()) - 1; // minus the leading "roommemberlist" token
+if(!staff && count > 1)
 {
 add_buffer_item("misc", "You can't delete the room while other players are in it.");
 return;
 }
-}
 setupmenu();
 m.add_item("Yes");
 m.add_item("No");
-m.intro_text = "Are you sure you want to delete this room? Everyone in it will be sent back to the lobby.";
+string consequence = (count > 1) ? "Everyone in it will be sent back to the lobby." : "You will be sent back to the lobby.";
+m.intro_text = "Are you sure you want to delete this room? " + consequence;
 int c = m.run();
 if(c == 0) send(0, "deleteroom", 0, true);
 else speak("canceled");

@@ -349,6 +349,14 @@ for(uint i=0; i<players.length(); i++)
 if(is_staff(players[i].rank)) send(players[i].peer_id, msg, 0, true);
 }
 }
+// Sends a message to everyone sharing the given room scope (used by local chat). room_id 0 = lobby.
+void relay_to_local(int room_id, string msg)
+{
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].room_id == room_id) send(players[i].peer_id, msg, 0, true);
+}
+}
 void netloop()
 {
 event = net.request();
@@ -512,6 +520,16 @@ else if(parsed[0]=="staffme" and index>-1 and is_staff(players[index].rank) and 
 {
 string action=string_join(parsed, " ", 1, parsed.length());
 relay_to_staff("staffmsg "+display_name(index)+" "+action);
+}
+else if(parsed[0]=="localchat" and index>-1 and parsed.length()>1)
+{
+string msg=string_join(parsed, " ", 1, parsed.length());
+relay_to_local(players[index].room_id, "localmsg "+display_name(index)+": "+msg);
+}
+else if(parsed[0]=="localme" and index>-1 and parsed.length()>1)
+{
+string action=string_join(parsed, " ", 1, parsed.length());
+relay_to_local(players[index].room_id, "localmsg "+display_name(index)+" "+action);
 }
 else if(parsed[0]=="help" and index>-1 and parsed.length()>1)
 {
