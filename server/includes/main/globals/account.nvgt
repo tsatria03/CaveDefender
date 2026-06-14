@@ -1,17 +1,51 @@
-// Account storage. One account per file at data/players/<username>.usr (key=value text).
-// Passwords are never stored in plaintext: each account gets a random salt and we store
-// the SHA-256 hash of salt+password. Each account also stores a rank: player, moderator,
-// administrator, or developer (mutually exclusive, full words only). A player has no special
-// powers; moderator, administrator, and developer are staff (see is_staff/rank_level).
+// Account storage. Each account is a FOLDER at data/players/<username>/, holding one small file per
+// field: username.usr, password.usr, gender.usr, rank.usr, map.usr, muted.usr, banned.usr.
+// This lets a server host read or edit a single field by hand without parsing a combined file.
+//
+// Passwords are never stored in plaintext: password.usr holds "<salt>:<hash>" -- a random salt
+// (plaintext, NOT secret) and the SHA-256 hash of salt+password, joined by a colon. rank is one of
+// player / moderator / administrator / developer. muted.usr and banned.usr each use the same scheme:
+// empty = not muted/banned, "0" = indefinite/permanent, any other number = the absolute epoch it
+// expires at. map.usr remembers the player's last map (default "lobby"); it is stored but not yet
+// acted on (reserved for the rooms "come back where you left off" feature).
 
-string account_path(string name)
+string account_dir(string name)
 {
-return "data/players/" + string_to_lower_case(name) + ".usr";
+return "data/players/" + string_to_lower_case(name);
 }
-
+string field_path(string name, string field)
+{
+return account_dir(name) + "/" + field + ".usr";
+}
 bool account_exists(string name)
 {
-return file_exists(account_path(name));
+return directory_exists(account_dir(name));
+}
+// Read a single field file, trimmed (so hand-added trailing newlines don't break things). Returns
+// def when the file is missing or empty.
+string read_field(string name, string field, string def="")
+{
+string p = field_path(name, field);
+if(!file_exists(p)) return def;
+file f;
+if(!f.open(p, "rb")) return def;
+string v = f.read();
+f.close();
+v = v.trim_whitespace();
+if(v == "") return def;
+return v;
+}
+// Write a single field file, creating the data/players/<name> folders as needed.
+bool write_field(string name, string field, string value)
+{
+if(!directory_exists("data")) directory_create("data");
+if(!directory_exists("data/players")) directory_create("data/players");
+if(!directory_exists(account_dir(name))) directory_create(account_dir(name));
+file f;
+if(!f.open(field_path(name, field), "wb")) return false;
+f.write(value);
+f.close();
+return true;
 }
 
 string make_salt()
@@ -28,65 +62,50 @@ return salt;
 bool create_account(string name, string password, string gender)
 {
 if(account_exists(name)) return false;
-if(!directory_exists("data/players")) directory_create("data/players");
 string salt = make_salt();
 string hash = string_hash_sha256(salt + password);
-file f;
-if(!f.open(account_path(name), "wb")) return false;
-string data;
-data  = "name=" + name + "\r\n";
-data += "salt=" + salt + "\r\n";
-data += "password=" + hash + "\r\n";
-data += "gender=" + gender + "\r\n";
-data += "rank=player\r\n";
-data += "muted=0\r\n";
-data += "muteuntil=0\r\n";
-data += "banned=0\r\n";
-data += "banuntil=0\r\n";
-f.write(data);
-f.close();
+write_field(name, "username", name);
+write_field(name, "password", salt + ":" + hash);
+write_field(name, "gender", gender);
+write_field(name, "rank", "player");
+write_field(name, "map", "lobby");
+write_field(name, "muted", "");
+write_field(name, "banned", "");
 return true;
 }
 
+// Loads an account's fields into a dictionary (keys: name, salt, password, gender, rank, map, muted,
+// banned). Kept for callers that want several fields at once, such as the /staff listing.
 dictionary@ load_account(string name)
 {
 dictionary@ d = dictionary();
 if(!account_exists(name)) return d;
-file f;
-f.open(account_path(name), "rb");
-string content = f.read();
-f.close();
-string[] lines = string_split(content, "\r\n", true);
-for(uint i=0; i<lines.length(); i++)
-{
-int eq = string_contains(lines[i], "=", 1);
-if(eq < 1) continue;
-string key = string_left(lines[i], eq);
-string val = lines[i].substr(eq + 1);
-d.set(key, val);
-}
+d.set("name", read_field(name, "username"));
+d.set("password", read_field(name, "password"));
+d.set("gender", read_field(name, "gender"));
+d.set("rank", read_field(name, "rank", "player"));
+d.set("map", read_field(name, "map", "lobby"));
+d.set("muted", read_field(name, "muted"));
+d.set("banned", read_field(name, "banned"));
 return d;
 }
 
 bool verify_password(string name, string password)
 {
 if(!account_exists(name)) return false;
-dictionary@ d = load_account(name);
-string salt = "", hash = "";
-d.get("salt", salt);
-d.get("password", hash);
+string blob = read_field(name, "password");
+int c = string_contains(blob, ":", 1);
+if(c < 1) return false;
+string salt = string_left(blob, c);
+string hash = blob.substr(c + 1);
 return string_hash_sha256(salt + password) == hash;
 }
 
-// Returns the stored rank for an account, defaulting to "player" when the account is
-// missing or has no rank field (e.g. accounts created before ranks existed).
+// Returns the stored rank for an account, defaulting to "player" when missing.
 string get_rank(string name)
 {
 if(!account_exists(name)) return "player";
-dictionary@ d = load_account(name);
-string rank = "player";
-d.get("rank", rank);
-return rank;
+return read_field(name, "rank", "player");
 }
 
 // Rank hierarchy as a number, used to gate commands by minimum level.
@@ -98,52 +117,21 @@ if(rank=="administrator") return 2;
 if(rank=="moderator") return 1;
 return 0;
 }
-// Staff = any rank above player (moderator, administrator, developer). Used for DISPLAY
-// (chat-name prefix, /staff listing, the "you are now..." notice), not command gating.
+// Staff = any rank above player. Used for DISPLAY (chat-name prefix, /staff listing, the
+// "you are now..." notice), not command gating.
 bool is_staff(string rank)
 {
 return rank_level(rank) >= 1;
 }
 
-// Rewrites an account file from a dictionary, writing every known field (missing keys fall back
-// to defaults, so older files gain new fields on their next write). Used by set_rank/set_mute.
-bool write_account(dictionary@ d)
-{
-string nm="", salt="", pass="", gender="", rank="player", muted="0", muteuntil="0", banned="0", banuntil="0";
-d.get("name", nm);
-d.get("salt", salt);
-d.get("password", pass);
-d.get("gender", gender);
-d.get("rank", rank);
-d.get("muted", muted);
-d.get("muteuntil", muteuntil);
-d.get("banned", banned);
-d.get("banuntil", banuntil);
-file f;
-if(!f.open(account_path(nm), "wb")) return false;
-string data;
-data  = "name=" + nm + "\r\n";
-data += "salt=" + salt + "\r\n";
-data += "password=" + pass + "\r\n";
-data += "gender=" + gender + "\r\n";
-data += "rank=" + rank + "\r\n";
-data += "muted=" + muted + "\r\n";
-data += "muteuntil=" + muteuntil + "\r\n";
-data += "banned=" + banned + "\r\n";
-data += "banuntil=" + banuntil + "\r\n";
-f.write(data);
-f.close();
-return true;
-}
-// Persists a new rank to an account's file, preserving its other fields. Used by /promote and /demote.
+// Persists a new rank, used by /promote and /demote.
 bool set_rank(string name, string rank)
 {
 if(!account_exists(name)) return false;
-dictionary@ d = load_account(name);
-d.set("rank", rank);
-return write_account(d);
+return write_field(name, "rank", rank);
 }
-// Current time as whole seconds since the Unix epoch, used for absolute mute expiry. NVGT's
+
+// Current time as whole seconds since the Unix epoch, used for absolute mute/ban expiry. NVGT's
 // Poco-backed timestamp converts implicitly to int64 microseconds since 1970 (UTC).
 int64 now_epoch()
 {
@@ -151,61 +139,45 @@ timestamp ts;
 int64 micros = ts;
 return micros / 1000000;
 }
+
 // Mute state: -1 = not muted, 0 = muted indefinitely, >0 = absolute epoch the mute expires at.
 int64 get_mute_until(string name)
 {
 if(!account_exists(name)) return -1;
-dictionary@ d = load_account(name);
-string muted="0", until="0";
-d.get("muted", muted);
-d.get("muteuntil", until);
-if(muted != "1") return -1;
-return int64(string_to_number(until));
+string m = read_field(name, "muted");
+if(m == "") return -1;
+return int64(string_to_number(m));
 }
 // Persists a mute (until = 0 for indefinite, otherwise an absolute epoch from now_epoch()).
 bool set_mute(string name, int64 until)
 {
 if(!account_exists(name)) return false;
-dictionary@ d = load_account(name);
-d.set("muted", "1");
-d.set("muteuntil", "" + until);
-return write_account(d);
+return write_field(name, "muted", "" + until);
 }
 // Clears any mute on an account.
 bool clear_mute(string name)
 {
 if(!account_exists(name)) return false;
-dictionary@ d = load_account(name);
-d.set("muted", "0");
-d.set("muteuntil", "0");
-return write_account(d);
+return write_field(name, "muted", "");
 }
+
 // Ban state: -1 = not banned, 0 = banned permanently, >0 = absolute epoch the ban expires at.
 int64 get_ban_until(string name)
 {
 if(!account_exists(name)) return -1;
-dictionary@ d = load_account(name);
-string banned="0", until="0";
-d.get("banned", banned);
-d.get("banuntil", until);
-if(banned != "1") return -1;
-return int64(string_to_number(until));
+string b = read_field(name, "banned");
+if(b == "") return -1;
+return int64(string_to_number(b));
 }
 // Persists a ban (until = 0 for permanent, otherwise an absolute epoch from now_epoch()).
 bool set_ban(string name, int64 until)
 {
 if(!account_exists(name)) return false;
-dictionary@ d = load_account(name);
-d.set("banned", "1");
-d.set("banuntil", "" + until);
-return write_account(d);
+return write_field(name, "banned", "" + until);
 }
 // Clears any ban on an account.
 bool clear_ban(string name)
 {
 if(!account_exists(name)) return false;
-dictionary@ d = load_account(name);
-d.set("banned", "0");
-d.set("banuntil", "0");
-return write_account(d);
+return write_field(name, "banned", "");
 }

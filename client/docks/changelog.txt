@@ -1,3 +1,5 @@
+New in 1.7.
+If you run your own server, each player account is now stored as a folder of small files, one per setting, instead of a single combined file, so you can read or change an individual setting by hand.
 New in 1.6.
 If you host a private room, you can now use Set password to change its password and Retrieve password to hear or copy the current one.
 The host can now Kick a player back to the lobby from a room, and Delete room now works with a confirmation. Staff can delete any room, while a non-staff host can only delete their own when no one else is inside; anyone in a deleted room is returned to the lobby.

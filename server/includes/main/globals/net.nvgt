@@ -290,11 +290,12 @@ return rank;
 // (Offline) based on the current roster.
 string build_staff_list()
 {
-string[] files=find_files("data/players/*.usr");
+string[] files=find_directories("data/players/*");
 string[] devs, admins, mods;
 for(uint i=0; i<files.length(); i++)
 {
-string acct=files[i].replace(".usr", "", true);
+string acct=files[i];
+if(acct=="" or acct=="." or acct=="..") continue;
 dictionary@ d=load_account(acct);
 string dispname="", rank="";
 d.get("name", dispname);
@@ -710,7 +711,7 @@ send(event.peer_id, "Room passwords must be between 6 and 24 characters.", 0,tru
 else
 {
 rooms[ri].password = parsed[1];
-send(event.peer_id, "Your room's password has been changed.", 0,true);
+send(event.peer_id, "Your room's password has been changed successfully.", 0,true);
 }
 }
 else if(parsed[0]=="restart" and index>-1 and rank_level(players[index].rank)>=2 and parsed.length()>1)
