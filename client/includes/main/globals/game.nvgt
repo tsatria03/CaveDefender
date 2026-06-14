@@ -65,13 +65,13 @@ buffercheck();
 			{
 				spamtimer.restart();
 				vc.record();
-				p.play_stationary("sounds/interface/misc/von.ogg", false);
+				p.play_stationary("sounds/ui/misc/von.ogg", false);
 				recording = true;
 				rectimer.restart();
 			}
 			else if(recording && holdkey == 0)
 			{
-				p.play_stationary("sounds/interface/misc/voff.ogg", false);
+				p.play_stationary("sounds/ui/misc/voff.ogg", false);
 				vc.stop(true, outfile);
 				recording = false;
 				spamtimer.restart();
@@ -100,7 +100,7 @@ buffercheck();
 		}
 		if(recording && rectimer.elapsed >= rectime)
 		{
-			p.play_stationary("sounds/interface/misc/voff.ogg", false);
+			p.play_stationary("sounds/ui/misc/voff.ogg", false);
 			vc.stop(true, outfile);
 			recording = false;
 			spamtimer.restart();
@@ -128,7 +128,7 @@ buffercheck();
 		}
 		if(key_released(KEY_O) && recording && voicechat == 1 && holdkey == 1)
 		{
-			p.play_stationary("sounds/interface/misc/voff.ogg", false);
+			p.play_stationary("sounds/ui/misc/voff.ogg", false);
 			vc.stop(true, outfile);
 			recording = false;
 			spamtimer.restart();
@@ -167,7 +167,7 @@ buffercheck();
 			pinging=true;
 			pingtimer.restart();
 			send(0, "ping_request", 0, true);
-			p.play_stationary("sounds/interface/misc/pingstart.ogg", false);
+			p.play_stationary("sounds/ui/misc/pingstart.ogg", false);
 			add_buffer_item("misc", "Pinging");
 		}
 		if(pinging and pingtimer.elapsed>=pingtimeout)
@@ -184,18 +184,18 @@ buffercheck();
 			beacons_enabled=!beacons_enabled;
 			if(beacons_enabled)
 			{
-				p.play_stationary("sounds/interface/misc/toggleon.ogg", false);
+				p.play_stationary("sounds/ui/misc/toggleon.ogg", false);
 				speak("beacons enabled");
 			}
 			else
 			{
-				p.play_stationary("sounds/interface/misc/toggleoff.ogg", false);
+				p.play_stationary("sounds/ui/misc/toggleoff.ogg", false);
 				speak("beacons disabled");
 			}
 		}
 		if(key_pressed(KEY_SLASH))
 		{
-			string msg=vd.input_box("Chat", "Type a message to send. Begin with a slash to run a command.", "");
+			string msg=vd.input_box("Global chat", "Type a message to send. Begin with a slash to run a command.", "");
 			if(msg!="") comparse(msg);
 			else speak("canceled");
 		}

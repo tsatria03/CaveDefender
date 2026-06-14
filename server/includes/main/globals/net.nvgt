@@ -542,6 +542,7 @@ if(priv) set_saved_private(players[index].name, pass);
 else set_saved_public(players[index].name, true);
 send_yourrooms(event.peer_id, players[index].name);
 send(event.peer_id, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name, 0,true);
+send(event.peer_id, "play roomcreate.ogg", 0,true);
 }
 }
 }

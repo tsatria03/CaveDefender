@@ -70,7 +70,7 @@ for(uint i=0; i<players.length(); i++)
 {
 if(players[i].beacontimer.elapsed>=beacontime)
 {
-players[i].beaconsound=beaconpool.play_extended_3d("sounds/interface/misc/beacon.ogg", me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, random(80, 120), false);
+players[i].beaconsound=beaconpool.play_extended_3d("sounds/ui/misc/beacon.ogg", me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, random(80, 120), false);
 players[i].beacontimer.restart();
 }
 }

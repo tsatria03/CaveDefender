@@ -1,4 +1,6 @@
 New in 1.7.
+The chat buffers have been renamed for clarity: chats is now global chats, and pm's is now private chats, making room for more chat types to come.
+Creating a room now plays a sound.
 Your public and private rooms are now saved to your account and come back automatically the next time you sign in, with your private room's password remembered.
 If you run your own server, each player account is now stored as a folder of small files, one per setting, instead of a single combined file, so you can read or change an individual setting by hand.
 New in 1.6.
