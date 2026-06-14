@@ -55,7 +55,7 @@ if(choice < 0) { speak("canceled"); return; }
 if(choice >= int(ids.length())) { speak("canceled"); return; } // Back
 if(which == "private")
 {
-string pw = vd.password_box("Join private room", "Enter the room's password.");
+string pw = vd.password_box("Private room", "Enter the room's password.");
 if(pw == "") { speak("canceled"); return; }
 send(0, "joinroom " + ids[choice] + " " + pw, 0, true);
 }

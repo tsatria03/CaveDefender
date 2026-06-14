@@ -511,12 +511,20 @@ players[index].x=string_to_number(parsed[1]);
 players[index].y=string_to_number(parsed[2]);
 broadcast_pos(index);
 }
+else if(parsed[0]=="step" and parsed.length()>3 and index>-1)
+{
+// Relay a footstep/wall-bump sound to everyone sharing the stepper's room, so they hear the move.
+string fs="footstep "+parsed[1]+" "+parsed[2]+" "+parsed[3];
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id==players[index].room_id and players[i].peer_id!=event.peer_id) send(players[i].peer_id, fs, 0, true);
+}
 else if(parsed[0]=="disconnect")
 {
 if(index>-1)
 {
 send(0, "offline "+players[index].name+" "+players[index].rank, 0,true);
 send(players[index].peer_id, "terminate", 0,true);
+handle_disconnect_rooms(event.peer_id); // close any rooms they host now, not a beat later when enet drops them.
 players.remove_at(index);
 }
 }
