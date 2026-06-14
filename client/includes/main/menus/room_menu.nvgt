@@ -65,13 +65,14 @@ if(roommembers_received) return pending_roommembers;
 }
 return "";
 }
-// Ask the server who shares our current space (lobby, room, or game) and wait for the reply, pumping
-// netloop meanwhile. Returns the raw "scopememberlist ..." payload, or "" on timeout / lost connection.
-string get_scope_members()
+// Ask the server for a roster (e.g. "scopemembers", "scopemembers 0", "roomgamemembers") and wait for
+// the reply, pumping netloop meanwhile. Returns the raw "scopememberlist ..." payload, or "" on
+// timeout / lost connection.
+string get_members(string request)
 {
 scopemembers_received = false;
 pending_scopemembers = "";
-send(0, "scopemembers", 0, true);
+send(0, request, 0, true);
 timer t;
 t.restart();
 while(t.elapsed < 3000)
@@ -83,16 +84,75 @@ if(scopemembers_received) return pending_scopemembers;
 }
 return "";
 }
-// Speak a roster of everyone in our current space, e.g. "there are currently 2 players in this room.
-// they are: ..." The `where` phrase is supplied by the caller ("in this room", "in the lobby", ...).
-void announce_scope(string where)
+// Speak a roster, e.g. "there are currently 2 players in this room. they are: ..." The request is the
+// server query to run and `where` is the spoken phrase ("in this room", "in the lobby", ...).
+void announce_members(string request, string where)
 {
-string roster = get_scope_members();
+string roster = get_members(request);
 if(!connected) return;
 string[] f = string_split(roster, " ", true);
 string[] names;
 for(uint i = 1; i < f.length(); i++) names.insert_last(f[i]);
-speak("there are currently " + names.length() + " players " + where + ". they are: " + oxford_join(names) + ".");
+speak(roster_sentence(where, names));
+}
+// Ask the server for a games glance (request is "roomgamemembers" for this room or "allgamemembers" for
+// the whole server) and wait for the reply, pumping netloop meanwhile. Returns the raw
+// "roomgamelist <count> ..." payload, or "" on timeout.
+string get_games(string request)
+{
+roomgames_received = false;
+pending_roomgames = "";
+send(0, request, 0, true);
+timer t;
+t.restart();
+while(t.elapsed < 3000)
+{
+wait(5);
+netloop();
+if(!connected) return "";
+if(roomgames_received) return pending_roomgames;
+}
+return "";
+}
+// Speak a games glance, e.g. "There are 2 games being played in this room, with 5 players across them: ..."
+void announce_games(string request, string where)
+{
+string payload = get_games(request);
+if(!connected) return;
+string[] f = string_split(payload, " ", true);
+int gc = (f.length() > 1) ? int(string_to_number(f[1])) : 0; // f[0]="roomgamelist", f[1]=game count
+string[] names;
+for(uint i = 2; i < f.length(); i++) names.insert_last(f[i]);
+speak(games_sentence(where, gc, names));
+}
+// Ask the server for the rooms overview (count + office occupants) and wait for the reply, pumping
+// netloop meanwhile. Returns the raw "roomsoverviewlist <count> ..." payload, or "" on timeout.
+string get_rooms()
+{
+rooms_received = false;
+pending_rooms = "";
+send(0, "roomsoverview", 0, true);
+timer t;
+t.restart();
+while(t.elapsed < 3000)
+{
+wait(5);
+netloop();
+if(!connected) return "";
+if(rooms_received) return pending_rooms;
+}
+return "";
+}
+// Speak a rooms glance, e.g. "There are 2 rooms open on the server, with 3 players across them: ..."
+void announce_rooms()
+{
+string payload = get_rooms();
+if(!connected) return;
+string[] f = string_split(payload, " ", true);
+int rc = (f.length() > 1) ? int(string_to_number(f[1])) : 0; // f[0]="roomsoverviewlist", f[1]=room count
+string[] names;
+for(uint i = 2; i < f.length(); i++) names.insert_last(f[i]);
+speak(rooms_sentence(rc, names));
 }
 // Host tool: pick a player in the room to eject back to the lobby.
 void kick_menu()

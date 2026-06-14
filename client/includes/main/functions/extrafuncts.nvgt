@@ -531,6 +531,42 @@ result += parts[i] + ", ";
 result += "and " + parts[n - 1];
 return result;
 }
+// Build a grammatically correct roster announcement, e.g. "There are 2 players in the lobby: a and b."
+// Handles the empty ("There are no players...") and singular ("There is 1 player...") cases. `where`
+// is the location phrase ("on the server", "in this room", ...).
+string roster_sentence(string where, string[]@ names)
+{
+uint n = names.length();
+if (n == 0) return "There are no players " + where + ".";
+if (n == 1) return "There is 1 player " + where + ": " + names[0] + ".";
+return "There are " + n + " players " + where + ": " + oxford_join(names) + ".";
+}
+// Build a glance summary of games and the players in them, e.g. "There are 2 games being played in this
+// room, with 5 players across them: a, b, c, d, and e." Handles 0 games, 1 game ("in it"), and the
+// (defensive) games-but-no-players case. `where` is the location phrase ("in this room", "on the server").
+string games_sentence(string where, int games, string[]@ names)
+{
+if (games <= 0) return "There are no games being played " + where + ".";
+string gpart = (games == 1) ? "There is 1 game being played " + where : "There are " + games + " games being played " + where;
+uint p = names.length();
+if (p == 0) return gpart + ".";
+string inphrase = (games == 1) ? "in it" : "across them";
+string ppart = (p == 1) ? ", with 1 player " + inphrase + ": " : ", with " + p + " players " + inphrase + ": ";
+return gpart + ppart + oxford_join(names) + ".";
+}
+// Build a glance summary of the open rooms and the players standing in them (their offices, not their
+// games), e.g. "There are 2 rooms open on the server, with 3 players across them: a, b, and c." Handles
+// 0 rooms, 1 room ("in it"), and the empty (open but unoccupied) room case.
+string rooms_sentence(int rooms, string[]@ names)
+{
+if (rooms <= 0) return "There are no rooms open on the server.";
+string rpart = (rooms == 1) ? "There is 1 room open on the server" : "There are " + rooms + " rooms open on the server";
+uint p = names.length();
+if (p == 0) return rpart + ".";
+string inphrase = (rooms == 1) ? "in it" : "across them";
+string ppart = (p == 1) ? ", with 1 player " + inphrase + ": " : ", with " + p + " players " + inphrase + ": ";
+return rpart + ppart + oxford_join(names) + ".";
+}
 string string_join(const string[]& in arr, const string& in delimiter)
 {
 string result="";
