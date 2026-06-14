@@ -5,6 +5,10 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add the R, L, and G glance keys that tell you who is in the rooms, the lobby, and the games, working from the lobby, a room, or a game, with correct grammar for empty spaces and single players.
+**Finished. Keep a game that has not started yet open after everyone leaves so it can be rejoined, including your own single-player game, and list started games in the join menu while telling you that you can't join one once it has begun.
+**Finished. Ask for confirmation before leaving or stopping a game, and let staff stop a game from inside it as well as from the room menu.
+**Finished. Rewrite the player and staff help pages to spell out what each rank can and can't do, covering commands, rooms, games, and chat channels.
 **Finished. Add the start a game, join a game, and stop a game options inside a room, where you pick a game mode and map size to start a game, join an open game with a free slot, or stop a game you host (staff can stop any).
 **Finished. Play other players' footsteps and wall bumps from their spot on the map as they move, on the surface they are walking on, so you can hear people moving around you.
 **Finished. Make each room its own space, drawing the room's own map and keeping its players, positions, footstep beacons, and voice chat separate from the lobby and from other rooms.

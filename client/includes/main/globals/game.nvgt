@@ -14,7 +14,18 @@ void game()
 		wait(5);
 buffercheck();
 		netloop();
-		if(!connected) return;
+		if(reconnected) return;            // back online after a drop; login() respawns us in the lobby
+		if(connection_dropped) return;     // reconnect gave up, or a login error ended the session
+		if(!connected and !reconnecting) return; // a kick or server shutdown ended the session
+		// While reconnecting in the background the loop keeps running (audio, ping, escape all work).
+		if(reconnecting and key_pressed(KEY_ESCAPE))
+		{
+			reconnecting=false;
+			reconnect_aborted=true;
+			connection_dropped=true;
+			speak("canceled");
+			continue;
+		}
 		update_sound_pools();
 		beaconloop();
 		wallcheck();
@@ -181,12 +192,13 @@ buffercheck();
 			pingtimer.restart();
 			send(0, "ping_request", 0, true);
 			p.play_stationary("sounds/ui/misc/pingstart.ogg", false);
-			add_buffer_item("misc", "Pinging");
+			add_buffer_item("connections", "Pinging");
 		}
 		if(pinging and pingtimer.elapsed>=pingtimeout)
 		{
 			pinging=false;
-			add_buffer_item("misc", "Ping lost");
+			p.play_stationary("sounds/ui/misc/pingstop.ogg", false);
+			add_buffer_item("connections", "Ping lost");
 		}
 		if(key_pressed(KEY_F4))
 		{
