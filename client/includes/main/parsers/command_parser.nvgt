@@ -23,14 +23,26 @@ void unknown_command(string cmd)
 {
 	add_buffer_item("misc", "Unknown command: " + cmd);
 }
-void comparse(string text)
+// Sends plain chat text to the right destination for the given channel.
+void send_chat(string channel, string text)
+{
+	if(channel == "staff") send(0, "staffchat " + text, 0, true);
+	else send(0, text, 1, true); // global (local/team added later)
+}
+// Sends a /me emote to the right destination. text is the full "/me <action>" string.
+void send_me(string channel, string text)
+{
+	if(channel == "staff") send(0, "staffme " + text.substr(4), 0, true);
+	else send(0, text, 1, true); // global: the server parses /me out of the chat message
+}
+void comparse(string text, string channel = "global")
 {
 	text = text.trim_whitespace();
 	if(text == "") return;
-	// No leading slash: ordinary public chat.
+	// No leading slash: ordinary chat, sent on whichever channel this input belongs to.
 	if(text[0] != "/")
 	{
-		send(0, text, 1, true);
+		send_chat(channel, text);
 		return;
 	}
 	string[] parsed = string_split(text, " ", true);
@@ -94,7 +106,7 @@ void comparse(string text)
 	else if(base == "/me")
 	{
 		if(parsed.length() < 2) { syntax_error("/me message"); return; }
-		send(0, text, 1, true);
+		send_me(channel, text);
 	}
 	else if(base == "/reply" or base == "/r")
 	{

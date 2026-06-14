@@ -195,8 +195,14 @@ buffercheck();
 		}
 		if(key_pressed(KEY_SLASH))
 		{
-			string msg=vd.input_box("Global chat", "Type a message to send. Begin with a slash to run a command.", "");
+			string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "");
 			if(msg!="") comparse(msg);
+			else speak("canceled");
+		}
+		if(key_pressed(KEY_APOSTROPHE) and myrank != "player")
+		{
+			string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "");
+			if(msg!="") comparse(msg, "staff");
 			else speak("canceled");
 		}
 		if(key_pressed(KEY_RETURN))
