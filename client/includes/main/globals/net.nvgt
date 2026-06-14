@@ -276,7 +276,7 @@ void netloop()
 		{
 			current_room = string_to_number(parsed[1]);
 			current_room_private = (parsed[2] == "private");
-			add_buffer_item("misc", "You are now in " + parsed[3] + "'s room.");
+			add_buffer_item("misc", "You are now in " + parsed[3] + "'s " + parsed[2] + " room.");
 		}
 		else if (parsed[0] == "roomleft")
 		{
