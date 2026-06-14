@@ -577,6 +577,97 @@ send(event.peer_id, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"privat
 }
 }
 }
+else if(parsed[0]=="roommembers" and index>-1)
+{
+string payload="roommemberlist";
+int ri=get_room_index(players[index].room_id);
+if(ri>-1)
+{
+for(uint j=0; j<rooms[ri].members.length(); j++)
+{
+int pi=get_player_index(rooms[ri].members[j]);
+if(pi>-1) payload+=" "+players[pi].name;
+}
+}
+send(event.peer_id, payload, 0,true);
+}
+else if(parsed[0]=="kickfromroom" and index>-1 and parsed.length()>1)
+{
+int ri=get_room_index(players[index].room_id);
+if(ri==-1)
+{
+send(event.peer_id, "You are not in a room.", 0,true);
+}
+else if(rooms[ri].host_peer != event.peer_id)
+{
+send(event.peer_id, "Only the host can kick players from the room.", 0,true);
+}
+else
+{
+int targetpeer=-1;
+for(uint j=0; j<rooms[ri].members.length(); j++)
+{
+int pi=get_player_index(rooms[ri].members[j]);
+if(pi>-1 and string_to_lower_case(players[pi].name)==string_to_lower_case(parsed[1])) { targetpeer=rooms[ri].members[j]; break; }
+}
+if(targetpeer==-1)
+{
+send(event.peer_id, "That player isn't in your room.", 0,true);
+}
+else if(targetpeer==event.peer_id)
+{
+send(event.peer_id, "You can't kick yourself.", 0,true);
+}
+else
+{
+string hostname=rooms[ri].host;
+string kind=rooms[ri].is_private?"private":"public";
+int tpi=get_player_index(targetpeer);
+string tname=(tpi>-1)?players[tpi].name:parsed[1];
+remove_member(targetpeer);
+if(tpi>-1) players[tpi].room_id=0;
+send(targetpeer, "roomkicked "+hostname+" "+kind, 0,true);
+for(uint j=0; j<rooms[ri].members.length(); j++)
+{
+send(rooms[ri].members[j], "roomkickannounce "+tname+" "+hostname+" "+kind, 0,true);
+}
+}
+}
+}
+else if(parsed[0]=="deleteroom" and index>-1)
+{
+int ri=get_room_index(players[index].room_id);
+if(ri==-1)
+{
+send(event.peer_id, "You are not in a room.", 0,true);
+}
+else
+{
+bool staff=is_staff(players[index].rank);
+bool host=(rooms[ri].host_peer==event.peer_id);
+bool alone=(rooms[ri].members.length()<=1);
+if(!staff and !host)
+{
+send(event.peer_id, "Only the host can delete the room.", 0,true);
+}
+else if(!staff and !alone)
+{
+send(event.peer_id, "You can't delete the room while other players are in it.", 0,true);
+}
+else
+{
+string disp=rooms[ri].host;
+string kind=rooms[ri].is_private?"private":"public";
+for(uint j=0; j<rooms[ri].members.length(); j++)
+{
+int pi=get_player_index(rooms[ri].members[j]);
+if(pi>-1) players[pi].room_id=0;
+send(rooms[ri].members[j], "roomdeleted "+disp+" "+kind, 0,true);
+}
+rooms.remove_at(ri);
+}
+}
+}
 else if(parsed[0]=="restart" and index>-1 and rank_level(players[index].rank)>=2 and parsed.length()>1)
 {
 int secs=string_to_number(parsed[1]);

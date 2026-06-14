@@ -1,16 +1,23 @@
 ####These are the things that need to be finished for future versions of the game.
 
-****Unfinished. Build the actual cave defender gameplay, where players defend the cave.
-****Unfinished. Expand the map system beyond the current small starter lobby.
+****Unfinished. Make each room its own space: draw the room's map and keep its players, chat, and voice separate from the lobby and from other rooms.
+****Unfinished. Build the cave defender gameplay that runs inside a room, where you gather wood, build and repair the four walls, and survive waves of bots, on small, medium, or large maps.
+****Unfinished. Add the start a game, join a game, and stop a game options inside a room.
+****Unfinished. Expand the map system beyond the current starter lobby.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a rooms system reached from a lobby menu, where you can create or join public and private rooms, with private rooms protected by a password, and up to one public and one private room per person.
+**Finished. Add a room menu to leave a room, kick a player as the host, and delete a room, with staff able to delete any room and a host able to delete their own when no one else is inside.
+**Finished. Require account usernames and passwords to be between 6 and 24 characters, return the cursor to the field that needs fixing on the connection menu, and report staff commands you can't use as unknown.
+**Finished. Add the /me action command and the /reply command for answering the last private message.
 **Finished. Add staff commands to ban and unban players, for a set time or permanently, saved so the ban blocks them from signing back in.
 **Finished. Add staff commands to mute and unmute a player's chat and voice, for a set time or indefinitely, saved so the mute survives reconnects and restarts.
 **Finished. Add staff commands to kick a player, and to promote or demote players between the moderator, administrator, and developer ranks.
 **Finished. Add the staff command to list every moderator, administrator, and developer, online or offline.
 **Finished. Add staff notification commands to alert everyone, or a single player, with a sound.
 **Finished. Add staff commands to restart or shut down the server, and send players back to the connection menu whenever the server goes offline.
+**Finished. Add a help command that opens the player or staff help pages.
 **Finished. Announce when a player creates a new account and joins for the first time.
 **Finished. Add persistent player ranks of player, moderator, administrator, and developer, with staff names shown in chat, private messages, and the staff and who lists.
 **Finished. Reject signing in when your game version does not match the server's.
