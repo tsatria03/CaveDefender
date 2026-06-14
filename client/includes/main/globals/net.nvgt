@@ -226,6 +226,12 @@ void netloop()
 		{
 			remove_player(parsed[1]);
 		}
+		else if (parsed[0] == "footstep" and parsed.length() > 3)
+		{
+			int fx = string_to_number(parsed[2]);
+			int fy = string_to_number(parsed[3]);
+			p.play_extended_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+		}
 		else if (parsed[0] == "yourrank" and parsed.length() > 1)
 		{
 			myrank = parsed[1];
