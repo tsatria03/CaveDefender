@@ -1,4 +1,5 @@
 New in 1.7.
+Updated the todo list file with the latest bug fix and feature improvements made to the game.
 You can now use local chat with the backslash key to talk to everyone in your current space, the lobby or your room, separate from global chat. As with the other chats, /me and slash commands work from it too.
 Fixed being unable to reconnect with an "already logged in" error after a connection dropped or the game was closed. Signing in now takes over your old session instead of being blocked by it.
 Staff can now talk privately with staff chat: press the apostrophe key to send a message only other staff see. You can run slash commands and /me from it too, just like normal chat, and staff messages collect in their own staff chats buffer.

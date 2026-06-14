@@ -7,6 +7,14 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add local chat on the backslash key, so you can talk to everyone in your current space, the lobby or your room, separate from global chat.
+**Finished. Add staff chat on the apostrophe key, a private channel only other staff can see and send to, collected in its own buffer hidden from regular players.
+**Finished. Make every chat input accept slash commands and /me, scoped to that channel, and rename the chat buffers to global chats and private chats.
+**Finished. Play a sound when a room is created.
+**Finished. Save each host's public and private rooms to their account and recreate them automatically on the next sign in, remembering the private room's password.
+**Finished. Let a private room host change its password with Set password and recall it with Retrieve password.
+**Finished. Store each player account as a folder of small files, one per setting, so a server host can read or change a single value by hand.
+**Finished. Fix being unable to reconnect with an already logged in error, so signing in now takes over the old session.
 **Finished. Add a rooms system reached from a lobby menu, where you can create or join public and private rooms, with private rooms protected by a password, and up to one public and one private room per person.
 **Finished. Add a room menu to leave a room, kick a player as the host, and delete a room, with staff able to delete any room and a host able to delete their own when no one else is inside.
 **Finished. Require account usernames and passwords to be between 6 and 24 characters, return the cursor to the field that needs fixing on the connection menu, and report staff commands you can't use as unknown.

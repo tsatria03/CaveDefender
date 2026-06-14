@@ -17,7 +17,7 @@ buffercheck();
 		if(!connected) return;
 		update_sound_pools();
 		beaconloop();
-		if (alt_is_down())
+		if (alt_is_down() or control_is_down() or shift_is_down())
 			movetime=runtime;
 		else
 			movetime=walktime;
