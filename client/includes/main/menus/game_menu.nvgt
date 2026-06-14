@@ -126,18 +126,20 @@ if(!connected) return;
 string[] lines = string_split(raw, "\n", true);
 int[] ids;
 string[] labels;
+string[] phases;
 for(uint i = 1; i < lines.length(); i++)
 {
 string[] f = string_split(lines[i], " ", true);
-if(f.length() < 5) continue;
+if(f.length() < 6) continue;
 int members = string_to_number(f[2]);
 int size = string_to_number(f[3]);
 bool solo = (f[4] == "solo");
 if(solo and f[1] != name) continue;    // others can't join a single-player game, but its host may rejoin
 if(members >= 4) continue;             // full
 ids.insert_last(string_to_number(f[0]));
+phases.insert_last(f[5]);              // idle / build / wave / over (used to report started games on pick)
 if(solo) labels.insert_last("Your single-player game, " + size + " by " + size);
-else labels.insert_last(f[1] + "'s game, " + members + (members == 1 ? " player" : " players") + ", " + size + " by " + size);
+else labels.insert_last(f[1] + "'s open game, " + members + (members == 1 ? " player" : " players") + ", " + size + " by " + size);
 }
 if(ids.length() == 0)
 {
@@ -147,9 +149,14 @@ return;
 setupmenu();
 for(uint i = 0; i < labels.length(); i++) m.add_item(labels[i]);
 m.add_item("Back");
-m.intro_text = "Join a game";
+m.intro_text = "Choose a game to join";
 int choice = m.run();
 if(choice < 0 or choice >= int(ids.length())) { speak("canceled"); return; }
+if(phases[choice] != "idle" and phases[choice] != "build")
+{
+add_buffer_item("misc", "That game has already started, so you can't join it.");
+return;
+}
 send(0, "joingame " + ids[choice], 0, true);
 }
 // Stop a game in the current room. Staff see every game; a non-staff player sees only games they host
@@ -180,7 +187,7 @@ return;
 setupmenu();
 for(uint i = 0; i < labels.length(); i++) m.add_item(labels[i]);
 m.add_item("Back");
-m.intro_text = "Stop a game";
+m.intro_text = "Choose a game to stop";
 int choice = m.run();
 if(choice < 0 or choice >= int(ids.length())) { speak("canceled"); return; }
 send(0, "stopgame " + ids[choice], 0, true);

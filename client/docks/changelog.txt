@@ -1,4 +1,6 @@
 New in 1.8.
+The Join game menu now lists games that are already underway as well, but tells you a game has already started, so you can't join it, if you pick one.
+Fixed the Join game menu failing to open, and reading out a line of raw text instead, whenever a room already had a game in it.
 Fixed leaving a game you hadn't started yet closing it for good, so you had no way back in. A game that has not begun its round now stays open in your room after everyone steps out, and you can rejoin it from Join game, including your own single-player game; it closes only when stopped or when the room closes.
 Pressing R, L, or G now gives you a spoken glance at who is around and where, much like /who does for the whole server. In the lobby, R lists the open rooms, L the players in the lobby, and G every game on the server; inside a room, R is your room and G is your room's games; and in a game, G lists your game. All of these readouts, and /who, now use correct grammar for empty spaces and for a single player or game.
 Fixed the room list showing a phantom player in a room nobody had joined, and the number of games in progress now shows the real count for each room instead of always reading zero.
