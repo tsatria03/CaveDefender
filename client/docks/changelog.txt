@@ -1,4 +1,6 @@
 New in 1.6.
+You can now join a private room: choose Join a private room, pick one from the list, and enter its password to get in.
+You can now join a public room. Choose Join a public room from the lobby menu to see the open rooms, who hosts each one, how many players are in it, and how many games are in progress, then pick one to join.
 New accounts now require a username and a password that are each between 6 and 24 characters.
 When creating an account or signing in, if a field is left empty or filled in incorrectly, the cursor now returns to the field you need to fix instead of leaving you to find it.
 You can now create a private room as well, protected by a password between 6 and 24 characters that you set when you make it; others will need that password to join.

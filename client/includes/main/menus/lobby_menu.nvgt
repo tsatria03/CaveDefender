@@ -36,6 +36,8 @@ send(0, "createroom private " + pw, 0, true);
 return;
 }
 }
+else if(sel == "Join a public room") join_room_menu("public");
+else if(sel == "Join a private room") join_room_menu("private");
 else if(sel == "Back") return;
 else add_buffer_item("misc", sel + " is coming soon.");
 }

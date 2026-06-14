@@ -506,11 +506,13 @@ else if(parsed[0]=="createroom" and index>-1 and parsed.length()>1)
 {
 if(players[index].room_id != 0)
 {
-send(event.peer_id, "You are already in a room.", 0,true);
+int cr=get_room_index(players[index].room_id);
+send(event.peer_id, "You are already in a "+((cr>-1 and rooms[cr].is_private)?"private":"public")+" room.", 0,true);
 }
 else if(get_hosted_room_index(event.peer_id) > -1)
 {
-send(event.peer_id, "You already have a room. Use Join to return to it.", 0,true);
+int hr=get_hosted_room_index(event.peer_id);
+send(event.peer_id, "You already have a "+(rooms[hr].is_private?"private":"public")+" room. Use Join to return to it.", 0,true);
 }
 else
 {
@@ -535,6 +537,45 @@ if(players[index].room_id != 0)
 remove_member(event.peer_id);
 players[index].room_id = 0;
 send(event.peer_id, "roomleft", 0,true);
+}
+}
+else if(parsed[0]=="listrooms" and index>-1 and parsed.length()>1)
+{
+string which=parsed[1];
+bool wantpriv=(which=="private");
+string payload="roomlist "+which;
+for(uint i=0; i<rooms.length(); i++)
+{
+if(rooms[i].is_private != wantpriv) continue;
+payload+="\n"+rooms[i].id+" "+rooms[i].host+" "+rooms[i].members.length()+" 0";
+}
+send(event.peer_id, payload, 0,true);
+}
+else if(parsed[0]=="joinroom" and index>-1 and parsed.length()>1)
+{
+if(players[index].room_id != 0)
+{
+send(event.peer_id, "You are already in a room.", 0,true);
+}
+else
+{
+int ri=get_room_index(string_to_number(parsed[1]));
+if(ri==-1)
+{
+send(event.peer_id, "That room no longer exists.", 0,true);
+}
+else if(rooms[ri].is_private and (parsed.length()<3 or parsed[2]!=rooms[ri].password))
+{
+send(event.peer_id, "Incorrect room password.", 0,true);
+}
+else
+{
+bool already=false;
+for(uint k=0; k<rooms[ri].members.length(); k++) if(rooms[ri].members[k]==event.peer_id) already=true;
+if(!already) rooms[ri].members.insert_last(event.peer_id);
+players[index].room_id=rooms[ri].id;
+send(event.peer_id, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"private":"public")+" "+rooms[ri].host, 0,true);
+}
 }
 }
 else if(parsed[0]=="restart" and index>-1 and rank_level(players[index].rank)>=2 and parsed.length()>1)

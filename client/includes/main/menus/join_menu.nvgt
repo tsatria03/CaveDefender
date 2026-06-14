@@ -1,0 +1,65 @@
+// Join-room flow: ask the server for the list of rooms, show them in a menu, and join the chosen
+// one. Reached from the lobby menu. Section 3 wires up public rooms; private rooms (with a password
+// prompt) come in the next section.
+
+// Ask the server for a room list ("public" or "private") and wait for the reply, pumping netloop so
+// other incoming messages are still handled meanwhile. Returns the raw "roomlist ..." payload, or
+// "" on timeout / lost connection.
+string get_room_list(string which)
+{
+roomlist_received = false;
+pending_roomlist = "";
+send(0, "listrooms " + which, 0, true);
+timer t;
+t.restart();
+while(t.elapsed < 3000)
+{
+wait(5);
+netloop();
+if(!connected) return "";
+if(roomlist_received) return pending_roomlist;
+}
+return "";
+}
+// Show the list of rooms of the given type and join whichever one is chosen.
+void join_room_menu(string which)
+{
+string list = get_room_list(which);
+if(!connected) return;
+// Payload is "roomlist <which>" then one line per room: "<id> <host> <members> <games>".
+string[] lines = string_split(list, "\n", true);
+int[] ids;
+string[] labels;
+for(uint i = 1; i < lines.length(); i++)
+{
+string[] f = string_split(lines[i], " ", true);
+if(f.length() < 4) continue;
+ids.insert_last(string_to_number(f[0]));
+string host = f[1];
+int members = string_to_number(f[2]);
+int games = string_to_number(f[3]);
+string label = host + "'s room, " + members + (members == 1 ? " player" : " players") + ", " + games + (games == 1 ? " game" : " games") + " in progress";
+labels.insert_last(label);
+}
+if(ids.length() == 0)
+{
+add_buffer_item("misc", "There are no " + which + " rooms right now.");
+return;
+}
+setupmenu();
+for(uint i = 0; i < labels.length(); i++) m.add_item(labels[i]);
+m.add_item("Back");
+m.intro_text = (which == "public" ? "Public rooms" : "Private rooms");
+int choice = m.run();
+if(choice < 0 or choice >= int(ids.length())) return; // Back or cancelled
+if(which == "private")
+{
+string pw = vd.password_box("Join private room", "Enter the room's password.");
+if(pw == "") return; // cancelled
+send(0, "joinroom " + ids[choice] + " " + pw, 0, true);
+}
+else
+{
+send(0, "joinroom " + ids[choice], 0, true);
+}
+}
