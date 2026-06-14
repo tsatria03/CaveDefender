@@ -1,4 +1,5 @@
 New in 1.7.
+Your public and private rooms are now saved to your account and come back automatically the next time you sign in, with your private room's password remembered.
 If you run your own server, each player account is now stored as a folder of small files, one per setting, instead of a single combined file, so you can read or change an individual setting by hand.
 New in 1.6.
 If you host a private room, you can now use Set password to change its password and Retrieve password to hear or copy the current one.

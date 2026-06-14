@@ -25,6 +25,7 @@ bool roomlist_received=false;
 string current_room_host=""; // host name of the room we're in, so we know whether we host it
 string pending_roommembers=""; // last room-member list received (used by kick / delete)
 bool roommembers_received=false;
+bool have_public_room=false, have_private_room=false; // whether we own a saved public/private room
 string version="1.7";
 timer rectimer;
 timer spamtimer;

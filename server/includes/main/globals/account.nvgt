@@ -1,13 +1,12 @@
 // Account storage. Each account is a FOLDER at data/players/<username>/, holding one small file per
-// field: username.usr, password.usr, gender.usr, rank.usr, map.usr, muted.usr, banned.usr.
+// field: username.usr, password.usr, gender.usr, rank.usr, muted.usr, banned.usr.
 // This lets a server host read or edit a single field by hand without parsing a combined file.
 //
 // Passwords are never stored in plaintext: password.usr holds "<salt>:<hash>" -- a random salt
 // (plaintext, NOT secret) and the SHA-256 hash of salt+password, joined by a colon. rank is one of
 // player / moderator / administrator / developer. muted.usr and banned.usr each use the same scheme:
 // empty = not muted/banned, "0" = indefinite/permanent, any other number = the absolute epoch it
-// expires at. map.usr remembers the player's last map (default "lobby"); it is stored but not yet
-// acted on (reserved for the rooms "come back where you left off" feature).
+// expires at.
 
 string account_dir(string name)
 {
@@ -68,7 +67,8 @@ write_field(name, "username", name);
 write_field(name, "password", salt + ":" + hash);
 write_field(name, "gender", gender);
 write_field(name, "rank", "player");
-write_field(name, "map", "lobby");
+write_field(name, "pubroom", "");
+write_field(name, "privroom", "");
 write_field(name, "muted", "");
 write_field(name, "banned", "");
 return true;
@@ -84,7 +84,6 @@ d.set("name", read_field(name, "username"));
 d.set("password", read_field(name, "password"));
 d.set("gender", read_field(name, "gender"));
 d.set("rank", read_field(name, "rank", "player"));
-d.set("map", read_field(name, "map", "lobby"));
 d.set("muted", read_field(name, "muted"));
 d.set("banned", read_field(name, "banned"));
 return d;
@@ -180,4 +179,24 @@ bool clear_ban(string name)
 {
 if(!account_exists(name)) return false;
 return write_field(name, "banned", "");
+}
+// Saved rooms (recreated when the account logs in). pubroom.usr = "1" if they have a public room,
+// blank if not. privroom.usr = the private room's password, blank if they have no private room
+// (the password's presence IS the flag). A server host can hand-create these to pre-make rooms.
+bool get_saved_public(string name)
+{
+return read_field(name, "pubroom") == "1";
+}
+bool set_saved_public(string name, bool has)
+{
+return write_field(name, "pubroom", has ? "1" : "");
+}
+// The saved private-room password, or "" if the account has no private room.
+string get_saved_private(string name)
+{
+return read_field(name, "privroom");
+}
+bool set_saved_private(string name, string password)
+{
+return write_field(name, "privroom", password);
 }
