@@ -26,6 +26,9 @@ buffercheck();
 		{
 			speak(me.x+", "+me.y+" on "+gmt()+". Facing "+facing_name(facing)+".");
 		}
+		if (key_pressed(KEY_R) and current_room != 0 and !in_game) announce_scope("in this room");
+		if (key_pressed(KEY_L) and current_room == 0 and !in_game) announce_scope("in the lobby");
+		if (key_pressed(KEY_G) and in_game) announce_scope("in this game");
 		if (key_down(KEY_LEFT) and movetimer.elapsed>=movetime)
 		{
 			facing=Left;

@@ -31,6 +31,8 @@ int current_game=0; // the id of the game we're in (0 = none); a space id in the
 string current_game_host=""; // host of the game we're in, so we know whether we may Stop it
 string pending_gamelist=""; // last game-list payload from the server (used by the join / stop menus)
 bool gamelist_received=false;
+string pending_scopemembers=""; // last scope-member list (used by the R/L/G roster keys)
+bool scopemembers_received=false;
 string game_phase="idle"; // the current game's round phase (idle/build/wave), synced from the server
 double game_build_seconds=0; // build-phase length (or remaining, on join) for the local countdown
 timer game_phasetimer; // restarted on each phase change; drives the build-phase countdown shown in the game menu

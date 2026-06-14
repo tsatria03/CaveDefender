@@ -1,4 +1,5 @@
 New in 1.8.
+You can now check who is in your current space and hear their names: press R while in a room, L while in the lobby, or G while in a game, much like /who does for the whole server.
 Fixed the room list showing a phantom player in a room nobody had joined, and the number of games in progress now shows the real count for each room instead of always reading zero.
 The help pages you open with /help have been rewritten to clearly lay out what each rank can and can't do, covering not just commands but rooms, games, and the chat channels, so the limits for players and staff are all in one place. This is handy for server hosters too.
 Staff can now stop a game from inside it, not just from the room menu, so a moderator or above who is in a game can end it without leaving first.

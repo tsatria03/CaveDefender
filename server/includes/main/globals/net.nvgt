@@ -843,6 +843,15 @@ if(pi>-1 and players[pi].room_id==rooms[ri].id) payload+=" "+players[pi].name; /
 }
 send(event.peer_id, payload, 0,true);
 }
+else if(parsed[0]=="scopemembers" and index>-1)
+{
+// Everyone sharing the requester's current space (their room_id) — used by the R/L/G roster keys.
+// Works uniformly for the lobby (room_id 0), an office, or a game cavern.
+string payload="scopememberlist";
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id == players[index].room_id) payload+=" "+players[i].name;
+send(event.peer_id, payload, 0,true);
+}
 else if(parsed[0]=="kickfromroom" and index>-1 and parsed.length()>1)
 {
 int ri=get_room_index(players[index].room_id);
