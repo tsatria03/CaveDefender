@@ -18,3 +18,14 @@ result += parts[i] + ", ";
 result += "and " + parts[n - 1];
 return result;
 }
+
+// Build a grammatically correct roster announcement, e.g. "There are 2 players in the lobby: a and b."
+// Handles the empty ("There are no players...") and singular ("There is 1 player...") cases. `where`
+// is the location phrase ("on the server", "in this room", ...).
+string roster_sentence(string where, string[]@ names)
+{
+uint n = names.length();
+if (n == 0) return "There are no players " + where + ".";
+if (n == 1) return "There is 1 player " + where + ": " + names[0] + ".";
+return "There are " + n + " players " + where + ": " + oxford_join(names) + ".";
+}

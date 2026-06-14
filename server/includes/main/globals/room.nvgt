@@ -68,6 +68,10 @@ void handle_disconnect_rooms(int peer)
 for(int i=int(rooms.length())-1; i>=0; i--)
 {
 if(rooms[i].host_peer != peer) continue;
+// The office is closing, so end every game running inside it first (mirrors deleteroom), or those
+// games (now persisting while idle) would be left orphaned with no parent room.
+for(int g=int(games.length())-1; g>=0; g--)
+if(games[g].parent_room==rooms[i].id) end_game(g);
 for(uint j=0; j<rooms[i].members.length(); j++)
 {
 int mp = rooms[i].members[j];

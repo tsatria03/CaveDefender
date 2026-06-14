@@ -132,10 +132,12 @@ string[] f = string_split(lines[i], " ", true);
 if(f.length() < 5) continue;
 int members = string_to_number(f[2]);
 int size = string_to_number(f[3]);
-if(f[4] == "solo") continue;    // can't join a single-player game
-if(members >= 4) continue;      // full
+bool solo = (f[4] == "solo");
+if(solo and f[1] != name) continue;    // others can't join a single-player game, but its host may rejoin
+if(members >= 4) continue;             // full
 ids.insert_last(string_to_number(f[0]));
-labels.insert_last(f[1] + "'s game, " + members + (members == 1 ? " player" : " players") + ", " + size + " by " + size);
+if(solo) labels.insert_last("Your single-player game, " + size + " by " + size);
+else labels.insert_last(f[1] + "'s game, " + members + (members == 1 ? " player" : " players") + ", " + size + " by " + size);
 }
 if(ids.length() == 0)
 {

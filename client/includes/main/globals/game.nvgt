@@ -26,9 +26,18 @@ buffercheck();
 		{
 			speak(me.x+", "+me.y+" on "+gmt()+". Facing "+facing_name(facing)+".");
 		}
-		if (key_pressed(KEY_R) and current_room != 0 and !in_game) announce_scope("in this room");
-		if (key_pressed(KEY_L) and current_room == 0 and !in_game) announce_scope("in the lobby");
-		if (key_pressed(KEY_G) and in_game) announce_scope("in this game");
+		if (key_pressed(KEY_R) and !in_game)
+		{
+			if(current_room != 0) announce_members("scopemembers", "in this room");
+			else announce_rooms();
+		}
+		if (key_pressed(KEY_L) and !in_game) announce_members("scopemembers 0", "in the lobby");
+		if (key_pressed(KEY_G))
+		{
+			if(in_game) announce_members("scopemembers", "in this game");
+			else if(current_room != 0) announce_games("roomgamemembers", "in this room");
+			else announce_games("allgamemembers", "on the server");
+		}
 		if (key_down(KEY_LEFT) and movetimer.elapsed>=movetime)
 		{
 			facing=Left;

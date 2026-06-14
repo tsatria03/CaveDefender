@@ -538,7 +538,7 @@ else if(parsed[0]=="who" and index>-1)
 {
 string[] names;
 for(uint i=0; i<players.length(); i++) names.insert_last(display_name(i));
-send(event.peer_id, "there are currently "+players.length()+" players on the server. they are: "+oxford_join(names)+".", 0,true);
+send(event.peer_id, roster_sentence("on the server", names), 0,true);
 }
 else if(parsed[0]=="staff" and index>-1)
 {
@@ -765,8 +765,9 @@ else if(games[gi].parent_room != players[index].room_id)
 {
 send(event.peer_id, "That game isn't in your room.", 0,true);
 }
-else if(games[gi].solo)
+else if(games[gi].solo and games[gi].host_peer != event.peer_id)
 {
+// A Solo game is unjoinable by others, but its own host may rejoin it after stepping out.
 send(event.peer_id, "That is a single-player game.", 0,true);
 }
 else if(games[gi].members.length() >= 4)
@@ -845,11 +846,44 @@ send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="scopemembers" and index>-1)
 {
-// Everyone sharing the requester's current space (their room_id) — used by the R/L/G roster keys.
-// Works uniformly for the lobby (room_id 0), an office, or a game cavern.
+// Everyone in a given space (room_id). With no argument it's the requester's own scope; with one it's
+// that specific space (the R/L/G keys use this — L passes 0 for the lobby). Works for lobby, office, or game.
+int target = (parsed.length()>1) ? int(string_to_number(parsed[1])) : players[index].room_id;
 string payload="scopememberlist";
 for(uint i=0; i<players.length(); i++)
-if(players[i].room_id == players[index].room_id) payload+=" "+players[i].name;
+if(players[i].room_id == target) payload+=" "+players[i].name;
+send(event.peer_id, payload, 0,true);
+}
+else if(parsed[0]=="roomgamemembers" and index>-1)
+{
+// Game count + everyone across all games running in the requester's current room (the G key, from a room).
+int rid = players[index].room_id;
+int gamecount=0;
+for(uint g=0; g<games.length(); g++) if(games[g].parent_room==rid) gamecount++;
+string payload="roomgamelist "+gamecount;
+for(uint i=0; i<players.length(); i++)
+{
+int gi=get_game_index(players[i].room_id);
+if(gi>-1 and games[gi].parent_room == rid) payload+=" "+players[i].name;
+}
+send(event.peer_id, payload, 0,true);
+}
+else if(parsed[0]=="allgamemembers" and index>-1)
+{
+// Game count + everyone in any game across the whole server (the G key, pressed from the lobby). Shares
+// the roomgamelist reply format with roomgamemembers; the client just labels it "on the server".
+string payload="roomgamelist "+games.length();
+for(uint i=0; i<players.length(); i++)
+if(get_game_index(players[i].room_id)>-1) payload+=" "+players[i].name;
+send(event.peer_id, payload, 0,true);
+}
+else if(parsed[0]=="roomsoverview" and index>-1)
+{
+// Room count + everyone standing in a room's office (NOT its games) across the server (the R key, from
+// the lobby). Office occupants have room_id == that room's id; game players have room_id == a game id.
+string payload="roomsoverviewlist "+rooms.length();
+for(uint i=0; i<players.length(); i++)
+if(get_room_index(players[i].room_id)>-1) payload+=" "+players[i].name;
 send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="kickfromroom" and index>-1 and parsed.length()>1)

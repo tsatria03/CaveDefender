@@ -78,8 +78,13 @@ int proom=games[gi].parent_room;
 games[gi].members.remove_at(mi);
 if(games[gi].members.length()==0)
 {
+// An idle game (round not begun) stays open in its room so it can be rejoined later, like a room does;
+// it closes only on Stop or when the room closes. Once a round has started, an emptied game just ends.
+if(games[gi].phase != "idle")
+{
 clear_walls(games[gi].id);
 games.remove_at(gi);
+}
 }
 else if(games[gi].host_peer==peer)
 {
