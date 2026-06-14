@@ -668,6 +668,51 @@ rooms.remove_at(ri);
 }
 }
 }
+else if(parsed[0]=="getroompassword" and index>-1)
+{
+int ri=get_room_index(players[index].room_id);
+if(ri==-1)
+{
+send(event.peer_id, "You are not in a room.", 0,true);
+}
+else if(rooms[ri].host_peer != event.peer_id)
+{
+send(event.peer_id, "Only the host can view the room's password.", 0,true);
+}
+else if(!rooms[ri].is_private)
+{
+send(event.peer_id, "Only private rooms have a password.", 0,true);
+}
+else
+{
+send(event.peer_id, "roompassword "+rooms[ri].password, 0,true);
+}
+}
+else if(parsed[0]=="setroompassword" and index>-1 and parsed.length()>1)
+{
+int ri=get_room_index(players[index].room_id);
+if(ri==-1)
+{
+send(event.peer_id, "You are not in a room.", 0,true);
+}
+else if(rooms[ri].host_peer != event.peer_id)
+{
+send(event.peer_id, "Only the host can change the room's password.", 0,true);
+}
+else if(!rooms[ri].is_private)
+{
+send(event.peer_id, "Only private rooms have a password.", 0,true);
+}
+else if(parsed[1].length()<6 or parsed[1].length()>24)
+{
+send(event.peer_id, "Room passwords must be between 6 and 24 characters.", 0,true);
+}
+else
+{
+rooms[ri].password = parsed[1];
+send(event.peer_id, "Your room's password has been changed.", 0,true);
+}
+}
 else if(parsed[0]=="restart" and index>-1 and rank_level(players[index].rank)>=2 and parsed.length()>1)
 {
 int secs=string_to_number(parsed[1]);

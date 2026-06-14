@@ -13,15 +13,15 @@ setupmenu();
 for(uint i=0; i<opts.length(); i++) m.add_item(opts[i]);
 m.intro_text = "Lobby menu";
 int choice = m.run();
-if(choice < 0) return;
+if(choice < 0) { speak("canceled"); return; }
 string sel = opts[choice];
 if(sel == "Create a public room") send(0, "createroom public", 0, true);
 else if(sel == "Create a private room")
 {
 while(true)
 {
-string pw = vd.password_box("Create a private room", "Enter a password for your room (at least 6 characters). Others will need it to join.");
-if(pw == "") return; // cancelled
+string pw = vd.password_box("Private room", "Enter a password for your room (at least 6 characters). Others will need it to join.");
+if(pw == "") { speak("canceled"); return; }
 if(pw.length() < 6 or pw.length() > 24)
 {
 dlgmessage("Room passwords must be between 6 and 24 characters. Press enter to continue.");
@@ -38,6 +38,6 @@ return;
 }
 else if(sel == "Join a public room") join_room_menu("public");
 else if(sel == "Join a private room") join_room_menu("private");
-else if(sel == "Back") return;
+else if(sel == "Back") { speak("canceled"); return; }
 else add_buffer_item("misc", sel + " is coming soon.");
 }
