@@ -39,6 +39,12 @@ else return event.message;
 // off, begin_reconnect_attempt() opens one fresh connection, and reconnect_tick() (one net.request per
 // frame) advances the handshake: connect, re-login, then either resume (reconnected) or, after
 // reconnecttime, give up (connection_dropped). Like the ping timeout, it waits before declaring defeat.
+// True when this client is the server's own host machine (connected to localhost). Used to keep the
+// connection-status chatter (lost/reconnected) for the hoster only; remote players reconnect silently.
+bool is_hoster()
+{
+return ip == "localhost" or ip == "127.0.0.1";
+}
 void begin_reconnect_attempt()
 {
 net.disconnect_peer_forcefully(serverpeer); // drop any stale/half-open peer before retrying
@@ -53,8 +59,11 @@ reconnected=false;
 reconnect_aborted=false;
 connected=false;
 reconnect_overall.restart();
+if(is_hoster())
+{
 speak("Connection lost. Trying to reconnect. Press escape to give up.");
 add_buffer_item("connections", "Connection lost. Trying to reconnect.");
+}
 begin_reconnect_attempt();
 }
 void reconnect_tick()
@@ -174,8 +183,11 @@ return false;
 if(reconnected)
 {
 reconnected=false;
+if(is_hoster())
+{
 speak("Reconnected.");
 add_buffer_item("connections", "Reconnected.");
+}
 continue; // back online; game() respawns us in the lobby
 }
 if(connection_dropped)

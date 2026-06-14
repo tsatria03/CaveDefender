@@ -19,22 +19,26 @@ vector me;
 void draw_map(string mapname, double minx=0, double maxx=50, double miny=0, double maxy=50)
 {
 clear_map(); // wipe the previous map first so switching spaces (lobby <-> office) doesn't stack tiles.
+clear_ambiences(); // drop the previous space's ambient bed before laying the new one.
 me.x=int((minx+maxx)/2);
 me.y=int((miny+maxy)/2);
 if(mapname=="lobby")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallbuilding");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "carpet");
+spawn_ambience(minx, maxx, miny, maxy, "lobby", -10); // sounds/ambience/lobby.ogg across the whole lobby.
 }
 if(mapname=="office")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallgeneric");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "cement");
+spawn_ambience(minx, maxx, miny, maxy, "office", -10); // sounds/ambience/office.ogg across the whole office.
 }
 if(mapname=="cavern")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallwood");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "cave");
+spawn_ambience(minx, maxx, miny, maxy, "cavern", -10); // sounds/ambience/cavern.ogg across the whole cavern.
 }
 }
 void playstep()
