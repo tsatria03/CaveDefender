@@ -20,6 +20,8 @@ string myrank="player";
 string last_pm_sender=""; // the most recent player to PM us, used by /reply (/r)
 int current_room=0; // 0 = main lobby; otherwise the id of the room we're in (Enter opens its menu)
 bool current_room_private=false; // whether the room we're in is private (controls room-menu options)
+string pending_roomlist=""; // last room-list payload received from the server (used by the join menu)
+bool roomlist_received=false;
 string version="1.6";
 timer rectimer;
 timer spamtimer;

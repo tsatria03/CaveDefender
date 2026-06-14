@@ -284,6 +284,11 @@ void netloop()
 			current_room_private = false;
 			add_buffer_item("misc", "You left the room.");
 		}
+		else if (parsed[0] == "roomlist")
+		{
+			pending_roomlist = message;
+			roomlist_received = true;
+		}
 		else
 		{
 			speak(message);
