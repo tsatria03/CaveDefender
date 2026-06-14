@@ -313,6 +313,7 @@ void netloop()
 			clear_players();
 			int gsize = string_to_number(parsed[2]);
 			in_game = true;
+			game_phase = "idle";
 			current_game = string_to_number(parsed[1]);
 			current_game_host = parsed[4];
 			add_buffer_item("misc", "You are now in " + parsed[4] + "'s " + parsed[3] + " game.");
@@ -326,12 +327,29 @@ void netloop()
 			clear_players();
 			clear_walls();
 			in_game = false;
+			game_phase = "idle";
 			current_game = 0;
 			current_game_host = "";
 			add_buffer_item("misc", "You left the game.");
 			draw_map("office");
 			lastx = int(me.x);
 			lasty = int(me.y);
+		}
+		else if (parsed[0] == "gamephase" and parsed.length() > 2)
+		{
+			game_phase = parsed[1];
+			game_build_seconds = string_to_number(parsed[2]);
+			game_phasetimer.restart();
+			if (game_phase == "build")
+			{
+				p.play_stationary("sounds/ui/misc/buildphase.ogg", false);
+				speak("Build phase. " + int(game_build_seconds) + " seconds to prepare.");
+			}
+			else if (game_phase == "wave")
+			{
+				p.play_stationary("sounds/ui/misc/wavephase.ogg", false);
+				speak("The enemies are coming!");
+			}
 		}
 		else if (parsed[0] == "roomlist")
 		{

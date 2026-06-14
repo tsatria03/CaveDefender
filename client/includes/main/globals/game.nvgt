@@ -214,7 +214,7 @@ buffercheck();
 		}
 		if(key_pressed(KEY_RETURN))
 		{
-			if(in_game) pause_menu();
+			if(in_game) game_menu();
 			else if(current_room==0) lobby_menu();
 			else room_menu();
 		}

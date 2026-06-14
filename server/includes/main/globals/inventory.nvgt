@@ -1,0 +1,43 @@
+// What a player is carrying, as item type -> count. Kept general (a dictionary, not just a wood
+// integer) so future items beyond wood need no new structure. Authoritative on the server — the client
+// can't be trusted to count wood it spends on shared walls — so one of these lives on each server
+// player object (see player.nvgt). Modeled on SimpleFighter's inventory, trimmed to the pure data
+// operations; the cycle / pan / speak UI is the client's job. Wired into gameplay in 6c.
+class inventory
+{
+dictionary items;
+// Add some of an item (a negative amount removes); the entry is dropped once it reaches 0.
+void give(string type, int amount)
+{
+int a=0;
+if(items.exists(type)) items.get(type, a);
+a+=amount;
+if(a<=0) items.delete(type);
+else items.set(type, a);
+}
+// Try to spend `amount` of an item. Returns false and takes nothing if there isn't enough.
+bool take(string type, int amount)
+{
+if(count(type)<amount) return false;
+give(type, -amount);
+return true;
+}
+// How many of an item the player holds (0 if none).
+int count(string type)
+{
+if(!items.exists(type)) return 0;
+int a=0;
+items.get(type, a);
+return a;
+}
+// Drop everything (e.g. when a game ends).
+void clear()
+{
+items.delete_all();
+}
+// The item types currently held.
+string[] get_keys()
+{
+return items.get_keys();
+}
+}
