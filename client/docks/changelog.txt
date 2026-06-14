@@ -1,4 +1,6 @@
 New in 1.9.
+Leaving the game now returns you to the connection menu instead of the main menu, so you can sign back in right away; from there, back still takes you to the main menu.
+Creating an account no longer signs you in straight away. Once it's made, the game asks whether you want to log in now; choose no and you're returned to the connection menu, where your new account is already saved for signing in.
 Fixed timed mutes and bans being off by up to a couple of minutes, so a mute or ban now lasts exactly as long as it was set for, and the remaining time is reported accurately.
 The lobby, the rooms, and the game caverns now play their own background music over the ambience.
 Each space now has its own background ambience that plays across the whole map, so the lobby, the rooms, and the game caverns each have their own atmosphere as you move around them.

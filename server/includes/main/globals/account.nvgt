@@ -147,9 +147,9 @@ int64 parse_epoch(string s)
 int64 result = 0;
 for(uint i = 0; i < s.length(); i++)
 {
-uint8 c = s[i];
-if(c < 48 or c > 57) break; // 0-9 are byte values 48-57
-result = result * 10 + int64(c - 48);
+int d = string_contains("0123456789", s[i], 1); // the digit's value = its position in the list, or -1 if not a digit
+if(d < 0) break; // stop at the first non-digit
+result = result * 10 + int64(d);
 }
 return result;
 }
