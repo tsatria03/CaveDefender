@@ -40,7 +40,7 @@ bool rooms_received=false;
 string game_phase="idle"; // the current game's round phase (idle/build/wave), synced from the server
 double game_build_seconds=0; // build-phase length (or remaining, on join) for the local countdown
 timer game_phasetimer; // restarted on each phase change; drives the build-phase countdown shown in the game menu
-string version="1.8";
+string version="1.9";
 timer rectimer;
 timer spamtimer;
 file dockfile, dockver, logfile;

@@ -1,3 +1,7 @@
+New in 1.9.
+If the connection drops while you are signed in, the game now keeps running and spends up to thirty seconds quietly trying to reconnect and sign you back in, rather than reporting the server offline right away; if it gets back on you return to the lobby, and you can press escape at any time to stop waiting.
+The ping timeout is now fifteen seconds, and the ping sound now plays when a ping is reported lost, just as it does when one comes back.
+You can now press escape while signing in to cancel the connection attempt and return to the connection menu, instead of waiting for it to finish or time out.
 New in 1.8.
 The Join game menu now lists games that are already underway as well, but tells you a game has already started, so you can't join it, if you pick one.
 Fixed the Join game menu failing to open, and reading out a line of raw text instead, whenever a room already had a game in it.

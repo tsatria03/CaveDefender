@@ -1,11 +1,13 @@
 int port=25562;
 string ip="localhost";
 
-bool encrypting=true, connected, registering, pinging, connection_dropped, kicked, justregistered;
+bool encrypting=true, connected, registering, pinging, connection_dropped, kicked, justregistered, reconnect_aborted, reconnecting, reconnected;
 
-timer connectiontimer, pingtimer;
+timer connectiontimer, pingtimer, reconnect_overall, reconnect_attempt;
 int connectingtime=10000;
-int pingtimeout=10000;
+int pingtimeout=15000;
+int reconnecttime=30000; // how long to keep retrying after a mid-session drop before giving up
+int reconnect_phase=0;   // 0 = waiting for the connection, 1 = waiting for the re-login to complete
 uint64 serverpeer=0;
 network net;
 network_event event;
@@ -31,6 +33,85 @@ if(encrypting) return string_decrypt(event.message, "rscs123");
 else return event.message;
 }
 
+// A mid-session drop (server closed/restarted, or the link blipped) no longer blocks: it enters a
+// background reconnect that is driven a frame at a time from netloop() while the game loop keeps
+// running, so audio, escape, and even a ping timeout still work meanwhile. start_reconnect() kicks it
+// off, begin_reconnect_attempt() opens one fresh connection, and reconnect_tick() (one net.request per
+// frame) advances the handshake: connect, re-login, then either resume (reconnected) or, after
+// reconnecttime, give up (connection_dropped). Like the ping timeout, it waits before declaring defeat.
+void begin_reconnect_attempt()
+{
+net.disconnect_peer_forcefully(serverpeer); // drop any stale/half-open peer before retrying
+serverpeer=net.connect(ip, port);
+reconnect_attempt.restart();
+reconnect_phase=0;
+}
+void start_reconnect()
+{
+reconnecting=true;
+reconnected=false;
+reconnect_aborted=false;
+connected=false;
+reconnect_overall.restart();
+speak("Connection lost. Trying to reconnect. Press escape to give up.");
+add_buffer_item("connections", "Connection lost. Trying to reconnect.");
+begin_reconnect_attempt();
+}
+void reconnect_tick()
+{
+if(reconnect_overall.elapsed>=reconnecttime) // ran out of time; give up and report offline
+{
+reconnecting=false;
+connection_dropped=true;
+return;
+}
+event=net.request();
+if(reconnect_phase==0) // waiting for the connection to come up
+{
+if(event.type==event_connect)
+{
+connected=true;
+registering=false;
+justregistered=false;
+send(0, "login "+name+" "+password+" "+version, 0,true);
+reconnect_attempt.restart();
+reconnect_phase=1;
+}
+else if(event.type==event_disconnect or reconnect_attempt.elapsed>=connectingtime)
+{
+begin_reconnect_attempt(); // this attempt stalled; start another
+}
+}
+else // phase 1: connected, waiting for the re-login to finish
+{
+if(event.type==event_receive)
+{
+string m=get_event_message();
+if(m=="done")
+{
+save_last_account();
+reconnecting=false;
+reconnected=true; // login() resumes the session; game() respawns us in the lobby
+return;
+}
+if(string_contains(m, "error:", 1)>-1)
+{
+dlgmessage(m);
+net.disconnect_peer_forcefully(serverpeer);
+connected=false;
+reconnecting=false;
+reconnect_aborted=true; // a specific error was shown; suppress the generic offline message
+connection_dropped=true;
+return;
+}
+}
+else if(event.type==event_disconnect or reconnect_attempt.elapsed>=connectingtime)
+{
+connected=false;
+begin_reconnect_attempt(); // lost it again; start another attempt
+}
+}
+}
 bool login()
 {
 justregistered=false;
@@ -40,6 +121,14 @@ connectiontimer.restart();
 while(true)
 {
 wait(5);
+// Pressing escape during the connect/login handshake aborts the attempt and returns to the menu.
+if(key_pressed(KEY_ESCAPE))
+{
+speak("canceled");
+connected=false;
+net.disconnect_peer_forcefully(serverpeer);
+return false;
+}
 event=net.request();
 if(connectiontimer.elapsed>=connectingtime and connected==false or event.type==event_disconnect)
 {
@@ -72,6 +161,8 @@ send(0, "login "+name+" "+password+" "+version, 0,true);
 else if(event.type==event_receive and get_event_message()=="done")
 {
 save_last_account();
+while(true)
+{
 game();
 if(kicked)
 {
@@ -80,15 +171,23 @@ fade_multi_pool(fademode);
 net.disconnect_peer_forcefully(serverpeer);
 return false;
 }
+if(reconnected)
+{
+reconnected=false;
+speak("Reconnected.");
+add_buffer_item("connections", "Reconnected.");
+continue; // back online; game() respawns us in the lobby
+}
 if(connection_dropped)
 {
 connection_dropped=false;
 fade_multi_pool(fademode);
 net.disconnect_peer_forcefully(serverpeer);
-dlgmessage("The server has gone offline.");
+if(!reconnect_aborted) dlgmessage("The server has gone offline.");
 return false;
 }
 return true;
+}
 }
 else if(event.type==event_receive and string_contains(get_event_message(), "error:", 1)>-1)
 {
@@ -127,13 +226,19 @@ if(data!="") send(0, data, 3, true);
 }
 void netloop()
 {
+	// While reconnecting, hand the whole frame to the background reconnect handshake; normal message
+	// processing is paused (we're not logged in) until it resumes or gives up.
+	if (reconnecting)
+	{
+		reconnect_tick();
+		return;
+	}
 	event = net.request();
-	// The server dropped us (it shut down/restarted, or the link was lost). Bounce out of the
-	// game; login() will report it and send us back to the connection menu.
+	// The server dropped us (it shut down/restarted, or the link was lost). Instead of bailing out
+	// immediately, start a background reconnect; the game loop keeps running while we try to get back on.
 	if (event.type == event_disconnect)
 	{
-		connection_dropped = true;
-		connected = false;
+		start_reconnect();
 		return;
 	}
 	// Channel 0: control/system messages. Each message is handled exactly once.
@@ -149,7 +254,7 @@ void netloop()
 		{
 			pinging=false;
 			p.play_stationary("sounds/ui/misc/pingstop.ogg", false);
-			add_buffer_item("misc", "The ping took " + pingtimer.elapsed + " ms");
+			add_buffer_item("connections", "The ping took " + pingtimer.elapsed + " ms");
 		}
 		else if (parsed[0] == "online" and parsed.length() > 1)
 		{
