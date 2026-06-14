@@ -1,8 +1,9 @@
 // Rooms are sub-lobbies inside the main lobby. A room is identified by its host (shown as
 // "<host>'s room"); it can hold many players and will host the up-to-4-player game instances added
-// in later sections. Rooms are PERSISTENT: leaving just returns you to the lobby and the room stays
-// open; a room closes only when its host deletes it or logs off the server. Map switching and
-// player scoping (who sees whom) come in a later section.
+// in later sections. Each host may own up to TWO rooms: one public and one private. Rooms are
+// PERSISTENT: leaving just returns you to the lobby and the room stays open; a room closes only when
+// its host deletes it or logs off the server. Map switching and player scoping (who sees whom) come
+// in a later section.
 int next_room_id = 1;
 room@[] rooms;
 class room
@@ -30,13 +31,13 @@ for(uint i=0; i<rooms.length(); i++)
 if(rooms[i].id==id) return i;
 return -1;
 }
-// The rooms[] index of the room hosted by this peer, or -1. A host owns their room even while
-// stepped out to the lobby, which is how "one room per host" is enforced.
-int get_hosted_room_index(int peer)
+// True if this peer already hosts a room of the given privacy. A host may have one public and one
+// private room (two at most), so creation is blocked only per type.
+bool hosts_type(int peer, bool priv)
 {
 for(uint i=0; i<rooms.length(); i++)
-if(rooms[i].host_peer==peer) return i;
-return -1;
+if(rooms[i].host_peer==peer and rooms[i].is_private==priv) return true;
+return false;
 }
 // Create a room hosted by the given player and return its new id.
 int create_room(string hostname, int hostpeer, bool priv, string pass)
@@ -57,23 +58,23 @@ if(rooms[i].members[j]==peer) { rooms[i].members.remove_at(j); return; }
 }
 }
 }
-// Called when a peer disconnects from the server. If they host a room it closes, and any remaining
-// members are sent back to the lobby. Otherwise they're just removed from any room they were inside.
+// Called when a peer disconnects from the server. Every room they host closes (up to one public and
+// one private), and any remaining members in those rooms are sent back to the lobby. They are also
+// removed from any other room they were merely a member of.
 void handle_disconnect_rooms(int peer)
 {
-int hi = get_hosted_room_index(peer);
-if(hi > -1)
+for(int i=int(rooms.length())-1; i>=0; i--)
 {
-for(uint j=0; j<rooms[hi].members.length(); j++)
+if(rooms[i].host_peer != peer) continue;
+for(uint j=0; j<rooms[i].members.length(); j++)
 {
-int mp = rooms[hi].members[j];
+int mp = rooms[i].members[j];
 if(mp == peer) continue;
 int pi = get_player_index(mp);
 if(pi > -1) players[pi].room_id = 0;
 send(mp, "roomleft", 0, true);
 }
-rooms.remove_at(hi);
-return;
+rooms.remove_at(i);
 }
 remove_member(peer);
 }

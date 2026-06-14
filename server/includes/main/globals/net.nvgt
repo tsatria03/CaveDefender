@@ -504,19 +504,18 @@ on_menu_result(index, parsed[1], int(string_to_number(parsed[2])));
 }
 else if(parsed[0]=="createroom" and index>-1 and parsed.length()>1)
 {
+bool priv = (parsed[1]=="private");
 if(players[index].room_id != 0)
 {
 int cr=get_room_index(players[index].room_id);
 send(event.peer_id, "You are already in a "+((cr>-1 and rooms[cr].is_private)?"private":"public")+" room.", 0,true);
 }
-else if(get_hosted_room_index(event.peer_id) > -1)
+else if(hosts_type(event.peer_id, priv))
 {
-int hr=get_hosted_room_index(event.peer_id);
-send(event.peer_id, "You already have a "+(rooms[hr].is_private?"private":"public")+" room. Use Join to return to it.", 0,true);
+send(event.peer_id, "You already have a "+(priv?"private":"public")+" room. Use Join to return to it.", 0,true);
 }
 else
 {
-bool priv = (parsed[1]=="private");
 string pass = (priv and parsed.length()>2) ? parsed[2] : "";
 if(priv and (pass.length()<6 or pass.length()>24))
 {
