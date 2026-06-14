@@ -357,6 +357,34 @@ for(uint i=0; i<players.length(); i++)
 if(players[i].room_id == room_id) send(players[i].peer_id, msg, 0, true);
 }
 }
+// Move a player to a new room scope (0 = lobby) and keep everyone's rosters in sync. Position, beacons
+// and voice are scoped per room: on a move we tell the old scope to drop the player (despawn) and the
+// new scope to pick them up (exchanging positions both ways). Server-wide online/offline presence is
+// unaffected. Send the matching roomjoined/roomleft/etc. message to the mover BEFORE calling this, so
+// their client clears its roster first and then receives the new scope's occupants.
+void set_room_scope(int pindex, int newroom)
+{
+string nm = players[pindex].name;
+int pr = players[pindex].peer_id;
+int oldroom = players[pindex].room_id;
+for(uint i=0; i<players.length(); i++)
+if(i!=uint(pindex) and players[i].room_id==oldroom) send(players[i].peer_id, "despawn "+nm, 0, true);
+players[pindex].room_id = newroom;
+players[pindex].x = 25; // every room scope (lobby and office) is 50x50, so the spawn is the center.
+players[pindex].y = 25;
+for(uint i=0; i<players.length(); i++)
+{
+if(i==uint(pindex) or players[i].room_id!=newroom) continue;
+send(players[i].peer_id, "pos "+nm+" "+players[pindex].x+" "+players[pindex].y, 0, true);
+send(pr, "pos "+players[i].name+" "+players[i].x+" "+players[i].y, 0, true);
+}
+}
+// Broadcast a player's current position to everyone sharing their room scope (used on each move).
+void broadcast_pos(int pindex)
+{
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id==players[pindex].room_id) send(players[i].peer_id, "pos "+players[pindex].name+" "+players[pindex].x+" "+players[pindex].y, 0, true);
+}
 void netloop()
 {
 event = net.request();
@@ -469,10 +497,10 @@ string savedpriv = get_saved_private(players[index].name);
 if(savedpriv != "") create_room(players[index].name, event.peer_id, true, savedpriv);
 send_yourrooms(event.peer_id, players[index].name);
 // Tell everyone where the new player is, and tell the new player where everyone else is.
-send(0, "pos "+players[index].name+" "+players[index].x+" "+players[index].y, 0,true);
+broadcast_pos(index);
 for(uint i=0; i<players.length(); i++)
 {
-if(i==uint(index)) continue;
+if(i==uint(index) or players[i].room_id!=players[index].room_id) continue;
 send(event.peer_id, "pos "+players[i].name+" "+players[i].x+" "+players[i].y, 0,true);
 }
 }
@@ -481,7 +509,7 @@ else if(parsed[0]=="move" and parsed.length()>2 and index>-1)
 {
 players[index].x=string_to_number(parsed[1]);
 players[index].y=string_to_number(parsed[2]);
-send(0, "pos "+players[index].name+" "+players[index].x+" "+players[index].y, 0,true);
+broadcast_pos(index);
 }
 else if(parsed[0]=="disconnect")
 {
@@ -581,11 +609,11 @@ send(event.peer_id, "Room passwords must be between 6 and 24 characters.", 0,tru
 else
 {
 int rid = create_room(players[index].name, event.peer_id, priv, pass);
-players[index].room_id = rid;
 if(priv) set_saved_private(players[index].name, pass);
 else set_saved_public(players[index].name, true);
 send_yourrooms(event.peer_id, players[index].name);
 send(event.peer_id, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name, 0,true);
+set_room_scope(index, rid);
 send(event.peer_id, "play roomcreate.ogg", 0,true);
 }
 }
@@ -595,8 +623,8 @@ else if(parsed[0]=="leaveroom" and index>-1)
 if(players[index].room_id != 0)
 {
 remove_member(event.peer_id);
-players[index].room_id = 0;
 send(event.peer_id, "roomleft", 0,true);
+set_room_scope(index, 0);
 }
 }
 else if(parsed[0]=="listrooms" and index>-1 and parsed.length()>1)
@@ -633,8 +661,8 @@ else
 bool already=false;
 for(uint k=0; k<rooms[ri].members.length(); k++) if(rooms[ri].members[k]==event.peer_id) already=true;
 if(!already) rooms[ri].members.insert_last(event.peer_id);
-players[index].room_id=rooms[ri].id;
 send(event.peer_id, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"private":"public")+" "+rooms[ri].host, 0,true);
+set_room_scope(index, rooms[ri].id);
 }
 }
 }
@@ -686,8 +714,8 @@ string kind=rooms[ri].is_private?"private":"public";
 int tpi=get_player_index(targetpeer);
 string tname=(tpi>-1)?players[tpi].name:parsed[1];
 remove_member(targetpeer);
-if(tpi>-1) players[tpi].room_id=0;
 send(targetpeer, "roomkicked "+hostname+" "+kind, 0,true);
+if(tpi>-1) set_room_scope(tpi, 0);
 for(uint j=0; j<rooms[ri].members.length(); j++)
 {
 send(rooms[ri].members[j], "roomkickannounce "+tname+" "+hostname+" "+kind, 0,true);
@@ -722,8 +750,8 @@ string kind=rooms[ri].is_private?"private":"public";
 for(uint j=0; j<rooms[ri].members.length(); j++)
 {
 int pi=get_player_index(rooms[ri].members[j]);
-if(pi>-1) players[pi].room_id=0;
 send(rooms[ri].members[j], "roomdeleted "+disp+" "+kind, 0,true);
+if(pi>-1) set_room_scope(pi, 0);
 }
 if(rooms[ri].is_private) set_saved_private(rooms[ri].host, "");
 else set_saved_public(rooms[ri].host, false);
@@ -809,7 +837,7 @@ else
 string relay=players[index].name+" "+players[index].x+" "+players[index].y+"\n"+audio;
 for(uint i=0; i<players.length(); i++)
 {
-if(players[i].peer_id==event.peer_id) continue;
+if(players[i].peer_id==event.peer_id or players[i].room_id!=players[index].room_id) continue;
 send(players[i].peer_id, relay, 3, true);
 }
 }

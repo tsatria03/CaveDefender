@@ -18,6 +18,7 @@ vector me;
 // spawns at the center, so the same call works for a 25x25, 50x50, or 100x100 map.
 void draw_map(string mapname, double minx=0, double maxx=50, double miny=0, double maxy=50)
 {
+clear_map(); // wipe the previous map first so switching spaces (lobby <-> office) doesn't stack tiles.
 me.x=int((minx+maxx)/2);
 me.y=int((miny+maxy)/2);
 if(mapname=="lobby")

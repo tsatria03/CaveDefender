@@ -55,6 +55,13 @@ if(i<0) return;
 players.remove_at(i);
 }
 
+// Drop the entire roster on a room change; the server then re-sends the new scope's occupants so we
+// only hear the players sharing our current space (lobby or room).
+void clear_players()
+{
+players.resize(0);
+}
+
 bool beacons_enabled=true; // toggled with F5; when false beaconloop() stays silent.
 int beacontime=500;        // ms between a player's beacon pulses.
 int lastx=1, lasty=1;      // last position reported to the server, so we only send when we actually move.
