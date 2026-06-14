@@ -1,11 +1,11 @@
 ####These are the things that need to be finished for future versions of the game.
 
 ****Unfinished. Build the cave defender gameplay that runs inside a room, where you gather wood, build and repair the four walls, and survive waves of bots, on small, medium, or large maps.
-****Unfinished. Add the start a game, join a game, and stop a game options inside a room.
 ****Unfinished. Expand the map system beyond the current starter lobby.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add the start a game, join a game, and stop a game options inside a room, where you pick a game mode and map size to start a game, join an open game with a free slot, or stop a game you host (staff can stop any).
 **Finished. Play other players' footsteps and wall bumps from their spot on the map as they move, on the surface they are walking on, so you can hear people moving around you.
 **Finished. Make each room its own space, drawing the room's own map and keeping its players, positions, footstep beacons, and voice chat separate from the lobby and from other rooms.
 **Finished. Add local chat on the backslash key, so you can talk to everyone in your current space, the lobby or your room, separate from global chat.

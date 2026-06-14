@@ -653,6 +653,24 @@ else if(parsed[0]=="leavegame" and index>-1)
 {
 leave_game(event.peer_id);
 }
+else if(parsed[0]=="stopgame" and index>-1 and parsed.length()>1)
+{
+// Stop a specific game by id (the room menu's Stop-game list): allowed for staff (any game) or that
+// game's own host (e.g. a host who left a game running and wants to kill it from the room).
+int gi=get_game_index(int(string_to_number(parsed[1])));
+if(gi==-1)
+{
+send(event.peer_id, "That game no longer exists.", 0,true);
+}
+else if(!is_staff(players[index].rank) and games[gi].host != players[index].name)
+{
+send(event.peer_id, "You don't have permission to stop that game.", 0,true);
+}
+else
+{
+end_game(gi);
+}
+}
 else if(parsed[0]=="stopgame" and index>-1)
 {
 int gi=get_game_index(players[index].room_id);
@@ -667,6 +685,52 @@ send(event.peer_id, "Only the host can stop the game.", 0,true);
 else
 {
 end_game(gi);
+}
+}
+else if(parsed[0]=="listgames" and index>-1)
+{
+// List every game in the player's current room (the client filters: Join shows open, non-full
+// games; the staff Stop list shows all). Fields: id host members size solo|open.
+string payload="gamelist";
+for(uint i=0; i<games.length(); i++)
+{
+if(games[i].parent_room != players[index].room_id) continue;
+payload+="\n"+games[i].id+" "+games[i].host+" "+games[i].members.length()+" "+games[i].size+" "+(games[i].solo?"solo":"open");
+}
+send(event.peer_id, payload, 0,true);
+}
+else if(parsed[0]=="joingame" and index>-1 and parsed.length()>1)
+{
+int ri=get_room_index(players[index].room_id);
+if(ri==-1)
+{
+send(event.peer_id, "You must be in a room to join a game.", 0,true);
+}
+else
+{
+int gi=get_game_index(int(string_to_number(parsed[1])));
+if(gi==-1)
+{
+send(event.peer_id, "That game no longer exists.", 0,true);
+}
+else if(games[gi].parent_room != players[index].room_id)
+{
+send(event.peer_id, "That game isn't in your room.", 0,true);
+}
+else if(games[gi].solo)
+{
+send(event.peer_id, "That is a single-player game.", 0,true);
+}
+else if(games[gi].members.length() >= 4)
+{
+send(event.peer_id, "That game is full.", 0,true);
+}
+else
+{
+games[gi].members.insert_last(event.peer_id);
+send(event.peer_id, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].host, 0,true);
+set_room_scope(index, games[gi].id);
+}
 }
 }
 else if(parsed[0]=="listrooms" and index>-1 and parsed.length()>1)
@@ -717,7 +781,7 @@ if(ri>-1)
 for(uint j=0; j<rooms[ri].members.length(); j++)
 {
 int pi=get_player_index(rooms[ri].members[j]);
-if(pi>-1) payload+=" "+players[pi].name;
+if(pi>-1 and players[pi].room_id==rooms[ri].id) payload+=" "+players[pi].name; // only those actually in the office, not off in a game.
 }
 }
 send(event.peer_id, payload, 0,true);
@@ -748,6 +812,10 @@ send(event.peer_id, "That player isn't in your room.", 0,true);
 else if(targetpeer==event.peer_id)
 {
 send(event.peer_id, "You can't kick yourself.", 0,true);
+}
+else if(get_player_index(targetpeer)>-1 and players[get_player_index(targetpeer)].room_id != rooms[ri].id)
+{
+send(event.peer_id, "That player is in a game and can't be kicked right now.", 0,true);
 }
 else
 {
@@ -787,6 +855,9 @@ send(event.peer_id, "You can't delete the room while other players are in it.", 
 }
 else
 {
+// End any games running in this room first so their players aren't orphaned by the delete.
+for(int g=int(games.length())-1; g>=0; g--)
+if(games[g].parent_room==rooms[ri].id) end_game(g);
 string disp=rooms[ri].host;
 string kind=rooms[ri].is_private?"private":"public";
 for(uint j=0; j<rooms[ri].members.length(); j++)
