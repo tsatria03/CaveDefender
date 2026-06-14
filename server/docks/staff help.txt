@@ -1,8 +1,20 @@
 Staff help.
 
-These commands are only available to staff. Each one lists the lowest rank that can use it. The staff ranks, from lowest to highest, are moderator, administrator, and developer, and a higher rank can always use everything a lower rank can. Words in angle brackets are things you fill in yourself; don't type the brackets.
+This covers everything staff can do that regular players cannot, both through commands and otherwise, and the lowest rank each thing needs. The staff ranks, from lowest to highest, are moderator, administrator, and developer, and a higher rank can always do everything a lower rank can. Words in angle brackets are things you fill in yourself; don't type the brackets.
 
-Moderator and up.
+Beyond commands. Moderator and up.
+
+These are not commands; they are things staff do through the game's chat keys and menus.
+
+Staff chat: Press apostrophe to talk on the staff channel, which only staff can send to or hear. Staff messages collect in their own buffer that regular players never see.
+Skip the build phase: In a game you host, the game menu lets you skip the build phase and start the wave early. A host who is not staff cannot skip; their build timer always runs its full length.
+
+Stop a game from inside it: The pause menu lets you stop a game you are in even when you don't host it. A regular player can only stop a game from the pause menu if they host it.
+Stop any game: A room's Stop game list shows you every game in that room so you can stop any of them. A regular player only sees games they host in that list.
+
+Delete any room: You can delete any room, even one with other players inside or games still running. A regular host can only delete their own room, and only when alone in it with no games.
+
+Commands. Moderator and up.
 
 /mute <player>, or /mute <player> <seconds>: Silences a player's chat and voice. Leave the time off, or use 0, for an indefinite mute. Only regular players can be muted, never other staff. The mute is remembered even if the player leaves and comes back.
 /unmute <player>: Lifts a mute early.

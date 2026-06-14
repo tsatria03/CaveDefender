@@ -1,6 +1,10 @@
 Player help.
 
-This is the list of commands every player can use, no matter their rank. Press slash to open the chat, type a command, and press enter to send it. Words in angle brackets are things you fill in yourself; don't type the brackets.
+This covers what you can do as a player, both the chat commands and the things you do through menus, and what is reserved for staff. Words in angle brackets are things you fill in yourself; don't type the brackets.
+
+Commands.
+
+Press slash to open the chat, type a command, and press enter to send it. Every command here works for everyone, no matter your rank.
 
 /who: Lists everyone who is currently on the server.
 /uptime, or /serveruptime: Tells you how long the server has been running.
@@ -10,3 +14,23 @@ This is the list of commands every player can use, no matter their rank. Press s
 /reply <message>, or /r <message>: Sends a private message to the last person who sent you one, so you don't have to type their name.
 /me <message>: Sends an action to everyone, with your name in front, for example /me waves becomes a message reading your name then waves. If you are staff, your rank is shown too.
 /help: Opens this player help in a readable window. Just type /help on its own. Staff can also choose a page with /help player or /help staff.
+
+Chat channels.
+
+Slash opens global chat, which everyone on the server hears.
+Backslash opens local chat, which only the people sharing your current space hear, whether that is the lobby or your room.
+Apostrophe opens staff chat, which only staff can send to or hear; as a regular player you can't use it.
+
+You can run any command from any chat you have access to.
+
+Rooms.
+
+From the lobby, press enter to open the lobby menu, where you can create or join a public or private room. You can host up to one public and one private room of your own. Inside a room, press enter for the room menu. If you host the room you can kick a player back to the lobby, and, for a private room, set or retrieve its password. You can delete your own room, but only when you are the only one in it and no games are running.
+
+Games.
+
+Inside a room you can start a game, choosing a mode and a map size, and others can join your open games while a game still has room. While in a game, press enter for the game menu, where the host begins the round, and press escape for the pause menu, where you can leave the game at any time, or stop it if you host it.
+
+What only staff can do.
+
+A few things are reserved for staff, the lowest staff rank being moderator. As a regular player you cannot use staff chat, skip a game's build phase, stop a game you don't host, or delete a room that isn't yours or that still has people in it. The full staff list is in the staff help.
