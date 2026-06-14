@@ -1,5 +1,6 @@
-// The room menu, opened with Enter while you're inside a room. Client-rendered. Section 1 wires up
-// "Leave room"; the game options and host tools are stubbed and fill in over the next sections.
+// The room menu, opened with Enter while you're inside a room. Client-rendered. Wires up Leave room,
+// Kick a player (host only), and Delete room (staff can delete any room; a non-staff host only when
+// no one else is inside). The remaining game options are stubbed and fill in over the next sections.
 // Set password / Retrieve password only appear for private rooms.
 void room_menu()
 {
@@ -23,6 +24,88 @@ int choice = m.run();
 if(choice < 0) return;
 string sel = opts[choice];
 if(sel == "Leave room") send(0, "leaveroom", 0, true);
+else if(sel == "Kick a player")
+{
+if(current_room_host != name) add_buffer_item("misc", "Only the host can kick players from the room.");
+else kick_menu();
+}
+else if(sel == "Delete room") delete_room_flow();
 else if(sel == "Back") return;
 else add_buffer_item("misc", sel + " is coming soon.");
+}
+// Ask the server for the current room's member list and wait for the reply, pumping netloop so other
+// incoming messages are still handled. Returns the raw "roommemberlist ..." payload, or "" on
+// timeout / lost connection.
+string get_room_member_list()
+{
+roommembers_received = false;
+pending_roommembers = "";
+send(0, "roommembers", 0, true);
+timer t;
+t.restart();
+while(t.elapsed < 3000)
+{
+wait(5);
+netloop();
+if(!connected) return "";
+if(roommembers_received) return pending_roommembers;
+}
+return "";
+}
+// Host tool: pick a player in the room to eject back to the lobby.
+void kick_menu()
+{
+string list = get_room_member_list();
+if(!connected) return;
+string[] f = string_split(list, " ", true);
+string[] names;
+for(uint i = 1; i < f.length(); i++)
+{
+if(f[i] == name) continue; // can't kick yourself
+names.insert_last(f[i]);
+}
+if(names.length() == 0)
+{
+add_buffer_item("misc", "There is no one else in your room to kick.");
+return;
+}
+setupmenu();
+for(uint i = 0; i < names.length(); i++) m.add_item(names[i]);
+m.add_item("Back");
+m.intro_text = "Kick a player";
+int choice = m.run();
+if(choice < 0 or choice >= int(names.length())) return;
+send(0, "kickfromroom " + names[choice], 0, true);
+}
+// Delete the current room. Staff may delete any room; a non-staff host may only delete when alone.
+void delete_room_flow()
+{
+bool staff = (myrank != "player");
+if(!staff)
+{
+if(current_room_host != name)
+{
+add_buffer_item("misc", "Only the host can delete the room.");
+return;
+}
+string list = get_room_member_list();
+if(!connected) return;
+if(list == "")
+{
+add_buffer_item("misc", "Couldn't reach the server.");
+return;
+}
+string[] f = string_split(list, " ", true);
+if(int(f.length()) - 1 > 1)
+{
+add_buffer_item("misc", "You can't delete the room while other players are in it.");
+return;
+}
+}
+setupmenu();
+m.add_item("Yes");
+m.add_item("No");
+m.intro_text = "Are you sure you want to delete this room? Everyone in it will be sent back to the lobby.";
+int c = m.run();
+if(c == 0) send(0, "deleteroom", 0, true);
 }

@@ -276,18 +276,45 @@ void netloop()
 		{
 			current_room = string_to_number(parsed[1]);
 			current_room_private = (parsed[2] == "private");
+			current_room_host = parsed[3];
 			add_buffer_item("misc", "You are now in " + parsed[3] + "'s " + parsed[2] + " room.");
 		}
 		else if (parsed[0] == "roomleft")
 		{
 			current_room = 0;
 			current_room_private = false;
+			current_room_host = "";
 			add_buffer_item("misc", "You left the room.");
 		}
 		else if (parsed[0] == "roomlist")
 		{
 			pending_roomlist = message;
 			roomlist_received = true;
+		}
+		else if (parsed[0] == "roommemberlist")
+		{
+			pending_roommembers = message;
+			roommembers_received = true;
+		}
+		else if (parsed[0] == "roomkicked" and parsed.length() > 2)
+		{
+			current_room = 0;
+			current_room_private = false;
+			current_room_host = "";
+			p.play_stationary("sounds/interface/misc/kick.ogg", false);
+			add_buffer_item("misc", "You have been kicked from " + parsed[1] + "'s " + parsed[2] + " room.");
+		}
+		else if (parsed[0] == "roomkickannounce" and parsed.length() > 3)
+		{
+			p.play_stationary("sounds/interface/misc/kick.ogg", false);
+			add_buffer_item("misc", parsed[1] + " has been kicked from " + parsed[2] + "'s " + parsed[3] + " room.");
+		}
+		else if (parsed[0] == "roomdeleted" and parsed.length() > 2)
+		{
+			current_room = 0;
+			current_room_private = false;
+			current_room_host = "";
+			add_buffer_item("misc", parsed[1] + "'s " + parsed[2] + " room has been deleted.");
 		}
 		else
 		{

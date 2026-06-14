@@ -1,4 +1,5 @@
 New in 1.6.
+In a room, the host can now Kick a player back to the lobby, and Delete room now works with a confirmation. Staff can delete any room, while a non-staff host can only delete their own when no one else is inside; anyone in a deleted room is returned to the lobby.
 You can now have up to two of your own rooms at once: one public and one private.
 You can now join a private room: choose Join a private room, pick one from the list, and enter its password to get in.
 You can now join a public room. Choose Join a public room from the lobby menu to see the open rooms, who hosts each one, how many players are in it, and how many games are in progress, then pick one to join.
