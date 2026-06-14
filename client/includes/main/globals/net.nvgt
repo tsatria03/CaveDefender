@@ -140,7 +140,11 @@ void netloop()
 	if (event.type == event_receive and event.channel == 0)
 	{
 		string message = get_event_message();
-		string[] parsed = string_split(message, " ", true);
+		// Dispatch on the first word of the FIRST line. Multi-line payloads (e.g. gamelist) put no
+		// space after the command word, so splitting the whole message on spaces would glue the
+		// command to the next line's first field ("gamelist\n3" instead of "gamelist").
+		string[] firstline = string_split(message, "\n", true);
+		string[] parsed = string_split(firstline[0], " ", true);
 		if (message == "ping_response")
 		{
 			pinging=false;

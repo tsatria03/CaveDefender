@@ -737,13 +737,13 @@ end_game(gi);
 }
 else if(parsed[0]=="listgames" and index>-1)
 {
-// List every game in the player's current room (the client filters: Join shows open, non-full
-// games; the staff Stop list shows all). Fields: id host members size solo|open.
+// List every game in the player's current room (the client filters: Join shows non-full games and
+// reports started ones; the staff Stop list shows all). Fields: id host members size solo|open phase.
 string payload="gamelist";
 for(uint i=0; i<games.length(); i++)
 {
 if(games[i].parent_room != players[index].room_id) continue;
-payload+="\n"+games[i].id+" "+games[i].host+" "+games[i].members.length()+" "+games[i].size+" "+(games[i].solo?"solo":"open");
+payload+="\n"+games[i].id+" "+games[i].host+" "+games[i].members.length()+" "+games[i].size+" "+(games[i].solo?"solo":"open")+" "+games[i].phase;
 }
 send(event.peer_id, payload, 0,true);
 }
