@@ -421,11 +421,21 @@ void netloop()
 			// A wall fell: "walldestroyed <direction>". Death sound + re-tile the breach to rubble.
 			destroy_wall_client(parsed[1]);
 		}
-		else if (parsed[0] == "gameover" and parsed.length() > 1)
+		else if (parsed[0] == "roundover" and parsed.length() > 1)
 		{
-			// All walls fell: "gameover <seconds>". Announce the team's survival time.
+			// The round ended (all walls fell): "roundover <seconds>". Announce how we did, log it, then
+			// ask whether to play again or leave; the reply goes back as playagain yes/no and the server
+			// waits until everyone has answered before resetting the cavern for the next round.
 			p.play_stationary("sounds/ui/misc/gameover.ogg", false);
-			add_buffer_item("alerts", "All walls destroyed! You survived " + parsed[1] + " seconds.");
+			string who = (players.length() > 0) ? "Your team survived " : "You survived ";
+			add_buffer_item("alerts", "All walls destroyed! " + who + parsed[1] + " seconds.");
+			dlgmessage("All walls destroyed! " + who + parsed[1] + " seconds.");
+			setupmenu();
+			m.add_item("Play again");
+			m.add_item("Leave the game");
+			m.intro_text = "Play again?";
+			if(m.run() == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next round to begin."); }
+			else send(0, "playagain no", 0, true);
 		}
 		else if (parsed[0] == "gamereset" and parsed.length() > 1)
 		{
@@ -480,7 +490,7 @@ void netloop()
 			if (alines.length() >= 3)
 			{
 				bool amask = (alines.length() > 3 and alines[3] == "1");
-				string aval = amask ? vd.password_box("Input", alines[1]) : vd.input_box("Input", alines[1], "");
+				string aval = amask ? vd.password_box("Private room", alines[1]) : vd.input_box("Input", alines[1], "");
 				if (aval == "") speak("canceled");
 				else send(0, alines[2] + " " + aval, 0, true);
 			}
