@@ -6,7 +6,7 @@ int peer_id;
 timer messagetimer;
 double version;
 string rank="player";
-int64 mute_global=-1, mute_local=-1, mute_staff=-1, mute_voice=-1; // per channel: -1 = not muted, 0 = indefinite, >0 = epoch it expires at.
+int64 mute_global=-1, mute_local=-1, mute_voice=-1; // per channel: -1 = not muted, 0 = indefinite, >0 = epoch it expires at. (Staff can't be muted, so there's no staff channel.)
 int x=1, y=1; // map position; defaults to the client's spawn at (1,1) until a position update arrives.
 int room_id=0; // 0 = main lobby; otherwise the id of the room this player is currently in.
 string[] menu_targets; // the argument behind each option of the last server-pushed LIST menu (a room id, game id, or player name), so a returned choice index maps back to the right thing.
@@ -30,13 +30,13 @@ players.insert_last(p1);
 array<string> mute_channels_for(string ch)
 {
 array<string> r;
-if(ch=="all") { r.insert_last("global"); r.insert_last("local"); r.insert_last("staff"); r.insert_last("voice"); }
+if(ch=="all") { r.insert_last("global"); r.insert_last("local"); r.insert_last("voice"); }
 else r.insert_last(ch);
 return r;
 }
 bool valid_mute_channel(string ch)
 {
-return ch=="global" or ch=="local" or ch=="staff" or ch=="voice";
+return ch=="global" or ch=="local" or ch=="voice";
 }
 // Read/write a player's in-memory mute for a channel (-1 not muted, 0 indefinite, >0 epoch).
 int64 get_player_mute(int pi, string ch)
@@ -44,7 +44,6 @@ int64 get_player_mute(int pi, string ch)
 if(pi<0 or pi>=int(players.length())) return -1;
 if(ch=="global") return players[pi].mute_global;
 if(ch=="local") return players[pi].mute_local;
-if(ch=="staff") return players[pi].mute_staff;
 if(ch=="voice") return players[pi].mute_voice;
 return -1;
 }
@@ -53,7 +52,6 @@ void set_player_mute(int pi, string ch, int64 v)
 if(pi<0 or pi>=int(players.length())) return;
 if(ch=="global") players[pi].mute_global=v;
 else if(ch=="local") players[pi].mute_local=v;
-else if(ch=="staff") players[pi].mute_staff=v;
 else if(ch=="voice") players[pi].mute_voice=v;
 }
 // Is this player muted in this channel right now? (>0 epochs that have passed read as not muted; the

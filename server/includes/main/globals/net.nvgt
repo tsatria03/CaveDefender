@@ -566,13 +566,13 @@ send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
 }
 else if(parsed[0]=="staffchat" and index>-1 and is_staff(players[index].rank) and parsed.length()>1)
 {
-if(is_muted_now(index, "staff")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
-else { string msg=string_join(parsed, " ", 1, parsed.length()); relay_to_staff("staffmsg "+display_name(index)+": "+msg); }
+string msg=string_join(parsed, " ", 1, parsed.length());
+relay_to_staff("staffmsg "+display_name(index)+": "+msg);
 }
 else if(parsed[0]=="staffme" and index>-1 and is_staff(players[index].rank) and parsed.length()>1)
 {
-if(is_muted_now(index, "staff")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
-else { string action=string_join(parsed, " ", 1, parsed.length()); relay_to_staff("staffmsg "+display_name(index)+" "+action); }
+string action=string_join(parsed, " ", 1, parsed.length());
+relay_to_staff("staffmsg "+display_name(index)+" "+action);
 }
 else if(parsed[0]=="localchat" and index>-1 and parsed.length()>1)
 {
@@ -1282,11 +1282,7 @@ else
                         }
                         else if(channel != "all" && !valid_mute_channel(channel))
                         {
-                            send(event.peer_id, "Unknown channel. Use global, local, staff, voice, or all.", 0, true);
-                        }
-                        else if(string_to_lower_case(tname) == string_to_lower_case(players[index].name))
-                        {
-                            send(event.peer_id, "You can't mute yourself.", 0, true);
+                            send(event.peer_id, "Unknown channel. Use global, local, voice, or all.", 0, true);
                         }
                         else if(rank_level(get_rank(tname)) > rank_level(players[index].rank))
                         {
@@ -1294,24 +1290,33 @@ else
                         }
                         else
                         {
-                            int dur = (parsed.length() >= 4) ? int(string_to_number(parsed[3])) : 0;
-                            if(dur < 0) dur = 0;
-                            int64 until = (dur > 0) ? (now_epoch() + dur) : 0;
                             array<string> chans = mute_channels_for(channel);
-                            for(uint c=0; c<chans.length(); c++) set_channel_mute(tname, chans[c], until);
-                            int ti = get_online_index(tname);
-                            if(ti > -1)
+                            bool allmuted = true;
+                            for(uint c=0; c<chans.length(); c++) if(get_channel_mute(tname, chans[c]) == -1) allmuted = false;
+                            if(allmuted)
                             {
-                                for(uint c=0; c<chans.length(); c++) set_player_mute(ti, chans[c], until);
-                                notify_target_mute(ti, channel, true, dur);
+                                send(event.peer_id, tname+" is already muted in "+(channel=="all"?"all channels":("the "+channel+" channel"))+".", 0, true);
                             }
-                            string disp = (ti > -1) ? display_name(ti) : tname;
-                            announce_mute_to_others(disp, (ti > -1) ? players[ti].peer_id : -1, channel, true);
+                            else
+                            {
+                                int dur = (parsed.length() >= 4) ? int(string_to_number(parsed[3])) : 0;
+                                if(dur < 0) dur = 0;
+                                int64 until = (dur > 0) ? (now_epoch() + dur) : 0;
+                                for(uint c=0; c<chans.length(); c++) set_channel_mute(tname, chans[c], until);
+                                int ti = get_online_index(tname);
+                                if(ti > -1)
+                                {
+                                    for(uint c=0; c<chans.length(); c++) set_player_mute(ti, chans[c], until);
+                                    notify_target_mute(ti, channel, true, dur);
+                                }
+                                string disp = (ti > -1) ? display_name(ti) : tname;
+                                announce_mute_to_others(disp, (ti > -1) ? players[ti].peer_id : -1, channel, true);
+                            }
                         }
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /mute <username> <channel> [seconds]. Channels: global, local, staff, voice, all.", 0, true);
+                        send(event.peer_id, "Usage: /mute <username> <channel> [seconds]. Channels: global, local, voice, all.", 0, true);
                     }
                 }
                 else if(parsed[0] == "/unmute" && rank_level(players[index].rank) >= 1)
@@ -1326,7 +1331,7 @@ else
                         }
                         else if(channel != "all" && !valid_mute_channel(channel))
                         {
-                            send(event.peer_id, "Unknown channel. Use global, local, staff, voice, or all.", 0, true);
+                            send(event.peer_id, "Unknown channel. Use global, local, voice, or all.", 0, true);
                         }
                         else if(rank_level(get_rank(tname)) > rank_level(players[index].rank))
                         {
@@ -1357,7 +1362,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /unmute <username> <channel>. Channels: global, local, staff, voice, all.", 0, true);
+                        send(event.peer_id, "Usage: /unmute <username> <channel>. Channels: global, local, voice, all.", 0, true);
                     }
                 }
                 else if(parsed[0] == "/ban" && rank_level(players[index].rank) >= 2)
@@ -1368,10 +1373,6 @@ else
                         if(!account_exists(tname))
                         {
                             send(event.peer_id, "There is no account named "+tname+".", 0, true);
-                        }
-                        else if(string_to_lower_case(tname) == string_to_lower_case(players[index].name))
-                        {
-                            send(event.peer_id, "You can't ban yourself.", 0, true);
                         }
                         else if(rank_level(get_rank(tname)) > rank_level(players[index].rank))
                         {
