@@ -1,10 +1,15 @@
 ####These are the things that need to be finished for future versions of the game.
 
+****Unfinished. Add chat language channels.
+****Unfinished. Make beacons disabled by default.
+****Unfinished. Add the ability to set your nickname.
+****Unfinished. Add an afk system.
+****Unfinished. Add a player/staff warning system.
 ****Unfinished. Build the cave defender gameplay that runs inside a room, where you gather wood, build and repair the four walls, and survive waves of bots, on small, medium, or large maps.
-****Unfinished. Expand the map system beyond the current starter lobby.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Expand the map system beyond the single starter lobby into distinct spaces, the lobby, the rooms' offices, and the game caverns, each drawn at its own size with its own floor and wall surfaces, ambience, and music.
 **Finished. Add the R, L, and G glance keys that tell you who is in the rooms, the lobby, and the games, working from the lobby, a room, or a game, with correct grammar for empty spaces and single players.
 **Finished. Keep a game that has not started yet open after everyone leaves so it can be rejoined, including your own single-player game, and list started games in the join menu while telling you that you can't join one once it has begun.
 **Finished. Ask for confirmation before leaving or stopping a game, and let staff stop a game from inside it as well as from the room menu.
