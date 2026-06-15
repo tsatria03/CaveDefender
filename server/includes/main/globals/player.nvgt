@@ -13,6 +13,7 @@ string[] menu_targets; // the argument behind each option of the last server-pus
 string[] menu_actions; // for a HETEROGENEOUS menu (e.g. the room menu), the action key behind each option.
 string menu_pending;   // a value carried across a cascading menu (e.g. the chosen game mode while picking the size).
 inventory inv; // what this player is carrying (wood, etc.); authoritative here, mirrored to the client. Wired in 6c.
+bool playagain_answered=false; // during a game's "over" phase: has this member answered the play-again prompt yet?
 player(int id, string username, double ver)
 {
 name=username;

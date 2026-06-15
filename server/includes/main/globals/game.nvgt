@@ -97,12 +97,17 @@ clear_enemies(games[gi].id);
 games.remove_at(gi);
 }
 }
-else if(games[gi].host_peer==peer)
+else
+{
+if(games[gi].host_peer==peer)
 {
 games[gi].host_peer=games[gi].members[0];
 int npi=get_player_index(games[gi].host_peer);
 if(npi>-1) games[gi].host=players[npi].name;
 if(games[gi].paused) resume_game(gi); // the host who paused is gone; don't leave the rest frozen
+}
+// A "no" answer (or any leave) during the post-round wait can leave the rest all answered; start anew.
+if(games[gi].phase=="over" and all_answered_playagain(gi)) reset_for_new_round(gi);
 }
 if(pi>-1)
 {
@@ -129,12 +134,17 @@ clear_items(games[i].id);
 clear_enemies(games[i].id);
 games.remove_at(i);
 }
-else if(games[i].host_peer==peer)
+else
+{
+if(games[i].host_peer==peer)
 {
 games[i].host_peer=games[i].members[0];
 int npi=get_player_index(games[i].host_peer);
 if(npi>-1) games[i].host=players[npi].name;
 if(games[i].paused) resume_game(i); // host who paused disconnected; unfreeze the remaining players
+}
+// A member dropping during the post-round wait can leave the rest all answered; start the next round.
+if(games[i].phase=="over" and all_answered_playagain(i)) reset_for_new_round(i);
 }
 }
 }
@@ -261,14 +271,41 @@ for(uint m=0; m<games[gi].members.length(); m++)
 send(games[gi].members[m], "walldestroyed "+dir, 0, true);
 redistribute_bots(gameid, dir, games[gi].size);
 }
-// All walls down: announce the survival time, then reset the game to a fresh idle cavern for a rematch.
+// All walls down: end the round. Clear the bots and wood, drop into the "over" phase, and ask every
+// member how they did and whether to play again (roundover). The cavern is NOT reset yet — we wait until
+// everyone has answered (players who say no leave to the office; the rest stay), then reset_for_new_round.
 void end_round_loss(int gi)
 {
 int gameid = games[gi].id;
-double size = games[gi].size;
 int secs = int(games[gi].wavetimer.elapsed/1000);
+games[gi].phase = "over";
+clear_enemies(gameid);
+clear_items(gameid);
 for(uint m=0; m<games[gi].members.length(); m++)
-send(games[gi].members[m], "gameover "+secs, 0, true);
+{
+int pi = get_player_index(games[gi].members[m]);
+if(pi > -1) players[pi].playagain_answered = false; // start everyone "awaiting an answer"
+send(games[gi].members[m], "roundover "+secs, 0, true);
+}
+}
+// True once every member still in the game has answered the play-again prompt (the no's have already left
+// via leave_game, so this means the remaining players all chose to stay). False for an empty game.
+bool all_answered_playagain(int gi)
+{
+if(gi<0 or gi>=int(games.length()) or games[gi].members.length()==0) return false;
+for(uint m=0; m<games[gi].members.length(); m++)
+{
+int pi = get_player_index(games[gi].members[m]);
+if(pi>-1 and !players[pi].playagain_answered) return false;
+}
+return true;
+}
+// Everyone who stayed has answered: rebuild a fresh idle cavern for the next round. The host then begins
+// it manually with Begin round (gated to the idle phase, which is what enforces "wait for all answers").
+void reset_for_new_round(int gi)
+{
+int gameid = games[gi].id;
+double size = games[gi].size;
 clear_enemies(gameid);
 clear_items(gameid);
 clear_walls(gameid);

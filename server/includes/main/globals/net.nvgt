@@ -741,6 +741,21 @@ if(ishost and active) { pause_game(gi); push_pause_menu(index); }
 else push_leave_menu(index);
 }
 }
+else if(parsed[0]=="playagain" and index>-1 and parsed.length()>1)
+{
+// Answer to the end-of-round "play again?" prompt. Only meaningful while the game is in the "over"
+// phase. No = leave to the office (migrates the host if needed); yes = stay. Once everyone who is left
+// has answered, the cavern resets to a fresh idle round for the host to begin.
+int gi=get_game_index(players[index].room_id);
+if(gi>-1 and games[gi].phase=="over")
+{
+int gid=games[gi].id;
+if(parsed[1]=="no") leave_game(players[index].peer_id);
+else players[index].playagain_answered=true;
+int gi2=get_game_index(gid); // leave_game may have removed the game if it emptied
+if(gi2>-1 and games[gi2].phase=="over" and all_answered_playagain(gi2)) reset_for_new_round(gi2);
+}
+}
 else if(parsed[0]=="createroom" and index>-1 and parsed.length()>1)
 {
 bool priv = (parsed[1]=="private");
