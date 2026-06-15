@@ -340,6 +340,11 @@ void netloop()
 			// Server feedback routed to the misc buffer (and spoken), e.g. command confirmations.
 			add_buffer_item("misc", message.substr(5));
 		}
+		else if (parsed[0] == "alert" and message.length() > 6)
+		{
+			// Server announcement routed to the alerts buffer (and spoken), e.g. a mute notice for others.
+			add_buffer_item("alerts", message.substr(6));
+		}
 		else if (parsed[0] == "welcome")
 			{
 				add_buffer_item("misc", message);
@@ -435,17 +440,27 @@ void netloop()
 			p.play_stationary("sounds/ui/misc/notify"+random(1, 5)+".ogg", false);
 			add_buffer_item("alerts", message.substr(7));
 		}
-		else if (parsed[0] == "muted" and parsed.length() > 1)
+		else if (parsed[0] == "muted" and parsed.length() > 2)
 		{
 			p.play_stationary("sounds/ui/misc/playermute.ogg", false);
-			int rem = string_to_number(parsed[1]);
-			if(rem > 0) add_buffer_item("alerts", "You have been muted for " + rem + " seconds.");
-			else add_buffer_item("alerts", "You have been muted indefinitely.");
+			string ch = parsed[1];
+			int rem = string_to_number(parsed[2]);
+			string what;
+			if(ch == "all") what = "You have been muted in all channels";
+			else if(ch == "voice") what = "Your voice chat has been muted";
+			else what = "Your " + ch + " chats have been muted";
+			what += (rem > 0) ? " for " + rem + " seconds." : " indefinitely.";
+			add_buffer_item("alerts", what);
 		}
-		else if (parsed[0] == "unmuted")
+		else if (parsed[0] == "unmuted" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/playerspeak.ogg", false);
-			add_buffer_item("alerts", "You can speak again.");
+			string ch = parsed[1];
+			string what;
+			if(ch == "all") what = "You have been unmuted in all channels.";
+			else if(ch == "voice") what = "Your voice chat has been unmuted.";
+			else what = "Your " + ch + " chats have been unmuted.";
+			add_buffer_item("alerts", what);
 		}
 		else if (parsed[0] == "roomjoined" and parsed.length() > 3)
 		{

@@ -1,4 +1,5 @@
 New in 1.9.
+Staff can now mute a player one channel at a time. Use /mute with a player's name, then a channel, global, local, staff, voice, or all, and optionally a number of seconds; leave the time off for an indefinite mute, and lift it with /unmute and the same channel. A muted player can still use commands but can't chat, use /me, or talk by voice in that channel, and everyone is told in the alerts buffer when a player is muted or unmuted. You can now mute any player at or below your own rank, not just regular players.
 Leaving the game now returns you to the connection menu instead of the main menu, so you can sign back in right away; from there, back still takes you to the main menu.
 Creating an account no longer signs you in straight away. Once it's made, the game asks whether you want to log in now; choose no and you're returned to the connection menu, where your new account is already saved for signing in.
 Fixed timed mutes and bans being off by up to a couple of minutes, so a mute or ban now lasts exactly as long as it was set for, and the remaining time is reported accurately.

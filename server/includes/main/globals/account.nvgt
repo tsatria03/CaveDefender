@@ -153,25 +153,26 @@ result = result * 10 + int64(d);
 }
 return result;
 }
-// Mute state: -1 = not muted, 0 = muted indefinitely, >0 = absolute epoch the mute expires at.
-int64 get_mute_until(string name)
+// Per-channel mute state. Each channel is stored in its own field (mute_global, mute_local, mute_staff,
+// mute_voice): "" = not muted, 0 = muted indefinitely, >0 = the absolute epoch the mute expires at.
+int64 get_channel_mute(string name, string channel)
 {
 if(!account_exists(name)) return -1;
-string m = read_field(name, "muted");
+string m = read_field(name, "mute_"+channel);
 if(m == "") return -1;
 return parse_epoch(m);
 }
-// Persists a mute (until = 0 for indefinite, otherwise an absolute epoch from now_epoch()).
-bool set_mute(string name, int64 until)
+// Persists a channel mute (until = 0 for indefinite, otherwise an absolute epoch from now_epoch()).
+bool set_channel_mute(string name, string channel, int64 until)
 {
 if(!account_exists(name)) return false;
-return write_field(name, "muted", "" + until);
+return write_field(name, "mute_"+channel, "" + until);
 }
-// Clears any mute on an account.
-bool clear_mute(string name)
+// Clears a channel mute on an account.
+bool clear_channel_mute(string name, string channel)
 {
 if(!account_exists(name)) return false;
-return write_field(name, "muted", "");
+return write_field(name, "mute_"+channel, "");
 }
 
 // Ban state: -1 = not banned, 0 = banned permanently, >0 = absolute epoch the ban expires at.

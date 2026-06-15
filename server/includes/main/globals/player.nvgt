@@ -6,8 +6,7 @@ int peer_id;
 timer messagetimer;
 double version;
 string rank="player";
-bool muted=false;
-int64 muteuntil=0; // when muted: 0 = indefinite, otherwise the epoch the mute expires at.
+int64 mute_global=-1, mute_local=-1, mute_staff=-1, mute_voice=-1; // per channel: -1 = not muted, 0 = indefinite, >0 = epoch it expires at.
 int x=1, y=1; // map position; defaults to the client's spawn at (1,1) until a position update arrives.
 int room_id=0; // 0 = main lobby; otherwise the id of the room this player is currently in.
 string[] menu_targets; // the argument behind each option of the last server-pushed LIST menu (a room id, game id, or player name), so a returned choice index maps back to the right thing.
@@ -26,6 +25,68 @@ void spawn_player(int id, string name, double version)
 {
 player p1(id, name, version);
 players.insert_last(p1);
+}
+// The channels a mute can apply to. "all" expands to every channel; a specific channel stays itself.
+array<string> mute_channels_for(string ch)
+{
+array<string> r;
+if(ch=="all") { r.insert_last("global"); r.insert_last("local"); r.insert_last("staff"); r.insert_last("voice"); }
+else r.insert_last(ch);
+return r;
+}
+bool valid_mute_channel(string ch)
+{
+return ch=="global" or ch=="local" or ch=="staff" or ch=="voice";
+}
+// Read/write a player's in-memory mute for a channel (-1 not muted, 0 indefinite, >0 epoch).
+int64 get_player_mute(int pi, string ch)
+{
+if(pi<0 or pi>=int(players.length())) return -1;
+if(ch=="global") return players[pi].mute_global;
+if(ch=="local") return players[pi].mute_local;
+if(ch=="staff") return players[pi].mute_staff;
+if(ch=="voice") return players[pi].mute_voice;
+return -1;
+}
+void set_player_mute(int pi, string ch, int64 v)
+{
+if(pi<0 or pi>=int(players.length())) return;
+if(ch=="global") players[pi].mute_global=v;
+else if(ch=="local") players[pi].mute_local=v;
+else if(ch=="staff") players[pi].mute_staff=v;
+else if(ch=="voice") players[pi].mute_voice=v;
+}
+// Is this player muted in this channel right now? (>0 epochs that have passed read as not muted; the
+// netloop poll clears and announces them shortly after.)
+bool is_muted_now(int pi, string ch)
+{
+int64 u = get_player_mute(pi, ch);
+if(u < 0) return false;
+if(u == 0) return true;
+return now_epoch() < u;
+}
+// Tell the target (sound + first-person alert) about a channel mute change. rem = remaining seconds for
+// a mute (0 = indefinite); ignored for an unmute.
+void notify_target_mute(int ti, string channel, bool muting, int rem)
+{
+if(ti < 0 or ti >= int(players.length())) return;
+if(muting) send(players[ti].peer_id, "muted "+channel+" "+rem, 0, true);
+else send(players[ti].peer_id, "unmuted "+channel, 0, true);
+}
+// Announce a channel mute change to everyone EXCEPT the target (who gets notify_target_mute instead),
+// into the alerts buffer, using the rank-aware display name. tpeer = the target's peer id (-1 if offline).
+void announce_mute_to_others(string disp, int tpeer, string channel, bool muting)
+{
+string verb = muting ? "muted" : "unmuted";
+string text;
+if(channel == "all") text = disp + " has been " + verb + " in all channels.";
+else if(channel == "voice") text = disp + "'s voice chat has been " + verb + ".";
+else text = disp + "'s " + channel + " chats have been " + verb + ".";
+for(uint i=0; i<players.length(); i++)
+{
+if(int(players[i].peer_id) == tpeer) continue;
+send(players[i].peer_id, "alert "+text, 0, true);
+}
 }
 // The name as other players should see it: staff (moderator/administrator/developer) get their
 // rank prefixed (e.g. "administrator bob"); regular players show just their name.
