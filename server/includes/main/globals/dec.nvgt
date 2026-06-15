@@ -1,5 +1,6 @@
 int port=25562;
 int userlimit=200;
+string owner="tsatria03"; // the owner account name (from conf.svr); always forced to developer rank.
 string version="2.0";
 string motd = "Welcome to the server!";
 timer svruptimer;
