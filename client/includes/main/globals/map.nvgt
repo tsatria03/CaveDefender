@@ -21,6 +21,7 @@ void draw_map(string mapname, double minx=0, double maxx=50, double miny=0, doub
 clear_map(); // wipe the previous map first so switching spaces (lobby <-> office) doesn't stack tiles.
 clear_ambiences(); // drop the previous space's ambient bed before laying the new one.
 clear_musics(); // and its music track, same as the ambience.
+clear_clientitems(); // and any ground items (wood) from the previous space.
 me.x=int((minx+maxx)/2);
 me.y=int((miny+maxy)/2);
 if(mapname=="lobby")

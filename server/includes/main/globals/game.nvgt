@@ -18,6 +18,8 @@ int[] members;    // peer ids of everyone currently in the cavern
 string phase="idle"; // round phase: idle -> build -> wave -> over -> idle (host begins from idle)
 timer phasetimer;    // times the current phase (drives the build-phase countdown)
 int buildduration=0; // how many seconds the build phase lasts (set per map size when the round begins)
+timer woodtimer;     // drives wood drops during the build and wave phases
+int woodinterval=0;  // ms until the next wood drop, re-rolled to a random 1000-5000 after each one
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl)
 {
 id=gid;
@@ -62,6 +64,7 @@ send(games[gindex].members[i], "gameleft", 0, true);
 set_room_scope(pi, proom);
 }
 clear_walls(gid);
+clear_items(gid);
 games.remove_at(gindex);
 }
 // One player leaves a game while it continues for others: solo or last-out ends it; if the host leaves
@@ -83,6 +86,7 @@ if(games[gi].members.length()==0)
 if(games[gi].phase != "idle")
 {
 clear_walls(games[gi].id);
+clear_items(games[gi].id);
 games.remove_at(gi);
 }
 }
@@ -113,6 +117,7 @@ games[i].members.remove_at(mi);
 if(games[i].members.length()==0)
 {
 clear_walls(games[i].id);
+clear_items(games[i].id);
 games.remove_at(i);
 }
 else if(games[i].host_peer==peer)
@@ -141,12 +146,26 @@ int secs = (phase=="build") ? games[gindex].buildduration : 0;
 for(uint i=0; i<games[gindex].members.length(); i++)
 send(games[gindex].members[i], "gamephase "+phase+" "+secs, 0, true);
 }
-// Called every server tick: any game whose build phase has run out advances to the wave phase.
+// Called every server tick: advance any finished build phase to the wave, and drop wood in active games.
 void gametick()
 {
 for(uint i=0; i<games.length(); i++)
 {
 if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
 set_game_phase(int(i), "wave");
+// Wood drops during the build and wave phases, on a random 1-5s cadence, up to a size-scaled cap.
+if((games[i].phase=="build" or games[i].phase=="wave") and games[i].woodtimer.elapsed >= games[i].woodinterval)
+{
+games[i].woodtimer.restart();
+games[i].woodinterval = random(1000, 5000);
+if(wood_count_in(games[i].id) < wood_cap(games[i].size))
+{
+int wx = random(1, games[i].size-1); // interior only; the 0 and size edges are walls
+int wy = random(1, games[i].size-1);
+int iid = spawn_item(games[i].id, wx, wy, "wood");
+for(uint m=0; m<games[i].members.length(); m++)
+send(games[i].members[m], "spawnitem "+iid+" wood "+wx+" "+wy, 0, true);
+}
+}
 }
 }

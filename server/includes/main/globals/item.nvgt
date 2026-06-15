@@ -49,6 +49,19 @@ if(items[i].room_id==room_id and items[i].x==x and items[i].y==y) return i;
 }
 return -1;
 }
+// How much wood may sit on a cavern's floor at once (scales with map size).
+int wood_cap(int size)
+{
+return size/5;
+}
+// Count the wood currently on the ground in a space.
+int wood_count_in(int room_id)
+{
+int n=0;
+for(uint i=0; i<items.length(); i++)
+if(@items[i]!=null and items[i].room_id==room_id and items[i].type=="wood") n++;
+return n;
+}
 // Remove an item by its id (on pickup).
 void remove_item(int id)
 {

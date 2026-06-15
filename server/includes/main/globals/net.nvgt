@@ -377,12 +377,76 @@ if(i==uint(pindex) or players[i].room_id!=newroom) continue;
 send(players[i].peer_id, "pos "+nm+" "+players[pindex].x+" "+players[pindex].y, 0, true);
 send(pr, "pos "+players[i].name+" "+players[i].x+" "+players[i].y, 0, true);
 }
+// Send any ground items already in the new space (e.g. wood down in a game you're joining mid-round).
+for(uint i=0; i<items.length(); i++)
+if(@items[i]!=null and items[i].room_id==newroom) send(pr, "spawnitem "+items[i].id+" "+items[i].type+" "+items[i].x+" "+items[i].y, 0, true);
+// Entering a game starts you with no wood (inventory is per-game); sync the cleared count and the walls.
+if(gi > -1)
+{
+players[pindex].inv.clear();
+send_wood_count(pindex);
+send(pr, wall_strength_msg(newroom), 0, true);
+}
 }
 // Broadcast a player's current position to everyone sharing their room scope (used on each move).
 void broadcast_pos(int pindex)
 {
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==players[pindex].room_id) send(players[i].peer_id, "pos "+players[pindex].name+" "+players[pindex].x+" "+players[pindex].y, 0, true);
+}
+// Send a player their current wood count so their client's I key can report it.
+void send_wood_count(int pindex)
+{
+send(players[pindex].peer_id, "wood "+players[pindex].inv.count("wood"), 0, true);
+}
+// The four cavern wall strengths (as percents) for a game, for the client's N/E/S/W/D keys.
+string wall_strength_msg(int gameid)
+{
+int gi = get_game_index(gameid);
+if(gi < 0) return "wallstr 0 0 0 0";
+double size = games[gi].size;
+return "wallstr "+wall_percent(gameid,"north",size)+" "+wall_percent(gameid,"east",size)+" "+wall_percent(gameid,"south",size)+" "+wall_percent(gameid,"west",size);
+}
+// Push the four wall strengths to everyone in a game (on entry, reinforce, and later damage).
+void broadcast_wall_strength(int gameid)
+{
+string m = wall_strength_msg(gameid);
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id == gameid) send(players[i].peer_id, m, 0, true);
+}
+// Pick up every wood within `radius` tiles of the player (radius 0 = the exact tile they're on). Only in
+// a game during the build or wave phase. Adds to the player's inventory, removes the items (telling
+// everyone in the game), and gives the picker the take sound plus an updated wood count.
+void gather_wood(int pindex, int radius)
+{
+int rid = players[pindex].room_id;
+int gi = get_game_index(rid);
+if(gi < 0) return;
+if(games[gi].phase != "build" and games[gi].phase != "wave") return;
+int px = players[pindex].x;
+int py = players[pindex].y;
+int got = 0;
+for(int i=int(items.length())-1; i>=0; i--)
+{
+if(@items[i]==null) continue;
+if(items[i].room_id != rid or items[i].type != "wood") continue;
+int dx = items[i].x - px; if(dx < 0) dx = -dx;
+int dy = items[i].y - py; if(dy < 0) dy = -dy;
+if(dx <= radius and dy <= radius)
+{
+int iid = items[i].id;
+items.remove_at(i);
+players[pindex].inv.give("wood", 1);
+got++;
+for(uint m=0; m<players.length(); m++)
+if(players[m].room_id == rid) send(players[m].peer_id, "removeitem "+iid, 0, true);
+}
+}
+if(got > 0)
+{
+send(players[pindex].peer_id, "play_item wood take", 0, true);
+send_wood_count(pindex);
+}
 }
 void netloop()
 {
@@ -530,6 +594,35 @@ else if(parsed[0]=="move" and parsed.length()>2 and index>-1)
 players[index].x=string_to_number(parsed[1]);
 players[index].y=string_to_number(parsed[2]);
 broadcast_pos(index);
+gather_wood(index, 0); // auto-grab any wood on the tile you just stepped onto
+}
+else if(parsed[0]=="grab" and index>-1)
+{
+gather_wood(index, 5); // the Enter grab key: scoop up all wood within 5 tiles
+}
+else if(parsed[0]=="reinforce" and index>-1 and parsed.length()>1)
+{
+// Shift+Enter at a wall: spend 1 wood for a random +1 to +5 strength on the wall you're facing.
+string dir = parsed[1];
+int gi = get_game_index(players[index].room_id);
+if(gi < 0) {} // not in a game
+else if(games[gi].phase != "build" and games[gi].phase != "wave") send(event.peer_id, "You can only reinforce during a round.", 0,true);
+else if(players[index].inv.count("wood") < 1) send(event.peer_id, "You don't have any wood.", 0,true);
+else if(!at_wall(players[index].x, players[index].y, dir, games[gi].size)) send(event.peer_id, "You need to be at a wall.", 0,true);
+else
+{
+int wi = border_wall(games[gi].id, dir, games[gi].size);
+if(wi > -1)
+{
+players[index].inv.take("wood", 1);
+int gain = random(1, 5);
+repair_wall(wi, gain);
+send_wood_count(index);
+send(event.peer_id, "play_item wood place", 0,true);
+send(event.peer_id, "reinforced "+dir+" "+gain, 0,true);
+broadcast_wall_strength(games[gi].id);
+}
+}
 }
 else if(parsed[0]=="step" and parsed.length()>3 and index>-1)
 {

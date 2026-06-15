@@ -1,0 +1,45 @@
+// Client mirror of the wood (and later other items) lying in a game's cavern. The server is
+// authoritative (see the server's item.nvgt); here we only hold each item's id and play its audio on
+// objpool: a one-shot drop sound when it appears, and a positional loop at its tile while it sits there,
+// stopped when it's picked up or the game is left. update_sound_pools() moves the listener for objpool,
+// so the loops pan and fade as you walk around them.
+clientitem@[] clientitems(0);
+class clientitem
+{
+int id;
+int x, y;
+string type; // e.g. "wood" -> sounds/objects/items/wood/
+int loophandle = -1;
+clientitem(int iid, int ix, int iy, string ty)
+{
+id = iid; x = ix; y = iy; type = ty;
+objpool.play_extended_3d("sounds/objects/items/" + type + "/drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+loophandle = objpool.play_extended_3d("sounds/objects/items/" + type + "/loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 100, false);
+}
+}
+int get_clientitem_index(int id)
+{
+for(uint i = 0; i < clientitems.length(); i++) if(clientitems[i].id == id) return i;
+return -1;
+}
+// A new item appeared (server "spawnitem <id> <type> <x> <y>").
+void add_clientitem(int id, int x, int y, string type)
+{
+if(get_clientitem_index(id) > -1) return; // already have it
+clientitem it(id, x, y, type);
+clientitems.insert_last(it);
+}
+// An item was picked up or otherwise removed (server "removeitem <id>"). Stops its loop.
+void remove_clientitem(int id)
+{
+int i = get_clientitem_index(id);
+if(i < 0) return;
+objpool.destroy_sound(clientitems[i].loophandle);
+clientitems.remove_at(i);
+}
+// Drop all item sounds (leaving a game / switching maps).
+void clear_clientitems()
+{
+for(uint i = 0; i < clientitems.length(); i++) objpool.destroy_sound(clientitems[i].loophandle);
+clientitems.resize(0);
+}

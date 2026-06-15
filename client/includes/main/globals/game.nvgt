@@ -51,6 +51,12 @@ buffercheck();
 			else if(current_room != 0) announce_games("roomgamemembers", "in this room");
 			else announce_games("allgamemembers", "on the server");
 		}
+		if (in_game and key_pressed(KEY_I)) speak("you have " + my_wood + (my_wood == 1 ? " piece" : " pieces") + " of wood.");
+		if (in_game and key_pressed(KEY_N)) speak("the north wall has " + wall_north + " percent strength.");
+		if (in_game and key_pressed(KEY_E)) speak("the east wall has " + wall_east + " percent strength.");
+		if (in_game and key_pressed(KEY_S)) speak("the south wall has " + wall_south + " percent strength.");
+		if (in_game and key_pressed(KEY_W)) speak("the west wall has " + wall_west + " percent strength.");
+		if (in_game and key_pressed(KEY_D)) speak("wall strengths. north " + wall_north + " percent. east " + wall_east + " percent. south " + wall_south + " percent. west " + wall_west + " percent.");
 		if (key_down(KEY_LEFT) and movetimer.elapsed>=movetime)
 		{
 			facing=Left;
@@ -240,8 +246,19 @@ buffercheck();
 		}
 		if(key_pressed(KEY_RETURN))
 		{
-			send(0, "openmenu", 0, true); // server builds and pushes the right menu (lobby, room, or in-game) for where you are
+			if(in_game)
+			{
+				if(shift_is_down())
+				{
+					// Shift+Enter reinforces the wall you're facing; the server checks you're actually at it.
+					string dir = (facing==Left) ? "west" : (facing==Right) ? "east" : (facing==Forward) ? "north" : "south";
+					send(0, "reinforce "+dir, 0, true);
+				}
+				else send(0, "grab", 0, true); // Enter grabs nearby wood
+			}
+			else send(0, "openmenu", 0, true); // lobby/room: open the menu
 		}
+		if(key_pressed(KEY_TAB) and in_game) send(0, "openmenu", 0, true); // in a game, Tab opens the game menu
 		if(key_pressed(KEY_ESCAPE))
 		{
 			if(in_game) { send(0, "openpausemenu", 0, true); continue; } // server pushes the pause menu
