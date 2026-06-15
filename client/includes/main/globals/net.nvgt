@@ -378,6 +378,39 @@ void netloop()
 			int fy = string_to_number(parsed[3]);
 			p.play_extended_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
 		}
+		else if (parsed[0] == "spawnitem" and parsed.length() > 4)
+		{
+			// A ground item appeared: "spawnitem <id> <type> <x> <y>". Plays its drop + loop on objpool.
+			add_clientitem(string_to_number(parsed[1]), string_to_number(parsed[3]), string_to_number(parsed[4]), parsed[2]);
+		}
+		else if (parsed[0] == "removeitem" and parsed.length() > 1)
+		{
+			// A ground item was picked up or removed: "removeitem <id>". Stops its loop.
+			remove_clientitem(string_to_number(parsed[1]));
+		}
+		else if (parsed[0] == "play_item" and parsed.length() > 2)
+		{
+			// A personal item sound for you, e.g. "play_item wood take" -> objects/items/wood/take.ogg.
+			p.play_stationary("sounds/objects/items/" + parsed[1] + "/" + parsed[2] + ".ogg", false);
+		}
+		else if (parsed[0] == "wood" and parsed.length() > 1)
+		{
+			// Your current wood count in this game, synced from the server (the I key reads it).
+			my_wood = string_to_number(parsed[1]);
+		}
+		else if (parsed[0] == "wallstr" and parsed.length() > 4)
+		{
+			// The four cavern wall strengths (percent): "wallstr <north> <east> <south> <west>".
+			wall_north = string_to_number(parsed[1]);
+			wall_east = string_to_number(parsed[2]);
+			wall_south = string_to_number(parsed[3]);
+			wall_west = string_to_number(parsed[4]);
+		}
+		else if (parsed[0] == "reinforced" and parsed.length() > 2)
+		{
+			// Spoken confirmation after you reinforce: "reinforced <direction> <gain>".
+			add_buffer_item("misc", "the " + parsed[1] + " wall gained " + parsed[2] + " strength.");
+		}
 		else if (parsed[0] == "yourrank" and parsed.length() > 1)
 		{
 			myrank = parsed[1];

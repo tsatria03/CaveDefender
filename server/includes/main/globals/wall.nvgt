@@ -33,14 +33,23 @@ wall w(room_id, minx, maxx, miny, maxy, health, maxhealth, destroyable);
 walls.insert_last(w);
 return walls.length()-1;
 }
+// A wall's starting strength: a structural (indestructible) wall uses the given health, but a
+// destroyable cavern wall begins at an independent random 20-80% of its max, so every wall and every
+// round differs and the build phase becomes a real assessment of which walls to reinforce first.
+double wall_start_health(double health, double maxhealth, bool destroyable)
+{
+if(!destroyable) return health;
+return random(int(maxhealth*0.2), int(maxhealth*0.8));
+}
 // Spawn the four edge walls (west, east, north, south) bordering a `size` x `size` space. Pass
-// destroyable=false for a structural lobby/office border, true for a game cavern.
+// destroyable=false for a structural lobby/office border, true for a game cavern. Cavern walls each roll
+// their own starting strength (wall_start_health is called per wall, so the four are independent).
 void spawn_border_walls(int room_id, double size, double health, double maxhealth, bool destroyable)
 {
-spawn_wall(room_id, 0, 0, 0, size, health, maxhealth, destroyable);       // west  (x = 0)
-spawn_wall(room_id, size, size, 0, size, health, maxhealth, destroyable); // east  (x = size)
-spawn_wall(room_id, 0, size, size, size, health, maxhealth, destroyable); // north (y = size)
-spawn_wall(room_id, 0, size, 0, 0, health, maxhealth, destroyable);       // south (y = 0)
+spawn_wall(room_id, 0, 0, 0, size, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable);       // west  (x = 0)
+spawn_wall(room_id, size, size, 0, size, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable); // east  (x = size)
+spawn_wall(room_id, 0, size, size, size, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable); // north (y = size)
+spawn_wall(room_id, 0, size, 0, 0, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable);       // south (y = 0)
 }
 // The walls[] index of the wall covering this cell in the given space, or -1 if there isn't one.
 int wall_at(int room_id, double x, double y)
@@ -61,12 +70,39 @@ if(!walls[id].destroyable) return;
 walls[id].health-=amount;
 if(walls[id].health<0) walls[id].health=0;
 }
-// Repair a wall with wood; health never rises above its maximum.
+// Reinforce a wall with wood. No cap (matching Sammy): strength may climb above maxhealth, so players
+// can over-build a wall as a buffer against wave damage.
 void repair_wall(int id, double amount)
 {
 if(id<0 or id>=int(walls.length()) or @walls[id]==null) return;
 walls[id].health+=amount;
-if(walls[id].health>walls[id].maxhealth) walls[id].health=walls[id].maxhealth;
+}
+// The walls[] index of a cavern's border wall in a compass direction (its size is the grid size).
+int border_wall(int room_id, string dir, double size)
+{
+if(dir=="west") return wall_at(room_id, 0, size/2);
+if(dir=="east") return wall_at(room_id, size, size/2);
+if(dir=="north") return wall_at(room_id, size/2, size);
+if(dir=="south") return wall_at(room_id, size/2, 0);
+return -1;
+}
+// True if a player standing at (px,py) is adjacent to the wall in this direction (the interior tile
+// right next to the border edge). The border ring is at 0 and size, so the adjacent floor tile is 1 or
+// size-1.
+bool at_wall(int px, int py, string dir, double size)
+{
+if(dir=="west") return px==1;
+if(dir=="east") return px==int(size)-1;
+if(dir=="north") return py==int(size)-1;
+if(dir=="south") return py==1;
+return false;
+}
+// A wall's strength as a percent of its max (can exceed 100 when over-reinforced).
+int wall_percent(int room_id, string dir, double size)
+{
+int wi = border_wall(room_id, dir, size);
+if(wi<0 or walls[wi].maxhealth<=0) return 0;
+return int(walls[wi].health / walls[wi].maxhealth * 100);
 }
 // Remove every wall belonging to a space (when a game ends or a room closes).
 void clear_walls(int room_id)
