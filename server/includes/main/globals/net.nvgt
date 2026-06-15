@@ -1433,9 +1433,9 @@ else
                         else
                         {
                             array<string> chans = mute_channels_for(channel);
-                            bool any = false;
-                            for(uint c=0; c<chans.length(); c++) if(get_channel_mute(tname, chans[c]) != -1) any = true;
-                            if(!any)
+                            bool anymuted = false;
+                            for(uint c=0; c<chans.length(); c++) if(get_channel_mute(tname, chans[c]) != -1) anymuted = true;
+                            if(!anymuted)
                             {
                                 send(event.peer_id, tname+" is not muted in "+(channel=="all"?"any channel":("the "+channel+" channel"))+".", 0, true);
                             }
