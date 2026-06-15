@@ -68,23 +68,64 @@ walls[index].hurtsound = p.play_extended_3d("sounds/objects/walls/"+walls[index]
 p.update_sound_3d(walls[index].hurtsound, walls[index].minx, walls[index].miny, 0);
 p.update_sound_range_3d(walls[index].hurtsound, 0, walls[index].maxx-walls[index].minx, 0, walls[index].maxy-walls[index].miny, 0, 0);
 }
-// Per-frame check (mirrors SimpleFighter's wallcheck): any wall whose synced health has hit 0 stops
-// its hurt clip, plays its death clip across the wall span, re-tiles the region to floor (overwriting
-// the wall tile, since the engine has no per-tile remove), then drops the wall. No debris platforms.
-void wallcheck()
+// The synced strength percent for a wall direction (set by the wallstr message; can exceed 100).
+int wall_percent_for(string dir)
 {
-for(uint i=0; i<walls.length(); i++)
-{
-if(@walls[i]==null) continue;
-if(walls[i].health<=0)
-{
-p.destroy_sound(walls[i].hurtsound);
-walls[i].deathsound = p.play_extended_3d("sounds/objects/walls/"+walls[i].type+"/death.ogg", me.x, me.y, me.z, walls[i].minx, walls[i].miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
-p.update_sound_3d(walls[i].deathsound, walls[i].minx, walls[i].miny, 0);
-p.update_sound_range_3d(walls[i].deathsound, 0, walls[i].maxx-walls[i].minx, 0, walls[i].maxy-walls[i].miny, 0, 0);
-spawn_platform(int(walls[i].minx), int(walls[i].maxx), int(walls[i].miny), int(walls[i].maxy), walls[i].floor);
-@walls[i] = null;
-return;
+if(dir=="north") return wall_north;
+if(dir=="east") return wall_east;
+if(dir=="south") return wall_south;
+if(dir=="west") return wall_west;
+return 0;
 }
+// Play a bot's hit on a wall in real 3D, positioned across that wall's span (like play_wall_hurt), with
+// the weapon's hit sound and a volume scaled to the wall's remaining strength: a healthy wall's hits are
+// quiet, a weakening wall's hits get loud and frantic. Called from the wallhit message. No fake panning.
+void play_wall_hit(string dir, int weapon)
+{
+double s = cavern_size;
+double minx, maxx, miny, maxy;
+if(dir=="west") { minx=0; maxx=0; miny=0; maxy=s; }
+else if(dir=="east") { minx=s; maxx=s; miny=0; maxy=s; }
+else if(dir=="north") { minx=0; maxx=s; miny=s; maxy=s; }
+else if(dir=="south") { minx=0; maxx=s; miny=0; maxy=0; }
+else return;
+// Pick the weapon's hit sound by weapon id (1 axe, 2 crowbar, 3 hammer, 4 bat). Explicit branches rather
+// than a nested ternary so the mapping is unmistakable and a stray value can't silently fall through.
+// Every weapon has hit1-3, so one of the three plays at random.
+string wname;
+if(weapon==1) wname = "axe";
+else if(weapon==2) wname = "crowbar";
+else if(weapon==4) wname = "bat";
+else wname = "hammer";
+string snd = "weapons/"+wname+"/hit"+random(1,3);
+int vol = -wall_percent_for(dir); // weaker wall = louder; Sammy's danger cue
+if(vol < -100) vol = -100;
+if(vol > 0) vol = 0;
+int h = p.play_extended_3d("sounds/"+snd+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, vol, 100, false);
+p.update_sound_3d(h, minx, miny, 0);
+p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
+// The wall itself reacts to every strike: a wood hurt creak across the same span, layered under the
+// weapon swing at full volume so you always hear the wall taking damage (the weapon scales for danger).
+int hh = p.play_extended_3d("sounds/objects/walls/wallwood/hurt"+random(1,3)+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+p.update_sound_3d(hh, minx, miny, 0);
+p.update_sound_range_3d(hh, 0, maxx-minx, 0, maxy-miny, 0, 0);
 }
+// Server-driven wall destruction (the "walldestroyed <dir>" message). Plays the death clip across the
+// wall span and re-tiles the breach to a random debris / woodpile / rubble floor, so you HEAR a breach
+// as you walk over it. Walls are server-authoritative, so this is event-driven, not a health poll.
+void destroy_wall_client(string dir)
+{
+double s = cavern_size;
+int minx, maxx, miny, maxy;
+if(dir=="west") { minx=0; maxx=0; miny=0; maxy=int(s); }
+else if(dir=="east") { minx=int(s); maxx=int(s); miny=0; maxy=int(s); }
+else if(dir=="north") { minx=0; maxx=int(s); miny=int(s); maxy=int(s); }
+else if(dir=="south") { minx=0; maxx=int(s); miny=0; maxy=0; }
+else return;
+int h = p.play_extended_3d("sounds/objects/walls/wallwood/death.ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+p.update_sound_3d(h, minx, miny, 0);
+p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
+string[] rubble;
+rubble.insert_last("debris"); rubble.insert_last("woodpile"); rubble.insert_last("rubble");
+spawn_platform(minx, maxx, miny, maxy, rubble[random(0, 2)]); // breach becomes walkable rubble
 }

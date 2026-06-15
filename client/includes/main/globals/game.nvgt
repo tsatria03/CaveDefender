@@ -26,9 +26,16 @@ buffercheck();
 			speak("canceled");
 			continue;
 		}
+		if(in_game and game_paused)
+		{
+			// The host has the game paused: everything is frozen except Escape, which opens the leave menu.
+			// Audio was already suspended on the gamepaused message, so we skip the per-frame audio and
+			// gameplay updates too — nothing moves or restarts until the host resumes.
+			if(key_pressed(KEY_ESCAPE)) send(0, "openpausemenu", 0, true);
+			continue;
+		}
 		update_sound_pools();
 		beaconloop();
-		wallcheck();
 		update_ambiences(me.x, me.y);
 		update_musics(me.x, me.y);
 		if (alt_is_down() or control_is_down() or shift_is_down())

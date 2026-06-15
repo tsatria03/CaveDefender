@@ -29,7 +29,13 @@ From the lobby, press enter to open the lobby menu, where you can create or join
 
 Games.
 
-Inside a room you can start a game, choosing a mode and a map size, and others can join your open games while a game still has room. In a game you defend four walls that each start at a random strength. Wood drops around the cavern during the round: walk over a piece to pick it up, or press enter to grab everything within a few tiles, then stand at a wall and press shift plus enter to spend one piece reinforcing it (the strength gained is random, and there is no upper limit, so you can over-build a wall as a buffer). Press i to hear how much wood you are carrying, press n, e, s, or w to hear a single wall's strength, and press d for a quick summary of all four. Press tab for the game menu, where the host begins the round, and press escape for the pause menu, where you can leave the game at any time, or stop it if you host it.
+Inside a room you can start a game, choosing a mode and a map size, and others can join your open games while a game still has room. In a game you defend four walls that each start at a random strength. Press tab for the game menu, where the host begins the round.
+
+The round opens with a build phase to prepare. Wood drops around the cavern: walk over a piece to pick it up, or press enter to grab everything within a few tiles, then stand at a wall and press shift plus enter to spend one piece reinforcing it (the strength gained is random, and there is no upper limit, so you can over-build a wall as a buffer). Press i to hear how much wood you are carrying, press n, e, s, or w to hear a single wall's strength, and press d for a quick summary of all four.
+
+When the wave begins, enemies attack your walls with axes, bats, crowbars, and hammers, and you hear each strike at the wall it lands on, louder as that wall weakens. A wall whose strength runs out breaks into rubble you can walk over, and its attackers move to the walls still standing. The round is lost when all four walls fall, and you are told how long you survived before the cavern resets for another try.
+
+Press escape for the pause menu. If you host the game and a round is running, opening it pauses the game for everyone until you resume; a solo game stays paused, while an open game resumes on its own after a minute and a half. Anyone can leave from this menu at any time, and the host can stop the game from it.
 
 What only staff can do.
 

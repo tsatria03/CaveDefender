@@ -612,7 +612,8 @@ else if(!at_wall(players[index].x, players[index].y, dir, games[gi].size)) send(
 else
 {
 int wi = border_wall(games[gi].id, dir, games[gi].size);
-if(wi > -1)
+if(wi > -1 and walls[wi].health <= 0) send(event.peer_id, "That wall is destroyed.", 0,true);
+else if(wi > -1)
 {
 players[index].inv.take("wood", 1);
 int gain = random(1, 5);
@@ -729,8 +730,16 @@ push_game_menu(index); // Enter in a game = round controls
 }
 else if(parsed[0]=="openpausemenu" and index>-1)
 {
-// Escape in a game = the pause menu (Resume/Leave/Stop). Only meaningful when actually in a game.
-if(get_game_index(players[index].room_id)>-1) push_pause_menu(index);
+// Escape in a game. The host, during a running round, pauses the whole game for everyone and gets the
+// pause menu; anyone else (or the host while idle/over) gets a plain leave menu that doesn't pause.
+int gi=get_game_index(players[index].room_id);
+if(gi>-1)
+{
+bool ishost=(games[gi].host_peer==players[index].peer_id);
+bool active=(games[gi].phase=="build" or games[gi].phase=="wave");
+if(ishost and active) { pause_game(gi); push_pause_menu(index); }
+else push_leave_menu(index);
+}
 }
 else if(parsed[0]=="createroom" and index>-1 and parsed.length()>1)
 {

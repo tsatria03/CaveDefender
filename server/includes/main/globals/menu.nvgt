@@ -177,9 +177,24 @@ return;
 send_menu(peer, "game", "Game menu. " + status, opts);
 }
 
-// The pause menu (Escape while in a game): Resume, Leave game, and (host or staff) Stop game. The
-// client pauses this player's local audio while it's open. Leave/Stop confirm before acting.
+// The host's pause menu (Escape during a running round): Resume, Leave game, Stop game. Showing it
+// freezes the whole game for everyone (see the openpausemenu handler); Resume or escape unfreezes. The
+// host can always stop their own game. Leave/Stop confirm before acting.
 void push_pause_menu(int index)
+{
+int peer = players[index].peer_id;
+int gi = get_game_index(players[index].room_id);
+if(gi < 0) return;
+players[index].menu_actions.resize(0);
+string[] opts;
+opts.insert_last("Resume"); players[index].menu_actions.insert_last("resume");
+opts.insert_last("Leave game"); players[index].menu_actions.insert_last("leave");
+opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stop");
+send_menu(peer, "pause", "Game paused", opts);
+}
+// The escape menu for anyone who can't pause (non-hosts, and the host when no round is running): just
+// Leave game, plus Stop game for the host or staff. Opening this does NOT pause the shared simulation.
+void push_leave_menu(int index)
 {
 int peer = players[index].peer_id;
 int gi = get_game_index(players[index].room_id);
@@ -187,10 +202,9 @@ if(gi < 0) return;
 bool canstop = (games[gi].host_peer == peer or is_staff(players[index].rank));
 players[index].menu_actions.resize(0);
 string[] opts;
-opts.insert_last("Resume"); players[index].menu_actions.insert_last("resume");
 opts.insert_last("Leave game"); players[index].menu_actions.insert_last("leave");
 if(canstop) { opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stop"); }
-send_menu(peer, "pause", "Pause menu", opts);
+send_menu(peer, "leavemenu", "Game menu", opts);
 }
 
 // Start-game cascade: pick a mode, then a size; the chosen mode rides in menu_pending across the two.
@@ -286,11 +300,21 @@ else if(act == "skipbuild") send(peer, "runcommand skipbuild", 0, true);
 }
 else if(id == "pause")
 {
-if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) return; // escape = resume
+int gi = get_game_index(players[player_index].room_id);
+if(choice < 0) { if(gi > -1) resume_game(gi); return; } // escaped the pause menu = resume the game
+if(choice >= int(players[player_index].menu_actions.length())) return;
+string act = players[player_index].menu_actions[choice];
+if(act == "resume") { if(gi > -1) resume_game(gi); }
+else if(act == "leave") confirm_menu(peer, "leavegame", "Are you sure you want to leave the game?");
+else if(act == "stop") confirm_menu(peer, "stopgame", "Are you sure you want to stop the game? It will end for everyone.");
+// Leave/Stop keep the game frozen through the confirm; cancelling the confirm resumes it (see confirm: below).
+}
+else if(id == "leavemenu")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) return;
 string act = players[player_index].menu_actions[choice];
 if(act == "leave") confirm_menu(peer, "leavegame", "Are you sure you want to leave the game?");
 else if(act == "stop") confirm_menu(peer, "stopgame", "Are you sure you want to stop the game? It will end for everyone.");
-// "resume" does nothing here; the client already resumed its audio when the menu closed.
 }
 else if(id == "startmode")
 {
@@ -307,5 +331,6 @@ send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pen
 else if(id.substr(0, 8) == "confirm:")
 {
 if(choice == 0) send(peer, "runcommand " + id.substr(8), 0, true); // Yes
+else { int gi = get_game_index(players[player_index].room_id); if(gi > -1) resume_game(gi); } // cancelled: if the host backed out of Leave/Stop, unfreeze the paused game (no-op otherwise)
 }
 }

@@ -9,7 +9,7 @@ These are not commands; they are things staff do through the game's chat keys an
 Staff chat: Press apostrophe to talk on the staff channel, which only staff can send to or hear. Staff messages collect in their own buffer that regular players never see.
 Skip the build phase: In a game you host, the game menu lets you skip the build phase and start the wave early. A host who is not staff cannot skip; their build timer always runs its full length.
 
-Stop a game from inside it: The pause menu lets you stop a game you are in even when you don't host it. A regular player can only stop a game from the pause menu if they host it.
+Stop a game from inside it: The menu you open with escape in a game lets you stop a game you are in even when you don't host it. A regular player can only stop a game from that menu if they host it.
 Stop any game: A room's Stop game list shows you every game in that room so you can stop any of them. A regular player only sees games they host in that list.
 
 Delete any room: You can delete any room, even one with other players inside or games still running. A regular host can only delete their own room, and only when alone in it with no games.
