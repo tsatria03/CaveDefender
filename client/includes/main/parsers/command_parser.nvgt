@@ -155,6 +155,12 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() < 3) { syntax_error("/notifyplayer username message"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/warn")
+	{
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+		if(parsed.length() < 4) { syntax_error("/warn username level reason"); return; }
+		send(0, text, 1, true);
+	}
 	else if(base == "/mute")
 	{
 		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }

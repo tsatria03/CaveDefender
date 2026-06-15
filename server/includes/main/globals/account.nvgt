@@ -46,6 +46,22 @@ f.write(value);
 f.close();
 return true;
 }
+// Append a warning to a player's on-disk record (warnings.usr) and return the new total. One per line:
+// level|staff|reason. Only the count is read back for now; the lines are kept for staff history.
+int add_warning(string name, int level, string staff, string reason)
+{
+string existing = read_field(name, "warnings", "");
+string entry = "" + level + "|" + staff + "|" + reason;
+write_field(name, "warnings", (existing == "") ? entry : existing + "\n" + entry);
+return warning_count(name);
+}
+// How many warnings a player has on record.
+int warning_count(string name)
+{
+string w = read_field(name, "warnings", "");
+if(w == "") return 0;
+return int(string_split(w, "\n", true).length());
+}
 
 string make_salt()
 {

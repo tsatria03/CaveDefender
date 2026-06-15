@@ -1381,6 +1381,45 @@ else
                         send(event.peer_id, "Usage: /notifyplayer <username> <message>", 0, true);
                     }
                 }
+                else if(parsed[0] == "/warn" && rank_level(players[index].rank) >= 2)
+                {
+                    if(parsed.length() >= 4)
+                    {
+                        string wname = parsed[1];
+                        int wlevel = int(string_to_number(parsed[2]));
+                        string wreason = string_join(parsed, " ", 3, parsed.length());
+                        if(wlevel < 1 || wlevel > 4)
+                        {
+                            send(event.peer_id, "Warning level must be between 1 and 4.", 0, true);
+                        }
+                        else if(!account_exists(wname))
+                        {
+                            send(event.peer_id, "There is no account named "+wname+".", 0, true);
+                        }
+                        else if(rank_level(get_rank(wname)) > rank_level(players[index].rank))
+                        {
+                            send(event.peer_id, "You can't warn someone above your own rank.", 0, true);
+                        }
+                        else
+                        {
+                            int wcount = add_warning(wname, wlevel, players[index].name, wreason);
+                            string realname = read_field(wname, "username", wname);
+                            int ti = get_online_index(wname);
+                            if(ti > -1) send(players[ti].peer_id, "warn "+wlevel+"\n"+display_name(index)+"\n"+wreason, 0, true);
+                            string offnote = (ti > -1) ? "" : " They are offline; the warning was recorded.";
+                            send(event.peer_id, "misc Warned "+realname+" (level "+wlevel+"). This is warning number "+wcount+"."+offnote, 0, true);
+                            for(uint wsi=0; wsi<players.length(); wsi++)
+                            {
+                                if(is_staff(players[wsi].rank) && players[wsi].peer_id != event.peer_id)
+                                    send(players[wsi].peer_id, "misc "+display_name(index)+" warned "+realname+" (level "+wlevel+"): "+wreason, 0, true);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /warn <username> <level 1-4> <reason>", 0, true);
+                    }
+                }
                 else if(parsed[0] == "/notify" && is_staff(players[index].rank))
                 {
                     if(parsed.length() >= 2)

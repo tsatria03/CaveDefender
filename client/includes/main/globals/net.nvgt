@@ -352,6 +352,20 @@ void netloop()
 			// Server announcement routed to the alerts buffer (and spoken), e.g. a mute notice for others.
 			add_buffer_item("alerts", message.substr(6));
 		}
+		else if (parsed[0] == "warn" and parsed.length() > 1)
+		{
+			// A staff warning aimed at you. Format: "warn <level>\n<rank-aware staff name>\n<reason>".
+			// Play the matching warning sound and show who warned you and why in the alerts buffer.
+			string[] wlines = string_split(message, "\n", true);
+			if(wlines.length() >= 3)
+			{
+				int wl = string_to_number(parsed[1]);
+				if(wl < 1) wl = 1;
+				if(wl > 4) wl = 4;
+				p.play_stationary("sounds/ui/misc/warn"+wl+".ogg", false);
+				add_buffer_item("alerts", "You've been given a level "+wl+" warning from "+wlines[1]+". "+wlines[2]);
+			}
+		}
 		else if (parsed[0] == "welcome")
 			{
 				add_buffer_item("misc", message);
