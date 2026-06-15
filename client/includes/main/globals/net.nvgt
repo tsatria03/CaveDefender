@@ -285,14 +285,21 @@ void netloop()
 		}
 		else if (parsed[0] == "online" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/online.ogg", false);
-			string ondisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + parsed[1] : parsed[1];
-				add_buffer_item("connections", ondisp + " just came online");
+			bool onstaff = (parsed.length() > 2 and parsed[2] != "player");
+			p.play_stationary(onstaff ? "sounds/ui/misc/staffin.ogg" : "sounds/ui/misc/online.ogg", false);
+			string ondisp = onstaff ? parsed[2] + " " + parsed[1] : parsed[1];
+			add_buffer_item("connections", ondisp + " just came online");
 		}
 		else if (parsed[0] == "newchar" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/newchar.ogg", false);
 			add_buffer_item("connections", parsed[1] + " just created a new account");
+		}
+		else if (parsed[0] == "playerjoinedgame" and parsed.length() > 1)
+		{
+			// Someone else joined the game you're in: play the join cue and note who in the player events buffer.
+			p.play_stationary("sounds/ui/misc/joingame.ogg", false);
+			add_buffer_item("player events", parsed[1] + " joined the game.");
 		}
 		else if (parsed[0] == "offline" and parsed.length() > 1)
 		{
@@ -556,6 +563,7 @@ void netloop()
 		}
 		else if (parsed[0] == "gamejoined" and parsed.length() > 4)
 		{
+			p.play_stationary("sounds/ui/misc/joingame.ogg", false); // personal cue: you entered a game
 			clear_players();
 			int gsize = string_to_number(parsed[2]);
 			cavern_size = gsize;
