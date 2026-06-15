@@ -54,7 +54,7 @@ int gid=next_room_id;
 next_room_id++;
 game g(gid, parent_room, hostname, hostpeer, size, solo);
 games.insert_last(g);
-spawn_border_walls(gid, size, 100, 100, true); // the four destroyable cavern walls (placeholder hp).
+spawn_border_walls(gid, size, 200, 200, true); // the four destroyable cavern walls (max health 200).
 return gid;
 }
 // End a game for everyone: return each member to the parent room (office), drop the cavern walls, and
@@ -325,7 +325,7 @@ double size = games[gi].size;
 clear_enemies(gameid);
 clear_items(gameid);
 clear_walls(gameid);
-spawn_border_walls(gameid, size, 100, 100, true); // fresh walls (new random starting strengths)
+spawn_border_walls(gameid, size, 200, 200, true); // fresh walls (max health 200, new random starting strengths)
 games[gi].phase = "idle";
 for(uint m=0; m<games[gi].members.length(); m++)
 {

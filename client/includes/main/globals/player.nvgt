@@ -12,11 +12,13 @@ int x, y;            // map position (2D; z is always 0 since the game has no he
 timer beacontimer;   // paces the periodic beacon, like SimpleFighter's checktimer / objtimer.
 int beaconsound=-1;  // sound_pool handle for this player's beacon; -1 when nothing is playing.
 int voicesound=-1;   // sound_pool handle for this player's current voice clip; -1 when none.
+int beaconpitch;     // this player's beacon pitch (80-120), rolled once so it stays constant per player.
 player(string pname, int px, int py)
 {
 name=pname;
 x=px;
 y=py;
+beaconpitch=random(80, 120);
 }
 }
 
@@ -68,7 +70,7 @@ int lastx=1, lasty=1;      // last position reported to the server, so we only s
 
 // Pulse a positional beacon at each tracked player's spot, relative to `me`, so you can hear where
 // everyone is. Re-fires per player on its own timer (same shape as SimpleFighter's cploop/objloop),
-// with the pitch jittered each pulse. Plays through beaconpool, whose listener update_sound_pools()
+// each at that player's own fixed pitch so individuals stay distinguishable but steady. Plays through beaconpool, whose listener update_sound_pools()
 // keeps anchored to `me`.
 void beaconloop()
 {
@@ -77,7 +79,7 @@ for(uint i=0; i<players.length(); i++)
 {
 if(players[i].beacontimer.elapsed>=beacontime)
 {
-players[i].beaconsound=beaconpool.play_extended_3d("sounds/ui/misc/beacon.ogg", me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, random(80, 120), false);
+players[i].beaconsound=beaconpool.play_extended_3d("sounds/ui/misc/beacon.ogg", me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, players[i].beaconpitch, false);
 players[i].beacontimer.restart();
 }
 }

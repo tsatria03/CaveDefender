@@ -1,4 +1,7 @@
 New in 2.0.
+If you run your own server, the owner account named in its config (owner, defaulting to tsatria03) is now always a developer, set when the account is created and re-applied each time it signs in.
+Each player's locator beacon now keeps a steady tone of its own instead of its pitch jumping around on every pulse, so you can tell people apart by ear more easily.
+Cavern walls are now sturdier, taking about twice as much punishment before they fall, so a round lasts longer and reinforcing goes further.
 Enemy waves now come in bursts: the bots attack for a stretch, then pull back to rest for an equal stretch before attacking again, giving you time to rebuild your walls between pushes. Each attack and rest lasts half of that map's build phase, and the bots keep accumulating, so every burst hits harder than the last.
 Fixed voice chat only ever sending your first recording; each push-to-talk message you record and send is now its own clip, instead of repeating the first one.
 The build phase before each wave is now longer, and wood spawns much faster with more allowed on the ground at once, so you have time to gather wood and strengthen your walls before the enemies arrive.
