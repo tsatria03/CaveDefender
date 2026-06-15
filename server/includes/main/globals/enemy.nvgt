@@ -87,6 +87,7 @@ int gid = enemies[i].game_id;
 int gi = get_game_index(gid);
 if(gi<0) continue;
 if(games[gi].paused) continue; // game frozen by the host; bots don't swing (their timers are paused too)
+if(games[gi].phase=="wave" and !games[gi].wave_attacking) continue; // resting segment between attack bursts
 int wi = border_wall(gid, enemies[i].wall, games[gi].size);
 if(wi<0 or walls[wi].health<=0) continue; // wall destroyed/missing; don't keep hitting it
 damage_wall(wi, enemy_damage(enemies[i].weapon));
