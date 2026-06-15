@@ -151,9 +151,9 @@ if(games[i].phase=="over" and all_answered_playagain(i)) reset_for_new_round(i);
 // How long the build phase runs for a given map size (difficulty: bigger maps get more prep time).
 int build_seconds(int size)
 {
-if(size==25) return 30;
-if(size==100) return 90;
-return 60;
+if(size==25) return 45;
+if(size==100) return 120;
+return 75;
 }
 // Set a game's round phase and tell everyone in it, so their clients announce the change and run the
 // build countdown. The seconds value is the build duration when entering build, 0 otherwise.
@@ -225,7 +225,7 @@ set_game_phase(int(i), "wave");
 if((games[i].phase=="build" or games[i].phase=="wave") and games[i].woodtimer.elapsed >= games[i].woodinterval)
 {
 games[i].woodtimer.restart();
-games[i].woodinterval = random(1000, 5000);
+games[i].woodinterval = random(500, 2000);
 if(wood_count_in(games[i].id) < wood_cap(games[i].size))
 {
 int wx = random(1, games[i].size-1); // interior only; the 0 and size edges are walls

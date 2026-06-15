@@ -1,4 +1,6 @@
 New in 2.0.
+The build phase before each wave is now longer, and wood spawns much faster with more allowed on the ground at once, so you have time to gather wood and strengthen your walls before the enemies arrive.
+You can now hear other players picking up and placing wood in 3D, from right where they are doing it, just as dropped wood already sounds.
 Administrators and up can now warn a player with /warn, followed by the player's name, a level from 1 to 4, and a reason, for example /warn bob 2 stop spamming. The warned player hears a sound matched to the level and is told who warned them and why; warnings are saved to the player's account, and other staff are quietly notified.
 Fixed a major networking bug that stopped players from connecting to a hosted server by its real address; the game now uses plain IPv4, so hosting over a VPN such as Radmin, or over a local network, works as expected. Before this, only connecting to a server on the same computer worked.
 Player beacons now start off when you sign in; press F5 to turn them on whenever you want to hear where everyone is.

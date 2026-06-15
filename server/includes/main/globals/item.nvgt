@@ -52,7 +52,7 @@ return -1;
 // How much wood may sit on a cavern's floor at once (scales with map size).
 int wood_cap(int size)
 {
-return size/5;
+return size/4;
 }
 // Count the wood currently on the ground in a space.
 int wood_count_in(int room_id)
