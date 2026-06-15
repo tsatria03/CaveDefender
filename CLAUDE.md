@@ -8,7 +8,7 @@ CaveDefender is an **online**, audio-only game written in **NVGT** (Non-Visual G
 
 It is a **client/server** game. The near-term goal is: connect to the server, log into an account, chat with other players, and walk around a shared map. Map objects (platforms, tiles, zones) are spawned through a custom game-engine DLL. The chat-center milestone is functionally complete: accounts, public/private chat, slash commands, networked player positions with locator beacons, and **spatial voice chat** (push-to-talk clips relayed through the server and played at the speaker's map position).
 
-**Heritage note:** the folder layout and several conventions were borrowed from the **SimpleFighter** project (a separate, *offline* map-builder game), so the structure looks familiar. But CaveDefender is online and very different. Do **not** assume SimpleFighter mechanics exist here — there is no map builder, no `.sif` map format, no NPCs/weapons/shields, and no build pipeline.
+**Heritage note:** the folder layout and several conventions were borrowed from the **SimpleFighter** project (a separate, *offline* map-builder game), so the structure looks familiar. But CaveDefender is online and very different. Do **not** assume SimpleFighter mechanics exist here — there is no map builder, no `.sif` map format, and no build pipeline. (CaveDefender does have enemy bots and weapons, but they are its own Wallbreaker wave system, not SimpleFighter's NPCs/shields.)
 
 ## Layout
 
@@ -66,7 +66,7 @@ Key client files (under `client/includes/main/`):
 - `globals/game.nvgt` — the in-chat loop: movement (which also reports position to the server via `move`), voice-chat keys, F1–F4 server keys, F5 to toggle player beacons, the escape-to-leave handler, buffer navigation. Each frame it calls `update_sound_pools()` then `beaconloop()`.
 - `globals/map.nvgt` — the map (`spawn_map()` via the engine), stepping / wall-bounce, and the `me` / `cam` vectors and bounds.
 - `globals/player.nvgt` — the client-side roster (`players`, an array of the `player` class: `name`, `x`, `y`, a `beacontimer` and `beaconsound` handle) of **other** players the server reports, for placing their sounds in 3D. The local player stays `me` + identity globals. `netloop()` keeps it current via `add_player` / `set_player_position` / `remove_player` (keyed by `get_player_index`), skipping your own name. Also holds the beacon system: `beaconloop()` pulses `beacon.ogg` at each player's spot every `beacontime` (500 ms) on the `beaconpool`, pitch jittered 80–120, gated by `beacons_enabled` (F5).
-- `globals/decpool.nvgt` — the `all_pools` `sound_pool` array (`p` and `beaconpool`) and `initialize` / `update` / `pause` / `resume` helpers. `update_sound_pools()` positions the 3D listener at `me` and is now called every frame from `game()`'s loop (needed for the beacons to pan).
+- `globals/decpool.nvgt` — the `all_pools` `sound_pool` array (`p`, `beaconpool`, `vpool`, `ambpool`, `musicpool`, `objpool`) and `initialize` / `update` / `pause` / `resume` helpers. `update_sound_pools()` positions the 3D listener at `me` and is now called every frame from `game()`'s loop (needed for the beacons to pan).
 - `deps/buffer.nvgt` — the message-buffer system: categories (`alerts`, `global chats`, `connections`, `private chats`, `misc`, `player events`) the player navigates (comma/period to move within a buffer, brackets to switch buffers) to review messages by type. Exported logs go under appdata `.../CaveDefender/logs`.
 - `deps/` — vendored libraries shared with SimpleFighter: `form.nvgt` (audio form), `form_menu.nvgt`, `setupmenu.nvgt`, `dlg.nvgt` / `dlgplayer.nvgt`, `sound_pool.nvgt`, `savedata.nvgt`, `speech.nvgt`, `voicechat.nvgt`, `GameEngine.nvgt`, etc. **Use `dlgmessage()` for player-facing dialogs** (the nicer wrapper), not raw `dlg()`.
 - `menus/menu.nvgt` — `mainmenu()`, the connection menu + account forms, and the preferences menu (`settingsmenu()`). (The in-game documentation menu was removed; `dockread()` remains a utility in `extrafuncts.nvgt`.)
@@ -79,6 +79,10 @@ Server files (under `server/`, same `includes/main/{deps,functions,globals}` glo
 - `includes/main/globals/net.nvgt` — send/receive, message dispatch, `login` / `register_account`, chat broadcast, the word `filter`, and the staff/moderation commands gated by `rank_level` (`/kick`, `/ban`, `/unban`, `/motd`, `/restart`, `/fastrestart`, `/promote`, `/demote`, `/mute`, `/unmute`, `/notify`, `/notifyplayer`; plus the public `/pm`, `/who`, `/staff`, `/help`).
 - `includes/main/globals/player.nvgt` — the **in-memory** connected-player roster (the `player` class: `name` / `peer_id` / `rank` / `version` / `x` / `y`, plus `spawn_player` / `get_player_index`), distinct from the on-disk accounts. `rank` is set from the account file at spawn. Renamed from the old `user` / `user.nvgt`.
 - `includes/main/globals/account.nvgt` — the on-disk account store.
+- `includes/main/globals/game.nvgt` — the game (cavern) spaces and round lifecycle: phases (idle → build → wave), wood drops, bot spawning, the all-walls-down loss + reset (`end_round_loss`), and the **host-only shared pause** (`pause_game`/`resume_game`; `gametick` skips paused games, Open games auto-resume after 90s).
+- `includes/main/globals/enemy.nvgt` — the wall-smasher bots: one weapon each (1 axe / 4 bat / 2 crowbar / 3 hammer, each its own attack speed and damage), spawned onto the least-attacked standing wall, swinging in `enemy_attacks`, and redistributing when a wall falls.
+- `includes/main/globals/wall.nvgt` and `globals/item.nvgt` — server-authoritative walls (health, `damage_wall`/`repair_wall`, `border_wall`; cavern walls start at a random 20–80%) and ground wood (spawn/pickup, size-scaled cap).
+- `includes/main/globals/menu.nvgt` — the server-pushed menus (`broadcast_menu`/`send_menu`, `on_menu_result`), including the host pause menu and the in-game leave menu.
 - `includes/main/functions/regex.nvgt` — the chat word filter, using NVGT's **native `regexp`** (the old third-party `filter.dll` is gone — see memory).
 
 ## Version
@@ -88,11 +92,11 @@ The version string lives in **two** places that must stay in sync: `client/inclu
 ## Audio
 
 NVGT `sound_pool` with HRTF. Player position is the vector `me`; pools advance per frame. `client/sounds/` is organized by category, with a **per-type subfolder** holding named clips:
-- `ui/` — `buffer/`, `dlg/`, `menu/`, `misc/` (online, offline, playerchat, privchat, von, voff, pingstart, pingstop, welcome, newmotd, kick, ban, promote/demote, notify1-5, etc.).
+- `ui/` — `buffer/`, `dlg/`, `menu/`, `misc/` (online, offline, playerchat, privchat, von, voff, pingstart, pingstop, welcome, newmotd, kick, ban, promote/demote, notify1-3, buildstart, wavestart, gameover, pause, resume, etc.).
 - `objects/walls/<wall>/` — e.g. `wallwood/{bump,death,hurt1-3}.ogg`; also `wallbuilding/bump.ogg` (lobby) and `wallgeneric/bump.ogg` (office room).
 - `objects/platforms/<tile>/` — e.g. `cave/step1-5.ogg`; also `carpet` (lobby) and `cement` (office room).
 - `objects/items/<item>/` — e.g. `wood` (`drop`/`loop`/`place`/`take`).
-- `weapons/<weapon>/` — e.g. `axe`, `crowbar`, `hammer` (`draw`/`fire`/`hit`).
+- `weapons/<weapon>/` — `axe`, `bat`, `crowbar`, `hammer` (`draw`/`fire1-3`/`hit1-3`); the enemy bots play the `hit` clips when they strike a wall.
 
 This game does **not** support swappable sound packs (see memory) — paths point directly at the fixed subfolders. `map.nvgt` builds the per-type subfolder paths (`objects/walls/<wall>/bump.ogg`, `objects/platforms/<tile>/step<n>.ogg`); `spawn_map()` lays a `wallwood` border around a `cave` interior, with `me` starting at `(1,1)` on the interior.
 

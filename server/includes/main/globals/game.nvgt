@@ -20,6 +20,11 @@ timer phasetimer;    // times the current phase (drives the build-phase countdow
 int buildduration=0; // how many seconds the build phase lasts (set per map size when the round begins)
 timer woodtimer;     // drives wood drops during the build and wave phases
 int woodinterval=0;  // ms until the next wood drop, re-rolled to a random 1000-5000 after each one
+timer enemytimer;    // drives bot spawns during the wave phase
+int enemyinterval=0; // ms until the next bot, re-rolled each spawn (random 5-10s divided by player count)
+timer wavetimer;     // started when the wave begins; its elapsed time is the survival score
+bool paused=false;   // host-only shared pause: when true this game's whole sim is frozen for everyone
+timer pausetimer;    // times the current pause, so Open games can auto-resume after 90s (Solo: indefinite)
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl)
 {
 id=gid;
@@ -65,6 +70,7 @@ set_room_scope(pi, proom);
 }
 clear_walls(gid);
 clear_items(gid);
+clear_enemies(gid);
 games.remove_at(gindex);
 }
 // One player leaves a game while it continues for others: solo or last-out ends it; if the host leaves
@@ -87,6 +93,7 @@ if(games[gi].phase != "idle")
 {
 clear_walls(games[gi].id);
 clear_items(games[gi].id);
+clear_enemies(games[gi].id);
 games.remove_at(gi);
 }
 }
@@ -95,6 +102,7 @@ else if(games[gi].host_peer==peer)
 games[gi].host_peer=games[gi].members[0];
 int npi=get_player_index(games[gi].host_peer);
 if(npi>-1) games[gi].host=players[npi].name;
+if(games[gi].paused) resume_game(gi); // the host who paused is gone; don't leave the rest frozen
 }
 if(pi>-1)
 {
@@ -118,6 +126,7 @@ if(games[i].members.length()==0)
 {
 clear_walls(games[i].id);
 clear_items(games[i].id);
+clear_enemies(games[i].id);
 games.remove_at(i);
 }
 else if(games[i].host_peer==peer)
@@ -125,6 +134,7 @@ else if(games[i].host_peer==peer)
 games[i].host_peer=games[i].members[0];
 int npi=get_player_index(games[i].host_peer);
 if(npi>-1) games[i].host=players[npi].name;
+if(games[i].paused) resume_game(i); // host who paused disconnected; unfreeze the remaining players
 }
 }
 }
@@ -142,15 +152,63 @@ void set_game_phase(int gindex, string phase)
 if(gindex<0 or gindex>=int(games.length())) return;
 games[gindex].phase=phase;
 if(phase=="build") games[gindex].phasetimer.restart();
+if(phase=="wave")
+{
+// Start the bot-spawn clock when the wave begins (interval scales with how many are defending).
+games[gindex].enemytimer.restart();
+games[gindex].wavetimer.restart(); // the survival clock starts now
+int pc = games[gindex].members.length(); if(pc<1) pc=1;
+games[gindex].enemyinterval = random(5000, 10000) / pc;
+}
 int secs = (phase=="build") ? games[gindex].buildduration : 0;
 for(uint i=0; i<games[gindex].members.length(); i++)
 send(games[gindex].members[i], "gamephase "+phase+" "+secs, 0, true);
+}
+// Host-only shared pause: freeze a game's entire simulation for everyone. The phase/wood/enemy/wave
+// timers and every bot's attack timer all pause where they are, so nothing advances until the host
+// resumes; gametick skips paused games. Open games auto-resume after 90s (timed off pausetimer in
+// gametick); Solo games stay paused until the host acts. Tells everyone in the game so their clients
+// freeze input and audio.
+void pause_game(int gi)
+{
+if(gi<0 or gi>=int(games.length()) or games[gi].paused) return;
+games[gi].paused=true;
+games[gi].pausetimer.restart();
+games[gi].phasetimer.pause();
+games[gi].woodtimer.pause();
+games[gi].enemytimer.pause();
+games[gi].wavetimer.pause();
+for(uint i=0; i<enemies.length(); i++)
+if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.pause();
+for(uint m=0; m<games[gi].members.length(); m++)
+send(games[gi].members[m], "gamepaused", 0, true);
+}
+// Unfreeze a paused game: resume every timer where it left off (so a half-elapsed build phase keeps its
+// remaining time) and tell everyone in the game. No-op if the game isn't paused.
+void resume_game(int gi)
+{
+if(gi<0 or gi>=int(games.length()) or !games[gi].paused) return;
+games[gi].paused=false;
+games[gi].phasetimer.resume();
+games[gi].woodtimer.resume();
+games[gi].enemytimer.resume();
+games[gi].wavetimer.resume();
+for(uint i=0; i<enemies.length(); i++)
+if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.resume();
+for(uint m=0; m<games[gi].members.length(); m++)
+send(games[gi].members[m], "gameresumed", 0, true);
 }
 // Called every server tick: advance any finished build phase to the wave, and drop wood in active games.
 void gametick()
 {
 for(uint i=0; i<games.length(); i++)
 {
+if(games[i].paused)
+{
+// Frozen by the host: nothing advances. Open games auto-resume after 90s; Solo waits for the host.
+if(!games[i].solo and games[i].pausetimer.elapsed >= 90000) resume_game(int(i));
+continue;
+}
 if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
 set_game_phase(int(i), "wave");
 // Wood drops during the build and wave phases, on a random 1-5s cadence, up to a size-scaled cap.
@@ -167,5 +225,61 @@ for(uint m=0; m<games[i].members.length(); m++)
 send(games[i].members[m], "spawnitem "+iid+" wood "+wx+" "+wy, 0, true);
 }
 }
+// Bots spawn during the wave only, on a player-scaled cadence, onto the least-attacked standing wall.
+if(games[i].phase=="wave" and games[i].enemytimer.elapsed >= games[i].enemyinterval)
+{
+games[i].enemytimer.restart();
+int pc = games[i].members.length(); if(pc<1) pc=1;
+games[i].enemyinterval = random(5000, 10000) / pc;
+string target = least_attacked_wall(games[i].id, games[i].size);
+if(target != "") spawn_enemy(games[i].id, target, random(1, 4));
 }
+}
+enemy_attacks(); // process every bot's attack timer across all games (breaches a wall when it hits 0)
+// Separate pass (not inside the bot loop, since the reset clears bots/walls): end any game whose walls
+// are all down.
+for(uint i=0; i<games.length(); i++)
+if(!games[i].paused and games[i].phase=="wave" and all_walls_destroyed(games[i].id, games[i].size)) end_round_loss(int(i));
+}
+// True if all four cavern walls of a game are down (health 0).
+bool all_walls_destroyed(int gameid, double size)
+{
+string[] dirs;
+dirs.insert_last("west"); dirs.insert_last("east"); dirs.insert_last("north"); dirs.insert_last("south");
+for(uint i=0; i<dirs.length(); i++)
+{
+int wi = border_wall(gameid, dirs[i], size);
+if(wi>-1 and walls[wi].health>0) return false;
+}
+return true;
+}
+// A wall just hit 0: tell clients to breach it and move its bots onto walls still standing. (The
+// all-walls-down game over is checked in gametick, not here, so we never reset mid bot-loop.)
+void on_wall_destroyed(int gameid, int gi, string dir)
+{
+for(uint m=0; m<games[gi].members.length(); m++)
+send(games[gi].members[m], "walldestroyed "+dir, 0, true);
+redistribute_bots(gameid, dir, games[gi].size);
+}
+// All walls down: announce the survival time, then reset the game to a fresh idle cavern for a rematch.
+void end_round_loss(int gi)
+{
+int gameid = games[gi].id;
+double size = games[gi].size;
+int secs = int(games[gi].wavetimer.elapsed/1000);
+for(uint m=0; m<games[gi].members.length(); m++)
+send(games[gi].members[m], "gameover "+secs, 0, true);
+clear_enemies(gameid);
+clear_items(gameid);
+clear_walls(gameid);
+spawn_border_walls(gameid, size, 100, 100, true); // fresh walls (new random starting strengths)
+games[gi].phase = "idle";
+for(uint m=0; m<games[gi].members.length(); m++)
+{
+int pi = get_player_index(games[gi].members[m]);
+if(pi > -1) { players[pi].inv.clear(); send_wood_count(pi); } // a fresh round starts with no wood
+send(games[gi].members[m], "gamereset "+int(size), 0, true);
+send(games[gi].members[m], "gamephase idle 0", 0, true);
+}
+broadcast_wall_strength(gameid);
 }

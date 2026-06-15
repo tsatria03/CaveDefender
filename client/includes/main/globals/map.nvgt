@@ -48,6 +48,11 @@ spawn_music(minx, maxx, miny, maxy, "cavern", -20); // sounds/music/cavern.ogg a
 }
 void playstep()
 {
+if (gmt()=="") // stepped off the map (e.g. out through a breach) — step back, no tile there
+{
+bounce();
+return;
+}
 if (string_contains(gmt(),"wall",1)>-1)
 {
 string subpath="objects/walls/"+gmt()+"/bump";

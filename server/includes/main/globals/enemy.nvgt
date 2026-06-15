@@ -1,0 +1,105 @@
+// Wall-smasher bots — the enemies in a game's wave. Each is tied to a game (by its game id, which is a
+// room_id) and to one wall it attacks, with a weapon that sets its attack speed and damage. Bots are
+// abstract (no map position; they're conceptually "at" a wall), unkillable, and never leave on their
+// own; one leaves only when its wall is destroyed (it redistributes to a standing wall). Server-
+// authoritative; the client just plays the relayed hit sounds. Modeled on Sammy Center's wallsmasher.
+// Weapons: 1 = axe (fast/weak), 4 = bat (just above axe), 2 = crowbar (medium), 3 = hammer (slow/strong).
+int next_enemy_id=1;
+enemy@[] enemies;
+class enemy
+{
+int id;
+int game_id;        // the game (room_id) this bot belongs to
+string wall;        // "west"/"east"/"north"/"south" — the wall it attacks
+int weapon;         // 1 = axe, 2 = crowbar, 3 = hammer, 4 = bat
+timer attacktimer;  // times the gap between this bot's hits
+int attackinterval; // ms between hits, set by the weapon
+enemy(int eid, int gid, string wl, int wp)
+{
+id=eid; game_id=gid; wall=wl; weapon=wp;
+if(wp==1) attackinterval=500;       // axe
+else if(wp==4) attackinterval=750;  // bat (just above the axe)
+else if(wp==2) attackinterval=1000; // crowbar
+else attackinterval=1500;           // hammer
+}
+}
+// How many bots in a game are currently attacking a given wall.
+int enemies_on_wall(int gameid, string dir)
+{
+int n=0;
+for(uint i=0; i<enemies.length(); i++)
+if(@enemies[i]!=null and enemies[i].game_id==gameid and enemies[i].wall==dir) n++;
+return n;
+}
+// The STANDING wall in a game with the fewest bots on it (even spread). "" if no walls stand.
+string least_attacked_wall(int gameid, double size)
+{
+string[] dirs;
+dirs.insert_last("west"); dirs.insert_last("east"); dirs.insert_last("north"); dirs.insert_last("south");
+string best="";
+int bestcount=0;
+for(uint i=0; i<dirs.length(); i++)
+{
+int wi = border_wall(gameid, dirs[i], size);
+if(wi<0 or walls[wi].health<=0) continue; // skip missing/destroyed walls
+int c = enemies_on_wall(gameid, dirs[i]);
+if(best=="" or c<bestcount) { best=dirs[i]; bestcount=c; }
+}
+return best;
+}
+// Move every bot off a now-destroyed wall onto the standing wall with the fewest attackers (recomputed
+// per bot so they spread). If no wall is left standing, they stay put (the round is about to end).
+void redistribute_bots(int gameid, string deadwall, double size)
+{
+for(uint i=0; i<enemies.length(); i++)
+{
+if(@enemies[i]==null or enemies[i].game_id!=gameid or enemies[i].wall!=deadwall) continue;
+string nw = least_attacked_wall(gameid, size);
+if(nw != "") enemies[i].wall = nw;
+}
+}
+// Spawn one bot in a game, attacking the given wall with the given weapon.
+void spawn_enemy(int gameid, string wall, int weapon)
+{
+enemy e(next_enemy_id, gameid, wall, weapon);
+next_enemy_id++;
+enemies.insert_last(e);
+}
+// Random damage for a weapon: axe 1-3, bat 2-4, crowbar 3-6, hammer 4-8.
+int enemy_damage(int weapon)
+{
+if(weapon==1) return random(1, 3);
+if(weapon==4) return random(2, 4);
+if(weapon==2) return random(3, 6);
+return random(4, 8);
+}
+// Every server tick: each bot whose attack timer is up swings at its wall, dealing its weapon's damage,
+// then the new wall strengths and a hit event (wall + weapon) go out to the game so clients play the
+// 3D hit sound. Bots on an already-destroyed wall are skipped (task 12 redistributes them).
+void enemy_attacks()
+{
+for(uint i=0; i<enemies.length(); i++)
+{
+if(@enemies[i]==null) continue;
+if(enemies[i].attacktimer.elapsed < enemies[i].attackinterval) continue;
+enemies[i].attacktimer.restart();
+int gid = enemies[i].game_id;
+int gi = get_game_index(gid);
+if(gi<0) continue;
+if(games[gi].paused) continue; // game frozen by the host; bots don't swing (their timers are paused too)
+int wi = border_wall(gid, enemies[i].wall, games[gi].size);
+if(wi<0 or walls[wi].health<=0) continue; // wall destroyed/missing; don't keep hitting it
+damage_wall(wi, enemy_damage(enemies[i].weapon));
+broadcast_wall_strength(gid);
+string hit = "wallhit "+enemies[i].wall+" "+enemies[i].weapon;
+for(uint m=0; m<games[gi].members.length(); m++)
+send(games[gi].members[m], hit, 0, true);
+if(walls[wi].health<=0) on_wall_destroyed(gid, gi, enemies[i].wall); // this hit just brought it down
+}
+}
+// Remove every bot in a game (when the game ends or the round is over).
+void clear_enemies(int gameid)
+{
+for(int i=int(enemies.length())-1; i>=0; i--)
+if(@enemies[i]!=null and enemies[i].game_id==gameid) enemies.remove_at(i);
+}
