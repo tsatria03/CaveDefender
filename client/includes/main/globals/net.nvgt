@@ -376,7 +376,7 @@ void netloop()
 		{
 			int fx = string_to_number(parsed[2]);
 			int fy = string_to_number(parsed[3]);
-			p.play_extended_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+			p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 		}
 		else if (parsed[0] == "spawnitem" and parsed.length() > 4)
 		{
@@ -431,8 +431,8 @@ void netloop()
 			add_buffer_item("alerts", "All walls destroyed! " + who + parsed[1] + " seconds.");
 			dlgmessage("All walls destroyed! " + who + parsed[1] + " seconds.");
 			setupmenu();
-			m.add_item("Play again");
-			m.add_item("Leave the game");
+			m.add_item("Yes");
+			m.add_item("No");
 			m.intro_text = "Play again?";
 			if(m.run() == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next round to begin."); }
 			else send(0, "playagain no", 0, true);
@@ -593,12 +593,12 @@ void netloop()
 			if (game_phase == "build")
 			{
 				p.play_stationary("sounds/ui/misc/buildstart.ogg", false);
-				speak("Build phase. " + int(game_build_seconds) + " seconds to prepare.");
+				add_buffer_item("alerts", "Build phase. " + int(game_build_seconds) + " seconds to prepare.");
 			}
 			else if (game_phase == "wave")
 			{
 				p.play_stationary("sounds/ui/misc/wavestart.ogg", false);
-				speak("The enemies are coming!");
+				add_buffer_item("alerts", "The enemies are coming!");
 			}
 		}
 		else if (parsed[0] == "gamepaused")
@@ -754,7 +754,7 @@ void netloop()
 				vf.open(vt, "wb");
 				vf.write(audio);
 				vf.close();
-				if(vi > -1) players[vi].voicesound = vpool.play_extended_3d(vt, me.x, me.y, me.z, vx, vy, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+				if(vi > -1) players[vi].voicesound = vpool.play_3d(vt, me.x, me.y, me.z, vx, vy, 0, calculate_theta(me_rotation), false);
 			}
 		}
 	}

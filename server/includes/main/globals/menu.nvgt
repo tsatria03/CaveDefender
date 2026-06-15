@@ -174,7 +174,7 @@ if(opts.length() == 0)
 send(peer, status, 0, true); // nothing actionable; just report where the round is
 return;
 }
-send_menu(peer, "game", "Game menu. " + status, opts);
+send_menu(peer, "game", "Round menu. " + status, opts);
 }
 
 // The host's pause menu (Escape during a running round): Resume, Leave game, Stop game. Showing it

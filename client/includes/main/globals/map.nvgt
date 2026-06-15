@@ -34,7 +34,7 @@ spawn_music(minx, maxx, miny, maxy, "lobby", -20); // sounds/music/lobby.ogg acr
 if(mapname=="office")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallgeneric");
-spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "cement");
+spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "marble");
 spawn_ambience(minx, maxx, miny, maxy, "office", -10); // sounds/ambience/office.ogg across the whole office.
 spawn_music(minx, maxx, miny, maxy, "office", -20); // sounds/music/office.ogg across the whole office (add the file).
 }
@@ -56,7 +56,9 @@ return;
 if (string_contains(gmt(),"wall",1)>-1)
 {
 string subpath="objects/walls/"+gmt()+"/bump";
-p.play_stationary("sounds/"+subpath+".ogg",false);
+// Play the bump in 3D at the wall tile. me is standing on it until bounce() runs, so once we step back
+// the listener hears the bump coming from the wall, the way SimpleFighter's playstep does it.
+p.play_3d("sounds/"+subpath+".ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step "+subpath+" "+int(me.x)+" "+int(me.y), 0, true); // before bounce(), so it plays at the wall tile.
 bounce();
 }
