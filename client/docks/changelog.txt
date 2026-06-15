@@ -1,4 +1,5 @@
 New in 2.0.
+If you run your own server, it now refuses to open a second copy of itself, the same way the client already does, so you can't accidentally run two servers at once.
 If you run your own server, the owner account named in its config (owner, defaulting to tsatria03) is now always a developer, set when the account is created and re-applied each time it signs in.
 Each player's locator beacon now keeps a steady tone of its own instead of its pitch jumping around on every pulse, so you can tell people apart by ear more easily.
 Cavern walls are now sturdier, taking about twice as much punishment before they fall, so a round lasts longer and reinforcing goes further.

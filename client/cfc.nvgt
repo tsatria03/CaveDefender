@@ -25,7 +25,7 @@ sound_global_hrtf = hrtf;
 initialize_sound_pools();
 string ver=load_engine();
 show_game_window("CaveDefender, version "+version);
-if(SCRIPT_COMPILED && gamstence.is_already_running)
+if(gamstence.is_already_running)
 {
 alert("error", "You can only have one instence of this game running!");
 exit();
