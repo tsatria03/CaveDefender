@@ -5,3 +5,4 @@ string version="2.0";
 string motd = "Welcome to the server!";
 timer svruptimer;
 file f;
+instance servstence("cavedefender_server"); // single-instance guard; own app id so it won't clash with the client's on one machine.

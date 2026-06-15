@@ -2,6 +2,11 @@
 
 void main()
 {
+if(servstence.is_already_running)
+{
+alert("error", "You can only have one instance of this server running!");
+exit();
+}
 svruptimer.restart();
 if(!directory_exists("data")) directory_create("data");
 if(!directory_exists("data/players")) directory_create("data/players");
