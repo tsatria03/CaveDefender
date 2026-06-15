@@ -16,8 +16,8 @@ Delete any room: You can delete any room, even one with other players inside or 
 
 Commands. Moderator and up.
 
-/mute <player>, or /mute <player> <seconds>: Silences a player's chat and voice. Leave the time off, or use 0, for an indefinite mute. Only regular players can be muted, never other staff. The mute is remembered even if the player leaves and comes back.
-/unmute <player>: Lifts a mute early.
+/mute <player> <channel>, or /mute <player> <channel> <seconds>: Silences a player in one channel: global, local, staff, voice, or all for every channel at once. Leave the time off, or use 0, for an indefinite mute. You can mute anyone at or below your own rank, never above. The muted player can still use commands, but not chat, /me, or voice in that channel; everyone is told in the alerts buffer. The mute is remembered even if the player leaves and comes back.
+/unmute <player> <channel>: Lifts a mute early in that channel, or use all for every channel.
 /promote <player> <rank>: Raises a player to a higher rank, for example /promote bob moderator. You can only grant a rank at or below your own, and only act on someone at or below your own rank, so a moderator can promote a player up to moderator.
 /demote <player> <rank>: Lowers a player to a lower rank, down to player. The same rank limits as promote apply.
 /notify <message>: Sends a notification, with a sound, to everyone on the server.
