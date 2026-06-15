@@ -20,6 +20,7 @@ result+="\r\n"+send_command("save voice "+filename+" wait");
 result+="\r\n"+send_command("close voice wait");
 if (convert==true)
 {
+if(file_exists(convertfilename)) file_delete(convertfilename); // delete the previous ogg first; oggenc2 won't overwrite an existing output, which made every clip after the first re-send the first one
 if (channels==2)
 run("lib/oggenc2.exe","-q3 --resample 32000 -b 64 \""+this.filename+"\" -o \""+convertfilename+"\"",true,true);
 else

@@ -1,4 +1,5 @@
 New in 2.0.
+Fixed voice chat only ever sending your first recording; each push-to-talk message you record and send is now its own clip, instead of repeating the first one.
 The build phase before each wave is now longer, and wood spawns much faster with more allowed on the ground at once, so you have time to gather wood and strengthen your walls before the enemies arrive.
 You can now hear other players picking up and placing wood in 3D, from right where they are doing it, just as dropped wood already sounds.
 Administrators and up can now warn a player with /warn, followed by the player's name, a level from 1 to 4, and a reason, for example /warn bob 2 stop spamming. The warned player hears a sound matched to the level and is told who warned them and why; warnings are saved to the player's account, and other staff are quietly notified.
