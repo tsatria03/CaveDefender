@@ -6,6 +6,7 @@
 ****Unfinished. Add an afk system.
 ****Unfinished. Add a player/staff warning system.
 ****Unfinished. Build the cave defender gameplay that runs inside a room, where you gather wood, build and repair the four walls, and survive waves of bots, on small, medium, or large maps.
+****Unfinished. Add a survival leaderboard that records and shows best survival times for the cave defender games.
 
 ##These are the things that are already finished from earlier versions of the game.
 
