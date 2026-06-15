@@ -13,8 +13,8 @@ int loophandle = -1;
 clientitem(int iid, int ix, int iy, string ty)
 {
 id = iid; x = ix; y = iy; type = ty;
-objpool.play_extended_3d("sounds/objects/items/" + type + "/drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
-loophandle = objpool.play_extended_3d("sounds/objects/items/" + type + "/loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, true, 0, 0, 0, 100, false);
+objpool.play_3d("sounds/objects/items/" + type + "/drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
+loophandle = objpool.play_3d("sounds/objects/items/" + type + "/loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), true);
 }
 }
 int get_clientitem_index(int id)
