@@ -16,8 +16,8 @@ Delete any room: You can delete any room, even one with other players inside or 
 
 Commands. Moderator and up.
 
-/mute <player> <channel>, or /mute <player> <channel> <seconds>: Silences a player in one channel: global, local, staff, voice, or all for every channel at once. Leave the time off, or use 0, for an indefinite mute. You can mute anyone at or below your own rank, never above. The muted player can still use commands, but not chat, /me, or voice in that channel; everyone is told in the alerts buffer. The mute is remembered even if the player leaves and comes back.
-/unmute <player> <channel>: Lifts a mute early in that channel, or use all for every channel.
+/mute <player> <channel>, or /mute <player> <channel> <seconds>: Silences a player in one channel: global, local, voice, or all for those channels at once. Leave the time off, or use 0, for an indefinite mute. You can mute anyone at or below your own rank, never above, so a staff member's public channels can be muted too; staff chat itself can never be muted. The muted player can still use commands, but not chat, /me, or voice in that channel; everyone is told in the alerts buffer. The mute is remembered even if the player leaves and comes back. You can mute yourself too; lift it with /unmute on the same channel.
+/unmute <player> <channel>: Lifts a mute early in that channel, or use all for those channels.
 /promote <player> <rank>: Raises a player to a higher rank, for example /promote bob moderator. You can only grant a rank at or below your own, and only act on someone at or below your own rank, so a moderator can promote a player up to moderator.
 /demote <player> <rank>: Lowers a player to a lower rank, down to player. The same rank limits as promote apply.
 /notify <message>: Sends a notification, with a sound, to everyone on the server.
@@ -25,8 +25,8 @@ Commands. Moderator and up.
 
 Administrator and up.
 
-/kick <player>: Removes a player from the server. They can sign back in right away. A kick can target anyone, including other staff.
-/ban <player>, or /ban <player> <seconds>: Bans a player so they can't sign in. Leave the time off for a permanent ban. You can't ban someone above your own rank, and you can't ban yourself.
+/kick <player>: Removes a player from the server. They can sign back in right away. A kick can target anyone, including other staff, and even yourself, which simply drops you to the connection menu so you can sign back in.
+/ban <player>, or /ban <player> <seconds>: Bans a player so they can't sign in. Leave the time off for a permanent ban. You can't ban someone above your own rank, but you can ban yourself, so use it carefully: you'll be banned like anyone else. If you do it by accident as the host, clear it by editing your account.
 /unban <player>: Lifts a ban.
 /motd <message>: Changes the server's message of the day.
 /restart <seconds>, or /rt <seconds>: Warns everyone with a countdown, then shuts the server down. The time can be from 30 to 3600 seconds.
