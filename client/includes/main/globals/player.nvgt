@@ -62,7 +62,7 @@ void clear_players()
 players.resize(0);
 }
 
-bool beacons_enabled=true; // toggled with F5; when false beaconloop() stays silent.
+bool beacons_enabled=false; // off by default; toggled with F5; when false beaconloop() stays silent.
 int beacontime=1000;        // ms between a player's beacon pulses.
 int lastx=1, lasty=1;      // last position reported to the server, so we only send when we actually move.
 

@@ -923,6 +923,12 @@ set_room_scope(index, games[gi].id);
 int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
 if(rem<0) rem=0;
 send(event.peer_id, "gamephase "+games[gi].phase+" "+rem, 0,true);
+// Tell the players already in the game that someone joined, so their clients play the join cue.
+for(uint mj=0; mj<games[gi].members.length(); mj++)
+{
+if(games[gi].members[mj]==event.peer_id) continue;
+send(games[gi].members[mj], "playerjoinedgame "+players[index].name, 0,true);
+}
 }
 }
 }
