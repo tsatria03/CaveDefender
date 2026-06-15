@@ -25,6 +25,9 @@ int enemyinterval=0; // ms until the next bot, re-rolled each spawn (random 5-10
 timer wavetimer;     // started when the wave begins; its elapsed time is the survival score
 bool paused=false;   // host-only shared pause: when true this game's whole sim is frozen for everyone
 timer pausetimer;    // times the current pause, so Open games can auto-resume after 90s (Solo: indefinite)
+bool wave_attacking=true; // during the wave: true = bots attacking, false = resting so players can rebuild
+timer wave_cycletimer;    // times the current attack or rest segment of the wave
+int wave_cycle=0;         // ms per attack/rest segment (half the build phase); set when the wave begins
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl)
 {
 id=gid;
@@ -169,6 +172,11 @@ games[gindex].enemytimer.restart();
 games[gindex].wavetimer.restart(); // the survival clock starts now
 int pc = games[gindex].members.length(); if(pc<1) pc=1;
 games[gindex].enemyinterval = random(5000, 10000) / pc;
+// The wave alternates attack and rest segments, each half the build phase (so bots hammer, then back
+// off to let players rebuild). The wave opens with an attack segment.
+games[gindex].wave_attacking = true;
+games[gindex].wave_cycletimer.restart();
+games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
 }
 int secs = (phase=="build") ? games[gindex].buildduration : 0;
 for(uint i=0; i<games[gindex].members.length(); i++)
@@ -188,6 +196,7 @@ games[gi].phasetimer.pause();
 games[gi].woodtimer.pause();
 games[gi].enemytimer.pause();
 games[gi].wavetimer.pause();
+games[gi].wave_cycletimer.pause();
 for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.pause();
 for(uint m=0; m<games[gi].members.length(); m++)
@@ -203,6 +212,7 @@ games[gi].phasetimer.resume();
 games[gi].woodtimer.resume();
 games[gi].enemytimer.resume();
 games[gi].wavetimer.resume();
+games[gi].wave_cycletimer.resume();
 for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.resume();
 for(uint m=0; m<games[gi].members.length(); m++)
@@ -235,14 +245,20 @@ for(uint m=0; m<games[i].members.length(); m++)
 send(games[i].members[m], "spawnitem "+iid+" wood "+wx+" "+wy, 0, true);
 }
 }
-// Bots spawn during the wave only, on a player-scaled cadence, onto the least-attacked standing wall.
-if(games[i].phase=="wave" and games[i].enemytimer.elapsed >= games[i].enemyinterval)
+// Bots spawn during the wave's attack segments only, on a player-scaled cadence, onto the least-attacked standing wall.
+if(games[i].phase=="wave" and games[i].wave_attacking and games[i].enemytimer.elapsed >= games[i].enemyinterval)
 {
 games[i].enemytimer.restart();
 int pc = games[i].members.length(); if(pc<1) pc=1;
 games[i].enemyinterval = random(5000, 10000) / pc;
 string target = least_attacked_wall(games[i].id, games[i].size);
 if(target != "") spawn_enemy(games[i].id, target, random(1, 4));
+}
+// Flip between attacking and resting every half-build-phase: bots hammer, then back off so players rebuild.
+if(games[i].phase=="wave" and games[i].wave_cycletimer.elapsed >= games[i].wave_cycle)
+{
+games[i].wave_cycletimer.restart();
+games[i].wave_attacking = !games[i].wave_attacking;
 }
 }
 enemy_attacks(); // process every bot's attack timer across all games (breaches a wall when it hits 0)
