@@ -1,4 +1,5 @@
 New in 2.0.
+Fixed a major networking bug that stopped players from connecting to a hosted server by its real address; the game now uses plain IPv4, so hosting over a VPN such as Radmin, or over a local network, works as expected. Before this, only connecting to a server on the same computer worked.
 Player beacons now start off when you sign in; press F5 to turn them on whenever you want to hear where everyone is.
 Joining a game now plays a sound, both for you when you enter and for everyone already in the game when someone new joins. Staff coming online now have their own distinct sound, so you can tell a staff arrival from a regular player's.
 Bumping into a cavern wall now plays in 3D, so you can tell by ear which of the four walls you are up against. The menu you open with Tab in a game has been renamed the round menu to set it apart from the game menu on escape, and the build and wave announcements now also collect in the alerts buffer so you can review them.

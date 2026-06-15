@@ -42,6 +42,7 @@ create_buffer("misc");
 create_buffer("player events");
 if (!directory_exists(preffsPath)) directory_create(preffsPath);
 readpreffs();
+net.IPV6enabled = false; // use pure IPv4 (like BGT) so VPN/IPv4 addresses such as Radmin work; must be set before setup_client
 net.setup_client(5, 500);
 wait(500);
 mainmenu();

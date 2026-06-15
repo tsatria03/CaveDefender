@@ -1,5 +1,5 @@
-#pragma asset data
 #pragma asset lib
+#pragma asset sounds
 #pragma document docks
 
 #include"main/deps/*"
