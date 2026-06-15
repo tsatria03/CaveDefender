@@ -445,6 +445,10 @@ if(players[m].room_id == rid) send(players[m].peer_id, "removeitem "+iid, 0, tru
 if(got > 0)
 {
 send(players[pindex].peer_id, "play_item wood take", 0, true);
+// Let others in the game hear the pickup in 3D at the gatherer's spot (reuses the positional footstep relay).
+for(uint wm=0; wm<players.length(); wm++)
+if(players[wm].room_id == rid and players[wm].peer_id != players[pindex].peer_id)
+send(players[wm].peer_id, "footstep objects/items/wood/take "+px+" "+py, 0, true);
 send_wood_count(pindex);
 }
 }
@@ -620,6 +624,10 @@ int gain = random(1, 5);
 repair_wall(wi, gain);
 send_wood_count(index);
 send(event.peer_id, "play_item wood place", 0,true);
+// Others in the game hear the wood being placed in 3D at the builder's spot (reuses the footstep relay).
+for(uint pm=0; pm<players.length(); pm++)
+if(players[pm].room_id == players[index].room_id and players[pm].peer_id != event.peer_id)
+send(players[pm].peer_id, "footstep objects/items/wood/place "+players[index].x+" "+players[index].y, 0, true);
 send(event.peer_id, "reinforced "+dir+" "+gain, 0,true);
 broadcast_wall_strength(games[gi].id);
 }
