@@ -20,6 +20,14 @@ bool account_exists(string name)
 {
 return directory_exists(account_dir(name));
 }
+// Case-sensitive existence: the account exists AND the given name matches the stored username exactly.
+// Used for command targeting (so /demote BOB does NOT act on account "bob"). account_exists itself stays
+// case-insensitive, which login relies on (sign in regardless of case) and registration relies on (you
+// can't create both "Bob" and "bob" since they'd share one lowercased folder).
+bool account_exists_exact(string name)
+{
+return account_exists(name) and read_field(name, "username", "") == name;
+}
 // True if this name is the configured owner account (case-insensitive); the owner is always developer.
 bool is_owner(string name)
 {
