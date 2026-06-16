@@ -178,7 +178,7 @@ void comparse(string text, string channel = "global")
 			afk_count=0;
 			afk_timer.restart();
 			p.play_stationary("sounds/ui/misc/afktimer.ogg", false);
-			add_buffer_item("misc", "Going AFK in 10 seconds. Press any key to cancel.");
+			add_buffer_item("misc", "Going AFK in 10 seconds. Press a key to cancel.");
 			return;
 		}
 		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
