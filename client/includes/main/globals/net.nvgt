@@ -286,7 +286,8 @@ void netloop()
 		else if (parsed[0] == "online" and parsed.length() > 1)
 		{
 			bool onstaff = (parsed.length() > 2 and parsed[2] != "player");
-			p.play_stationary(onstaff ? "sounds/ui/misc/staffin.ogg" : "sounds/ui/misc/online.ogg", false);
+			p.play_stationary("sounds/ui/misc/online.ogg", false);
+			if(onstaff) p.play_stationary("sounds/ui/misc/staffin.ogg", false);
 			string ondisp = onstaff ? parsed[2] + " " + parsed[1] : parsed[1];
 			add_buffer_item("connections", ondisp + " just came online");
 		}
@@ -361,6 +362,36 @@ void netloop()
 			p.play_stationary(fon ? "sounds/ui/misc/flagon.ogg" : "sounds/ui/misc/flagoff.ogg", false);
 			int fnl = string_contains(message, "\n", 1);
 			if(fnl > -1) add_buffer_item("alerts", message.substr(fnl + 1));
+		}
+		else if (parsed[0] == "afkset")
+		{
+			// An admin put us AFK directly (no countdown): mark away. Any key wakes us. The going-away cue
+			// comes from the afkannounce broadcast that everyone (us included) receives.
+			afk_counting = false;
+			afk = true;
+		}
+		else if (parsed[0] == "afkclear")
+		{
+			// An admin brought us back from AFK: clear away state. The return cue comes from afkannounce.
+			afk_counting = false;
+			afk = false;
+		}
+		else if (parsed[0] == "afkannounce" and parsed.length() > 1)
+		{
+			// Someone went away or came back. Format: "afkannounce <1|0>\n<rank-aware name>". Everyone is told
+			// and hears the cue (including the player themselves), so the going-away/return sound is shared.
+			int anl = string_contains(message, "\n", 1);
+			string adisp = (anl > -1) ? message.substr(anl + 1) : "";
+			if(parsed[1] == "1")
+			{
+				p.play_stationary("sounds/ui/misc/afkon.ogg", false);
+				add_buffer_item("misc", adisp + " is now AFK.");
+			}
+			else
+			{
+				p.play_stationary("sounds/ui/misc/afkoff.ogg", false);
+				add_buffer_item("misc", adisp + " is no longer AFK.");
+			}
 		}
 		else if (parsed[0] == "warn" and parsed.length() > 1)
 		{

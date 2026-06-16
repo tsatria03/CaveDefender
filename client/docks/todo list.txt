@@ -3,11 +3,11 @@
 ****Unfinished. Add a staff flag system.
 ****Unfinished. Add chat language channels.
 ****Unfinished. Add the ability to set your nickname.
-****Unfinished. Add an afk system.
 ****Unfinished. Add a survival leaderboard that records and shows best survival times for the cave defender games.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add an AFK system on /afk: a ten second beeping countdown that any key cancels, any key wakes you, everyone is told when you go away and come back, and your name shows as AFK in the player lists; administrators and up can put another player AFK with /afk and a name.
 **Finished. Add a player warning system on /warn for administrators and up: pick a level from 1 to 4 and a reason, the warned player hears the level's sound and is told who warned them, and warnings are saved to the account.
 **Finished. Make player beacons off by default, toggled on with F5, and give each player a steady beacon pitch instead of one that jumps around.
 **Finished. Refine cave defender rounds: sturdier walls, longer build phases with faster wood, enemies that attack in bursts with rest periods so you can rebuild, and an end-of-round results screen that lets you play again or leave.

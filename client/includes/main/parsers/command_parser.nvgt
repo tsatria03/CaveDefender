@@ -161,6 +161,30 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() < 4) { syntax_error("/warn username level reason"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/afk")
+	{
+		// No argument: go AFK yourself via the local countdown (any key cancels it). With a name, it's the
+		// admin+ command to put another player AFK, forwarded to the server like the other staff commands.
+		if(parsed.length() == 1)
+		{
+			if(afk) // already away: typing /afk brings you back (the afkoff cue comes from the broadcast)
+			{
+				afk=false;
+				send(0, "afkreturn", 0, true);
+				return;
+			}
+			if(afk_counting) return; // countdown already running
+			afk_counting=true;
+			afk_count=0;
+			afk_timer.restart();
+			p.play_stationary("sounds/ui/misc/afktimer.ogg", false);
+			add_buffer_item("misc", "Going AFK in 10 seconds. Press any key to cancel.");
+			return;
+		}
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+		if(parsed.length() != 2) { syntax_error("/afk, or /afk username"); return; }
+		send(0, text, 1, true);
+	}
 	else if(base == "/flag")
 	{
 		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }

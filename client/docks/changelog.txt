@@ -1,4 +1,5 @@
 New in 2.1.
+You can now go AFK by typing /afk, which starts a ten second countdown of beeps; press any key to cancel it, and once you are away most keys bring you back, while the chat, buffer review, F1 through F5, R, L, G, and escape keys keep working without waking you. Typing /afk again also brings you back. While you are AFK everyone is told in the misc buffer, your name reads as AFK on your chat and in /who and the R, L, and G readouts no matter where you are, and administrators and up can put another player AFK with /afk followed by a name.
 The owner account named in the server config is now always a developer and can no longer be demoted, so a self-demote can't strip your powers or revert confusingly on your next sign in.
 New in 2.0.
 Slash commands that target a player now require the name's capitalization to match exactly, so a wrong-case name like BOB is no longer treated as the account bob; you must type the name the way it really is. Signing in still works regardless of case.

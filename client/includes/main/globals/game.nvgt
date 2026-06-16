@@ -9,6 +9,8 @@ void game()
 	current_room=0;
 	have_public_room=false;
 	have_private_room=false;
+	afk=false;
+	afk_counting=false;
 	while(true)
 	{
 		wait(5);
@@ -38,6 +40,65 @@ buffercheck();
 		beaconloop();
 		update_ambiences(me.x, me.y);
 		update_musics(me.x, me.y);
+		// AFK: during the countdown any key cancels it; once away, any key wakes us. Handled before the
+		// normal key checks so the waking press only brings us back rather than also acting.
+		if(afk_counting)
+		{
+			if(afk_wake_key_pressed())
+			{
+				afk_counting=false;
+				p.play_stationary("sounds/ui/misc/afkoff.ogg", false);
+				add_buffer_item("misc", "You are no longer going AFK.");
+			}
+			else if(afk_timer.elapsed>=1000)
+			{
+				afk_timer.restart();
+				afk_count++;
+				if(afk_count>=10)
+				{
+					// Going away. The afkon cue comes from the afkannounce broadcast everyone receives.
+					afk_counting=false;
+					afk=true;
+					send(0, "afk", 0, true);
+				}
+				else p.play_stationary("sounds/ui/misc/afktimer.ogg", false);
+			}
+		}
+		else if(afk)
+		{
+			// While away, the chat keys still open chat without waking you (backslash only when shift isn't
+			// held, since shift+backslash is the buffer export combo).
+			if(key_pressed(KEY_SLASH))
+			{
+				string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "");
+				if(msg!="") comparse(msg);
+				else speak("canceled");
+				continue;
+			}
+			if(key_pressed(KEY_BACKSLASH) and !shift_is_down())
+			{
+				string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "");
+				if(msg!="") comparse(msg, "local");
+				else speak("canceled");
+				continue;
+			}
+			if(key_pressed(KEY_APOSTROPHE) and myrank != "player")
+			{
+				string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "");
+				if(msg!="") comparse(msg, "staff");
+				else speak("canceled");
+				continue;
+			}
+			if(afk_wake_key_pressed())
+			{
+				// A non-exempt key woke you: come back and swallow that press so it does nothing else. The
+				// afkoff cue comes from the afkannounce broadcast everyone receives.
+				afk=false;
+				send(0, "afkreturn", 0, true);
+				continue;
+			}
+			// No wake key this frame: fall through so the exempt keys (buffers, F1-F5, G/L/R, escape) work.
+		}
 		if (alt_is_down() or control_is_down() or shift_is_down())
 			movetime=runtime;
 		else
