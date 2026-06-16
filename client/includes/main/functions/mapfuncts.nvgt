@@ -13,3 +13,46 @@ string gmt()
 {
 return get_tile_at(me.x,me.y);
 }
+// The compass heading (degrees, 0 = north, clockwise) for a facing const, so the relative-direction
+// helpers in rotation.nvgt can describe where something is compared to the way you're facing.
+double facing_degrees(int f)
+{
+if(f==Right) return 90;
+if(f==Backward) return 180;
+if(f==Left) return 270;
+return 0; // Forward / north
+}
+// Read out every other player in your current space, nearest first, as a direction relative to the way
+// you're facing plus a rough distance (the P key). Mirrors the nearby-players readout in WeldrynWars.
+void track_players()
+{
+if(players.length()==0) { speak("No players nearby."); return; }
+// Gather (distance, line) for each player, then sort nearest-first with a simple selection sort (the
+// roster in one space is small).
+double[] dists;
+string[] lines;
+for(uint i=0; i<players.length(); i++)
+{
+double d = get_2d_distance(me.x, me.y, players[i].x, players[i].y);
+double ang = calculate_x_y_angle(me.x, me.y, players[i].x, players[i].y, facing_degrees(facing));
+int td = int(d + 0.5);
+// Match the listings: an away player reads "AFK ...", and a flagged staff member shows their rank.
+string disp = (players[i].afk ? "AFK " : "") + (players[i].vrank != "player" and players[i].vrank != "" ? players[i].vrank + " " : "") + players[i].name;
+string line = disp + " is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away.");
+dists.insert_last(d);
+lines.insert_last(line);
+}
+for(uint i=0; i<dists.length(); i++)
+{
+uint best=i;
+for(uint j=i+1; j<dists.length(); j++) if(dists[j]<dists[best]) best=j;
+if(best!=i)
+{
+double dt=dists[i]; dists[i]=dists[best]; dists[best]=dt;
+string lt=lines[i]; lines[i]=lines[best]; lines[best]=lt;
+}
+}
+string spoken;
+for(uint i=0; i<lines.length(); i++) spoken += (i>0 ? " " : "") + lines[i];
+speak(spoken);
+}

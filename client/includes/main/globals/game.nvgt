@@ -9,6 +9,9 @@ void game()
 	current_room=0;
 	have_public_room=false;
 	have_private_room=false;
+	in_game=false;            // clear any stale in-game state (e.g. after a mid-game drop + reconnect)
+	current_game=0;
+	current_game_host="";
 	afk=false;
 	afk_counting=false;
 	while(true)
@@ -107,6 +110,7 @@ buffercheck();
 		{
 			speak(me.x+", "+me.y+" on "+gmt()+". Facing "+facing_name(facing)+".");
 		}
+		if (key_pressed(KEY_P)) track_players();
 		if (key_pressed(KEY_R) and !in_game)
 		{
 			if(current_room != 0) announce_members("scopemembers", "in this room");

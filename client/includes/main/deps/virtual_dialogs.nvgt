@@ -86,6 +86,7 @@ private void monitor() {
 bool window_status;
 
 wait(5);
+net_keepalive(); // service the network so a long-open dialog/input box doesn't time the connection out
 this.handle_arrow_keys();
 this.form.monitor();
 window_status = is_window_active();

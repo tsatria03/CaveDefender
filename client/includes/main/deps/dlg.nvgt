@@ -5,6 +5,7 @@ speak(message);
 while(true)
 {
 wait(5);
+net_keepalive(); // service the network so a long-open dialog doesn't time the connection out
 if (timeout>-1 and timeouter.elapsed>=timeout)
 return false;
 if (key_repeating(KEY_C) and dlgcoppy==true)

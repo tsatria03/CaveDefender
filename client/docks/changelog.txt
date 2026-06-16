@@ -1,4 +1,10 @@
 New in 2.1.
+New account notices now play and appear in the alerts buffer the moment someone creates an account, before that person even signs in, rather than waiting for their first login.
+Press P to hear where the other players around you are, listed nearest first, each as a direction relative to the way you are facing and a rough distance, or that no one is nearby. Staff who have raised their flag are named with their rank, and anyone who is away is marked AFK, just like in the other lists.
+Reinforcing a wall now adds from five to ten strength per piece of wood, up from one to five, so each piece counts for more against the tougher walls.
+Fixed the game dropping its connection when a menu or dialog was left open for a while, most often the results and play again prompt after a round: the network is now kept alive while any menu, dialog, or text box is on screen, so you can take your time without being disconnected.
+Fixed the lobby menu opening with tab instead of enter after a connection drop during a game: returning to the lobby now always clears your in-game state, so enter opens the menu as it should.
+Cavern walls are now much tougher, with twice the maximum strength they had before, and the enemies swing more slowly, so a round is more about steady upkeep than a frantic scramble. The axe, bat, crowbar, and hammer now hit every one, one and a quarter, one and a half, and two seconds respectively.
 You can now go AFK by typing /afk, which starts a ten second countdown of beeps; press any key to cancel it, and once you are away most keys bring you back, while the chat, buffer review, F1 through F5, R, L, G, and escape keys keep working without waking you. Typing /afk again also brings you back. While you are AFK everyone is told in the misc buffer, your name reads as AFK on your chat and in /who and the R, L, and G readouts no matter where you are, and administrators and up can put another player AFK with /afk followed by a name.
 The owner account named in the server config is now always a developer and can no longer be demoted, so a self-demote can't strip your powers or revert confusingly on your next sign in.
 New in 2.0.

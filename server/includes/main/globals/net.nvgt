@@ -234,6 +234,9 @@ return;
 if(create_account(name, password, gender))
 {
 send(event.peer_id, "registered", 0,true);
+// Tell everyone already online that a new account was made, right now at creation time (before the new
+// player has logged in). The registrant isn't in the roster yet, so this loop naturally skips them.
+for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "newchar "+name, 0, true);
 }
 else
 {
@@ -376,8 +379,8 @@ players[pindex].y = center;
 for(uint i=0; i<players.length(); i++)
 {
 if(i==uint(pindex) or players[i].room_id!=newroom) continue;
-send(players[i].peer_id, "pos "+nm+" "+players[pindex].x+" "+players[pindex].y, 0, true);
-send(pr, "pos "+players[i].name+" "+players[i].x+" "+players[i].y, 0, true);
+send(players[i].peer_id, pos_msg(pindex), 0, true);
+send(pr, pos_msg(int(i)), 0, true);
 }
 // Send any ground items already in the new space (e.g. wood down in a game you're joining mid-round).
 for(uint i=0; i<items.length(); i++)
@@ -390,11 +393,20 @@ send_wood_count(pindex);
 send(pr, wall_strength_msg(newroom), 0, true);
 }
 }
+// "pos <name> <x> <y> <visible-rank> <afk>" for a player, so the client's player tracker (P) can show the
+// same flag-aware rank and AFK marker the listings use. visible-rank is the rank only when the player is
+// staff AND has their flag on, otherwise "player"; afk is 1 or 0.
+string pos_msg(int pindex)
+{
+string vr = (is_staff(players[pindex].rank) and players[pindex].flagged) ? players[pindex].rank : "player";
+string af = players[pindex].afk ? "1" : "0";
+return "pos "+players[pindex].name+" "+players[pindex].x+" "+players[pindex].y+" "+vr+" "+af;
+}
 // Broadcast a player's current position to everyone sharing their room scope (used on each move).
 void broadcast_pos(int pindex)
 {
 for(uint i=0; i<players.length(); i++)
-if(players[i].room_id==players[pindex].room_id) send(players[i].peer_id, "pos "+players[pindex].name+" "+players[pindex].x+" "+players[pindex].y, 0, true);
+if(players[i].room_id==players[pindex].room_id) send(players[i].peer_id, pos_msg(pindex), 0, true);
 }
 // Send a player their current wood count so their client's I key can report it.
 void send_wood_count(int pindex)
@@ -564,8 +576,9 @@ players[index].rank = "developer";
 }
 players[index].flagged = get_flag(players[index].name); // staff-attention flag, default off (incognito)
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
-if(parsed.length()>3 and parsed[3]=="new") send(0, "newchar "+players[index].name, 0,true);
-else send(0, "online "+players[index].name+" "+players[index].rank, 0,true);
+// New accounts are announced at creation time (see register_account), so logging in for the first time
+// is just a normal "online" notice like anyone else.
+send(0, "online "+players[index].name+" "+players[index].rank, 0,true);
 // Load each channel mute from disk; notify the player of any that are still active.
 array<string> spchans = mute_channels_for("all");
 for(uint sc=0; sc<spchans.length(); sc++)
@@ -598,7 +611,7 @@ broadcast_pos(index);
 for(uint i=0; i<players.length(); i++)
 {
 if(i==uint(index) or players[i].room_id!=players[index].room_id) continue;
-send(event.peer_id, "pos "+players[i].name+" "+players[i].x+" "+players[i].y, 0,true);
+send(event.peer_id, pos_msg(int(i)), 0,true);
 }
 }
 }
@@ -629,7 +642,7 @@ if(wi > -1 and walls[wi].health <= 0) send(event.peer_id, "That wall is destroye
 else if(wi > -1)
 {
 players[index].inv.take("wood", 1);
-int gain = random(1, 5);
+int gain = random(5, 10);
 repair_wall(wi, gain);
 send_wood_count(index);
 send(event.peer_id, "play_item wood place", 0,true);
@@ -683,6 +696,7 @@ if(!players[index].afk)
 players[index].afk=true;
 string disp=display_name_flagged(index);
 for(uint ai=0; ai<players.length(); ai++) send(players[ai].peer_id, "afkannounce 1\n"+disp, 0,true);
+broadcast_pos(index); // refresh the AFK marker in everyone's player tracker
 }
 }
 else if(parsed[0]=="afkreturn" and index>-1)
@@ -693,6 +707,7 @@ if(players[index].afk)
 players[index].afk=false;
 string disp=display_name_flagged(index);
 for(uint ai=0; ai<players.length(); ai++) send(players[ai].peer_id, "afkannounce 0\n"+disp, 0,true);
+broadcast_pos(index);
 }
 }
 else if(parsed[0]=="staffchat" and index>-1 and is_staff(players[index].rank) and parsed.length()>1)
@@ -1294,6 +1309,7 @@ else
                     // Announce the flip to everyone with the rank shown (always, regardless of the flag state).
                     string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+players[index].rank+" "+players[index].name+" has "+fverb+" their staff flag.";
                     for(uint ffi=0; ffi<players.length(); ffi++) send(players[ffi].peer_id, fann, 0, true);
+                    broadcast_pos(index); // refresh the visible rank in everyone's player tracker
                 }
                 else if(parsed[0] == "/afk" && rank_level(players[index].rank) >= 2)
                 {
@@ -1309,12 +1325,14 @@ else
                                 players[ti].afk = true;
                                 send(players[ti].peer_id, "afkset", 0, true);
                                 for(uint ai=0; ai<players.length(); ai++) send(players[ai].peer_id, "afkannounce 1\n"+disp, 0, true);
+                                broadcast_pos(ti);
                             }
                             else
                             {
                                 players[ti].afk = false;
                                 send(players[ti].peer_id, "afkclear", 0, true);
                                 for(uint ai=0; ai<players.length(); ai++) send(players[ai].peer_id, "afkannounce 0\n"+disp, 0, true);
+                                broadcast_pos(ti);
                             }
                         }
                         else send(event.peer_id, "There is no player named "+parsed[1]+" online.", 0, true);

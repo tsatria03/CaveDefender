@@ -17,10 +17,10 @@ int attackinterval; // ms between hits, set by the weapon
 enemy(int eid, int gid, string wl, int wp)
 {
 id=eid; game_id=gid; wall=wl; weapon=wp;
-if(wp==1) attackinterval=500;       // axe
-else if(wp==4) attackinterval=750;  // bat (just above the axe)
-else if(wp==2) attackinterval=1000; // crowbar
-else attackinterval=1500;           // hammer
+if(wp==1) attackinterval=1000;      // axe
+else if(wp==4) attackinterval=1250; // bat (just above the axe)
+else if(wp==2) attackinterval=1500; // crowbar
+else attackinterval=2000;           // hammer
 }
 }
 // How many bots in a game are currently attacking a given wall.

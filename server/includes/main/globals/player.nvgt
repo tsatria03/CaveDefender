@@ -94,7 +94,7 @@ send(players[i].peer_id, "alert "+text, 0, true);
 string afk_prefix(int index)
 {
 if(index<0 or index>=int(players.length())) return "";
-return players[index].afk ? "afk " : "";
+return players[index].afk ? "AFK " : "";
 }
 // The name as other players should see it: staff (moderator/administrator/developer) get their
 // rank prefixed (e.g. "administrator bob"); regular players show just their name.
