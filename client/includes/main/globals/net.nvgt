@@ -251,7 +251,94 @@ string data=vf.read();
 vf.close();
 if(data!="") send(0, data, 3, true);
 }
+// --- Network keepalive during blocking UI ---
+// Blocking menus/dialogs (form_menu.run, dlg, the virtual_dialogs boxes) suspend the main game loop, so
+// net.request() stops being called and enet times the connection out (the engine sets a 10s min / 35s max
+// unresponsive window). To prevent that, those loops pump net_keepalive() every tick, which services the
+// network by running netloop() so ACKs/pings keep flowing and messages are handled live. Because netloop()
+// can itself open a blocking UI (a server menu, the play-again prompt, an input box), the pumped calls are
+// re-entrant: netloop_depth tracks the nesting, and any message that would open ANOTHER blocking UI while
+// one is already up is deferred (queued) and run after the current one closes, so the shared globals (the
+// menu m, the dialog pools) are never used by two modals at once.
+int netloop_depth=0;
+string[] net_deferred; // blocking-UI messages held until the open modal closes (drained by the wrapper)
 void netloop()
+{
+	netloop_depth++;
+	netloop_impl();
+	if(netloop_depth==1)
+	{
+		// Outermost call: now that no modal is open, run anything that arrived while one was.
+		while(net_deferred.length()>0)
+		{
+			string msg=net_deferred[0];
+			net_deferred.remove_at(0);
+			dispatch_modal(msg);
+		}
+	}
+	netloop_depth--;
+}
+// Pumped every tick by the blocking UI loops. Gated so it does nothing before we're connected (the pre-login
+// menus and the connect/login handshake have their own request loops and must not have events stolen).
+void net_keepalive()
+{
+	if(connected or reconnecting) netloop();
+}
+// form_menu's background_callback signature is void(form_menu@, string); this shim just pumps the network.
+void net_keepalive_cb(form_menu@ mm, string data)
+{
+	if(connected or reconnecting) netloop();
+}
+// Open the blocking UI for a deferred message once the previous modal has closed.
+void dispatch_modal(string message)
+{
+	string[] parsed = string_split(message, " ", true);
+	if(parsed[0]=="showmenu") show_server_menu(message);
+	else if(parsed[0]=="roundover") handle_roundover(message);
+	else if(parsed[0]=="helptext") handle_helptext(message);
+	else if(parsed[0]=="askinput") handle_askinput(message);
+}
+// The round ended (all walls fell): "roundover <seconds>". Announce how we did, then ask whether to play
+// again or leave; the reply goes back as playagain yes/no and the server waits until everyone has answered.
+void handle_roundover(string message)
+{
+	string[] parsed = string_split(message, " ", true);
+	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
+	string who = (players.length() > 0) ? "Your team survived " : "You survived ";
+	add_buffer_item("alerts", "All walls destroyed! " + who + parsed[1] + " seconds.");
+	dlgmessage("All walls destroyed! " + who + parsed[1] + " seconds.");
+	setupmenu();
+	m.add_item("Yes");
+	m.add_item("No");
+	m.intro_text = "Play again?";
+	if(m.run() == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next round to begin."); }
+	else send(0, "playagain no", 0, true);
+}
+// Server-sent help: "helptext\n<which>\n<content>" -> open it in the doc reader.
+void handle_helptext(string message)
+{
+	int nl = string_contains(message, "\n", 1);
+	if(nl > 0)
+	{
+		string which = message.substr(9, nl - 9);
+		string content = message.substr(nl + 1);
+		dockread(which + " help.txt", content);
+	}
+}
+// A server-driven flow needs a typed value. Format: askinput\n<prompt>\n<command prefix>\n<mask>. We show a
+// local box (masked when <mask> is 1) and send "<prefix> <text>"; the server command handler does the work.
+void handle_askinput(string message)
+{
+	string[] alines = string_split(message, "\n", true);
+	if (alines.length() >= 3)
+	{
+		bool amask = (alines.length() > 3 and alines[3] == "1");
+		string aval = amask ? vd.password_box("Private room", alines[1]) : vd.input_box("Input", alines[1], "");
+		if (aval == "") speak("canceled");
+		else send(0, alines[2] + " " + aval, 0, true);
+	}
+}
+void netloop_impl()
 {
 	// While reconnecting, hand the whole frame to the background reconnect handshake; normal message
 	// processing is paused (we're not logged in) until it resumes or gives up.
@@ -294,7 +381,7 @@ void netloop()
 		else if (parsed[0] == "newchar" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/newchar.ogg", false);
-			add_buffer_item("connections", parsed[1] + " just created a new account");
+			add_buffer_item("alerts", parsed[1] + " just created a new account");
 		}
 		else if (parsed[0] == "playerjoinedgame" and message.length() > 17)
 		{
@@ -426,8 +513,11 @@ void netloop()
 			{
 				int px = string_to_number(parsed[2]);
 				int py = string_to_number(parsed[3]);
+				// Newer servers append the visible rank and AFK flag for the player tracker; default if absent.
+				string pvr = parsed.length() > 4 ? parsed[4] : "player";
+				bool pafk = parsed.length() > 5 and parsed[5] == "1";
 				add_player(parsed[1], px, py);
-				set_player_position(parsed[1], px, py);
+				set_player_position(parsed[1], px, py, pvr, pafk);
 			}
 		}
 		else if (parsed[0] == "despawn" and parsed.length() > 1)
@@ -485,19 +575,9 @@ void netloop()
 		}
 		else if (parsed[0] == "roundover" and parsed.length() > 1)
 		{
-			// The round ended (all walls fell): "roundover <seconds>". Announce how we did, log it, then
-			// ask whether to play again or leave; the reply goes back as playagain yes/no and the server
-			// waits until everyone has answered before resetting the cavern for the next round.
-			p.play_stationary("sounds/ui/misc/gameover.ogg", false);
-			string who = (players.length() > 0) ? "Your team survived " : "You survived ";
-			add_buffer_item("alerts", "All walls destroyed! " + who + parsed[1] + " seconds.");
-			dlgmessage("All walls destroyed! " + who + parsed[1] + " seconds.");
-			setupmenu();
-			m.add_item("Yes");
-			m.add_item("No");
-			m.intro_text = "Play again?";
-			if(m.run() == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next round to begin."); }
-			else send(0, "playagain no", 0, true);
+			// Blocking UI: defer if another modal is already open (see the keepalive note above).
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_roundover(message);
 		}
 		else if (parsed[0] == "gamereset" and parsed.length() > 1)
 		{
@@ -531,31 +611,19 @@ void netloop()
 		}
 		else if (parsed[0] == "helptext")
 		{
-			int nl = string_contains(message, "\n", 1);
-			if(nl > 0)
-			{
-				string which = message.substr(9, nl - 9);
-				string content = message.substr(nl + 1);
-				dockread(which + " help.txt", content);
-			}
+			// Blocking UI: defer if another modal is already open (see the keepalive note above).
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_helptext(message);
 		}
 		else if (parsed[0] == "showmenu")
 		{
-			show_server_menu(message);
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else show_server_menu(message);
 		}
 		else if (parsed[0] == "askinput")
 		{
-			// A server-driven flow needs a typed value. Format: askinput\n<prompt>\n<command prefix>\n<mask>.
-			// We show a local box (masked when <mask> is 1) and send "<prefix> <text>"; the matching
-			// command handler on the server does the validation and the work. Text entry stays local.
-			string[] alines = string_split(message, "\n", true);
-			if (alines.length() >= 3)
-			{
-				bool amask = (alines.length() > 3 and alines[3] == "1");
-				string aval = amask ? vd.password_box("Private room", alines[1]) : vd.input_box("Input", alines[1], "");
-				if (aval == "") speak("canceled");
-				else send(0, alines[2] + " " + aval, 0, true);
-			}
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_askinput(message);
 		}
 		else if (parsed[0] == "runcommand")
 		{

@@ -7,6 +7,7 @@ m.play_music();
 }
 else m.add_music("");
 
+@m.background_callback = @net_keepalive_cb; // pump the network each tick so the menu doesn't time us out
 m.wrap=menuwrap;
 m.first_letter_navigation=first_letter;
 m.side_scrolling=side_scrolling;

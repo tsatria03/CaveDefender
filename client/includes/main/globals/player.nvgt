@@ -13,6 +13,8 @@ timer beacontimer;   // paces the periodic beacon, like SimpleFighter's checktim
 int beaconsound=-1;  // sound_pool handle for this player's beacon; -1 when nothing is playing.
 int voicesound=-1;   // sound_pool handle for this player's current voice clip; -1 when none.
 int beaconpitch;     // this player's beacon pitch (80-120), rolled once so it stays constant per player.
+string vrank="player"; // visible rank for the P tracker: the rank only when they're staff with their flag on, else "player".
+bool afk=false;        // whether this player is currently away (for the tracker's AFK prefix).
 player(string pname, int px, int py)
 {
 name=pname;
@@ -32,21 +34,29 @@ if(players[i].name==pname) return i;
 return -1;
 }
 
-// Start tracking a remote player (ignored if we already are).
-void add_player(string pname, int px, int py)
+// Start tracking a remote player (ignored if we already are). The visible rank and AFK flag default to
+// ordinary; the pos handler sets the real values via set_player_position.
+void add_player(string pname, int px, int py, string pvrank="player", bool pafk=false)
 {
 if(get_player_index(pname)>-1) return;
 player p1(pname, px, py);
+p1.vrank=pvrank;
+p1.afk=pafk;
 players.insert_last(p1);
 }
 
-// Update a tracked player's position; the beacon/footsteps then play at the new spot.
-void set_player_position(string pname, int px, int py)
+// Update a tracked player's position (and their visible rank / AFK state); the beacon/footsteps then play
+// at the new spot. The rank/afk default to ordinary so callers that don't know them (e.g. the voice header)
+// don't clobber a known value with bad data — those callers pass no extra args, but they only ADD a player,
+// they don't move an existing one, so the real pos updates keep the values current.
+void set_player_position(string pname, int px, int py, string pvrank="player", bool pafk=false)
 {
 int i=get_player_index(pname);
 if(i<0) return;
 players[i].x=px;
 players[i].y=py;
+players[i].vrank=pvrank;
+players[i].afk=pafk;
 }
 
 // Stop tracking a remote player (on offline/disconnect).
