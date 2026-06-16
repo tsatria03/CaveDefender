@@ -189,15 +189,9 @@ if(buffers[bufferpos].items.length()<=0)
 speak("Empty.");
 return;
 }
-if(buffers[bufferpos].bpos>=buffers[bufferpos].items.length()-1)
-{
-buffers[bufferpos].bpos=buffers[bufferpos].items.length()-1;
-return;
-}
-else
-{
-buffers[bufferpos].bpos++;
-}
+// Advance if we can; at the last item, stay put. Either way re-announce the current item so a single-item
+// buffer and edge presses still read out instead of going silent.
+if(buffers[bufferpos].bpos < int(buffers[bufferpos].items.length()-1)) buffers[bufferpos].bpos++;
 spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
@@ -209,15 +203,8 @@ if(buffers[bufferpos].items.length()<=0)
 speak("Empty.");
 return;
 }
-if(buffers[bufferpos].bpos<=0)
-{
-buffers[bufferpos].bpos=0;
-return;
-}
-else
-{
-buffers[bufferpos].bpos--;
-}
+// Step back if we can; at the first item, stay put and still re-announce it.
+if(buffers[bufferpos].bpos > 0) buffers[bufferpos].bpos--;
 spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
@@ -229,7 +216,6 @@ if(buffers[bufferpos].items.length()==0)
 speak("Empty.");
 return;
 }
-if(buffers[bufferpos].bpos==0) return;
 buffers[bufferpos].bpos=0;
 spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
@@ -242,8 +228,7 @@ if(buffers[bufferpos].items.length()==0)
 speak("Empty.");
 return;
 }
-if(buffers[bufferpos].bpos==int(buffers[bufferpos].items.length()-1)) return;
-buffers[bufferpos].bpos=buffers[bufferpos].items.length()-1;
+buffers[bufferpos].bpos=int(buffers[bufferpos].items.length()-1);
 spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }

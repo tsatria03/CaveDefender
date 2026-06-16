@@ -41,7 +41,7 @@ bool regex(string message, string pattern)
 // True if a key that should cancel the AFK countdown or wake you from away was pressed this frame.
 // Scans the SDL scancode range (KEY_A is the first real key at 4) but skips keys that should stay
 // usable, or stay inert, while away: the buffer-review keys (comma, period, the brackets, shift plus
-// M / C / backslash) and their shift modifier, the chat keys (slash, backslash, apostrophe), the
+// M / C / backslash) and the shift / alt / control modifiers, the chat keys (slash, backslash, apostrophe), the
 // F1-F5 server keys, the G / L / R / P glance keys, and escape. All of these keep working while away (the
 // AFK loop falls through to their normal handlers); the chat keys it handles itself before calling this.
 bool afk_wake_key_pressed()
@@ -50,7 +50,7 @@ bool afk_wake_key_pressed()
 	{
 		if(k==KEY_COMMA or k==KEY_PERIOD or k==KEY_LBRACKET or k==KEY_RBRACKET) continue;
 		if(k==KEY_M or k==KEY_C or k==KEY_BACKSLASH) continue;
-		if(k==KEY_LSHIFT or k==KEY_RSHIFT) continue;
+		if(k==KEY_LSHIFT or k==KEY_RSHIFT or k==KEY_LALT or k==KEY_RALT or k==KEY_LCTRL or k==KEY_RCTRL) continue;
 		if(k==KEY_SLASH or k==KEY_APOSTROPHE or k==KEY_ESCAPE) continue;
 		if(k==KEY_F1 or k==KEY_F2 or k==KEY_F3 or k==KEY_F4 or k==KEY_F5) continue;
 		if(k==KEY_G or k==KEY_L or k==KEY_R or k==KEY_P) continue;
