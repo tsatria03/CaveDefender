@@ -1,4 +1,7 @@
+New in 2.1.
+The owner account named in the server config is now always a developer and can no longer be demoted, so a self-demote can't strip your powers or revert confusingly on your next sign in.
 New in 2.0.
+Slash commands that target a player now require the name's capitalization to match exactly, so a wrong-case name like BOB is no longer treated as the account bob; you must type the name the way it really is. Signing in still works regardless of case.
 Staff can now raise or lower their staff flag with the new /flag command, off by default and saved to your account: raising it shows your rank to everyone, while lowering it makes you appear as an ordinary player in chat, the R, L, and G readouts, join notices, and the room and game lists. Whenever someone flips their flag, every user hears a sound and gets an alert, for example, Attention! administrator bob has raised their staff flag. Your rank always shows in /who, the staff list, and the connect notices regardless.
 If you run your own server, it now refuses to open a second copy of itself, the same way the client already does, so you can't accidentally run two servers at once.
 If you run your own server, the owner account named in its config (owner, defaulting to tsatria03) is now always a developer, set when the account is created and re-applied each time it signs in.

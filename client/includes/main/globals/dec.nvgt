@@ -44,7 +44,7 @@ string game_phase="idle"; // the current game's round phase (idle/build/wave), s
 bool game_paused=false; // true while the host has the game paused (server-driven); freezes input and audio
 double game_build_seconds=0; // build-phase length (or remaining, on join) for the local countdown
 timer game_phasetimer; // restarted on each phase change; drives the build-phase countdown shown in the game menu
-string version="2.0";
+string version="2.1";
 timer rectimer;
 timer spamtimer;
 file dockfile, dockver, logfile;

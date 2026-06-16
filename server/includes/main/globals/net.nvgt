@@ -1314,7 +1314,7 @@ else
                         {
                             send(event.peer_id, "You can't promote someone above your own rank.", 0, true);
                         }
-                        else if(!account_exists(tname))
+                        else if(!account_exists_exact(tname))
                         {
                             send(event.peer_id, "There is no account named "+tname+".", 0, true);
                         }
@@ -1336,7 +1336,7 @@ else
                                 players[ti].rank = newrank;
                                 send(players[ti].peer_id, "rankchange promoted "+oldrank+" "+newrank, 0, true);
                             }
-                            send(event.peer_id, tname+" has been promoted to "+newrank+".", 0, true);
+                            send(event.peer_id, "alert "+tname+" has been promoted to "+newrank+".", 0, true);
                         }
                     }
                     else
@@ -1354,9 +1354,13 @@ else
                         {
                             send(event.peer_id, "Invalid rank. Choose player, moderator, or administrator.", 0, true);
                         }
-                        else if(!account_exists(tname))
+                        else if(!account_exists_exact(tname))
                         {
                             send(event.peer_id, "There is no account named "+tname+".", 0, true);
+                        }
+                        else if(is_owner(tname))
+                        {
+                            send(event.peer_id, "The owner account is always a developer and can't be demoted.", 0, true);
                         }
                         else if(rank_level(get_rank(tname)) > rank_level(players[index].rank))
                         {
@@ -1376,7 +1380,7 @@ else
                                 players[ti].rank = newrank;
                                 send(players[ti].peer_id, "rankchange demoted "+oldrank+" "+newrank, 0, true);
                             }
-                            send(event.peer_id, tname+" has been demoted to "+newrank+".", 0, true);
+                            send(event.peer_id, "alert "+tname+" has been demoted to "+newrank+".", 0, true);
                         }
                     }
                     else
@@ -1388,7 +1392,7 @@ else
                 {
                     if(parsed.length() >= 3)
                     {
-                        int ti = get_online_index(parsed[1]);
+                        int ti = get_player_index_from(parsed[1]);
                         if(ti > -1)
                         {
                             string nmsg = string_join(parsed, " ", 2, parsed.length());
@@ -1416,7 +1420,7 @@ else
                         {
                             send(event.peer_id, "Warning level must be between 1 and 4.", 0, true);
                         }
-                        else if(!account_exists(wname))
+                        else if(!account_exists_exact(wname))
                         {
                             send(event.peer_id, "There is no account named "+wname+".", 0, true);
                         }
@@ -1462,7 +1466,7 @@ else
                     {
                         string tname = parsed[1];
                         string channel = string_to_lower_case(parsed[2]);
-                        if(!account_exists(tname))
+                        if(!account_exists_exact(tname))
                         {
                             send(event.peer_id, "There is no account named "+tname+".", 0, true);
                         }
@@ -1511,7 +1515,7 @@ else
                     {
                         string tname = parsed[1];
                         string channel = string_to_lower_case(parsed[2]);
-                        if(!account_exists(tname))
+                        if(!account_exists_exact(tname))
                         {
                             send(event.peer_id, "There is no account named "+tname+".", 0, true);
                         }
@@ -1556,7 +1560,7 @@ else
                     if(parsed.length() >= 2)
                     {
                         string tname = parsed[1];
-                        if(!account_exists(tname))
+                        if(!account_exists_exact(tname))
                         {
                             send(event.peer_id, "There is no account named "+tname+".", 0, true);
                         }
@@ -1597,7 +1601,7 @@ else
                     if(parsed.length() >= 2)
                     {
                         string tname = parsed[1];
-                        if(!account_exists(tname))
+                        if(!account_exists_exact(tname))
                         {
                             send(event.peer_id, "There is no account named "+tname+".", 0, true);
                         }
