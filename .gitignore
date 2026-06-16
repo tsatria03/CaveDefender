@@ -6,5 +6,8 @@
 
 New File*.txt
 
-src/client/lib/
-releases/
+client/lib/
+client/releases/
+
+server/lib/
+server/releases/

@@ -26,7 +26,7 @@ void announce_members(string request, string where)
 {
 string roster = get_members(request);
 if(!connected) return;
-string[] f = string_split(roster, " ", true);
+string[] f = string_split(roster, "\n", true); // newline-delimited so rank-aware names (with a space) survive
 string[] names;
 for(uint i = 1; i < f.length(); i++) names.insert_last(f[i]);
 speak(roster_sentence(where, names));
@@ -55,10 +55,11 @@ void announce_games(string request, string where)
 {
 string payload = get_games(request);
 if(!connected) return;
-string[] f = string_split(payload, " ", true);
-int gc = (f.length() > 1) ? int(string_to_number(f[1])) : 0; // f[0]="roomgamelist", f[1]=game count
+string[] lines = string_split(payload, "\n", true); // line 0 is "roomgamelist <count>", then one name per line
+string[] head = string_split(lines[0], " ", true);
+int gc = (head.length() > 1) ? int(string_to_number(head[1])) : 0;
 string[] names;
-for(uint i = 2; i < f.length(); i++) names.insert_last(f[i]);
+for(uint i = 1; i < lines.length(); i++) names.insert_last(lines[i]);
 speak(games_sentence(where, gc, names));
 }
 // Ask the server for the rooms overview (count + office occupants) and wait for the reply, pumping
@@ -84,9 +85,10 @@ void announce_rooms()
 {
 string payload = get_rooms();
 if(!connected) return;
-string[] f = string_split(payload, " ", true);
-int rc = (f.length() > 1) ? int(string_to_number(f[1])) : 0; // f[0]="roomsoverviewlist", f[1]=room count
+string[] lines = string_split(payload, "\n", true); // line 0 is "roomsoverviewlist <count>", then one name per line
+string[] head = string_split(lines[0], " ", true);
+int rc = (head.length() > 1) ? int(string_to_number(head[1])) : 0;
 string[] names;
-for(uint i = 2; i < f.length(); i++) names.insert_last(f[i]);
+for(uint i = 1; i < lines.length(); i++) names.insert_last(lines[i]);
 speak(rooms_sentence(rc, names));
 }

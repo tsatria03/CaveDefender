@@ -295,11 +295,12 @@ void netloop()
 			p.play_stationary("sounds/ui/misc/newchar.ogg", false);
 			add_buffer_item("connections", parsed[1] + " just created a new account");
 		}
-		else if (parsed[0] == "playerjoinedgame" and parsed.length() > 1)
+		else if (parsed[0] == "playerjoinedgame" and message.length() > 17)
 		{
-			// Someone else joined the game you're in: play the join cue and note who in the player events buffer.
+			// Someone else joined the game you're in: play the join cue and note who (rank-aware) in the player
+			// events buffer. The name may contain a space (rank prefix), so take everything after the command.
 			p.play_stationary("sounds/ui/misc/joingame.ogg", false);
-			add_buffer_item("player events", parsed[1] + " joined the game.");
+			add_buffer_item("player events", message.substr(17) + " joined the game.");
 		}
 		else if (parsed[0] == "offline" and parsed.length() > 1)
 		{
@@ -351,6 +352,15 @@ void netloop()
 		{
 			// Server announcement routed to the alerts buffer (and spoken), e.g. a mute notice for others.
 			add_buffer_item("alerts", message.substr(6));
+		}
+		else if (parsed[0] == "flagswitch" and parsed.length() > 1)
+		{
+			// A staff member flipped their attention flag: everyone hears the sound and gets the alert.
+			// Format: "flagswitch <0|1>\n<alert text>".
+			bool fon = (parsed[1] == "1");
+			p.play_stationary(fon ? "sounds/ui/misc/flagon.ogg" : "sounds/ui/misc/flagoff.ogg", false);
+			int fnl = string_contains(message, "\n", 1);
+			if(fnl > -1) add_buffer_item("alerts", message.substr(fnl + 1));
 		}
 		else if (parsed[0] == "warn" and parsed.length() > 1)
 		{
@@ -558,8 +568,10 @@ void netloop()
 			clear_players();
 			current_room = string_to_number(parsed[1]);
 			current_room_private = (parsed[2] == "private");
-			current_room_host = parsed[3];
-			add_buffer_item("misc", "You are now in " + parsed[3] + "'s " + parsed[2] + " room.");
+			current_room_host = parsed[3]; // plain name, for host comparison
+			string[] rjl = string_split(message, "\n", true);
+			string rhost = (rjl.length() > 1) ? rjl[1] : parsed[3]; // rank-aware display name for the announcement
+			add_buffer_item("misc", "You are now in " + rhost + "'s " + parsed[2] + " room.");
 			draw_map("office");
 			lastx = int(me.x);
 			lasty = int(me.y);
@@ -585,8 +597,10 @@ void netloop()
 			game_phase = "idle";
 			game_paused = false;
 			current_game = string_to_number(parsed[1]);
-			current_game_host = parsed[4];
-			add_buffer_item("misc", "You are now in " + parsed[4] + "'s " + parsed[3] + " game.");
+			current_game_host = parsed[4]; // plain name, for host comparison
+			string[] gjl = string_split(message, "\n", true);
+			string ghost = (gjl.length() > 1) ? gjl[1] : parsed[4]; // rank-aware display name for the announcement
+			add_buffer_item("misc", "You are now in " + ghost + "'s " + parsed[3] + " game.");
 			draw_map("cavern", 0, gsize, 0, gsize);
 			setup_cavern_walls(gsize);
 			lastx = int(me.x);

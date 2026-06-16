@@ -1,4 +1,5 @@
 New in 2.0.
+Staff can now raise or lower their staff flag with the new /flag command, off by default and saved to your account: raising it shows your rank to everyone, while lowering it makes you appear as an ordinary player in chat, the R, L, and G readouts, join notices, and the room and game lists. Whenever someone flips their flag, every user hears a sound and gets an alert, for example, Attention! administrator bob has raised their staff flag. Your rank always shows in /who, the staff list, and the connect notices regardless.
 If you run your own server, it now refuses to open a second copy of itself, the same way the client already does, so you can't accidentally run two servers at once.
 If you run your own server, the owner account named in its config (owner, defaulting to tsatria03) is now always a developer, set when the account is created and re-applied each time it signs in.
 Each player's locator beacon now keeps a steady tone of its own instead of its pitch jumping around on every pulse, so you can tell people apart by ear more easily.

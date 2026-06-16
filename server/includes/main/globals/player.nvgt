@@ -14,6 +14,7 @@ string[] menu_actions; // for a HETEROGENEOUS menu (e.g. the room menu), the act
 string menu_pending;   // a value carried across a cascading menu (e.g. the chosen game mode while picking the size).
 inventory inv; // what this player is carrying (wood, etc.); authoritative here, mirrored to the client. Wired in 6c.
 bool playagain_answered=false; // during a game's "over" phase: has this member answered the play-again prompt yet?
+bool flagged=false; // staff-attention flag: when true this staff member's rank shows to regular players; default off (incognito). Loaded from flag.usr at spawn.
 player(int id, string username, double ver)
 {
 name=username;
@@ -94,4 +95,34 @@ string display_name(int index)
 if(index<0 or index>=int(players.length())) return "";
 if(is_staff(players[index].rank)) return players[index].rank+" "+players[index].name;
 return players[index].name;
+}
+// Rank-aware display name from a NAME (not an index): uses the live rank if the player is online, else
+// the on-disk rank. For places we only have a name, e.g. a room/game host. Returns "rank name" or just name.
+string display_name_for(string name)
+{
+int pi = get_online_index(name);
+if(pi > -1) return display_name(pi);
+string r = get_rank(name);
+if(is_staff(r)) return r + " " + name;
+return name;
+}
+// Flag-aware display name: rank is shown ONLY if the staff member has their attention flag on; otherwise
+// (and for non-staff) just the plain name. Used everywhere regular players see a name and the flag should
+// let staff stay incognito (chat, rosters, join notices, host labels). Always-visible spots (/who,
+// online/offline, /staff, staff-only contexts) keep using display_name instead.
+string display_name_flagged(int index)
+{
+if(index<0 or index>=int(players.length())) return "";
+if(is_staff(players[index].rank) and players[index].flagged) return players[index].rank+" "+players[index].name;
+return players[index].name;
+}
+// Flag-aware display name from a NAME (online or offline) — for hosts. Uses the live flag if connected,
+// else the saved flag from disk.
+string display_name_flagged_for(string name)
+{
+int pi = get_online_index(name);
+if(pi > -1) return display_name_flagged(pi);
+string r = get_rank(name);
+if(is_staff(r) and get_flag(name)) return r + " " + name;
+return name;
 }
