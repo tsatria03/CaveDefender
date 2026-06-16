@@ -161,6 +161,12 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() < 4) { syntax_error("/warn username level reason"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/flag")
+	{
+		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
+		if(parsed.length() != 1) { syntax_error("/flag"); return; }
+		send(0, text, 1, true);
+	}
 	else if(base == "/mute")
 	{
 		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }

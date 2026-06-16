@@ -52,7 +52,7 @@ if(cri>-1) rooms[cri].members.insert_last(peer); // the creator is now inside th
 if(priv) set_saved_private(players[index].name, pass);
 else set_saved_public(players[index].name, true);
 send_yourrooms(peer, players[index].name);
-send(peer, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name, 0,true);
+send(peer, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
 set_room_scope(index, rid);
 send(peer, "play roomcreate.ogg", 0,true);
 }
@@ -79,7 +79,7 @@ return;
 bool already=false;
 for(uint k=0; k<rooms[ri].members.length(); k++) if(rooms[ri].members[k]==peer) already=true;
 if(!already) rooms[ri].members.insert_last(peer);
-send(peer, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"private":"public")+" "+rooms[ri].host, 0,true);
+send(peer, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"private":"public")+" "+rooms[ri].host+"\n"+display_name_flagged_for(rooms[ri].host), 0,true);
 set_room_scope(index, rooms[ri].id);
 }
 // The rooms[] index of the room with this id, or -1 if there isn't one.

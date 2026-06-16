@@ -560,6 +560,7 @@ if(is_owner(players[index].name) and players[index].rank != "developer")
 set_rank(players[index].name, "developer");
 players[index].rank = "developer";
 }
+players[index].flagged = get_flag(players[index].name); // staff-attention flag, default off (incognito)
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 if(parsed.length()>3 and parsed[3]=="new") send(0, "newchar "+players[index].name, 0,true);
 else send(0, "online "+players[index].name+" "+players[index].rank, 0,true);
@@ -685,12 +686,12 @@ relay_to_staff("staffmsg "+display_name(index)+" "+action);
 else if(parsed[0]=="localchat" and index>-1 and parsed.length()>1)
 {
 if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
-else { string msg=string_join(parsed, " ", 1, parsed.length()); relay_to_local(players[index].room_id, "localmsg "+display_name(index)+": "+msg); }
+else { string msg=string_join(parsed, " ", 1, parsed.length()); relay_to_local(players[index].room_id, "localmsg "+display_name_flagged(index)+": "+msg); }
 }
 else if(parsed[0]=="localme" and index>-1 and parsed.length()>1)
 {
 if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
-else { string action=string_join(parsed, " ", 1, parsed.length()); relay_to_local(players[index].room_id, "localmsg "+display_name(index)+" "+action); }
+else { string action=string_join(parsed, " ", 1, parsed.length()); relay_to_local(players[index].room_id, "localmsg "+display_name_flagged(index)+" "+action); }
 }
 else if(parsed[0]=="help" and index>-1 and parsed.length()>1)
 {
@@ -798,7 +799,7 @@ int size=int(string_to_number(parsed[1]));
 if(size!=25 and size!=50 and size!=100) size=50;
 bool solo=(parsed[2]=="solo");
 int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo);
-send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+players[index].name, 0,true);
+send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
 set_room_scope(index, gid);
 send(event.peer_id, "gamephase idle 0", 0,true);
 }
@@ -932,7 +933,7 @@ send(event.peer_id, "That game is already in progress.", 0,true);
 else
 {
 games[gi].members.insert_last(event.peer_id);
-send(event.peer_id, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].host, 0,true);
+send(event.peer_id, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0,true);
 set_room_scope(index, games[gi].id);
 int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
 if(rem<0) rem=0;
@@ -941,7 +942,7 @@ send(event.peer_id, "gamephase "+games[gi].phase+" "+rem, 0,true);
 for(uint mj=0; mj<games[gi].members.length(); mj++)
 {
 if(games[gi].members[mj]==event.peer_id) continue;
-send(games[gi].members[mj], "playerjoinedgame "+players[index].name, 0,true);
+send(games[gi].members[mj], "playerjoinedgame "+display_name_flagged(index), 0,true);
 }
 }
 }
@@ -986,7 +987,7 @@ else if(parsed[0]=="scopemembers" and index>-1)
 int target = (parsed.length()>1) ? int(string_to_number(parsed[1])) : players[index].room_id;
 string payload="scopememberlist";
 for(uint i=0; i<players.length(); i++)
-if(players[i].room_id == target) payload+=" "+players[i].name;
+if(players[i].room_id == target) payload+="\n"+display_name_flagged(i);
 send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="roomgamemembers" and index>-1)
@@ -999,7 +1000,7 @@ string payload="roomgamelist "+gamecount;
 for(uint i=0; i<players.length(); i++)
 {
 int gi=get_game_index(players[i].room_id);
-if(gi>-1 and games[gi].parent_room == rid) payload+=" "+players[i].name;
+if(gi>-1 and games[gi].parent_room == rid) payload+="\n"+display_name_flagged(i);
 }
 send(event.peer_id, payload, 0,true);
 }
@@ -1009,7 +1010,7 @@ else if(parsed[0]=="allgamemembers" and index>-1)
 // the roomgamelist reply format with roomgamemembers; the client just labels it "on the server".
 string payload="roomgamelist "+games.length();
 for(uint i=0; i<players.length(); i++)
-if(get_game_index(players[i].room_id)>-1) payload+=" "+players[i].name;
+if(get_game_index(players[i].room_id)>-1) payload+="\n"+display_name_flagged(i);
 send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="roomsoverview" and index>-1)
@@ -1018,7 +1019,7 @@ else if(parsed[0]=="roomsoverview" and index>-1)
 // the lobby). Office occupants have room_id == that room's id; game players have room_id == a game id.
 string payload="roomsoverviewlist "+rooms.length();
 for(uint i=0; i<players.length(); i++)
-if(get_room_index(players[i].room_id)>-1) payload+=" "+players[i].name;
+if(get_room_index(players[i].room_id)>-1) payload+="\n"+display_name_flagged(i);
 send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="kickfromroom" and index>-1 and parsed.length()>1)
@@ -1243,8 +1244,8 @@ if(event.type == event_receive && event.channel == 1)
                     int target_index = get_player_index_from(target_user);
                     if(target_index > -1)
 {
-send(event.peer_id, "PM to " + display_name(target_index) + ": " + pm_message, 2, true);
-send(players[target_index].peer_id, "PM from " + display_name(index) + ": " + pm_message, 2, true);
+send(event.peer_id, "PM to " + display_name_flagged(target_index) + ": " + pm_message, 2, true);
+send(players[target_index].peer_id, "PM from " + display_name_flagged(index) + ": " + pm_message, 2, true);
                     }
 else
 {
@@ -1260,8 +1261,17 @@ else
                     else
                     {
                         string action = string_join(parsed, " ", 1, parsed.length());
-                        send(0, display_name(index) + " " + action, 1, true);
+                        send(0, display_name_flagged(index) + " " + action, 1, true);
                     }
+                }
+                else if(parsed[0] == "/flag" && rank_level(players[index].rank) >= 1)
+                {
+                    players[index].flagged = !players[index].flagged;
+                    set_flag(players[index].name, players[index].flagged);
+                    string fverb = players[index].flagged ? "raised" : "lowered";
+                    // Announce the flip to everyone with the rank shown (always, regardless of the flag state).
+                    string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+players[index].rank+" "+players[index].name+" has "+fverb+" their staff flag.";
+                    for(uint ffi=0; ffi<players.length(); ffi++) send(players[ffi].peer_id, fann, 0, true);
                 }
                 else if(parsed[0] == "/kick" && rank_level(players[index].rank) >= 2)
                 {
@@ -1618,7 +1628,7 @@ else
             {
             players[index].messagetimer.restart();
             string what;
-            what += display_name(index) + ": " + message;
+            what += display_name_flagged(index) + ": " + message;
             send(0, what, 1, true);
             }
         }

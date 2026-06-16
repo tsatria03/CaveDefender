@@ -25,6 +25,9 @@ bool is_owner(string name)
 {
 return string_to_lower_case(name) == string_to_lower_case(owner);
 }
+// The staff-attention flag (flag.usr): "1" = rank is shown to regular players, empty = incognito. Default off.
+bool get_flag(string name) { return read_field(name, "flag", "") == "1"; }
+void set_flag(string name, bool on) { write_field(name, "flag", on ? "1" : ""); }
 // Read a single field file, trimmed (so hand-added trailing newlines don't break things). Returns
 // def when the file is missing or empty.
 string read_field(string name, string field, string def="")

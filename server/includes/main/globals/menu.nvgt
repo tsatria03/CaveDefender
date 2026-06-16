@@ -53,7 +53,7 @@ if(rooms[i].is_private != priv) continue;
 int gc = 0;
 for(uint g = 0; g < games.length(); g++) if(games[g].parent_room == rooms[i].id) gc++;
 players[index].menu_targets.insert_last("" + rooms[i].id);
-opts.insert_last(rooms[i].host + "'s room, " + rooms[i].members.length() + (rooms[i].members.length() == 1 ? " player" : " players") + ", " + gc + (gc == 1 ? " game" : " games") + " in progress");
+opts.insert_last(display_name_flagged_for(rooms[i].host) + "'s room, " + rooms[i].members.length() + (rooms[i].members.length() == 1 ? " player" : " players") + ", " + gc + (gc == 1 ? " game" : " games") + " in progress");
 }
 if(opts.length() == 0)
 {
@@ -133,7 +133,7 @@ else if(!staff and games[i].host != players[index].name) continue;      // stop:
 players[index].menu_targets.insert_last("" + games[i].id);
 string label;
 if(mode == "join" and games[i].solo) label = "Your single-player game, " + games[i].size + " by " + games[i].size;
-else label = games[i].host + "'s " + (games[i].solo ? "single-player" : "open") + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
+else label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
 if(games[i].phase != "idle") label += ", in progress";
 opts.insert_last(label);
 }

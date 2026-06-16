@@ -2,14 +2,18 @@
 
 ****Unfinished. Add a staff flag system.
 ****Unfinished. Add chat language channels.
-****Unfinished. Make beacons disabled by default.
 ****Unfinished. Add the ability to set your nickname.
 ****Unfinished. Add an afk system.
-****Unfinished. Add a player/staff warning system.
 ****Unfinished. Add a survival leaderboard that records and shows best survival times for the cave defender games.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a player warning system on /warn for administrators and up: pick a level from 1 to 4 and a reason, the warned player hears the level's sound and is told who warned them, and warnings are saved to the account.
+**Finished. Make player beacons off by default, toggled on with F5, and give each player a steady beacon pitch instead of one that jumps around.
+**Finished. Refine cave defender rounds: sturdier walls, longer build phases with faster wood, enemies that attack in bursts with rest periods so you can rebuild, and an end-of-round results screen that lets you play again or leave.
+**Finished. Play wood pickups, placements, and wall bumps in 3D so you can hear where they happen, and add join-game and staff-online sounds.
+**Finished. Make the configured owner account always a developer, and make the server refuse a second instance of itself, like the client already does.
+**Finished. Fix hosting over a VPN or local network by using plain IPv4, and fix voice chat only ever sending your first recording.
 **Finished. Build the cave defender gameplay that runs inside a room: a build phase where you gather wood and reinforce four walls that each start at a random strength, then waves of bots that attack the walls with axes, bats, crowbars, and hammers, hits you hear in 3D growing louder as a wall weakens, until a wall breaks into rubble and its attackers spread to the rest; the round is lost when all four fall and your survival time is announced before the cavern resets, with a host-only pause that freezes the whole game, on small, medium, or large maps.
 **Finished. Expand the map system beyond the single starter lobby into distinct spaces, the lobby, the rooms' offices, and the game caverns, each drawn at its own size with its own floor and wall surfaces, ambience, and music.
 **Finished. Add the R, L, and G glance keys that tell you who is in the rooms, the lobby, and the games, working from the lobby, a room, or a game, with correct grammar for empty spaces and single players.
