@@ -15,6 +15,7 @@ string menu_pending;   // a value carried across a cascading menu (e.g. the chos
 inventory inv; // what this player is carrying (wood, etc.); authoritative here, mirrored to the client. Wired in 6c.
 bool playagain_answered=false; // during a game's "over" phase: has this member answered the play-again prompt yet?
 bool flagged=false; // staff-attention flag: when true this staff member's rank shows to regular players; default off (incognito). Loaded from flag.usr at spawn.
+bool afk=false; // away-from-keyboard: set when the player goes AFK (self via /afk countdown, or an admin via /afk <name>); cleared on any input. Not persisted (resets each session).
 player(int id, string username, double ver)
 {
 name=username;
@@ -87,6 +88,13 @@ for(uint i=0; i<players.length(); i++)
 if(int(players[i].peer_id) == tpeer) continue;
 send(players[i].peer_id, "alert "+text, 0, true);
 }
+}
+// An "afk " prefix for a player who is away, or "" otherwise. Prepended in every informational user
+// listing (who, /staff, the R/L/G readouts) so an away player reads as "afk bob" / "afk moderator bob".
+string afk_prefix(int index)
+{
+if(index<0 or index>=int(players.length())) return "";
+return players[index].afk ? "afk " : "";
 }
 // The name as other players should see it: staff (moderator/administrator/developer) get their
 // rank prefixed (e.g. "administrator bob"); regular players show just their name.
