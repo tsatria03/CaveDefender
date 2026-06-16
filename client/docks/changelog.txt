@@ -1,4 +1,5 @@
 New in 2.1.
+Fixed voice chat playing the previous clip instead of the new one, both for hearing your own recording and for other players' messages; each clip now plays fresh as it arrives.
 Fixed reviewing a buffer going silent at its edges: comma and period, and shift with them, now always read the current message, so a buffer holding a single message is no longer unresponsive.
 New account notices now play and appear in the alerts buffer the moment someone creates an account, before that person even signs in, rather than waiting for their first login.
 Press P to hear where the other players around you are, listed nearest first, each as a direction relative to the way you are facing and a rough distance, or that no one is nearby. Staff who have raised their flag are named with their rank, and anyone who is away is marked AFK, just like in the other lists.

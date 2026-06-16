@@ -1271,7 +1271,7 @@ if(event.type == event_receive && event.channel == 1)
     }
     else
     {
-        send(event.peer_id, "Usage: /motd <new_message>", 0, true);
+        send(event.peer_id, "Usage: /motd message", 0, true);
     }
 }
                  else if(parsed[0] == "/pm" && parsed.length() >= 3)
@@ -1337,7 +1337,7 @@ else
                         }
                         else send(event.peer_id, "There is no player named "+parsed[1]+" online.", 0, true);
                     }
-                    else send(event.peer_id, "Usage: /afk <username>", 0, true);
+                    else send(event.peer_id, "Usage: /afk username", 0, true);
                 }
                 else if(parsed[0] == "/kick" && rank_level(players[index].rank) >= 2)
                 {
@@ -1363,7 +1363,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /kick <username>", 0, true);
+                        send(event.peer_id, "Usage: /kick username", 0, true);
                     }
                 }
                 else if(parsed[0] == "/promote" && rank_level(players[index].rank) >= 1)
@@ -1407,7 +1407,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /promote <username> <moderator, administrator, or developer>", 0, true);
+                        send(event.peer_id, "Usage: /promote username rank.", 0, true);
                     }
                 }
                 else if(parsed[0] == "/demote" && rank_level(players[index].rank) >= 1)
@@ -1451,7 +1451,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /demote <username> <player, moderator, or administrator>", 0, true);
+                        send(event.peer_id, "Usage: /demote username rank.", 0, true);
                     }
                 }
                 else if((parsed[0] == "/notifyplayer" || parsed[0] == "/notplayer") && is_staff(players[index].rank))
@@ -1472,7 +1472,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /notifyplayer <username> <message>", 0, true);
+                        send(event.peer_id, "Usage: /notifyplayer username message", 0, true);
                     }
                 }
                 else if(parsed[0] == "/warn" && rank_level(players[index].rank) >= 2)
@@ -1511,7 +1511,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /warn <username> <level 1-4> <reason>", 0, true);
+                        send(event.peer_id, "Usage: /warn username level reason.", 0, true);
                     }
                 }
                 else if(parsed[0] == "/notify" && is_staff(players[index].rank))
@@ -1523,7 +1523,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /notify <message>", 0, true);
+                        send(event.peer_id, "Usage: /notify message", 0, true);
                     }
                 }
                 else if(parsed[0] == "/mute" && rank_level(players[index].rank) >= 1)
@@ -1572,7 +1572,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /mute <username> <channel> [seconds]. Channels: global, local, voice, all.", 0, true);
+                        send(event.peer_id, "Usage: /mute username channel [seconds].", 0, true);
                     }
                 }
                 else if(parsed[0] == "/unmute" && rank_level(players[index].rank) >= 1)
@@ -1618,7 +1618,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /unmute <username> <channel>. Channels: global, local, voice, all.", 0, true);
+                        send(event.peer_id, "Usage: /unmute username channel.", 0, true);
                     }
                 }
                 else if(parsed[0] == "/ban" && rank_level(players[index].rank) >= 2)
@@ -1659,7 +1659,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /ban <username>, or /ban <username> seconds", 0, true);
+                        send(event.peer_id, "Usage: /ban username, or /ban username seconds", 0, true);
                     }
                 }
                 else if(parsed[0] == "/unban" && rank_level(players[index].rank) >= 2)
@@ -1683,7 +1683,7 @@ else
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /unban <username>", 0, true);
+                        send(event.peer_id, "Usage: /unban username", 0, true);
                     }
                 }
             }

@@ -1,6 +1,6 @@
 Player help.
 
-This covers what you can do as a player, both the chat commands and the things you do through menus, and what is reserved for staff. Words in angle brackets are things you fill in yourself; don't type the brackets.
+This covers what you can do as a player, both the chat commands and the things you do through menus, and what is reserved for staff. Words like player and message are things you fill in yourself.
 
 Commands.
 
@@ -10,9 +10,9 @@ Press slash to open the chat, type a command, and press enter to send it. Every 
 /uptime, or /serveruptime: Tells you how long the server has been running.
 /getmotd: Reads out the server's message of the day.
 /staff: Lists every staff member, online or offline, along with their rank.
-/pm <player> <message>: Sends a private message to a single player.
-/reply <message>, or /r <message>: Sends a private message to the last person who sent you one, so you don't have to type their name.
-/me <message>: Sends an action to everyone, with your name in front, for example /me waves becomes a message reading your name then waves. If you are staff, your rank is shown too.
+/pm player message: Sends a private message to a single player.
+/reply message, or /r message: Sends a private message to the last person who sent you one, so you don't have to type their name.
+/me message: Sends an action to everyone, with your name in front, for example /me waves becomes a message reading your name then waves. If you are staff, your rank is shown too.
 /help: Opens this player help in a readable window. Just type /help on its own. Staff can also choose a page with /help player or /help staff.
 /afk: Marks you as away. It starts a ten second countdown of beeps; press any key during the countdown to cancel it. Once you are away, everyone is told and your name shows as AFK in the player lists wherever you are, and the next key you press brings you back.
 

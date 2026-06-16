@@ -1,0 +1,96 @@
+// Voice-chat recording, playback, and transmission. Modeled on buffer.nvgt's buffercheck(): the in-game
+// loop just calls recordcheck() each frame and all the O-key logic lives here. prep_recording() starts a
+// take, prep_playback() ends one (transmit + your own centered playback), and play_remote_voice() plays an
+// incoming clip in 3D at the speaker's position so you can move around them.
+int voiceclip_id = 0;     // ever-increasing id giving each voice clip (yours and others') a unique temp filename, so NVGT's filename-keyed preload cache can't replay a previous clip.
+int selfvoicesound = -1;  // voice-pool handle for your own last playback clip; -1 when none.
+string selfvoicefile = ""; // temp path of your own last playback clip, for cleanup before the next one.
+
+// Begin a recording (O pressed while idle): cue, start capture, mark recording, restart the limit timer.
+void prep_recording()
+{
+	spamtimer.restart();
+	vc.record();
+	p.play_stationary("sounds/ui/misc/von.ogg", false);
+	recording = true;
+	rectimer.restart();
+}
+
+// End a recording (any of the three stop triggers): cue, stop capture, send it, and — if you have "hear my
+// voice" on — play your own clip back centered through the voice pool. The own-voice copy uses a unique
+// filename so NVGT's filename-keyed preload cache can't replay your previous take.
+void prep_playback()
+{
+	p.play_stationary("sounds/ui/misc/voff.ogg", false);
+	vc.stop(true, outfile);
+	recording = false;
+	spamtimer.restart();
+	if(rectimer.elapsed < 300) { speak("Recording too short"); return; }
+	if(!file_exists(outfile)) { speak("Playback failed. File missing."); return; }
+	transmit_voice();
+	if(hearvoice)
+	{
+		string st = DIRECTORY_TEMP + "\\cvf_self_" + (voiceclip_id++) + ".ogg";
+		if(file_copy(outfile, st, true))
+		{
+			if(selfvoicesound != -1) vpool.destroy_sound(selfvoicesound);
+			if(selfvoicefile != "" and file_exists(selfvoicefile)) file_delete(selfvoicefile);
+			selfvoicesound = vpool.play_stationary(st, false); // centered: you're the listener, so no 3D for your own voice
+			selfvoicefile = st;
+		}
+		int sec = rectimer.elapsed / 1000;
+		speak("Playing back " + sec + " seconds");
+	}
+}
+
+// Per-frame O-key handler, like buffercheck() for the buffer keys: start on press, and stop on the toggle
+// press, the time limit, or the key release, depending on the hold-to-talk preference.
+void recordcheck()
+{
+	if(voicechat != 1) return;
+	if(key_pressed(KEY_O) && spamtimer.elapsed >= spamtime)
+	{
+		if(!recording) prep_recording();
+		else if(holdkey == 0) prep_playback(); // toggle mode: a second press stops
+	}
+	if(recording && rectimer.elapsed >= rectime) prep_playback(); // hit the time limit
+	if(key_released(KEY_O) && recording && holdkey == 1) prep_playback(); // push-to-talk: stop on release
+}
+
+// Read the recorded clip off disk and send it on the voice channel (3). The server prepends the speaker
+// header and relays it to everyone else.
+void transmit_voice()
+{
+	if(!file_exists(outfile)) return;
+	file vf;
+	if(!vf.open(outfile, "rb")) return;
+	string data = vf.read();
+	vf.close();
+	if(data != "") send(0, data, 3, true);
+}
+
+// Play an incoming voice clip in 3D at the speaker's map position. Message format: "name x y\n<ogg bytes>".
+// Each clip is written to a unique temp file so the preload cache can't replay the speaker's previous clip;
+// the speaker's prior file is deleted once its sound is freed.
+void play_remote_voice(string msg)
+{
+	int nl = string_contains(msg, "\n", 1);
+	if(nl <= 0) return;
+	string[] h = string_split(string_left(msg, nl), " ", true);
+	if(h.length() < 3 or h[0] == name) return;
+	string audio = msg.substr(nl + 1);
+	int vx = string_to_number(h[1]);
+	int vy = string_to_number(h[2]);
+	string vt = DIRECTORY_TEMP + "\\cvf_voice_" + h[0] + "_" + (voiceclip_id++) + ".ogg";
+	add_player(h[0], vx, vy);
+	int vi = get_player_index(h[0]);
+	if(vi < 0) return;
+	if(players[vi].voicesound != -1) vpool.destroy_sound(players[vi].voicesound);
+	if(players[vi].voicefile != "" and file_exists(players[vi].voicefile)) file_delete(players[vi].voicefile);
+	file vf;
+	vf.open(vt, "wb");
+	vf.write(audio);
+	vf.close();
+	players[vi].voicesound = vpool.play_3d(vt, me.x, me.y, me.z, vx, vy, 0, calculate_theta(me_rotation), false);
+	players[vi].voicefile = vt;
+}
