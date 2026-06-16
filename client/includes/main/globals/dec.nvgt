@@ -52,7 +52,7 @@ string version="2.1";
 timer rectimer;
 timer spamtimer;
 file dockfile, dockver, logfile;
-sound dummy, playback;
+sound dummy;
 savedata st(DIRECTORY_APPDATA+"tsatria03/CaveDefender/preffs/settings.cvf", "iBFDPgJbahBTY9QgdhFojwSDoexxd1uGmSUNJKOiQTYttCwNN5cjEI0vjFmTumLMGUvCwmgIChfAjJzLGdWQsNftU9pUTC0vjM0qjPfoOA11VAejUGWEEUJtRR10tK7DJ2kDwCPOiqC0E82Lv7axg8aOrL2kaBTYvjaLJEy3wg8X69j4rMaZnnzLO6PgKCmUHIYJ3UF3WMdNpd9w534HZi85Zz");
 audio_form form;
 form_menu m;

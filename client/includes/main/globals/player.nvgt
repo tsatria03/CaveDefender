@@ -12,6 +12,7 @@ int x, y;            // map position (2D; z is always 0 since the game has no he
 timer beacontimer;   // paces the periodic beacon, like SimpleFighter's checktimer / objtimer.
 int beaconsound=-1;  // sound_pool handle for this player's beacon; -1 when nothing is playing.
 int voicesound=-1;   // sound_pool handle for this player's current voice clip; -1 when none.
+string voicefile="";  // temp .ogg path of this player's current clip, so the previous one can be deleted.
 int beaconpitch;     // this player's beacon pitch (80-120), rolled once so it stays constant per player.
 string vrank="player"; // visible rank for the P tracker: the rank only when they're staff with their flag on, else "player".
 bool afk=false;        // whether this player is currently away (for the tracker's AFK prefix).
