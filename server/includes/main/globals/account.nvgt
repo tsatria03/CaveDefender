@@ -8,9 +8,20 @@
 // empty = not muted/banned, "0" = indefinite/permanent, any other number = the absolute epoch it
 // expires at.
 
+// The on-disk folder for an account. Folders keep the case the account was created with (so an account
+// made as "DevilGuardian" stays DevilGuardian on disk, not devilguardian). Lookups stay case-insensitive:
+// try the name as typed first (which on a case-insensitive filesystem already matches any case), then
+// scan for an existing folder that matches ignoring case, and finally fall back to the original case for
+// a brand-new account being created.
 string account_dir(string name)
 {
-return "data/players/" + string_to_lower_case(name);
+string direct = "data/players/" + name;
+if(directory_exists(direct)) return direct;
+string want = string_to_lower_case(name);
+string[] dirs = find_directories("data/players/*");
+for(uint i=0; i<dirs.length(); i++)
+if(string_to_lower_case(dirs[i]) == want) return "data/players/" + dirs[i];
+return direct;
 }
 string field_path(string name, string field)
 {
@@ -22,8 +33,9 @@ return directory_exists(account_dir(name));
 }
 // Case-sensitive existence: the account exists AND the given name matches the stored username exactly.
 // Used for command targeting (so /demote BOB does NOT act on account "bob"). account_exists itself stays
-// case-insensitive, which login relies on (sign in regardless of case) and registration relies on (you
-// can't create both "Bob" and "bob" since they'd share one lowercased folder).
+// case-insensitive (account_dir resolves an existing folder regardless of case), which login relies on
+// (sign in regardless of case) and registration relies on (you can't create both "Bob" and "bob", since
+// the second create resolves to the first's folder and is refused).
 bool account_exists_exact(string name)
 {
 return account_exists(name) and read_field(name, "username", "") == name;

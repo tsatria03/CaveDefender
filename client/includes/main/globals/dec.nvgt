@@ -48,7 +48,6 @@ int afk_count=0; // seconds elapsed in the AFK countdown (10 = go away)
 timer afk_timer; // ticks the one-per-second AFK countdown beeps
 double game_build_seconds=0; // build-phase length (or remaining, on join) for the local countdown
 timer game_phasetimer; // restarted on each phase change; drives the build-phase countdown shown in the game menu
-string version="2.2";
 timer rectimer;
 timer spamtimer;
 file dockfile, dockver, logfile;

@@ -1,5 +1,6 @@
 #pragma asset data
 #pragma document docks
+#include"version.nvgt"
 
 #include"main/deps/*"
 #include"main/functions/*"

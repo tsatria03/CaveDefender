@@ -816,7 +816,9 @@ void netloop_impl()
 			current_room_private = false;
 			current_room_host = "";
 			p.play_stationary("sounds/ui/misc/kick.ogg", false);
-			add_buffer_item("misc", "You have been kicked from " + parsed[1] + "'s " + parsed[2] + " room.");
+			string[] rkl = string_split(message, "\n", true);
+			string rkhost = (rkl.length() > 1) ? rkl[1] : parsed[1]; // rank-aware host name; fall back to the plain username
+			add_buffer_item("misc", "You have been kicked from " + rkhost + "'s " + parsed[2] + " room.");
 			draw_map("lobby");
 			lastx = int(me.x);
 			lasty = int(me.y);
@@ -830,7 +832,9 @@ void netloop_impl()
 			current_room = 0;
 			current_room_private = false;
 			current_room_host = "";
-			add_buffer_item("misc", parsed[1] + "'s " + parsed[2] + " room has been deleted.");
+			string[] rdl = string_split(message, "\n", true);
+			string rdhost = (rdl.length() > 1) ? rdl[1] : parsed[1]; // rank-aware host name; fall back to the plain username
+			add_buffer_item("misc", rdhost + "'s " + parsed[2] + " room has been deleted.");
 			draw_map("lobby");
 			lastx = int(me.x);
 			lasty = int(me.y);
