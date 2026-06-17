@@ -1,3 +1,9 @@
+New in 2.3.
+Enemy bots now attack in a measured, capped pattern instead of piling up without limit: each wave opens with one bot per wall, and every attack burst adds one more to each wall, up to a ceiling that scales with how many players are defending, two per wall on your own and up to four per wall in a full game. Losing a wall sends its bots onto the walls still standing, so the pressure keeps building even as your wood runs low.
+Strikes on a wall now swell with danger: the weapon blow and the wall's creak start quiet while a wall is strong and grow louder the more battered it gets, so you can tell by volume which wall is in real trouble.
+Gathering wood now reaches five tiles: just walking scoops up any wood within five tiles of you, instead of only the tile you land on, and pressing Enter to grab uses the same five-tile reach.
+Reinforcing a wall no longer means leaning right against it: standing within five tiles of the wall you are facing now counts, and you can hold Shift and Enter to keep placing wood instead of pressing it for every piece.
+Larger maps now grow much more wood. Bigger caverns drop several pieces at a time and hold more on the ground at once, so a team spread across a big map is no longer starved for wood the way a small map never was; small maps are unchanged.
 New in 2.2.
 Cavern walls now start each round between half and full strength, instead of as low as a fifth, so no wall begins so weak that the bots can topple it before you have a chance to reinforce it.
 Each player now starts every round carrying a random fifteen to thirty wood, a head start so you can shore up the weakest walls right away instead of waiting for the gathering to pick up.

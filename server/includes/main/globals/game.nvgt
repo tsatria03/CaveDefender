@@ -20,8 +20,7 @@ timer phasetimer;    // times the current phase (drives the build-phase countdow
 int buildduration=0; // how many seconds the build phase lasts (set per map size when the round begins)
 timer woodtimer;     // drives wood drops during the build and wave phases
 int woodinterval=0;  // ms until the next wood drop, re-rolled to a random 1000-5000 after each one
-timer enemytimer;    // drives bot spawns during the wave phase
-int enemyinterval=0; // ms until the next bot, re-rolled each spawn (random 5-10s divided by player count)
+int wave_bot_target=0; // per-wall bot count for the current wave; +1 on each attack burst, capped per player count
 timer wavetimer;     // started when the wave begins; its elapsed time is the survival score
 bool paused=false;   // host-only shared pause: when true this game's whole sim is frozen for everyone
 timer pausetimer;    // times the current pause, so Open games can auto-resume after 90s (Solo: indefinite)
@@ -179,23 +178,23 @@ send_wood_count(pi);
 }
 if(phase=="wave")
 {
-// Start the bot-spawn clock when the wave begins (interval scales with how many are defending).
-games[gindex].enemytimer.restart();
 games[gindex].wavetimer.restart(); // the survival clock starts now
-int pc = games[gindex].members.length(); if(pc<1) pc=1;
-games[gindex].enemyinterval = random(5000, 10000) / pc;
 // The wave alternates attack and rest segments, each half the build phase (so bots hammer, then back
 // off to let players rebuild). The wave opens with an attack segment.
 games[gindex].wave_attacking = true;
 games[gindex].wave_cycletimer.restart();
 games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
+// First attack burst: one bot per standing wall. The per-wall count grows by 1 on each later flip back
+// to attacking, up to the player-scaled ceiling (bot_cap).
+games[gindex].wave_bot_target = 1;
+fill_walls_to(games[gindex].id, games[gindex].size, games[gindex].wave_bot_target);
 }
 int secs = (phase=="build") ? games[gindex].buildduration : 0;
 for(uint i=0; i<games[gindex].members.length(); i++)
 send(games[gindex].members[i], "gamephase "+phase+" "+secs, 0, true);
 }
-// Host-only shared pause: freeze a game's entire simulation for everyone. The phase/wood/enemy/wave
-// timers and every bot's attack timer all pause where they are, so nothing advances until the host
+// Host-only shared pause: freeze a game's entire simulation for everyone. The phase/wood/wave timers
+// and every bot's attack timer all pause where they are, so nothing advances until the host
 // resumes; gametick skips paused games. Open games auto-resume after 90s (timed off pausetimer in
 // gametick); Solo games stay paused until the host acts. Tells everyone in the game so their clients
 // freeze input and audio.
@@ -206,7 +205,6 @@ games[gi].paused=true;
 games[gi].pausetimer.restart();
 games[gi].phasetimer.pause();
 games[gi].woodtimer.pause();
-games[gi].enemytimer.pause();
 games[gi].wavetimer.pause();
 games[gi].wave_cycletimer.pause();
 for(uint i=0; i<enemies.length(); i++)
@@ -222,7 +220,6 @@ if(gi<0 or gi>=int(games.length()) or !games[gi].paused) return;
 games[gi].paused=false;
 games[gi].phasetimer.resume();
 games[gi].woodtimer.resume();
-games[gi].enemytimer.resume();
 games[gi].wavetimer.resume();
 games[gi].wave_cycletimer.resume();
 for(uint i=0; i<enemies.length(); i++)
@@ -248,8 +245,11 @@ if((games[i].phase=="build" or games[i].phase=="wave") and games[i].woodtimer.el
 {
 games[i].woodtimer.restart();
 games[i].woodinterval = random(500, 2000);
-if(wood_count_in(games[i].id) < wood_cap(games[i].size))
+// Drop several pieces at once on bigger maps (a size-scaled supply rate), each only while under the cap.
+int drops = wood_drops_per_tick(games[i].size);
+for(int d=0; d<drops; d++)
 {
+if(wood_count_in(games[i].id) >= wood_cap(games[i].size)) break;
 int wx = random(1, games[i].size-1); // interior only; the 0 and size edges are walls
 int wy = random(1, games[i].size-1);
 int iid = spawn_item(games[i].id, wx, wy, "wood");
@@ -257,20 +257,18 @@ for(uint m=0; m<games[i].members.length(); m++)
 send(games[i].members[m], "spawnitem "+iid+" wood "+wx+" "+wy, 0, true);
 }
 }
-// Bots spawn during the wave's attack segments only, on a player-scaled cadence, onto the least-attacked standing wall.
-if(games[i].phase=="wave" and games[i].wave_attacking and games[i].enemytimer.elapsed >= games[i].enemyinterval)
-{
-games[i].enemytimer.restart();
-int pc = games[i].members.length(); if(pc<1) pc=1;
-games[i].enemyinterval = random(5000, 10000) / pc;
-string target = least_attacked_wall(games[i].id, games[i].size);
-if(target != "") spawn_enemy(games[i].id, target, random(1, 4));
-}
 // Flip between attacking and resting every half-build-phase: bots hammer, then back off so players rebuild.
 if(games[i].phase=="wave" and games[i].wave_cycletimer.elapsed >= games[i].wave_cycle)
 {
 games[i].wave_cycletimer.restart();
 games[i].wave_attacking = !games[i].wave_attacking;
+// Each time a fresh attack burst begins, every wall grows by one bot, up to the player-scaled ceiling.
+if(games[i].wave_attacking)
+{
+int cap = bot_cap(int(i));
+if(games[i].wave_bot_target < cap) games[i].wave_bot_target++;
+fill_walls_to(games[i].id, games[i].size, games[i].wave_bot_target);
+}
 }
 }
 enemy_attacks(); // process every bot's attack timer across all games (breaches a wall when it hits 0)
