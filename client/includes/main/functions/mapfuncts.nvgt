@@ -13,6 +13,20 @@ string gmt()
 {
 return get_tile_at(me.x,me.y);
 }
+// A single cavern wall's strength spoken in full (the N/E/S/W keys). A wall at 0 reads as destroyed
+// rather than "0 percent strength".
+string wall_phrase_full(string dir, int pct)
+{
+if(pct<=0) return "the "+dir+" wall has been destroyed.";
+return "the "+dir+" wall has "+pct+" percent strength.";
+}
+// A single wall's strength in the short form used by the T summary ("north 26 percent", or
+// "north destroyed" when it's down).
+string wall_phrase_short(string dir, int pct)
+{
+if(pct<=0) return dir+" destroyed";
+return dir+" "+pct+" percent";
+}
 // The compass heading (degrees, 0 = north, clockwise) for a facing const, so the relative-direction
 // helpers in rotation.nvgt can describe where something is compared to the way you're facing.
 double facing_degrees(int f)

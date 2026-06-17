@@ -386,6 +386,13 @@ if(requested.length() < 3 or requested.length() > 24) { send(issuer_peer, "misc 
 if(filterchar(requested, true)) { send(issuer_peer, "misc Nicknames may only contain letters, numbers, hyphens and underscores.", 0, true); return false; }
 newnick = requested;
 }
+// No-op if it's already their current nickname: tell them rather than re-announcing the same name.
+if(newnick == players[ti].nickname)
+{
+if(byself) send(issuer_peer, "misc Your nickname is already set to "+newnick+".", 0, true);
+else send(issuer_peer, "misc This player's nickname is already set to "+newnick+".", 0, true);
+return false;
+}
 // Must be unique among online players: no one else's nickname OR username may match it (anti-impersonation).
 for(uint i=0; i<players.length(); i++)
 {
