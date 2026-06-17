@@ -43,3 +43,18 @@ void clear_clientitems()
 for(uint i = 0; i < clientitems.length(); i++) objpool.destroy_sound(clientitems[i].loophandle);
 clientitems.resize(0);
 }
+// Pause / resume only the object pool (the ground-item sounds, e.g. the looping wood). Used to silence the
+// wood loops while an in-game menu or dialog is open, without touching ambience, music, or the UI pool.
+void pause_objects()
+{
+for(uint i = 0; i < objpool.items.length(); i++)
+{
+if(@objpool.items[i].handle == null) continue;
+if(objpool.items[i].handle.playing == false) continue;
+objpool.pause_sound(i);
+}
+}
+void resume_objects()
+{
+for(uint i = 0; i < objpool.items.length(); i++) objpool.resume_sound(i);
+}
