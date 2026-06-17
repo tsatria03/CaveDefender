@@ -1,4 +1,6 @@
 New in 2.2.
+Cavern walls now start each round between half and full strength, instead of as low as a fifth, so no wall begins so weak that the bots can topple it before you have a chance to reinforce it.
+Each player now starts every round carrying a random fifteen to thirty wood, a head start so you can shore up the weakest walls right away instead of waiting for the gathering to pick up.
 Voice chat now follows people as they move: a clip plays from wherever the speaker is and tracks them around the map while it plays, so you can hear them walk past you, and you can move around their voice too, just like footsteps.
 A wall that has fallen now reads as destroyed instead of zero percent, both when you check a single wall with N, E, S, or W and in the full summary on T.
 If you run your own server, new account folders now keep the exact capitalization the player signed up with, for example EllaShey instead of ellashey, so the folders are easier to recognize; signing in still works no matter how you type your name.

@@ -34,12 +34,12 @@ walls.insert_last(w);
 return walls.length()-1;
 }
 // A wall's starting strength: a structural (indestructible) wall uses the given health, but a
-// destroyable cavern wall begins at an independent random 20-80% of its max, so every wall and every
+// destroyable cavern wall begins at an independent random 50-100% of its max, so every wall and every
 // round differs and the build phase becomes a real assessment of which walls to reinforce first.
 double wall_start_health(double health, double maxhealth, bool destroyable)
 {
 if(!destroyable) return health;
-return random(int(maxhealth*0.2), int(maxhealth*0.8));
+return random(int(maxhealth*0.5), int(maxhealth));
 }
 // Spawn the four edge walls (west, east, north, south) bordering a `size` x `size` space. Pass
 // destroyable=false for a structural lobby/office border, true for a game cavern. Cavern walls each roll

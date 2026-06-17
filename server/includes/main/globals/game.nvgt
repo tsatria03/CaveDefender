@@ -164,7 +164,19 @@ void set_game_phase(int gindex, string phase)
 {
 if(gindex<0 or gindex>=int(games.length())) return;
 games[gindex].phase=phase;
-if(phase=="build") games[gindex].phasetimer.restart();
+if(phase=="build")
+{
+games[gindex].phasetimer.restart();
+// Hand each defender a random starting stockpile (15-30 wood) so they can immediately shore up a weak
+// wall before gathering ramps up. The inventory was cleared between rounds, so this is a clean grant.
+for(uint i=0; i<games[gindex].members.length(); i++)
+{
+int pi=get_player_index(games[gindex].members[i]);
+if(pi<0) continue;
+players[pi].inv.give("wood", random(15, 30));
+send_wood_count(pi);
+}
+}
 if(phase=="wave")
 {
 // Start the bot-spawn clock when the wave begins (interval scales with how many are defending).
