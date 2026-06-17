@@ -1,6 +1,7 @@
 #pragma asset lib
 #pragma asset sounds
 #pragma document docks
+#include"version.nvgt"
 
 #include"main/deps/*"
 #include"main/functions/*"

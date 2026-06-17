@@ -146,7 +146,7 @@ void login(string name, string password, string ver)
 {
 if(ver != version)
 {
-send(event.peer_id, "error: your game version ("+ver+") does not match the server version ("+version+"). Please update your game.", 0,true);
+send(event.peer_id, "Error: Your client is incompatible. your version: "+ver+". Latest version: "+version+". Please update the game to connect to the server.", 0,true);
 return;
 }
 if(!account_exists(name))
@@ -1162,7 +1162,7 @@ string kind=rooms[ri].is_private?"private":"public";
 int tpi=get_player_index(targetpeer);
 string tdisp=(tpi>-1)?display_name_flagged(tpi):parsed[1]; // flag-aware kicked name, captured before removal
 remove_member(targetpeer);
-send(targetpeer, "roomkicked "+hostname+" "+kind, 0,true);
+send(targetpeer, "roomkicked "+hostname+" "+kind+"\n"+display_name_flagged_for(hostname), 0,true); // 2nd line: rank-aware host name (may contain a space)
 if(tpi>-1) set_room_scope(tpi, 0);
 send(event.peer_id, "misc You kicked "+tdisp+".", 0,true); // kicker: first-person
 broadcast_event(tdisp+" was kicked from "+display_name_flagged_for(hostname)+"'s "+kind+" room.", event.peer_id, targetpeer); // everyone else
@@ -1207,7 +1207,7 @@ if(!member) send(players[pe].peer_id, "event "+hostdisp+"'s "+kind+" room was de
 for(uint j=0; j<rooms[ri].members.length(); j++)
 {
 int pi=get_player_index(rooms[ri].members[j]);
-send(rooms[ri].members[j], "roomdeleted "+disp+" "+kind, 0,true);
+send(rooms[ri].members[j], "roomdeleted "+disp+" "+kind+"\n"+hostdisp, 0,true); // 2nd line: rank-aware host name (may contain a space)
 if(pi>-1) set_room_scope(pi, 0);
 }
 if(rooms[ri].is_private) set_saved_private(rooms[ri].host, "");

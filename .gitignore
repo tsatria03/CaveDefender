@@ -1,16 +1,8 @@
 .claude
 New File*.txt
 
-client/*.mp3
-client/*.ogg
-client/*.wav
-
 client/lib/
 client/releases/
-
-server/*.mp3
-server/*.ogg
-server/*.wav
 
 server/lib/
 server/releases/
