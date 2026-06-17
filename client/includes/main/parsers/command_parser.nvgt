@@ -191,6 +191,23 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/flag"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/nickname" or base == "/nick")
+	{
+		// One argument: set your own nickname (or "default" to revert). Two: staff set another player's
+		// nickname by username (all staff). Anything else is bad syntax.
+		if(parsed.length() == 2) { send(0, text, 1, true); }
+		else if(parsed.length() == 3)
+		{
+			if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
+			send(0, text, 1, true);
+		}
+		else
+		{
+			if(my_rank_level() >= 1) syntax_error("/nickname username altname, or /nick username altname");
+			else syntax_error("/nickname altname, or /nick altname");
+			return;
+		}
+	}
 	else if(base == "/mute")
 	{
 		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }

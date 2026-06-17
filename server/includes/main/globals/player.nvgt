@@ -1,7 +1,8 @@
 player@[] players;
 class player
 {
-string name;
+string name;          // the account username: the stable identity (login, folder, command targeting).
+string nickname;      // the display name shown in place of the username everywhere; loaded from nickname.usr at spawn.
 int peer_id;
 timer messagetimer;
 double version;
@@ -101,18 +102,20 @@ return players[index].afk ? "AFK " : "";
 string display_name(int index)
 {
 if(index<0 or index>=int(players.length())) return "";
-if(is_staff(players[index].rank)) return players[index].rank+" "+players[index].name;
-return players[index].name;
+if(is_staff(players[index].rank)) return players[index].rank+" "+players[index].nickname;
+return players[index].nickname;
 }
-// Rank-aware display name from a NAME (not an index): uses the live rank if the player is online, else
-// the on-disk rank. For places we only have a name, e.g. a room/game host. Returns "rank name" or just name.
+// Rank-aware display name from a NAME (not an index): uses the live rank/nickname if the player is online,
+// else the on-disk values. For places we only have a username, e.g. a room/game host. The displayed part is
+// the nickname, never the raw username.
 string display_name_for(string name)
 {
 int pi = get_online_index(name);
 if(pi > -1) return display_name(pi);
 string r = get_rank(name);
-if(is_staff(r)) return r + " " + name;
-return name;
+string nick = get_nickname(name);
+if(is_staff(r)) return r + " " + nick;
+return nick;
 }
 // Flag-aware display name: rank is shown ONLY if the staff member has their attention flag on; otherwise
 // (and for non-staff) just the plain name. Used everywhere regular players see a name and the flag should
@@ -121,16 +124,17 @@ return name;
 string display_name_flagged(int index)
 {
 if(index<0 or index>=int(players.length())) return "";
-if(is_staff(players[index].rank) and players[index].flagged) return players[index].rank+" "+players[index].name;
-return players[index].name;
+if(is_staff(players[index].rank) and players[index].flagged) return players[index].rank+" "+players[index].nickname;
+return players[index].nickname;
 }
-// Flag-aware display name from a NAME (online or offline) — for hosts. Uses the live flag if connected,
-// else the saved flag from disk.
+// Flag-aware display name from a NAME (online or offline) — for hosts. Uses the live flag/nickname if
+// connected, else the saved values from disk. The displayed part is always the nickname.
 string display_name_flagged_for(string name)
 {
 int pi = get_online_index(name);
 if(pi > -1) return display_name_flagged(pi);
 string r = get_rank(name);
-if(is_staff(r) and get_flag(name)) return r + " " + name;
-return name;
+string nick = get_nickname(name);
+if(is_staff(r) and get_flag(name)) return r + " " + nick;
+return nick;
 }
