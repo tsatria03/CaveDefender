@@ -356,6 +356,17 @@ for(uint i=0; i<players.length(); i++)
 if(players[i].room_id == room_id) send(players[i].peer_id, msg, 0, true);
 }
 }
+// Broadcast a third-person lifecycle notice (room/game created, left, stopped, kicked, etc.) to everyone's
+// player events buffer, server-wide, skipping the actor(s) who instead get a first-person confirmation in
+// their own misc buffer. The text should already use a flag-aware name (display_name_flagged[_for]).
+void broadcast_event(string text, int skip1 = -1, int skip2 = -1)
+{
+for(uint i=0; i<players.length(); i++)
+{
+if(int(players[i].peer_id) == skip1 or int(players[i].peer_id) == skip2) continue;
+send(players[i].peer_id, "event "+text, 0, true);
+}
+}
 // Move a player to a new room scope (0 = lobby) and keep everyone's rosters in sync. Position, beacons
 // and voice are scoped per room: on a move we tell the old scope to drop the player (despawn) and the
 // new scope to pick them up (exchanging positions both ways). Server-wide online/offline presence is
@@ -695,18 +706,20 @@ if(!players[index].afk)
 {
 players[index].afk=true;
 string disp=display_name_flagged(index);
-for(uint ai=0; ai<players.length(); ai++) send(players[ai].peer_id, "afkannounce 1\n"+disp, 0,true);
+send(event.peer_id, "afkself 1", 0, true); // you: first-person misc + cue
+for(uint ai=0; ai<players.length(); ai++) if(int(players[ai].peer_id)!=event.peer_id) send(players[ai].peer_id, "afkannounce 1\n"+disp, 0,true); // others: player events + cue
 broadcast_pos(index); // refresh the AFK marker in everyone's player tracker
 }
 }
 else if(parsed[0]=="afkreturn" and index>-1)
 {
-// Any input on the client brought them back: clear AFK and announce the return to everyone.
+// Any input on the client brought them back: clear AFK and announce the return.
 if(players[index].afk)
 {
 players[index].afk=false;
 string disp=display_name_flagged(index);
-for(uint ai=0; ai<players.length(); ai++) send(players[ai].peer_id, "afkannounce 0\n"+disp, 0,true);
+send(event.peer_id, "afkself 0", 0, true);
+for(uint ai=0; ai<players.length(); ai++) if(int(players[ai].peer_id)!=event.peer_id) send(players[ai].peer_id, "afkannounce 0\n"+disp, 0,true);
 broadcast_pos(index);
 }
 }
@@ -818,9 +831,12 @@ else if(parsed[0]=="leaveroom" and index>-1)
 {
 if(players[index].room_id != 0)
 {
+int lri=get_room_index(players[index].room_id);
+string lhost = (lri>-1) ? rooms[lri].host : "";
 remove_member(event.peer_id);
 send(event.peer_id, "roomleft", 0,true);
 set_room_scope(index, 0);
+broadcast_event(display_name_flagged(index)+" left "+(lhost==""?"a":lhost+"'s")+" room.", event.peer_id);
 }
 }
 else if(parsed[0]=="startgame" and index>-1 and parsed.length()>2)
@@ -839,10 +855,13 @@ int gid=create_game(players[index].room_id, players[index].name, event.peer_id, 
 send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
 set_room_scope(index, gid);
 send(event.peer_id, "gamephase idle 0", 0,true);
+// Only open games are joinable, so only those announce the "you can join" notice.
+if(!solo) broadcast_event(display_name_flagged(index)+" started a game. You can join it from the room menu.", event.peer_id);
 }
 }
 else if(parsed[0]=="leavegame" and index>-1)
 {
+broadcast_event(display_name_flagged(index)+" left the game.", event.peer_id);
 leave_game(event.peer_id);
 }
 else if(parsed[0]=="beginround" and index>-1)
@@ -905,6 +924,8 @@ send(event.peer_id, "You don't have permission to stop that game.", 0,true);
 }
 else
 {
+send(event.peer_id, "misc You stopped the game.", 0,true);
+broadcast_event(display_name_flagged_for(games[gi].host)+"'s game was stopped.", event.peer_id);
 end_game(gi);
 }
 }
@@ -921,6 +942,8 @@ send(event.peer_id, "Only the host or staff can stop the game.", 0,true);
 }
 else
 {
+send(event.peer_id, "misc You stopped the game.", 0,true);
+broadcast_event(display_name_flagged_for(games[gi].host)+"'s game was stopped.", event.peer_id);
 end_game(gi);
 }
 }
@@ -1095,14 +1118,12 @@ else
 string hostname=rooms[ri].host;
 string kind=rooms[ri].is_private?"private":"public";
 int tpi=get_player_index(targetpeer);
-string tname=(tpi>-1)?players[tpi].name:parsed[1];
+string tdisp=(tpi>-1)?display_name_flagged(tpi):parsed[1]; // flag-aware kicked name, captured before removal
 remove_member(targetpeer);
 send(targetpeer, "roomkicked "+hostname+" "+kind, 0,true);
 if(tpi>-1) set_room_scope(tpi, 0);
-for(uint j=0; j<rooms[ri].members.length(); j++)
-{
-send(rooms[ri].members[j], "roomkickannounce "+tname+" "+hostname+" "+kind, 0,true);
-}
+send(event.peer_id, "misc You kicked "+tdisp+".", 0,true); // kicker: first-person
+broadcast_event(tdisp+" was kicked from "+display_name_flagged_for(hostname)+"'s "+kind+" room.", event.peer_id, targetpeer); // everyone else
 }
 }
 }
@@ -1133,6 +1154,14 @@ for(int g=int(games.length())-1; g>=0; g--)
 if(games[g].parent_room==rooms[ri].id) end_game(g);
 string disp=rooms[ri].host;
 string kind=rooms[ri].is_private?"private":"public";
+string hostdisp=display_name_flagged_for(rooms[ri].host);
+// Bystanders (anyone not in this room) get a player-events note; the room's own members get roomdeleted below.
+for(uint pe=0; pe<players.length(); pe++)
+{
+bool member=false;
+for(uint mj=0; mj<rooms[ri].members.length(); mj++) if(rooms[ri].members[mj]==int(players[pe].peer_id)) { member=true; break; }
+if(!member) send(players[pe].peer_id, "event "+hostdisp+"'s "+kind+" room was deleted.", 0,true);
+}
 for(uint j=0; j<rooms[ri].members.length(); j++)
 {
 int pi=get_player_index(rooms[ri].members[j]);
@@ -1323,15 +1352,15 @@ else
                             if(!players[ti].afk)
                             {
                                 players[ti].afk = true;
-                                send(players[ti].peer_id, "afkset", 0, true);
-                                for(uint ai=0; ai<players.length(); ai++) send(players[ai].peer_id, "afkannounce 1\n"+disp, 0, true);
+                                send(players[ti].peer_id, "afkself 1", 0, true);
+                                for(uint ai=0; ai<players.length(); ai++) if(ai!=uint(ti)) send(players[ai].peer_id, "afkannounce 1\n"+disp, 0, true);
                                 broadcast_pos(ti);
                             }
                             else
                             {
                                 players[ti].afk = false;
-                                send(players[ti].peer_id, "afkclear", 0, true);
-                                for(uint ai=0; ai<players.length(); ai++) send(players[ai].peer_id, "afkannounce 0\n"+disp, 0, true);
+                                send(players[ti].peer_id, "afkself 0", 0, true);
+                                for(uint ai=0; ai<players.length(); ai++) if(ai!=uint(ti)) send(players[ai].peer_id, "afkannounce 0\n"+disp, 0, true);
                                 broadcast_pos(ti);
                             }
                         }

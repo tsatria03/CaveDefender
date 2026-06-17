@@ -297,12 +297,15 @@ void handle_roundover(string message)
 	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
 	string who = (players.length() > 0) ? "Your team survived " : "You survived ";
 	add_buffer_item("alerts", "All walls destroyed! " + who + parsed[1] + " seconds.");
+	pause_objects(); // silence any lingering wood loops behind the results dialog and play-again prompt
 	dlgmessage("All walls destroyed! " + who + parsed[1] + " seconds.");
 	setupmenu();
 	m.add_item("Yes");
 	m.add_item("No");
 	m.intro_text = "Play again?";
-	if(m.run() == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next round to begin."); }
+	int again = m.run();
+	resume_objects();
+	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next round to begin."); }
 	else send(0, "playagain no", 0, true);
 }
 // Server-sent help: "helptext\n<which>\n<content>" -> open it in the doc reader.
@@ -381,6 +384,12 @@ void netloop_impl()
 			p.play_stationary("sounds/ui/misc/joingame.ogg", false);
 			add_buffer_item("player events", message.substr(17) + " joined the game.");
 		}
+		else if (parsed[0] == "event")
+		{
+			// A third-person lifecycle notice about another player (room/game created, left, stopped, kicked,
+			// etc.), pre-built by the server with the rank-aware name. Lands in the player events buffer.
+			add_buffer_item("player events", message.substr(6));
+		}
 		else if (parsed[0] == "offline" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/offline.ogg", false);
@@ -441,34 +450,29 @@ void netloop_impl()
 			int fnl = string_contains(message, "\n", 1);
 			if(fnl > -1) add_buffer_item("alerts", message.substr(fnl + 1));
 		}
-		else if (parsed[0] == "afkset")
+		else if (parsed[0] == "afkself" and parsed.length() > 1)
 		{
-			// An admin put us AFK directly (no countdown): mark away. Any key wakes us. The going-away cue
-			// comes from the afkannounce broadcast that everyone (us included) receives.
+			// You went away or came back: set the state, play the cue, and note it first-person in misc.
 			afk_counting = false;
-			afk = true;
-		}
-		else if (parsed[0] == "afkclear")
-		{
-			// An admin brought us back from AFK: clear away state. The return cue comes from afkannounce.
-			afk_counting = false;
-			afk = false;
+			afk = (parsed[1] == "1");
+			if(afk) { p.play_stationary("sounds/ui/misc/afkon.ogg", false); add_buffer_item("misc", "You are now AFK."); }
+			else { p.play_stationary("sounds/ui/misc/afkoff.ogg", false); add_buffer_item("misc", "You are no longer AFK."); }
 		}
 		else if (parsed[0] == "afkannounce" and parsed.length() > 1)
 		{
-			// Someone went away or came back. Format: "afkannounce <1|0>\n<rank-aware name>". Everyone is told
-			// and hears the cue (including the player themselves), so the going-away/return sound is shared.
+			// Another player went away or came back. Format: "afkannounce <1|0>\n<rank-aware name>". Everyone
+			// else hears the cue and gets a third-person note in the player events buffer.
 			int anl = string_contains(message, "\n", 1);
 			string adisp = (anl > -1) ? message.substr(anl + 1) : "";
 			if(parsed[1] == "1")
 			{
 				p.play_stationary("sounds/ui/misc/afkon.ogg", false);
-				add_buffer_item("misc", adisp + " is now AFK.");
+				add_buffer_item("player events", adisp + " is now AFK.");
 			}
 			else
 			{
 				p.play_stationary("sounds/ui/misc/afkoff.ogg", false);
-				add_buffer_item("misc", adisp + " is no longer AFK.");
+				add_buffer_item("player events", adisp + " is no longer AFK.");
 			}
 		}
 		else if (parsed[0] == "warn" and parsed.length() > 1)
@@ -807,11 +811,6 @@ void netloop_impl()
 			draw_map("lobby");
 			lastx = int(me.x);
 			lasty = int(me.y);
-		}
-		else if (parsed[0] == "roomkickannounce" and parsed.length() > 3)
-		{
-			p.play_stationary("sounds/ui/misc/kick.ogg", false);
-			add_buffer_item("misc", parsed[1] + " has been kicked from " + parsed[2] + "'s " + parsed[3] + " room.");
 		}
 		else if (parsed[0] == "roomdeleted" and parsed.length() > 2)
 		{

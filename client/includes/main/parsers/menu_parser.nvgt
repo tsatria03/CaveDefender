@@ -12,9 +12,12 @@ void show_server_menu(string message)
 	setupmenu();
 	for(uint i = 2; i < lines.length(); i++) m.add_item(lines[i]);
 	m.intro_text = lines[1];
-	// Shared-pause audio is handled by the gamepaused/gameresumed messages, not here, so this menu no
-	// longer pauses the pools itself — when the host's pause menu appears the game is already frozen.
+	// Silence the looping ground-item sounds (wood) while an in-game menu is up, unless the game is already
+	// frozen by the host's shared pause (which paused every pool, so leave that ownership alone).
+	bool suspend = (in_game and !game_paused);
+	if(suspend) pause_objects();
 	int choice = m.run();
+	if(in_game and !game_paused) resume_objects();
 	// Confirmation menus (id "confirm:<cmd>") treat anything but Yes (option 0) as a cancel.
 	bool isconfirm = (string_left(menuid, 8) == "confirm:");
 	if(choice < 0 or (isconfirm and choice != 0)) speak("canceled");

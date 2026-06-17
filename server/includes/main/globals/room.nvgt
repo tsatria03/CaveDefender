@@ -55,6 +55,9 @@ send_yourrooms(peer, players[index].name);
 send(peer, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
 set_room_scope(index, rid);
 send(peer, "play roomcreate.ogg", 0,true);
+// Tell everyone else (player events) a new room is up and how to join it.
+string chint = priv ? "You can join it with its password from the join private room option." : "You can join it from the join public room option.";
+broadcast_event(display_name_flagged(index)+" just created a "+(priv?"private":"public")+" room. "+chint, peer);
 }
 // Try to put a player into a room by id, validating presence, existence, and (for private rooms) the
 // password. Sends feedback on failure. Shared by the joinroom command and the lobby join menus.
