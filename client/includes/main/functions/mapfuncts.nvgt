@@ -36,8 +36,10 @@ for(uint i=0; i<players.length(); i++)
 double d = get_2d_distance(me.x, me.y, players[i].x, players[i].y);
 double ang = calculate_x_y_angle(me.x, me.y, players[i].x, players[i].y, facing_degrees(facing));
 int td = int(d + 0.5);
-// Match the listings: an away player reads "AFK ...", and a flagged staff member shows their rank.
-string disp = (players[i].afk ? "AFK " : "") + (players[i].vrank != "player" and players[i].vrank != "" ? players[i].vrank + " " : "") + players[i].name;
+// Match the listings: an away player reads "AFK ...", a flagged staff member shows their rank, and the
+// name shown is the nickname (falling back to the username key if the nickname hasn't synced yet).
+string pdisp = (players[i].nickname != "") ? players[i].nickname : players[i].name;
+string disp = (players[i].afk ? "AFK " : "") + (players[i].vrank != "player" and players[i].vrank != "" ? players[i].vrank + " " : "") + pdisp;
 string line = disp + " is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away.");
 dists.insert_last(d);
 lines.insert_last(line);

@@ -16,6 +16,7 @@ string voicefile="";  // temp .ogg path of this player's current clip, so the pr
 int beaconpitch;     // this player's beacon pitch (80-120), rolled once so it stays constant per player.
 string vrank="player"; // visible rank for the P tracker: the rank only when they're staff with their flag on, else "player".
 bool afk=false;        // whether this player is currently away (for the tracker's AFK prefix).
+string nickname="";    // display name (synced via pos); the tracker shows this instead of the username key.
 player(string pname, int px, int py)
 {
 name=pname;

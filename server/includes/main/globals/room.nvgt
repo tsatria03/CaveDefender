@@ -84,6 +84,10 @@ for(uint k=0; k<rooms[ri].members.length(); k++) if(rooms[ri].members[k]==peer) 
 if(!already) rooms[ri].members.insert_last(peer);
 send(peer, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"private":"public")+" "+rooms[ri].host+"\n"+display_name_flagged_for(rooms[ri].host), 0,true);
 set_room_scope(index, rooms[ri].id);
+// Tell everyone else (player events) that this player joined the room ("their own" when it's the host).
+string jtype = rooms[ri].is_private?"private":"public";
+string jwhere = (players[index].name == rooms[ri].host) ? "their own "+jtype+" room" : display_name_flagged_for(rooms[ri].host)+"'s "+jtype+" room";
+broadcast_event(display_name_flagged(index)+" joined "+jwhere+".", peer);
 }
 // The rooms[] index of the room with this id, or -1 if there isn't one.
 int get_room_index(int id)
