@@ -17,6 +17,7 @@ void mainmenu()
 		}
 		else if(sel=="settings")
 		{
+m.fade_music();
 			settingsmenu();
 		}
 		else if(sel=="st")

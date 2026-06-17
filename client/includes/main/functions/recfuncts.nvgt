@@ -94,3 +94,24 @@ void play_remote_voice(string msg)
 	players[vi].voicesound = vpool.play_3d(vt, me.x, me.y, me.z, vx, vy, 0, calculate_theta(me_rotation), false);
 	players[vi].voicefile = vt;
 }
+
+// Make each playing voice clip follow its speaker around the map, every frame (called from game()'s loop
+// right after the listener is repositioned). A voice is one continuous clip, so unlike footsteps it can't
+// re-emit at the speaker's new spot; instead we move the playing sound's source to the speaker's current
+// roster position (the same position that drives their footsteps and beacon). update_sound_3d also re-pans
+// against the listener, so this covers you moving around a still speaker too. The unique clip filename
+// guards against a finished slot having been reused by another voice; we clear the handle once it stops.
+void voiceloop()
+{
+	for(uint i=0; i<players.length(); i++)
+	{
+		int s = players[i].voicesound;
+		if(s < 0) continue;
+		if(s >= int(vpool.items.length()) or @vpool.items[s].handle == null or !vpool.items[s].handle.playing or vpool.items[s].filename != players[i].voicefile)
+		{
+			players[i].voicesound = -1;
+			continue;
+		}
+		vpool.update_sound_3d(s, players[i].x, players[i].y, 0);
+	}
+}

@@ -1,4 +1,5 @@
 New in 2.2.
+Voice chat now follows people as they move: a clip plays from wherever the speaker is and tracks them around the map while it plays, so you can hear them walk past you, and you can move around their voice too, just like footsteps.
 A wall that has fallen now reads as destroyed instead of zero percent, both when you check a single wall with N, E, S, or W and in the full summary on T.
 If you run your own server, new account folders now keep the exact capitalization the player signed up with, for example EllaShey instead of ellashey, so the folders are easier to recognize; signing in still works no matter how you type your name.
 Commands that target a player now accept either their username or their current nickname, so you can act on someone by the name you actually see. They also require the target to be online, so you can no longer kick, ban, mute, promote, demote, or warn an offline player, the only exception being unban, which still reaches offline accounts by username since a banned player is always offline. When a name isn't found, the game now tells you whether that player does not exist or is simply not online.
