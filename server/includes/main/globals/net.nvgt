@@ -673,7 +673,7 @@ else if(parsed[0]=="move" and parsed.length()>2 and index>-1)
 players[index].x=string_to_number(parsed[1]);
 players[index].y=string_to_number(parsed[2]);
 broadcast_pos(index);
-gather_wood(index, 0); // auto-grab any wood on the tile you just stepped onto
+gather_wood(index, 5); // auto-grab any wood within 5 tiles of where you just stepped
 }
 else if(parsed[0]=="grab" and index>-1)
 {

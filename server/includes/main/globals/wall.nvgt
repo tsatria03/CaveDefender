@@ -86,15 +86,16 @@ if(dir=="north") return wall_at(room_id, size/2, size);
 if(dir=="south") return wall_at(room_id, size/2, 0);
 return -1;
 }
-// True if a player standing at (px,py) is adjacent to the wall in this direction (the interior tile
-// right next to the border edge). The border ring is at 0 and size, so the adjacent floor tile is 1 or
-// size-1.
+// True if a player standing at (px,py) is close enough to the wall in this direction to reinforce it.
+// You needn't lean right on it: standing up to wall_reach tiles back from the border still counts. The
+// border ring is at 0 and size, so the nearest interior tile is 1 (west/south) or size-1 (east/north).
+const int wall_reach=5;
 bool at_wall(int px, int py, string dir, double size)
 {
-if(dir=="west") return px==1;
-if(dir=="east") return px==int(size)-1;
-if(dir=="north") return py==int(size)-1;
-if(dir=="south") return py==1;
+if(dir=="west") return px>=1 and px<=wall_reach;
+if(dir=="east") return px<=int(size)-1 and px>=int(size)-wall_reach;
+if(dir=="north") return py<=int(size)-1 and py>=int(size)-wall_reach;
+if(dir=="south") return py>=1 and py<=wall_reach;
 return false;
 }
 // A wall's strength as a percent of its max (can exceed 100 when over-reinforced).

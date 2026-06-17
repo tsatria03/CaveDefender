@@ -77,9 +77,20 @@ if(dir=="south") return wall_south;
 if(dir=="west") return wall_west;
 return 0;
 }
+// Volume (pool units) for a wall-strike sound, scaled by the wall's strength: a full wall's strikes are
+// quiet (-30) and rise toward full volume (0) as it is battered down, so a weakening wall sounds louder
+// and more urgent (Sammy's danger cue). Over-reinforced walls stay at the quiet -30 floor.
+int wall_strike_volume(int pct)
+{
+int vol = -(pct*30/100); // 100% -> -30, 0% -> 0
+if(vol < -30) vol = -30;
+if(vol > 0) vol = 0;
+return vol;
+}
 // Play a bot's hit on a wall in real 3D, positioned across that wall's span (like play_wall_hurt), with
-// the weapon's hit sound and a volume scaled to the wall's remaining strength: a healthy wall's hits are
-// quiet, a weakening wall's hits get loud and frantic. Called from the wallhit message. No fake panning.
+// the weapon's hit sound AND the wall's own hurt creak, both at a volume scaled to the wall's remaining
+// strength: a healthy wall's strikes are quiet, a weakening wall's get loud. Called from the wallhit
+// message. The damage-scaled volume is re-asserted after the position updates so they don't stomp it.
 void play_wall_hit(string dir, int weapon)
 {
 double s = cavern_size;
@@ -98,17 +109,17 @@ else if(weapon==2) wname = "crowbar";
 else if(weapon==4) wname = "bat";
 else wname = "hammer";
 string snd = "weapons/"+wname+"/hit"+random(1,3);
-int vol = -wall_percent_for(dir); // weaker wall = louder; Sammy's danger cue
-if(vol < -100) vol = -100;
-if(vol > 0) vol = 0;
+int vol = wall_strike_volume(wall_percent_for(dir)); // -30 at full strength, up to 0 as the wall falls
 int h = p.play_extended_3d("sounds/"+snd+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, vol, 100, false);
 p.update_sound_3d(h, minx, miny, 0);
 p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
-// The wall itself reacts to every strike: a wood hurt creak across the same span, layered under the
-// weapon swing at full volume so you always hear the wall taking damage (the weapon scales for danger).
-int hh = p.play_extended_3d("sounds/objects/walls/wallwood/hurt"+random(1,3)+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+p.update_sound_start_values(h, 0, vol, 100); // re-assert the damage-scaled volume after the position updates
+// The wall itself reacts to every strike: a wood hurt creak across the same span, at the same
+// damage-scaled volume as the weapon swing so the whole strike swells as the wall weakens.
+int hh = p.play_extended_3d("sounds/objects/walls/wallwood/hurt"+random(1,3)+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, vol, 100, false);
 p.update_sound_3d(hh, minx, miny, 0);
 p.update_sound_range_3d(hh, 0, maxx-minx, 0, maxy-miny, 0, 0);
+p.update_sound_start_values(hh, 0, vol, 100); // same damage-scaled volume for the wall's own creak
 }
 // Server-driven wall destruction (the "walldestroyed <dir>" message). Plays the death clip across the
 // wall span and re-tiles the breach to a random debris / woodpile / rubble floor, so you HEAR a breach

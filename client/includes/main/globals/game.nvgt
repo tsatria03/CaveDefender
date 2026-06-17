@@ -224,13 +224,14 @@ buffercheck();
 			if(msg!="") comparse(msg, "local");
 			else speak("canceled");
 		}
-		if(key_pressed(KEY_RETURN))
+		// Shift+Enter repeats while held (key_repeating) so you can place wood rapidly; plain Enter grab and the menu stay single-press.
+		if(key_pressed(KEY_RETURN) or (in_game and shift_is_down() and key_repeating(KEY_RETURN)))
 		{
 			if(in_game)
 			{
 				if(shift_is_down())
 				{
-					// Shift+Enter reinforces the wall you're facing; the server checks you're actually at it.
+					// Shift+Enter reinforces the wall you're facing; the server checks you're close enough.
 					string dir = (facing==Left) ? "west" : (facing==Right) ? "east" : (facing==Forward) ? "north" : "south";
 					send(0, "reinforce "+dir, 0, true);
 				}

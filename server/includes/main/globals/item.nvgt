@@ -49,10 +49,24 @@ if(items[i].room_id==room_id and items[i].x==x and items[i].y==y) return i;
 }
 return -1;
 }
-// How much wood may sit on a cavern's floor at once (scales with map size).
+// How much wood may sit on a cavern's floor at once (scales with map size). Bigger maps get a much
+// higher ceiling so the extra drops aren't suppressed, but it's kept modest (never a flood) since at
+// most four players defend any map. Tiered by the three map sizes (25 / 50 / 100).
 int wood_cap(int size)
 {
-return size/4;
+if(size<=25) return 6;
+if(size<=50) return 18;
+return 40;
+}
+// How many wood pieces drop per spawn tick. The drop cadence is flat across map sizes, so on a big map
+// one piece per tick is the same trickle spread over far more ground -- this is what actually starves
+// larger maps. Dropping more per tick raises the supply RATE with size (the real fix), kept measured so
+// big maps are richer but never awash. Tiered by the three map sizes (25 / 50 / 100).
+int wood_drops_per_tick(int size)
+{
+if(size<=25) return 1;
+if(size<=50) return 2;
+return 4;
 }
 // Count the wood currently on the ground in a space.
 int wood_count_in(int room_id)
