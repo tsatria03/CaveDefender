@@ -124,11 +124,11 @@ buffercheck();
 			else announce_games("allgamemembers", "on the server");
 		}
 		if (in_game and key_pressed(KEY_I)) speak("you have " + my_wood + (my_wood == 1 ? " piece" : " pieces") + " of wood.");
-		if (in_game and key_pressed(KEY_N)) speak("the north wall has " + wall_north + " percent strength.");
-		if (in_game and key_pressed(KEY_E)) speak("the east wall has " + wall_east + " percent strength.");
-		if (in_game and key_pressed(KEY_S)) speak("the south wall has " + wall_south + " percent strength.");
-		if (in_game and key_pressed(KEY_W)) speak("the west wall has " + wall_west + " percent strength.");
-		if (in_game and key_pressed(KEY_T)) speak("wall strengths. north " + wall_north + " percent. east " + wall_east + " percent. south " + wall_south + " percent. west " + wall_west + " percent.");
+		if (in_game and key_pressed(KEY_N)) speak(wall_phrase_full("north", wall_north));
+		if (in_game and key_pressed(KEY_E)) speak(wall_phrase_full("east", wall_east));
+		if (in_game and key_pressed(KEY_S)) speak(wall_phrase_full("south", wall_south));
+		if (in_game and key_pressed(KEY_W)) speak(wall_phrase_full("west", wall_west));
+		if (in_game and key_pressed(KEY_T)) speak("wall strengths. " + wall_phrase_short("north", wall_north) + ". " + wall_phrase_short("east", wall_east) + ". " + wall_phrase_short("south", wall_south) + ". " + wall_phrase_short("west", wall_west) + ".");
 		if (in_game and key_pressed(KEY_D)) track_wood();
 		if (key_down(KEY_LEFT) and movetimer.elapsed>=movetime)
 		{
