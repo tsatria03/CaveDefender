@@ -1,12 +1,17 @@
 ####These are the things that need to be finished for future versions of the game.
 
-****Unfinished. Add a staff flag system.
+****Unfinished. Fix voice chat not moving with the players.
+****Unfinished. Add an option to Invite players to rooms and games.
+****Unfinished. Give each player starting wood.
+****Unfinished. Make each wall have at least 50% strength or higher at the beginning of the game.
+****Unfinished. Make more wood spawn in larger maps so it's easier to collect.
+****Unfinished. Limit how many bots can attack the walls.
 ****Unfinished. Add chat language channels.
-****Unfinished. Add the ability to set your nickname.
-****Unfinished. Add a survival leaderboard that records and shows best survival times for the cave defender games.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add the ability to set your nickname.
+**Finished. Add a staff flag system.
 **Finished. Add an AFK system on /afk: a ten second beeping countdown that any key cancels, any key wakes you, everyone is told when you go away and come back, and your name shows as AFK in the player lists; administrators and up can put another player AFK with /afk and a name.
 **Finished. Add a player warning system on /warn for administrators and up: pick a level from 1 to 4 and a reason, the warned player hears the level's sound and is told who warned them, and warnings are saved to the account.
 **Finished. Make player beacons off by default, toggled on with F5, and give each player a steady beacon pitch instead of one that jumps around.

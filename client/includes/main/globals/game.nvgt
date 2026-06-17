@@ -41,6 +41,7 @@ buffercheck();
 		}
 		update_sound_pools();
 		beaconloop();
+		voiceloop();
 		update_ambiences(me.x, me.y);
 		update_musics(me.x, me.y);
 		// AFK: during the countdown any key cancels it; once away, any key wakes us. Handled before the

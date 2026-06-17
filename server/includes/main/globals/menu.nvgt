@@ -72,8 +72,8 @@ int ri = get_room_index(players[index].room_id);
 if(ri < 0) return;
 players[index].menu_actions.resize(0);
 string[] opts;
-opts.insert_last("Join game"); players[index].menu_actions.insert_last("joingame");
 opts.insert_last("Start game"); players[index].menu_actions.insert_last("startgame");
+opts.insert_last("Join game"); players[index].menu_actions.insert_last("joingame");
 opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stopgame");
 opts.insert_last("Kick a player"); players[index].menu_actions.insert_last("kick");
 if(rooms[ri].is_private)
