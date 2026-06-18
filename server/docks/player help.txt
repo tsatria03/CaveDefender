@@ -16,12 +16,17 @@ Press slash to open the chat, type a command, and press enter to send it. Every 
 /nickname name, or /nick name: Sets a nickname, an alternative name shown in place of your username everywhere, for example /nick tony. Type /nick default to go back to your account name. Nicknames are 3 to 24 characters, use the same letters, numbers, hyphens, and underscores as usernames, and must not already be in use; your real username still appears in parentheses in the who and staff lists.
 /help: Opens this player help in a readable window. Just type /help on its own. Staff can also choose a page with /help player or /help staff.
 /afk: Marks you as away. It starts a ten second countdown of beeps; press any key during the countdown to cancel it. Once you are away, everyone is told and your name shows as AFK in the player lists wherever you are, and the next key you press brings you back.
+/channel: Opens a menu to choose your language chat channel. See Chat channels below for what it affects.
 
 Chat channels.
 
 Slash opens global chat, which everyone on the server hears.
 Backslash opens local chat, which only the people sharing your current space hear, whether that is the lobby or your room.
 Apostrophe opens staff chat, which only staff can send to or hear; as a regular player you can't use it.
+
+Global and local chat are also divided into language channels. You only hear global and local messages from people on the same language channel as you, so each language has its own conversation; private messages and staff chat reach across all channels. Choose yours with /channel, everyone starts on English, and your choice is saved for next time.
+
+One of the channels is named Unfiltered. It works like any other channel, in that you only chat with people who have also chosen it, but it is the single place where the word filter is switched off. It is meant for talking freely, including adult or NSFW topics, so pick it only if you are happy to both read and write that kind of language. No one is ever put there automatically, and you can leave it any time by choosing another channel with /channel.
 
 You can run any command from any chat you have access to.
 
@@ -33,7 +38,7 @@ Games.
 
 Inside a room you can start a game, choosing a mode and a map size, and others can join your open games while a game still has room. In a game you defend four walls that each start at a random strength. Press tab for the round menu, where the host begins the round.
 
-The round opens with a build phase to prepare. Wood drops around the cavern: walk over a piece to pick it up, or press enter to grab everything within a few tiles, then stand at a wall and press shift plus enter to spend one piece reinforcing it (the strength gained is random, and there is no upper limit, so you can over-build a wall as a buffer). Press i to hear how much wood you are carrying, press n, e, s, or w to hear a single wall's strength, press t for a quick summary of all four walls, and press d to locate the wood lying around you, nearest first. The P key locates the other players the same way.
+The round opens with a build phase to prepare, and you begin each round already carrying some wood. More wood drops around the cavern, and simply walking near a piece picks up everything within five tiles of you. Stand within five tiles of any wall and press shift plus enter to spend one piece reinforcing the nearest wall, no matter which way you face; the strength gained is random, and there is no upper limit, so you can over-build a wall as a buffer. Hold shift plus enter to keep placing wood without pressing it for every piece. Press i to hear how much wood you are carrying, press n, e, s, or w to hear a single wall's strength, press t for a quick summary of all four walls, and press d to locate the wood lying around you, nearest first. The P key locates the other players the same way.
 
 When the wave begins, enemies attack your walls with axes, bats, crowbars, and hammers, and you hear each strike at the wall it lands on, louder as that wall weakens. A wall whose strength runs out breaks into rubble you can walk over, and its attackers move to the walls still standing. The round is lost when all four walls fall; you are then shown how long you survived and asked whether to play again or leave. Choose play again to stay in the cavern, or leave to return to your room. In an open game with others, the cavern resets for a new round once everyone has answered, and the host begins it from the game menu as before.
 

@@ -354,12 +354,25 @@ if(is_staff(players[i].rank)) send(players[i].peer_id, msg, 0, true);
 }
 }
 // Sends a message to everyone sharing the given room scope (used by local chat). room_id 0 = lobby.
-void relay_to_local(int room_id, string msg)
+void relay_to_local(int room_id, string msg, string language="")
 {
 for(uint i=0; i<players.length(); i++)
 {
-if(players[i].room_id == room_id) send(players[i].peer_id, msg, 0, true);
+if(players[i].room_id != room_id) continue;
+// When a language is given (local CHAT), only same-language players hear it; "" = everyone in the space.
+// (Both current callers are local chat and pass a language; "" is just a safe default for any future use.)
+if(language != "" and string_to_lower_case(players[i].language) != string_to_lower_case(language)) continue;
+send(players[i].peer_id, msg, 0, true);
 }
+}
+// Broadcast a global-channel chat message only to players on the same language channel as the sender, so
+// global chat is scoped per language (like local). PMs and staff chat bypass this and reach across languages.
+void relay_global(int sender_index, string what)
+{
+if(sender_index < 0 or sender_index >= int(players.length())) return;
+string lang = players[sender_index].language;
+for(uint i=0; i<players.length(); i++)
+if(string_to_lower_case(players[i].language) == string_to_lower_case(lang)) send(players[i].peer_id, what, 1, true);
 }
 // Broadcast a third-person lifecycle notice (room/game created, left, stopped, kicked, etc.) to everyone's
 // player events buffer, server-wide, skipping the actor(s) who instead get a first-person confirmation in
@@ -628,6 +641,8 @@ players[index].rank = "developer";
 }
 players[index].flagged = get_flag(players[index].name); // staff-attention flag, default off (incognito)
 players[index].nickname = get_nickname(players[index].name); // display name (nickname.usr), defaults to the username
+string lang = get_language(players[index].name); // language channel (language.usr); fall back to English if it's not a configured channel
+players[index].language = is_valid_language(lang) ? lang : "English";
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 // New accounts are announced at creation time (see register_account), so logging in for the first time
 // is just a normal "online" notice like anyone else.
@@ -746,6 +761,10 @@ else if(parsed[0]=="staff" and index>-1)
 {
 send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
 }
+else if(parsed[0]=="channel" and index>-1)
+{
+push_language_menu(index); // the /channel chooser, available to everyone
+}
 else if(parsed[0]=="afk" and index>-1)
 {
 // The client's self-AFK countdown finished: mark this player away and tell everyone (flag-aware name).
@@ -783,12 +802,12 @@ relay_to_staff("staffmsg "+afk_prefix(index)+display_name(index)+" "+action);
 else if(parsed[0]=="localchat" and index>-1 and parsed.length()>1)
 {
 if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
-else { string msg=string_join(parsed, " ", 1, parsed.length()); relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg); }
+else { string msg=string_join(parsed, " ", 1, parsed.length()); relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg, players[index].language); }
 }
 else if(parsed[0]=="localme" and index>-1 and parsed.length()>1)
 {
 if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
-else { string action=string_join(parsed, " ", 1, parsed.length()); relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+" "+action); }
+else { string action=string_join(parsed, " ", 1, parsed.length()); relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+" "+action, players[index].language); }
 }
 else if(parsed[0]=="help" and index>-1 and parsed.length()>1)
 {
@@ -1325,7 +1344,7 @@ if(event.type == event_receive && event.channel == 1)
         if(message.length() > 0)
 {
             if(players[index].messagetimer.elapsed < 50) messend = false;            
-            if(filter(get_event_message()))
+            if(string_to_lower_case(players[index].language) != "unfiltered" and filter(get_event_message()))
 {
                 send(event.peer_id, "Your message contains forbidden words", 1, true);
                 messend = false;
@@ -1377,7 +1396,7 @@ else
                     else
                     {
                         string action = string_join(parsed, " ", 1, parsed.length());
-                        send(0, afk_prefix(index) + display_name_flagged(index) + " " + action, 1, true);
+                        relay_global(index, afk_prefix(index) + display_name_flagged(index) + " " + action); // global /me: same-language only
                     }
                 }
                 else if(parsed[0] == "/flag" && rank_level(players[index].rank) >= 1)
@@ -1788,7 +1807,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
             players[index].messagetimer.restart();
             string what;
             what += afk_prefix(index) + display_name_flagged(index) + ": " + message;
-            send(0, what, 1, true);
+            relay_global(index, what); // global chat: only same-language players hear it
             }
         }
     }
