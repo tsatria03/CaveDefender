@@ -86,17 +86,21 @@ if(dir=="north") return wall_at(room_id, size/2, size);
 if(dir=="south") return wall_at(room_id, size/2, 0);
 return -1;
 }
-// True if a player standing at (px,py) is close enough to the wall in this direction to reinforce it.
-// You needn't lean right on it: standing up to wall_reach tiles back from the border still counts. The
-// border ring is at 0 and size, so the nearest interior tile is 1 (west/south) or size-1 (east/north).
+// The cavern wall a player at (px,py) is closest to, or "" if no wall is within wall_reach. You needn't
+// lean on a wall to reinforce it: standing up to wall_reach tiles out counts, in ANY direction. This is
+// position-based (nearest of the four borders), so reinforcing no longer depends on which way you happen
+// to be facing -- that facing dependence is what made backing away from a wall fail. Ties favour the
+// nearer border; the border ring sits at 0 and size, so distance to each is just px / size-px / py / size-py.
 const int wall_reach=5;
-bool at_wall(int px, int py, string dir, double size)
+string wall_in_reach(int px, int py, double size)
 {
-if(dir=="west") return px>=1 and px<=wall_reach;
-if(dir=="east") return px<=int(size)-1 and px>=int(size)-wall_reach;
-if(dir=="north") return py<=int(size)-1 and py>=int(size)-wall_reach;
-if(dir=="south") return py>=1 and py<=wall_reach;
-return false;
+int s=int(size);
+string best="west"; int bd=px;          // distance to the west wall (x=0)
+if(s-px < bd) { best="east"; bd=s-px; } // east wall (x=size)
+if(py   < bd) { best="south"; bd=py; }  // south wall (y=0)
+if(s-py < bd) { best="north"; bd=s-py; }// north wall (y=size)
+if(bd > wall_reach) return "";
+return best;
 }
 // A wall's strength as a percent of its max (can exceed 100 when over-reinforced).
 int wall_percent(int room_id, string dir, double size)

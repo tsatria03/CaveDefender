@@ -185,7 +185,7 @@ games[gindex].wave_attacking = true;
 games[gindex].wave_cycletimer.restart();
 games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
 // First attack burst: one bot per standing wall. The per-wall count grows by 1 on each later flip back
-// to attacking, up to the player-scaled ceiling (bot_cap).
+// to attacking, up to a flat ceiling of 4 per wall (bots_per_wall_cap).
 games[gindex].wave_bot_target = 1;
 fill_walls_to(games[gindex].id, games[gindex].size, games[gindex].wave_bot_target);
 }
@@ -262,13 +262,16 @@ if(games[i].phase=="wave" and games[i].wave_cycletimer.elapsed >= games[i].wave_
 {
 games[i].wave_cycletimer.restart();
 games[i].wave_attacking = !games[i].wave_attacking;
-// Each time a fresh attack burst begins, every wall grows by one bot, up to the player-scaled ceiling.
+// Each time a fresh attack burst begins, every wall grows by one bot, up to the cap.
 if(games[i].wave_attacking)
 {
-int cap = bot_cap(int(i));
-if(games[i].wave_bot_target < cap) games[i].wave_bot_target++;
+if(games[i].wave_bot_target < bots_per_wall_cap) games[i].wave_bot_target++;
 fill_walls_to(games[i].id, games[i].size, games[i].wave_bot_target);
 }
+// Announce the swing of the cycle to everyone in the game so their clients replay the wave cue when the
+// bots resume and a rest cue when they pull back.
+for(uint m=0; m<games[i].members.length(); m++)
+send(games[i].members[m], "waveseg "+(games[i].wave_attacking?"1":"0"), 0, true);
 }
 }
 enemy_attacks(); // process every bot's attack timer across all games (breaches a wall when it hits 0)

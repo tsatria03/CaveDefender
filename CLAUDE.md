@@ -92,7 +92,7 @@ The version string lives in **two** files that must stay in sync: `client/includ
 ## Audio
 
 NVGT `sound_pool` with HRTF. Player position is the vector `me`; pools advance per frame. `client/sounds/` is organized by category, with a **per-type subfolder** holding named clips:
-- `ui/` — `buffer/`, `dlg/`, `menu/`, `misc/` (online, offline, playerchat, privchat, von, voff, pingstart, pingstop, welcome, newmotd, kick, ban, promote/demote, notify1-3, buildstart, wavestart, gameover, pause, resume, etc.).
+- `ui/` — `buffer/`, `dlg/`, `menu/`, `misc/` (online, offline, playerchat, privchat, von, voff, pingstart, pingstop, welcome, newmotd, kick, ban, promote/demote, notify1-2, buildprep, wavestart, wavestop, gameover, pause, resume, etc.).
 - `objects/walls/<wall>/` — e.g. `wallwood/{bump,death,hurt1-3}.ogg`; also `wallbuilding/bump.ogg` (lobby) and `wallgeneric/bump.ogg` (office room).
 - `objects/platforms/<tile>/` — e.g. `cave/step1-5.ogg`; also `carpet` (lobby) and `marble` (office room).
 - `objects/items/<item>/` — e.g. `wood` (`drop`/`loop`/`place`/`take`).

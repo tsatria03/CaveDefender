@@ -231,11 +231,12 @@ buffercheck();
 			{
 				if(shift_is_down())
 				{
-					// Shift+Enter reinforces the wall you're facing; the server checks you're close enough.
+					// Shift+Enter reinforces the nearest wall in reach; the server picks it from your position, so the
+// direction sent here is just a legacy hint it ignores (facing no longer matters).
 					string dir = (facing==Left) ? "west" : (facing==Right) ? "east" : (facing==Forward) ? "north" : "south";
 					send(0, "reinforce "+dir, 0, true);
 				}
-				else send(0, "grab", 0, true); // Enter grabs nearby wood
+				// Plain Enter no longer grabs wood -- walking near it auto-grabs within reach.
 			}
 			else send(0, "openmenu", 0, true); // lobby/room: open the menu
 		}
