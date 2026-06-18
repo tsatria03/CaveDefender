@@ -52,6 +52,11 @@ void set_flag(string name, bool on) { write_field(name, "flag", on ? "1" : ""); 
 // to the account's own username (the "default" state). Hand-editable; auto-created at registration.
 string get_nickname(string name) { return read_field(name, "nickname", read_field(name, "username", name)); }
 bool set_nickname(string name, string nick) { return write_field(name, "nickname", nick); }
+// The language chat channel (language.usr): the BARE English language name, e.g. "English" (NOT the menu's
+// "English (English)" form). Defaults to English. Hand-editable, but must match a configured channel in
+// languages.svr to take effect -- an invalid value falls back to English at spawn (is_valid_language).
+string get_language(string name) { return read_field(name, "language", "English"); }
+bool set_language(string name, string lang) { return write_field(name, "language", lang); }
 // Read a single field file, trimmed (so hand-added trailing newlines don't break things). Returns
 // def when the file is missing or empty.
 string read_field(string name, string field, string def="")
@@ -113,6 +118,7 @@ string salt = make_salt();
 string hash = string_hash_sha256(salt + password);
 write_field(name, "username", name);
 write_field(name, "nickname", name); // display name starts equal to the username
+write_field(name, "language", "English"); // everyone starts on the English channel
 write_field(name, "password", salt + ":" + hash);
 write_field(name, "gender", gender);
 write_field(name, "rank", is_owner(name) ? "developer" : "player");

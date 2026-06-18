@@ -85,6 +85,11 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/staff"); return; }
 		send(0, "staff", 0, true);
 	}
+	else if(base == "/channel")
+	{
+		if(parsed.length() != 1) { syntax_error("/channel"); return; }
+		send(0, "channel", 0, true); // everyone: the server pushes the language-channel chooser
+	}
 	else if(base == "/restart" or base == "/rt")
 	{
 		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }

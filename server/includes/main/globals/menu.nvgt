@@ -227,6 +227,52 @@ send_menu(players[index].peer_id, "startsize", "Choose the map size", opts);
 // Called when a player answers a server menu. player_index is their roster index, id is the menu's
 // id, choice is the 0-based option index they picked (or -1 if they cancelled). This is the hook
 // feature code fills in — e.g. tally a poll, apply a choice, etc. Empty for now.
+// Read the configured language channels (one per line, "English (Native)") from data/preffs/languages.svr,
+// skipping blanks. Read fresh each time so a host can edit the list without restarting.
+string[] load_language_channels()
+{
+string[] langs;
+if(!file_exists("data/preffs/languages.svr")) return langs;
+file lf;
+if(!lf.open("data/preffs/languages.svr", "rb")) return langs;
+string content = lf.read();
+lf.close();
+string[] lines = string_split(content, "\n", true);
+for(uint i=0; i<lines.length(); i++)
+{
+string ln = lines[i].trim_whitespace();
+if(ln != "") langs.insert_last(ln);
+}
+return langs;
+}
+// The bare English name of a channel line ("English (English)" -> "English"). The parenthetical native
+// name is purely for the menu display so players hear what it sounds like.
+string language_bare(string line)
+{
+int paren = string_contains(line, " (", 1);
+if(paren > 0) return string_left(line, paren);
+return line;
+}
+// Is `name` (a bare English language name) one of the configured channels? Case-insensitive. Used to
+// validate a hand-edited language.usr so an invalid one can fall back to English.
+bool is_valid_language(string name)
+{
+string[] langs = load_language_channels();
+for(uint i=0; i<langs.length(); i++)
+if(string_to_lower_case(language_bare(langs[i])) == string_to_lower_case(name)) return true;
+return false;
+}
+// The /channel chooser: list every configured language channel for the player to pick from. The names go
+// in menu_targets so the returned choice maps back to one. Available to everyone.
+void push_language_menu(int index)
+{
+int peer = players[index].peer_id;
+string[] langs = load_language_channels();
+if(langs.length() == 0) { send(peer, "No language channels are configured.", 0, true); return; }
+players[index].menu_targets.resize(0);
+for(uint i=0; i<langs.length(); i++) players[index].menu_targets.insert_last(langs[i]);
+send_menu(peer, "channel", "Select a language channel to use.", langs);
+}
 void on_menu_result(int player_index, string id, int choice)
 {
 if(player_index < 0 or player_index >= int(players.length())) return;
@@ -237,6 +283,14 @@ if(choice == 0) do_create_room(player_index, peer, false, ""); // Create a publi
 else if(choice == 1) ask_input(peer, "Enter a password for your room (at least 6 characters). Others will need it to join.", "createroom private", true);
 else if(choice == 2) push_join_list(player_index, false); // Join a public room
 else if(choice == 3) push_join_list(player_index, true);  // Join a private room
+}
+else if(id == "channel")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+string cname = language_bare(players[player_index].menu_targets[choice]); // bare English name, e.g. "English"
+players[player_index].language = cname;
+set_language(players[player_index].name, cname); // persist to language.usr so it sticks across sessions
+send(peer, "misc Channel language set to "+cname+".", 0, true);
 }
 else if(id == "joinpublic" or id == "joinprivate")
 {
