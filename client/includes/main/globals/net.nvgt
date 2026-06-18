@@ -731,13 +731,28 @@ void netloop_impl()
 			game_phasetimer.restart();
 			if (game_phase == "build")
 			{
-				p.play_stationary("sounds/ui/misc/buildstart.ogg", false);
+				p.play_stationary("sounds/ui/misc/buildprep.ogg", false);
 				add_buffer_item("alerts", "Build phase. " + int(game_build_seconds) + " seconds to prepare.");
 			}
 			else if (game_phase == "wave")
 			{
 				p.play_stationary("sounds/ui/misc/wavestart.ogg", false);
 				add_buffer_item("alerts", "The enemies are coming!");
+			}
+		}
+		else if (parsed[0] == "waveseg" and parsed.length() > 1)
+		{
+			// The wave swung between attacking and resting: replay the wave cue when the bots resume, and a
+			// rest cue when they pull back so you know it's safe to rebuild.
+			if (parsed[1] == "1")
+			{
+				p.play_stationary("sounds/ui/misc/wavestart.ogg", false);
+				add_buffer_item("alerts", "The enemies are coming!");
+			}
+			else
+			{
+				p.play_stationary("sounds/ui/misc/wavestop.ogg", false);
+				add_buffer_item("alerts", "The enemies stopped coming. Reinforce while you can!");
 			}
 		}
 		else if (parsed[0] == "gamepaused")

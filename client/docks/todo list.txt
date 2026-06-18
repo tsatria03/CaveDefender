@@ -7,6 +7,7 @@
 ****Unfinished. Make more wood spawn in larger maps so it's easier to collect.
 ****Unfinished. Limit how many bots can attack the walls.
 ****Unfinished. Add chat language channels.
+****Unfinished. Add the ability to spectate games.
 
 ##These are the things that are already finished from earlier versions of the game.
 

@@ -675,19 +675,18 @@ players[index].y=string_to_number(parsed[2]);
 broadcast_pos(index);
 gather_wood(index, 5); // auto-grab any wood within 5 tiles of where you just stepped
 }
-else if(parsed[0]=="grab" and index>-1)
+else if(parsed[0]=="reinforce" and index>-1)
 {
-gather_wood(index, 5); // the Enter grab key: scoop up all wood within 5 tiles
-}
-else if(parsed[0]=="reinforce" and index>-1 and parsed.length()>1)
-{
-// Shift+Enter at a wall: spend 1 wood for a random +1 to +5 strength on the wall you're facing.
-string dir = parsed[1];
+// Shift+Enter near a wall: spend 1 wood for a random +5 to +10 strength on the NEAREST wall in reach.
+// Position-based (not facing-based), so it works from up to wall_reach tiles out in any direction.
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) {} // not in a game
 else if(games[gi].phase != "build" and games[gi].phase != "wave") send(event.peer_id, "You can only reinforce during a round.", 0,true);
 else if(players[index].inv.count("wood") < 1) send(event.peer_id, "You don't have any wood.", 0,true);
-else if(!at_wall(players[index].x, players[index].y, dir, games[gi].size)) send(event.peer_id, "You need to be at a wall.", 0,true);
+else
+{
+string dir = wall_in_reach(players[index].x, players[index].y, games[gi].size);
+if(dir == "") send(event.peer_id, "You need to be near a wall.", 0,true);
 else
 {
 int wi = border_wall(games[gi].id, dir, games[gi].size);
@@ -705,6 +704,7 @@ if(players[pm].room_id == players[index].room_id and players[pm].peer_id != even
 send(players[pm].peer_id, "footstep objects/items/wood/place "+players[index].x+" "+players[index].y, 0, true);
 send(event.peer_id, "reinforced "+dir+" "+gain, 0,true);
 broadcast_wall_strength(games[gi].id);
+}
 }
 }
 }
