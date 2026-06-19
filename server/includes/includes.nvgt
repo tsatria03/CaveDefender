@@ -1,9 +1,0 @@
-#pragma asset data
-#pragma document docks
-#include"version.nvgt"
-
-#include"main/deps/*"
-#include"main/functions/*"
-#include"main/globals/*"
-
-typedef uint8 usmall; typedef int8 small;

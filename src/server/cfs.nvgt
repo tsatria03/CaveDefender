@@ -1,0 +1,72 @@
+#include"includes/includes.nvgt"
+
+void main()
+{
+if(servstence.is_already_running)
+{
+alert("error", "You can only have one instance of this server running!");
+exit();
+}
+svruptimer.restart();
+if(!directory_exists("data")) directory_create("data");
+if(!directory_exists("data/players")) directory_create("data/players");
+if(!directory_exists("data/preffs")) directory_create("data/preffs");
+if(file_exists("data/preffs/conf.svr"))
+{
+f.open("data/preffs/conf.svr", "rb");
+string content=f.read();
+string[] prefs=string_split(content, "\r\n", true);
+string[] values;
+for(uint i=0; i<prefs.length(); i++)
+{
+values.insert_at(i, string_replace(prefs[i], string_left(prefs[i],  string_contains(prefs[i], "=", 1)+1), "", true));
+prefs[i]=string_replace(prefs[i], "="+values[i], "", true);
+}
+if(prefs.find("port")!=-1)
+{
+port=string_to_number(values[prefs.find("port")]);
+}
+if(prefs.find("userlimit")!=-1)
+{
+userlimit=string_to_number(values[prefs.find("userlimit")]);
+}
+if(prefs.find("owner")!=-1)
+{
+owner=values[prefs.find("owner")];
+}
+f.close();
+}
+    if(file_exists("data/preffs/motd.svr"))
+    {
+        f.open("data/preffs/motd.svr", "r");
+        motd = f.read();
+        f.close();
+    }
+    else
+    {
+        f.open("data/preffs/motd.svr", "w");
+        f.write(motd);
+        f.close();
+    }
+net.IPV6enabled = false; // use pure IPv4 (like BGT) so the server binds 0.0.0.0 and VPN/IPv4 clients (e.g. Radmin) can reach it; must be set before setup_server
+bool neth=net.setup_server(port, 5, 500);
+show_game_window("CaveDefender server, version "+version+", hosted on port "+port+", user limit "+userlimit);
+if(!SCRIPT_COMPILED) hide_window(); // run interpreted from the cmd launcher, the server is headless (the cmd window is the UI), so hide the NVGT window; a compiled build keeps it visible.
+wait(500);
+spawn_border_walls(0, 50, 100, 100, false); // the lobby (room_id 0) has indestructible structural walls.
+while(true)
+{
+wait(5);
+netloop();
+gametick();
+}
+}
+void writeprefs()
+{
+file f;
+f.open("data/preffs/conf.svr", "wb");
+string what;
+what="port="+port+"\r\n"+"userlimit="+userlimit+"\r\n"+"owner="+owner+"\r\n";
+f.write(what);
+f.close();
+}
