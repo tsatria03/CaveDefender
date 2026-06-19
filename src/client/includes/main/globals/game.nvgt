@@ -103,16 +103,25 @@ buffercheck();
 			}
 			// No wake key this frame: fall through so the exempt keys (buffers, F1-F5, G/L/R, escape) work.
 		}
-		if (alt_is_down() or control_is_down() or shift_is_down())
-			movetime=runtime;
-		else
-			movetime=walktime;
+		// Auto-running (toggle with Alt+R): when on you run by default and holding a modifier walks; when
+		// off it's the reverse (walk by default, modifier runs). Mirrors how SimpleFighter inverts with alt.
+		bool running = autorun;
+		if (alt_is_down()) running = !running;
+		movetime = running ? runtime : walktime;
 		if (key_pressed(KEY_C))
 		{
 			speak(me.x+", "+me.y+" on "+gmt()+". Facing "+facing_name(facing)+".");
 		}
 		if (key_pressed(KEY_P)) track_players();
-		if (key_pressed(KEY_R) and !in_game)
+		if (key_pressed(KEY_R) and alt_is_down())
+		{
+			// Alt+R toggles auto-running anywhere you can move; saved so it sticks next session.
+			autorun = !autorun;
+			p.play_stationary(autorun ? "sounds/ui/misc/toggleon.ogg" : "sounds/ui/misc/toggleoff.ogg", false);
+			speak(autorun ? "auto running on" : "auto running off");
+			writepreffs();
+		}
+		else if (key_pressed(KEY_R) and !in_game)
 		{
 			if(current_room != 0) announce_members("scopemembers", "in this room");
 			else announce_rooms();
@@ -278,8 +287,8 @@ void speak_game_status()
 	}
 	else if(game_phase == "wave")
 	{
-		if(wave_attacking) speak("The enemies are attacking.");
-		else speak("The enemies are resting.");
+		if(wave_attacking) speak("Round " + wave_number + ", the enemies are attacking.");
+		else speak("Round " + wave_number + ", the enemies are resting.");
 	}
 	else speak("The round has not started yet.");
 }

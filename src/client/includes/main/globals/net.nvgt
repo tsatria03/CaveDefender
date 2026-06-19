@@ -738,8 +738,9 @@ void netloop_impl()
 			else if (game_phase == "wave")
 			{
 				wave_attacking = true; // the wave opens with an attack segment
+				wave_number = (parsed.length() > 3) ? string_to_number(parsed[3]) : 1; // round number rides on the message
 				p.play_stationary("sounds/ui/misc/wavestart.ogg", false);
-				add_buffer_item("alerts", "The enemies are coming!");
+				add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
 			}
 		}
 		else if (parsed[0] == "waveseg" and parsed.length() > 1)
@@ -749,8 +750,9 @@ void netloop_impl()
 			wave_attacking = (parsed[1] == "1");
 			if (parsed[1] == "1")
 			{
+				wave_number = (parsed.length() > 2) ? string_to_number(parsed[2]) : wave_number + 1; // round number rides on the message
 				p.play_stationary("sounds/ui/misc/wavestart.ogg", false);
-				add_buffer_item("alerts", "The enemies are coming!");
+				add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
 			}
 			else
 			{

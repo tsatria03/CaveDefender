@@ -21,6 +21,7 @@ int buildduration=0; // how many seconds the build phase lasts (set per map size
 timer woodtimer;     // drives wood drops during the build and wave phases
 int woodinterval=0;  // ms until the next wood drop, re-rolled to a random 1000-5000 after each one
 int wave_bot_target=0; // per-wall bot count for the current wave; +1 on each attack burst, capped per player count
+int wave_number=0; // which attack burst (round) the wave is on; 1 on the first attack, +1 each later burst, uncapped (announced to clients)
 timer wavetimer;     // started when the wave begins; its elapsed time is the survival score
 bool paused=false;   // host-only shared pause: when true this game's whole sim is frozen for everyone
 timer pausetimer;    // times the current pause, so Open games can auto-resume after 90s (Solo: indefinite)
@@ -187,11 +188,13 @@ games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
 // First attack burst: one bot per standing wall. The per-wall count grows by 1 on each later flip back
 // to attacking, up to a flat ceiling of 8 per wall (bots_per_wall_cap).
 games[gindex].wave_bot_target = 1;
+// First attack burst is round 1; the counter climbs by 1 on each later flip back to attacking (uncapped).
+games[gindex].wave_number = 1;
 fill_walls_to(games[gindex].id, games[gindex].size, games[gindex].wave_bot_target);
 }
 int secs = (phase=="build") ? games[gindex].buildduration : 0;
 for(uint i=0; i<games[gindex].members.length(); i++)
-send(games[gindex].members[i], "gamephase "+phase+" "+secs, 0, true);
+send(games[gindex].members[i], "gamephase "+phase+" "+secs+" "+games[gindex].wave_number, 0, true);
 }
 // Host-only shared pause: freeze a game's entire simulation for everyone. The phase/wood/wave timers
 // and every bot's attack timer all pause where they are, so nothing advances until the host
@@ -266,12 +269,13 @@ games[i].wave_attacking = !games[i].wave_attacking;
 if(games[i].wave_attacking)
 {
 if(games[i].wave_bot_target < bots_per_wall_cap) games[i].wave_bot_target++;
+games[i].wave_number++; // the round number keeps climbing each burst even after the bot count caps
 fill_walls_to(games[i].id, games[i].size, games[i].wave_bot_target);
 }
 // Announce the swing of the cycle to everyone in the game so their clients replay the wave cue when the
 // bots resume and a rest cue when they pull back.
 for(uint m=0; m<games[i].members.length(); m++)
-send(games[i].members[m], "waveseg "+(games[i].wave_attacking?"1":"0"), 0, true);
+send(games[i].members[m], "waveseg "+(games[i].wave_attacking?"1":"0")+" "+games[i].wave_number, 0, true);
 }
 }
 enemy_attacks(); // process every bot's attack timer across all games (breaches a wall when it hits 0)
