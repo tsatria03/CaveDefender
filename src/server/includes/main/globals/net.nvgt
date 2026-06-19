@@ -706,6 +706,7 @@ else
 {
 int wi = border_wall(games[gi].id, dir, games[gi].size);
 if(wi > -1 and walls[wi].health <= 0) send(event.peer_id, "That wall is destroyed.", 0,true);
+else if(wi > -1 and walls[wi].health >= walls[wi].maxhealth * wall_overbuild_cap) send(event.peer_id, "This wall can't be reinforced any further.", 0,true);
 else if(wi > -1)
 {
 players[index].inv.take("wood", 1);
@@ -946,6 +947,10 @@ send(event.peer_id, "Only the host can begin the round.", 0,true);
 else if(games[gi].phase != "idle")
 {
 send(event.peer_id, "The round has already started.", 0,true);
+}
+else if(!games[gi].solo and games[gi].members.length() < 2)
+{
+send(event.peer_id, "You can't begin an open game on your own. Wait for another player to join, or start a single-player game instead.", 0,true);
 }
 else
 {

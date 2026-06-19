@@ -3,8 +3,8 @@ import subprocess
 from pathlib import Path
 
 # Launch the CaveDefender server. The .nvgt source lives in src/server, but the
-# assets (data, docks, lib) live here in play/server, so we run with cwd set to
-# this folder so every cwd-relative path resolves against play/server. Run as a
+# assets (data, docks, lib) live here in cf/server, so we run with cwd set to
+# this folder so every cwd-relative path resolves against cf/server. Run as a
 # .py (python.exe) so a console is present; subprocess.run blocks until the server
 # exits, keeping that window open for the whole session (it's the server's UI).
 

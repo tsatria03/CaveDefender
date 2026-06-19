@@ -1,16 +1,22 @@
 ####These are the things that need to be finished for future versions of the game.
 
-****Unfinished. Fix voice chat not moving with the players.
 ****Unfinished. Add an option to Invite players to rooms and games.
-****Unfinished. Give each player starting wood.
-****Unfinished. Make each wall have at least 50% strength or higher at the beginning of the game.
-****Unfinished. Make more wood spawn in larger maps so it's easier to collect.
-****Unfinished. Limit how many bots can attack the walls.
-****Unfinished. Add chat language channels.
 ****Unfinished. Add the ability to spectate games.
+****Unfinished. Add live voice chatting, a continuous real-time voice instead of only recorded push-to-talk clips.
+****Unfinished. Limit how far over 100% a wall can be reinforced, so you can no longer build a wall up without any cap.
+****Unfinished. Allow reinforcing walls only during the rest periods when the enemies aren't attacking, not while a wave is actively striking.
+****Unfinished. Add more bots as the round goes on, so the pressure keeps increasing over time.
+****Unfinished. Remove the starting wood players are given at the start of a round, so all wood must be gathered.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Prevent beginning an open game's round while you are its only player, so an open game now needs a second player to have joined first; solo play uses a single-player game instead.
+**Finished. Add chat language channels.
+**Finished. Limit how many bots can attack the walls.
+**Finished. Make more wood spawn in larger maps so it's easier to collect.
+**Finished. Make each wall have at least 50% strength or higher at the beginning of the game.
+**Finished. Give each player starting wood.
+**Finished. Fix voice chat not moving with the players.
 **Finished. Add the ability to set your nickname.
 **Finished. Add a staff flag system.
 **Finished. Add an AFK system on /afk: a ten second beeping countdown that any key cancels, any key wakes you, everyone is told when you go away and come back, and your name shows as AFK in the player lists; administrators and up can put another player AFK with /afk and a name.

@@ -4,9 +4,9 @@ import subprocess
 import ctypes
 
 # Launch the CaveDefender client. The .nvgt source lives in src/client, but the
-# assets (lib, sounds, docks) live here in play/client, so we run with cwd set to
+# assets (lib, sounds, docks) live here in cf/client, so we run with cwd set to
 # this folder: every cwd-relative path in the game (lib/GameEngine64.dll,
-# sounds/..., lib/oggenc2.exe, docks/...) then resolves against play/client.
+# sounds/..., lib/oggenc2.exe, docks/...) then resolves against cf/client.
 # CREATE_NO_WINDOW gives nvgt no console; the launcher spawns and exits, so its
 # own console only flashes. The client opens its own NVGT game window.
 
