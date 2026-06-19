@@ -5,8 +5,8 @@ New File*.txt
 release/
 
 # Binary engine libraries (DLLs + bundled tools like oggenc2.exe)
-play/client/lib/
-play/server/lib/
+cf/client/lib/
+cf/server/lib/
 
 # Binary media assets
-play/client/sounds/
+cf/client/sounds/

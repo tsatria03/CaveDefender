@@ -70,12 +70,16 @@ if(!walls[id].destroyable) return;
 walls[id].health-=amount;
 if(walls[id].health<0) walls[id].health=0;
 }
-// Reinforce a wall with wood. No cap (matching Sammy): strength may climb above maxhealth, so players
-// can over-build a wall as a buffer against wave damage.
+// How far a wall may be over-built: 2.0 = up to 200% of its max health. Players can stockpile a buffer
+// against wave damage, but not make a wall effectively invincible (which trivialized the game).
+const double wall_overbuild_cap = 2.0;
+// Reinforce a wall with wood, clamped to wall_overbuild_cap x its max health.
 void repair_wall(int id, double amount)
 {
 if(id<0 or id>=int(walls.length()) or @walls[id]==null) return;
 walls[id].health+=amount;
+double cap = walls[id].maxhealth * wall_overbuild_cap;
+if(walls[id].health > cap) walls[id].health = cap;
 }
 // The walls[] index of a cavern's border wall in a compass direction (its size is the grid size).
 int border_wall(int room_id, string dir, double size)
