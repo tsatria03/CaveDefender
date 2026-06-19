@@ -1,10 +1,12 @@
 .claude
 New File*.txt
 
-client/lib/
-client/releases/
+# Compiled release builds
+release/
 
-server/lib/
-server/releases/
+# Binary engine libraries (DLLs + bundled tools like oggenc2.exe)
+play/client/lib/
+play/server/lib/
 
-releases/
+# Binary media assets
+play/client/sounds/
