@@ -49,6 +49,7 @@ void connectionmenu()
 		m.add_item("new account", "newaccount");
 		m.add_item("change server IP. Currently set to " + ip, "changeip");
 		m.add_item("change server port. Currently set to " + port, "changeport");
+		m.add_item("Select a server. Currently set to " + current_server_label(), "selectserver");
 		m.add_item("back", "back");
 		m.intro_text="Connection menu.";
 		int mres=m.run();
@@ -72,6 +73,11 @@ void connectionmenu()
 				else dlgmessage("That is not a valid port. Please enter a number between 1 and 65535. Press enter to continue.");
 			}
 			else speak("canceled");
+			continue;
+		}
+		if(sel=="selectserver")
+		{
+			loadservermenu();
 			continue;
 		}
 		m.fade_music();
@@ -219,8 +225,8 @@ string current_server_label()
 		if(servers[i].sip==ip and servers[i].sport==port) return servers[i].sname;
 	return "none";
 }
-// Server presets are managed from Preferences > General (Add / Load / Remove a server buttons). Loading one
-// fills in ip/port so the connection menu connects to it; the values persist in settings.cvf.
+// Server presets are added/removed from Preferences > General and chosen from the connection menu's Select a
+// server option. Loading one fills in ip/port so the connection menu connects to it; saved in settings.cvf.
 // Add a server preset: name, ip, and port, like the new-account form.
 void addserverform()
 {
@@ -284,7 +290,7 @@ void loadservermenu()
 	for(uint i=0; i<servers.length(); i++)
 		m.add_item(servers[i].sname + ", " + servers[i].sip + ", port " + servers[i].sport, ""+i);
 	m.add_item("back", "back");
-	m.intro_text="Load a server. Choose the server you want to connect to.";
+	m.intro_text="Choose a server to connect to.";
 	int mres=m.run();
 	string sel=mres<0?"back":m.selected_item_id;
 	if(sel=="back") { speak("canceled"); return; }
@@ -293,7 +299,7 @@ void loadservermenu()
 	ip=servers[idx].sip;
 	port=servers[idx].sport;
 	writepreffs();
-	dlgmessage("Server loaded. Press enter to continue.");
+	speak("Server changed to " + servers[idx].sname + ".");
 }
 // Remove a saved server preset.
 void removeservermenu()
@@ -338,8 +344,6 @@ void settingsmenu()
 		int tab_general=0, tab_game=1, tab_sound=2, tab_menu=3, tab_speech=4;
 		int addsrv = form.create_button("Add a server");
 		form.assign_to_tab(addsrv, tabs, tab_general);
-		int loadsrv = form.create_button("Load a server. Currently set to " + current_server_label());
-		form.assign_to_tab(loadsrv, tabs, tab_general);
 		int remsrv = form.create_button("Remove a server");
 		form.assign_to_tab(remsrv, tabs, tab_general);
 		int hvc = form.create_checkbox("Hear your voice when sending voice messages", hearvoice);
@@ -397,11 +401,6 @@ void settingsmenu()
 			{
 				addserverform();
 				break;
-			}
-			if(form.is_pressed(loadsrv))
-			{
-				loadservermenu();
-				break; // rebuild so the load button's "currently set to" and the IP/port buttons refresh
 			}
 			if(form.is_pressed(remsrv))
 			{

@@ -32,7 +32,7 @@ You can run any command from any chat you have access to.
 
 Moving around.
 
-You move with the arrow keys, and holding alt, control, or shift while you move makes you run. Press alt plus R at any time to toggle auto-running: when it is on you run by default and hold one of those modifiers to walk instead, and when it is off it works the other way around. The game tells you auto running on or off as you switch it, and your choice is saved for next time.
+You move with the arrow keys, and holding alt, control, or shift while you move makes you run. Press alt plus R at any time to toggle auto-running: when it is on you run by default and hold one of those modifiers to walk instead, and when it is off it works the other way around. The game tells you auto running enabled or disabled as you switch it, and your choice is saved for next time.
 
 Rooms.
 
