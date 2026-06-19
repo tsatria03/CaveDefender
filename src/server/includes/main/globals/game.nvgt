@@ -166,8 +166,15 @@ games[gindex].phase=phase;
 if(phase=="build")
 {
 games[gindex].phasetimer.restart();
-// No starting wood: players enter the build phase empty-handed and must gather everything they
-// reinforce with (the inventory was already cleared between rounds).
+// Hand each defender a random starting stockpile (15-30 wood) so they can immediately shore up a weak
+// wall before gathering ramps up. The inventory was cleared between rounds, so this is a clean grant.
+for(uint i=0; i<games[gindex].members.length(); i++)
+{
+int pi=get_player_index(games[gindex].members[i]);
+if(pi<0) continue;
+players[pi].inv.give("wood", random(15, 30));
+send_wood_count(pi);
+}
 }
 if(phase=="wave")
 {
@@ -178,7 +185,7 @@ games[gindex].wave_attacking = true;
 games[gindex].wave_cycletimer.restart();
 games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
 // First attack burst: one bot per standing wall. The per-wall count grows by 1 on each later flip back
-// to attacking, up to a flat ceiling of 4 per wall (bots_per_wall_cap).
+// to attacking, up to a flat ceiling of 8 per wall (bots_per_wall_cap).
 games[gindex].wave_bot_target = 1;
 fill_walls_to(games[gindex].id, games[gindex].size, games[gindex].wave_bot_target);
 }

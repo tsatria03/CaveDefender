@@ -224,7 +224,7 @@ buffercheck();
 			if(msg!="") comparse(msg, "local");
 			else speak("canceled");
 		}
-		// Shift+Enter repeats while held (key_repeating) so you can place wood rapidly; plain Enter grab and the menu stay single-press.
+		// Shift+Enter repeats while held (key_repeating) so you can place wood rapidly; plain Enter and the menu stay single-press.
 		if(key_pressed(KEY_RETURN) or (in_game and shift_is_down() and key_repeating(KEY_RETURN)))
 		{
 			if(in_game)
@@ -236,11 +236,11 @@ buffercheck();
 					string dir = (facing==Left) ? "west" : (facing==Right) ? "east" : (facing==Forward) ? "north" : "south";
 					send(0, "reinforce "+dir, 0, true);
 				}
-				// Plain Enter no longer grabs wood -- walking near it auto-grabs within reach.
+				else if(current_game_host == name) send(0, "openmenu", 0, true); // plain Enter opens the game menu, host only; a non-host's Enter does nothing
 			}
 			else send(0, "openmenu", 0, true); // lobby/room: open the menu
 		}
-		if(key_pressed(KEY_TAB) and in_game) send(0, "openmenu", 0, true); // in a game, Tab opens the game menu
+		if(key_pressed(KEY_TAB) and in_game) speak_game_status(); // in a game, Tab speaks the current round status
 		if(key_pressed(KEY_ESCAPE))
 		{
 			if(in_game) { send(0, "openpausemenu", 0, true); continue; } // server pushes the pause menu
@@ -265,4 +265,21 @@ buffercheck();
 			}
 		}
 }
+}
+// Tab in a game: speak the current round status. Enter now opens the game menu, so Tab is free to read
+// out where the round stands -- the build countdown, or whether the enemies are attacking or resting.
+void speak_game_status()
+{
+	if(game_phase == "build")
+	{
+		int rem = int(game_build_seconds) - int(game_phasetimer.elapsed / 1000);
+		if(rem < 0) rem = 0;
+		speak("Build phase, " + rem + (rem == 1 ? " second" : " seconds") + " until the enemies come.");
+	}
+	else if(game_phase == "wave")
+	{
+		if(wave_attacking) speak("The enemies are attacking.");
+		else speak("The enemies are resting.");
+	}
+	else speak("The round has not started yet.");
 }

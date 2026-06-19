@@ -38,17 +38,17 @@ string format_uptime(int uptime_seconds)
     string uptime_message = "Server Uptime: ";
     if (days > 0)
     {
-        uptime_message += string(days) + " days, ";
+        uptime_message += string(days) + (days == 1 ? " day, " : " days, ");
     }
     if (hours > 0 || days > 0)
     {
-        uptime_message += string(hours) + " hours, ";
+        uptime_message += string(hours) + (hours == 1 ? " hour, " : " hours, ");
     }
     if (minutes > 0 || hours > 0 || days > 0)
     {
-        uptime_message += string(minutes) + " minutes, ";
+        uptime_message += string(minutes) + (minutes == 1 ? " minute, " : " minutes, ");
     }
-    uptime_message += string(seconds) + " seconds.";
+    uptime_message += string(seconds) + (seconds == 1 ? " second." : " seconds.");
     return uptime_message;
 }
 string string_join(string[]@ arr, string delimiter, uint start_index = 0, uint end_index = 0)
@@ -697,6 +697,7 @@ else if(parsed[0]=="reinforce" and index>-1)
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) {} // not in a game
 else if(games[gi].phase != "build" and games[gi].phase != "wave") send(event.peer_id, "You can only reinforce during a round.", 0,true);
+else if(games[gi].phase == "wave" and games[gi].wave_attacking) send(event.peer_id, "You can't reinforce while the enemies are attacking.", 0,true);
 else if(players[index].inv.count("wood") < 1) send(event.peer_id, "You don't have any wood.", 0,true);
 else
 {
@@ -950,7 +951,7 @@ send(event.peer_id, "The round has already started.", 0,true);
 }
 else if(!games[gi].solo and games[gi].members.length() < 2)
 {
-send(event.peer_id, "You can't begin an open game on your own. Wait for another player to join, or start a single-player game instead.", 0,true);
+send(event.peer_id, "You can't begin a round with yourself.", 0,true);
 }
 else
 {

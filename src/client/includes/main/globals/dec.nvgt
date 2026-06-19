@@ -41,6 +41,7 @@ int my_wood=0; // how much wood you're carrying in the current game (synced from
 int wall_north=0, wall_east=0, wall_south=0, wall_west=0; // current cavern wall strengths as percents (synced; read by N/E/S/W/D)
 int cavern_size=0; // the current game's cavern grid size, for positioning wall-hit sounds
 string game_phase="idle"; // the current game's round phase (idle/build/wave), synced from the server
+bool wave_attacking=true; // during a wave: true = enemies attacking, false = resting; synced from waveseg, for the Tab status readout
 bool game_paused=false; // true while the host has the game paused (server-driven); freezes input and audio
 bool afk=false; // true while we're marked away (server-synced); any key brings us back
 bool afk_counting=false; // true during the /afk pre-countdown; any key cancels it before we go away

@@ -49,7 +49,7 @@ return best;
 }
 // Move every bot off a now-destroyed wall onto the standing wall with the fewest attackers (recomputed
 // per bot so they spread), but never past the per-wall cap: a bot with no room under bots_per_wall_cap
-// (or no wall left standing) simply leaves the game, so a wall never piles up beyond 4.
+// (or no wall left standing) simply leaves the game, so a wall never piles up beyond 8.
 void redistribute_bots(int gameid, string deadwall, double size)
 {
 for(int i=int(enemies.length())-1; i>=0; i--)
@@ -67,10 +67,10 @@ enemy e(next_enemy_id, gameid, wall, weapon);
 next_enemy_id++;
 enemies.insert_last(e);
 }
-// The per-wall bot ceiling: a flat 4 for every game, regardless of player count. A wave grows by one bot
-// per wall on each attack burst up to this, then holds. A wall NEVER exceeds 4 -- even a destroyed wall's
-// redistributed bots respect it (excess simply leave). So at most 16 bots in a game (4 walls x 4).
-const int bots_per_wall_cap=4;
+// The per-wall bot ceiling: a flat 8 for every game, regardless of player count. A wave grows by one bot
+// per wall on each attack burst up to this, then holds. A wall NEVER exceeds 8 -- even a destroyed wall's
+// redistributed bots respect it (excess simply leave). So at most 32 bots in a game (4 walls x 8).
+const int bots_per_wall_cap=8;
 // Bring every STANDING wall in a game up to `target` bots, adding fresh random-weapon bots to fill any
 // shortfall. Walls already at or above target (e.g. piled up by redistribution after a collapse) are left
 // alone -- this never removes bots, so losing a wall only ever makes the survivors busier.

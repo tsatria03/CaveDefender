@@ -122,8 +122,8 @@ p.update_sound_range_3d(hh, 0, maxx-minx, 0, maxy-miny, 0, 0);
 p.update_sound_start_values(hh, 0, vol, 100); // same damage-scaled volume for the wall's own creak
 }
 // Server-driven wall destruction (the "walldestroyed <dir>" message). Plays the death clip across the
-// wall span and re-tiles the breach to a random debris / woodpile / rubble floor, so you HEAR a breach
-// as you walk over it. Walls are server-authoritative, so this is event-driven, not a health poll.
+// wall span and re-tiles the breach to a wood floor, so you HEAR a breach as you walk over it. Walls are
+// server-authoritative, so this is event-driven, not a health poll.
 void destroy_wall_client(string dir)
 {
 double s = cavern_size;
@@ -136,7 +136,5 @@ else return;
 int h = p.play_extended_3d("sounds/objects/walls/wallwood/death.ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
 p.update_sound_3d(h, minx, miny, 0);
 p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
-string[] rubble;
-rubble.insert_last("debris"); rubble.insert_last("woodpile"); rubble.insert_last("rubble");
-spawn_platform(minx, maxx, miny, maxy, rubble[random(0, 2)]); // breach becomes walkable rubble
+spawn_platform(minx, maxx, miny, maxy, "wood"); // breach becomes a walkable wood platform
 }
