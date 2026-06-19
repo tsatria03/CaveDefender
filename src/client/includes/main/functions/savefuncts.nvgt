@@ -66,6 +66,10 @@ if(st.d.exists("gamxit"))
 {
 gamxit=st.read_int("gamxit");
 }
+if(st.d.exists("autorun"))
+{
+autorun=st.read_bool("autorun");
+}
 if(st.d.exists("ip"))
 {
 ip=st.read_string("ip");
@@ -90,6 +94,7 @@ st.add("first_letter",first_letter);
 st.add("side_scrolling",side_scrolling);
 st.add("speak_menu_position",speak_menu_position);
 st.add("gamxit",gamxit);
+st.add("autorun",autorun);
 st.add("ip",ip);
 st.add("port",port);
 st.save();

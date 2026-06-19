@@ -7,6 +7,7 @@ int voicechat = 1;
 int holdkey = 1;
 bool hearvoice=true;
 int gamxit=1;
+bool autorun=false; // when on you run by default and holding a movement modifier (alt/ctrl/shift) walks instead; toggled in-map with Alt+R, saved in prefs
 string preffsPath = DIRECTORY_APPDATA + "tsatria03/CaveDefender/preffs/";
 string soundcard="Default";
 string mapmode="2d";
@@ -42,6 +43,7 @@ int wall_north=0, wall_east=0, wall_south=0, wall_west=0; // current cavern wall
 int cavern_size=0; // the current game's cavern grid size, for positioning wall-hit sounds
 string game_phase="idle"; // the current game's round phase (idle/build/wave), synced from the server
 bool wave_attacking=true; // during a wave: true = enemies attacking, false = resting; synced from waveseg, for the Tab status readout
+int wave_number=0; // which attack burst (round) the wave is on; 1 on the first attack, +1 each later burst; synced for the wave announce and Tab status
 bool game_paused=false; // true while the host has the game paused (server-driven); freezes input and audio
 bool afk=false; // true while we're marked away (server-synced); any key brings us back
 bool afk_counting=false; // true during the /afk pre-countdown; any key cancels it before we go away

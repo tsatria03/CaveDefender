@@ -1,4 +1,6 @@
 New in 2.4.
+You can now toggle auto-running with Alt and R wherever you can move: when it is on you run by default and hold a movement key modifier to walk, and when it is off it is the other way around, so you no longer have to hold a key down to keep up a run; the game says auto running on or off as you toggle it, and your choice is remembered for next time.
+Each enemy wave is now announced with its round number, for example Round 1, the enemies are coming, and the count climbs with every fresh attack, so you can tell at a glance how deep into a round you are; pressing tab for the round status reads the round number too.
 In a game, the host now opens the round menu with enter instead of tab, and anyone can press tab to hear the current round status, such as how long is left in the build phase or whether the enemies are attacking or resting.
 The end-of-round message now reads your survival time in minutes and seconds instead of a raw seconds count, for example one minute and thirty-two seconds rather than ninety-two seconds.
 You can no longer reinforce a wall while the enemies are actively attacking. Reinforcing now works only during the build phase and the rest periods between attacks, so shoring up a wall is a between-wave decision rather than something you can do in the middle of an assault.
