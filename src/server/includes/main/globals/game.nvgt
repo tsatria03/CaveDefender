@@ -22,6 +22,7 @@ timer woodtimer;     // drives wood drops during the build and wave phases
 int woodinterval=0;  // ms until the next wood drop, re-rolled to a random 1000-5000 after each one
 int wave_bot_target=0; // per-wall bot count for the current wave; +1 on each attack burst, capped per player count
 int wave_number=0; // which attack burst (round) the wave is on; 1 on the first attack, +1 each later burst, uncapped (announced to clients)
+bool warned=false; // set once the heads-up for the upcoming wave has been sent; re-armed at build start and at each rest segment
 timer wavetimer;     // started when the wave begins; its elapsed time is the survival score
 bool paused=false;   // host-only shared pause: when true this game's whole sim is frozen for everyone
 timer pausetimer;    // times the current pause, so Open games can auto-resume after 90s (Solo: indefinite)
@@ -151,6 +152,8 @@ if(games[i].phase=="over" and all_answered_playagain(i)) reset_for_new_round(i);
 }
 }
 }
+// How many seconds before a wave lands that defenders get a single heads-up (one per upcoming wave).
+const int wave_warning_seconds = 10;
 // How long the build phase runs for a given map size (difficulty: bigger maps get more prep time).
 int build_seconds(int size)
 {
@@ -167,6 +170,7 @@ games[gindex].phase=phase;
 if(phase=="build")
 {
 games[gindex].phasetimer.restart();
+games[gindex].warned=false; // arm the heads-up for the first wave
 // Hand each defender a random starting stockpile (15-30 wood) so they can immediately shore up a weak
 // wall before gathering ramps up. The inventory was cleared between rounds, so this is a clean grant.
 for(uint i=0; i<games[gindex].members.length(); i++)
@@ -243,6 +247,20 @@ continue;
 }
 if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
 set_game_phase(int(i), "wave");
+// Heads-up before the first wave: once, wave_warning_seconds before the build phase ends.
+if(games[i].phase=="build" and !games[i].warned and games[i].phasetimer.elapsed >= (games[i].buildduration - wave_warning_seconds)*1000)
+{
+games[i].warned=true;
+for(uint m=0; m<games[i].members.length(); m++)
+send(games[i].members[m], "wavewarning "+wave_warning_seconds, 0, true);
+}
+// Heads-up before each later wave: once per rest segment, wave_warning_seconds before it ends.
+if(games[i].phase=="wave" and !games[i].wave_attacking and !games[i].warned and games[i].wave_cycletimer.elapsed >= games[i].wave_cycle - wave_warning_seconds*1000)
+{
+games[i].warned=true;
+for(uint m=0; m<games[i].members.length(); m++)
+send(games[i].members[m], "wavewarning "+wave_warning_seconds, 0, true);
+}
 // Wood drops during the build and wave phases, on a random 1-5s cadence, up to a size-scaled cap.
 if((games[i].phase=="build" or games[i].phase=="wave") and games[i].woodtimer.elapsed >= games[i].woodinterval)
 {
@@ -272,6 +290,7 @@ if(games[i].wave_bot_target < bots_per_wall_cap) games[i].wave_bot_target++;
 games[i].wave_number++; // the round number keeps climbing each burst even after the bot count caps
 fill_walls_to(games[i].id, games[i].size, games[i].wave_bot_target);
 }
+else games[i].warned=false; // a rest segment just opened; arm the heads-up for the next wave
 // Announce the swing of the cycle to everyone in the game so their clients replay the wave cue when the
 // bots resume and a rest cue when they pull back.
 for(uint m=0; m<games[i].members.length(); m++)

@@ -1,5 +1,15 @@
 int port=25562;
 string ip="localhost";
+// Saved server presets, managed from Preferences > General > Select a server. Loading one fills ip/port.
+class serverpreset
+{
+	string sname;
+	string sip;
+	int sport;
+	serverpreset(){}
+	serverpreset(string n, string i, int p){ sname=n; sip=i; sport=p; }
+}
+serverpreset[] servers;
 
 bool encrypting=true, connected, registering, pinging, connection_dropped, kicked, justregistered, reconnect_aborted, reconnecting, reconnected;
 
@@ -759,6 +769,13 @@ void netloop_impl()
 				p.play_stationary("sounds/ui/misc/wavestop.ogg", false);
 				add_buffer_item("alerts", "The enemies stopped coming.");
 			}
+		}
+		else if (parsed[0] == "wavewarning" and parsed.length() > 1)
+		{
+			// A heads-up that the next wave lands soon: a single cue and alert, the same number of seconds
+			// before every wave (build phase or rest segment). Everyone in the game hears it.
+			p.play_stationary("sounds/ui/misc/alert.ogg", false);
+			add_buffer_item("alerts", "The enemies will attack in " + parsed[1] + " seconds.");
 		}
 		else if (parsed[0] == "gamepaused")
 		{
