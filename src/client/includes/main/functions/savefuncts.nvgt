@@ -82,6 +82,10 @@ if(st.d.exists("servers"))
 {
 parse_servers(st.read_string("servers"));
 }
+if(st.d.exists("server_custom"))
+{
+server_custom=st.read_bool("server_custom");
+}
 }
 // Server presets are stored as one string: each entry is name, ip, port joined by tabs, entries by newlines.
 string serialize_servers()
@@ -125,6 +129,7 @@ st.add("autorun",autorun);
 st.add("ip",ip);
 st.add("port",port);
 st.add("servers",serialize_servers());
+st.add("server_custom",server_custom);
 st.save();
 }
 void save_last_account()

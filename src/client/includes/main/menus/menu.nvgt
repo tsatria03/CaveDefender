@@ -49,7 +49,7 @@ void connectionmenu()
 		m.add_item("new account", "newaccount");
 		m.add_item("change server IP. Currently set to " + ip, "changeip");
 		m.add_item("change server port. Currently set to " + port, "changeport");
-		m.add_item("Select a server. Currently set to " + current_server_label(), "selectserver");
+		m.add_item("Load a server. Currently set to " + current_server_label(), "selectserver");
 		m.add_item("back", "back");
 		m.intro_text="Connection menu.";
 		int mres=m.run();
@@ -59,7 +59,7 @@ void connectionmenu()
 		{
 			// Ad-hoc server address (no preset); saved at once so it sticks without opening settings.
 			string newip=vd.input_box("Server", "Enter the new server.", ip);
-			if(newip!="") { ip=newip; writepreffs(); }
+			if(newip!="") { ip=newip; server_custom=true; writepreffs(); }
 			else speak("canceled");
 			continue;
 		}
@@ -69,7 +69,7 @@ void connectionmenu()
 			if(newport!="")
 			{
 				int p=string_to_number(newport);
-				if(p>=1 and p<=65535) { port=p; writepreffs(); }
+				if(p>=1 and p<=65535) { port=p; server_custom=true; writepreffs(); }
 				else dlgmessage("That is not a valid port. Please enter a number between 1 and 65535. Press enter to continue.");
 			}
 			else speak("canceled");
@@ -218,12 +218,19 @@ bool newaccountform()
 	}
 	return false;
 }
-// The name of the saved server whose ip/port match what's currently set, or "none" if it isn't a preset.
+// One server preset formatted for a list item, e.g. "Tony's server. IP: localhost. Port: 25562."
+string server_list_text(uint i)
+{
+	return servers[i].sname + ". IP: " + servers[i].sip + ". Port: " + servers[i].sport;
+}
+// The name of the saved server currently in use, or "Custom" if you're on a manually entered one. The
+// explicit custom flag wins, so picking Custom reads as Custom even when ip/port still match a preset.
 string current_server_label()
 {
-	for(uint i=0; i<servers.length(); i++)
-		if(servers[i].sip==ip and servers[i].sport==port) return servers[i].sname;
-	return "none";
+	if(!server_custom)
+		for(uint i=0; i<servers.length(); i++)
+			if(servers[i].sip==ip and servers[i].sport==port) return servers[i].sname;
+	return "Custom";
 }
 // Server presets are added/removed from Preferences > General and chosen from the connection menu's Select a
 // server option. Loading one fills in ip/port so the connection menu connects to it; saved in settings.cvf.
@@ -279,27 +286,26 @@ void addserverform()
 	}
 }
 // Load a server preset into ip/port so the connection menu connects to it (it does not connect by itself).
+// The default top entry is Custom: it keeps whatever ip/port are set (a manually entered, non-preset server).
 void loadservermenu()
 {
-	if(servers.length()==0)
-	{
-		dlgmessage("There are no saved servers yet. Use add a server first. Press enter to continue.");
-		return;
-	}
-	setupmenu();
+	setupmenu(true);
+	m.add_item("Custom", "custom");
 	for(uint i=0; i<servers.length(); i++)
-		m.add_item(servers[i].sname + ", " + servers[i].sip + ", port " + servers[i].sport, ""+i);
+		m.add_item(server_list_text(i), ""+i);
 	m.add_item("back", "back");
-	m.intro_text="Choose a server to connect to.";
+	m.intro_text="Choose a server to load.";
 	int mres=m.run();
 	string sel=mres<0?"back":m.selected_item_id;
 	if(sel=="back") { speak("canceled"); return; }
+	if(sel=="custom") { server_custom=true; writepreffs(); dlgmessage("Server changed to custom. Press enter to continue."); return; } // leave ip/port as set; change them from the connection menu
 	int idx=string_to_number(sel);
 	if(idx<0 or idx>=int(servers.length())) return;
 	ip=servers[idx].sip;
 	port=servers[idx].sport;
+	server_custom=false;
 	writepreffs();
-	speak("Server changed to " + servers[idx].sname + ".");
+	dlgmessage("Server changed to " + servers[idx].sname + ". Press enter to continue.");
 }
 // Remove a saved server preset.
 void removeservermenu()
@@ -311,7 +317,7 @@ void removeservermenu()
 	}
 	setupmenu();
 	for(uint i=0; i<servers.length(); i++)
-		m.add_item(servers[i].sname + ", " + servers[i].sip + ", port " + servers[i].sport, ""+i);
+		m.add_item(server_list_text(i), ""+i);
 	m.add_item("back", "back");
 	m.intro_text="Remove a server. Choose the server you want to remove.";
 	int mres=m.run();
@@ -329,6 +335,79 @@ void removeservermenu()
 	writepreffs();
 	dlgmessage(removed + " removed. Press enter to continue.");
 }
+// Edit a saved server: pick one, then change any of its name, ip, or port in a pre-filled form.
+void editservermenu()
+{
+	if(servers.length()==0)
+	{
+		dlgmessage("There are no saved servers to edit. Press enter to continue.");
+		return;
+	}
+	setupmenu();
+	for(uint i=0; i<servers.length(); i++)
+		m.add_item(server_list_text(i), ""+i);
+	m.add_item("back", "back");
+	m.intro_text="Edit a server. Choose the server you want to edit.";
+	int mres=m.run();
+	string sel=mres<0?"back":m.selected_item_id;
+	if(sel=="back") { speak("canceled"); return; }
+	int idx=string_to_number(sel);
+	if(idx<0 or idx>=int(servers.length())) return;
+	editserverform(idx);
+}
+// The edit form, pre-filled with the chosen server's name, ip, and port; updates it in place.
+void editserverform(int idx)
+{
+	form.reset();
+	form.create_window("Edit a server", false);
+	int namebox=form.create_input_box("Name", servers[idx].sname, "");
+	int ipbox=form.create_input_box("IP", servers[idx].sip, "");
+	int portbox=form.create_input_box("Port", ""+servers[idx].sport, "");
+	int savebtn=form.create_button("&Save", true);
+	int cancelbtn=form.create_button("&Cancel", false, true);
+	form.focus(namebox);
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		if(form.is_pressed(cancelbtn) or key_pressed(KEY_ESCAPE))
+		{
+			speak("canceled");
+			return;
+		}
+		if(form.is_pressed(savebtn))
+		{
+			string nm=form.get_text(namebox).trim_whitespace();
+			string ipv=form.get_text(ipbox).trim_whitespace();
+			string ptv=form.get_text(portbox).trim_whitespace();
+			if(nm=="")
+			{
+				dlgmessage("Please enter a name. Press enter to continue.");
+				form.focus(namebox);
+				continue;
+			}
+			if(ipv=="")
+			{
+				dlgmessage("Please enter an IP. Press enter to continue.");
+				form.focus(ipbox);
+				continue;
+			}
+			int pnum=string_to_number(ptv);
+			if(pnum<1 or pnum>65535)
+			{
+				dlgmessage("That is not a valid port. Please enter a number between 1 and 65535. Press enter to continue.");
+				form.focus(portbox);
+				continue;
+			}
+			servers[idx].sname=nm;
+			servers[idx].sip=ipv;
+			servers[idx].sport=pnum;
+			writepreffs();
+			dlgmessage("Server saved. Press enter to continue.");
+			return;
+		}
+	}
+}
 void settingsmenu()
 {
 	while(true)
@@ -344,6 +423,8 @@ void settingsmenu()
 		int tab_general=0, tab_game=1, tab_sound=2, tab_menu=3, tab_speech=4;
 		int addsrv = form.create_button("Add a server");
 		form.assign_to_tab(addsrv, tabs, tab_general);
+		int editsrv = form.create_button("Edit a server");
+		form.assign_to_tab(editsrv, tabs, tab_general);
 		int remsrv = form.create_button("Remove a server");
 		form.assign_to_tab(remsrv, tabs, tab_general);
 		int hvc = form.create_checkbox("Hear your voice when sending voice messages", hearvoice);
@@ -400,6 +481,11 @@ void settingsmenu()
 			if(form.is_pressed(addsrv))
 			{
 				addserverform();
+				break;
+			}
+			if(form.is_pressed(editsrv))
+			{
+				editservermenu();
 				break;
 			}
 			if(form.is_pressed(remsrv))
