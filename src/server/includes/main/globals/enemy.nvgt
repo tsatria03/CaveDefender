@@ -86,13 +86,13 @@ int have = enemies_on_wall(gameid, dirs[d]);
 for(int n=have; n<target; n++) spawn_enemy(gameid, dirs[d], random(1, 4));
 }
 }
-// Random damage for a weapon: axe 1-3, bat 2-4, crowbar 3-6, hammer 4-8.
+// Random damage for a weapon: axe 1-2, bat 2-3, crowbar 3-4, hammer 4-5.
 int enemy_damage(int weapon)
 {
-if(weapon==1) return random(1, 3);
-if(weapon==4) return random(2, 4);
-if(weapon==2) return random(3, 6);
-return random(4, 8);
+if(weapon==1) return random(1, 2);
+if(weapon==4) return random(2, 3);
+if(weapon==2) return random(3, 4);
+return random(4, 5);
 }
 // Every server tick: each bot whose attack timer is up swings at its wall, dealing its weapon's damage,
 // then the new wall strengths and a hit event (wall + weapon) go out to the game so clients play the

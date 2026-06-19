@@ -118,7 +118,7 @@ buffercheck();
 			// Alt+R toggles auto-running anywhere you can move; saved so it sticks next session.
 			autorun = !autorun;
 			p.play_stationary(autorun ? "sounds/ui/misc/toggleon.ogg" : "sounds/ui/misc/toggleoff.ogg", false);
-			speak(autorun ? "auto running on" : "auto running off");
+			speak(autorun ? "auto running enabled" : "auto running disabled");
 			writepreffs();
 		}
 		else if (key_pressed(KEY_R) and !in_game)
@@ -283,7 +283,7 @@ void speak_game_status()
 	{
 		int rem = int(game_build_seconds) - int(game_phasetimer.elapsed / 1000);
 		if(rem < 0) rem = 0;
-		speak("Build phase, " + rem + (rem == 1 ? " second" : " seconds") + " until the enemies come.");
+		speak("Build phase, " + rem + (rem == 1 ? " second" : " seconds") + " remaining.");
 	}
 	else if(game_phase == "wave")
 	{
