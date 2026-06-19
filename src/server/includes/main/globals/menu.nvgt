@@ -169,11 +169,7 @@ players[index].menu_actions.resize(0);
 string[] opts;
 if(host and phase == "idle") { opts.insert_last("Begin round"); players[index].menu_actions.insert_last("beginround"); }
 else if(host and phase == "build" and staff) { opts.insert_last("Skip build phase"); players[index].menu_actions.insert_last("skipbuild"); }
-if(opts.length() == 0)
-{
-send(peer, status, 0, true); // nothing actionable; just report where the round is
-return;
-}
+if(opts.length() == 0) return; // nothing actionable: stay silent and let Tab report the round status
 send_menu(peer, "game", "Round menu. " + status, opts);
 }
 

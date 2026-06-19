@@ -78,6 +78,33 @@ if(st.d.exists("port"))
 {
 port=st.read_int("port");
 }
+if(st.d.exists("servers"))
+{
+parse_servers(st.read_string("servers"));
+}
+}
+// Server presets are stored as one string: each entry is name, ip, port joined by tabs, entries by newlines.
+string serialize_servers()
+{
+string serialized="";
+for(uint i=0; i<servers.length(); i++)
+{
+if(i>0) serialized+="\n";
+serialized += servers[i].sname + "\t" + servers[i].sip + "\t" + servers[i].sport;
+}
+return serialized;
+}
+void parse_servers(string data)
+{
+servers.resize(0);
+if(data=="") return;
+string[] lines=string_split(data, "\n", true);
+for(uint i=0; i<lines.length(); i++)
+{
+string[] f=string_split(lines[i], "\t", true);
+if(f.length()<3) continue;
+servers.insert_last(serverpreset(f[0], f[1], string_to_number(f[2])));
+}
 }
 void writepreffs()
 {
@@ -97,6 +124,7 @@ st.add("gamxit",gamxit);
 st.add("autorun",autorun);
 st.add("ip",ip);
 st.add("port",port);
+st.add("servers",serialize_servers());
 st.save();
 }
 void save_last_account()
