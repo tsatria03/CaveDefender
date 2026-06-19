@@ -10,6 +10,7 @@ class serverpreset
 	serverpreset(string n, string i, int p){ sname=n; sip=i; sport=p; }
 }
 serverpreset[] servers;
+bool server_custom=false; // true = on a manually entered (non-preset) server; forces the label to "Custom" even if ip/port happen to match a preset
 
 bool encrypting=true, connected, registering, pinging, connection_dropped, kicked, justregistered, reconnect_aborted, reconnecting, reconnected;
 

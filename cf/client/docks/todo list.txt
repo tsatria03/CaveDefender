@@ -3,13 +3,15 @@
 ****Unfinished. Add an option to Invite players to rooms and games.
 ****Unfinished. Add the ability to spectate games.
 ****Unfinished. Add live voice chatting, a continuous real-time voice instead of only recorded push-to-talk clips.
-****Unfinished. Add auto-running so you keep moving while a movement key is held.
-****Unfinished. Announce the round number with each enemy wave, for example "Round 1, the enemies are coming!".
-****Unfinished. Add a server manager.
-****Unfinished. Warn players when the next enemy wave is about to start.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Lower and even out enemy weapon damage so a cluster of bots can no longer strip a well built wall as quickly.
+**Finished. Add saved server presets, added, edited, and removed in preferences and chosen from the connection menu, with a custom option for a manually entered address.
+**Finished. Warn players about ten seconds before each enemy wave, during the build phase and the rest periods, with a heads-up sound and an alert.
+**Finished. Announce the round number with each enemy wave, for example "Round 1, the enemies are coming!", and read it with the round status on tab.
+**Finished. Add auto-running, toggled with Alt plus R, so you run by default and holding a movement modifier walks instead, saved between sessions.
+**Finished. Make the host open the round menu with enter and let anyone hear the round status with tab.
 **Finished. Add more bots as the round goes on, raising the per-wall bot ceiling from four to eight so the pressure keeps building.
 **Finished. Allow reinforcing walls only during the rest periods, not while the enemies are actively attacking.
 **Finished. Limit how far over 100% a wall can be reinforced, capping a wall at twice its full strength.
