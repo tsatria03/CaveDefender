@@ -70,9 +70,9 @@ if(!walls[id].destroyable) return;
 walls[id].health-=amount;
 if(walls[id].health<0) walls[id].health=0;
 }
-// How far a wall may be over-built: 2.0 = up to 200% of its max health. Players can stockpile a buffer
+// How far a wall may be over-built: 4.0 = up to 400% of its max health. Players can stockpile a buffer
 // against wave damage, but not make a wall effectively invincible (which trivialized the game).
-const double wall_overbuild_cap = 2.0;
+const double wall_overbuild_cap = 4.0;
 // Reinforce a wall with wood, clamped to wall_overbuild_cap x its max health.
 void repair_wall(int id, double amount)
 {

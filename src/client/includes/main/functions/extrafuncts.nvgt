@@ -1,3 +1,15 @@
+// Format a whole number of seconds as a spoken duration: 92 -> "1 minute and 32 seconds",
+// 45 -> "45 seconds", 60 -> "1 minute". Singular/plural handled; under a minute reads as seconds only.
+string format_duration(int seconds)
+{
+if(seconds < 0) seconds = 0;
+int mins = seconds / 60;
+int secs = seconds % 60;
+if(mins == 0) return secs + (secs == 1 ? " second" : " seconds");
+string m = mins + (mins == 1 ? " minute" : " minutes");
+if(secs == 0) return m;
+return m + " and " + secs + (secs == 1 ? " second" : " seconds");
+}
 bool alt_is_down()
 {
 if(key_down(KEY_LALT) or key_down(KEY_RALT))
