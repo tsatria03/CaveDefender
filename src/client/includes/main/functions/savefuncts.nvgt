@@ -10,6 +10,14 @@ if(st.d.exists("menumusvolume"))
 {
 menumusvolume=st.read_int("menumusvolume");
 }
+if(st.d.exists("ambvolume"))
+{
+ambvolume=st.read_double("ambvolume");
+}
+if(st.d.exists("musvolume"))
+{
+musvolume=st.read_double("musvolume");
+}
 if (st.d.exists("tts_config"))
 {
     string config = st.read_string("tts_config");
@@ -132,6 +140,8 @@ void writepreffs()
 {
 st.add("echomode",echomode);
 st.add("menumusvolume",menumusvolume);
+st.add("ambvolume",ambvolume);
+st.add("musvolume",musvolume);
 st.add("tts_config", tts_dump_config(tts, true));
 st.add("soundcard",soundcard);
 st.add("recname",recname);

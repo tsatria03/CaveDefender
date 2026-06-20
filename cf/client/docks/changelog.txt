@@ -1,5 +1,9 @@
 New in 2.5.
-Enemy damage is now a fixed amount per weapon instead of a random range, with the axe doing one, the bat two, the crowbar three, and the hammer four, so a hit always takes off a known, predictable amount. The limit on attackers has also been removed, so every round now adds one more bot to each wall with no upper bound instead of leveling off, and pressing tab during a rest tells you which round you just finished, for example round three complete.
+You can now adjust the ambience and music volumes while you play: page up and page down change the music, and home and end change the ambience, with each setting remembered for next time.
+Each piece of wood you spend reinforcing a wall now adds ten to twenty strength instead of five to ten, so repairs go further.
+The limit on attackers has been removed, so every round now adds one more bot to each wall with no upper bound instead of leveling off.
+Enemy damage is now a fixed amount per weapon instead of a random range, with the axe doing one, the bat two, the crowbar three, and the hammer four, so a hit always takes off a known, predictable amount.
+Pressing tab during a rest now tells you which round you just finished, for example round three complete.
 Updated the todo list file with the latest bug fix and feature improvements made to the game.
 New in 2.4.
 You can now choose which recording device voice chat uses. In preferences, under the sound tab, the new select recording device option lists your microphones; pick one or leave it on Default, and your choice is saved for next time.

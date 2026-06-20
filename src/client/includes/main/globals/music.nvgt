@@ -37,6 +37,18 @@ void update_musics(double lx, double ly)
 {
 for(uint i = 0; i < musics.length(); i++) musics[i].update(lx, ly);
 }
+// Set the volume of every live music track and remember it as the in-world music volume, so newly drawn
+// maps spawn at the same level. Updates each sound's start volume (the pool keeps subtracting distance
+// attenuation from that base, so the new level sticks frame to frame).
+void set_music_volume(double vol)
+{
+musvolume = vol;
+for(uint i = 0; i < musics.length(); i++)
+{
+musics[i].volume = vol;
+musicpool.update_sound_start_values(musics[i].handle, 0, vol, 100);
+}
+}
 void clear_musics()
 {
 for(uint i = 0; i < musics.length(); i++) musicpool.destroy_sound(musics[i].handle);

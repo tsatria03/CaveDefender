@@ -8,6 +8,8 @@ int holdkey = 1;
 bool hearvoice=false; // "Hear your voice when streaming voice messages": live self-monitor while you talk, off by default
 int gamxit=1;
 bool autorun=false; // when on you run by default and holding a movement modifier (alt/ctrl/shift) walks instead; toggled in-map with Alt+R, saved in prefs
+double ambvolume=0, musvolume=0; // in-world ambience/music volume (0 = full, down to -100); set on every map's spawned beds, adjusted in-map with Home/End (ambience) and PageUp/PageDown (music), saved in prefs
+timer worldvoltimer; // throttles the in-map Home/End/PageUp/PageDown world-volume key repeats
 string preffsPath = DIRECTORY_APPDATA + "tsatria03/CaveDefender/preffs/";
 string soundcard="Default";
 int recdev=-1; // voice-chat input device index for microphone.start_recording; -1 = system default. Resolved from recname at load.

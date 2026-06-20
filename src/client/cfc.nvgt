@@ -54,6 +54,8 @@ void resetpreffs()
 {
 echomode=1;
 menumusvolume=0;
+ambvolume=0;
+musvolume=0;
 use_sr = true;
 tts.set_voice(0);
 tts.set_rate(0);

@@ -692,7 +692,7 @@ gather_wood(index, 5); // auto-grab any wood within 5 tiles of where you just st
 }
 else if(parsed[0]=="reinforce" and index>-1)
 {
-// Shift+Enter near a wall: spend 1 wood for a random +5 to +10 strength on the NEAREST wall in reach.
+// Shift+Enter near a wall: spend 1 wood for a random +10 to +20 strength on the NEAREST wall in reach.
 // Position-based (not facing-based), so it works from up to wall_reach tiles out in any direction.
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) {} // not in a game
@@ -711,7 +711,7 @@ else if(wi > -1 and walls[wi].health >= walls[wi].maxhealth * wall_overbuild_cap
 else if(wi > -1)
 {
 players[index].inv.take("wood", 1);
-int gain = random(5, 10);
+int gain = random(10, 20);
 repair_wall(wi, gain);
 send_wood_count(index);
 send(event.peer_id, "play_item wood place", 0,true);
