@@ -427,7 +427,7 @@ void settingsmenu()
 		form.assign_to_tab(editsrv, tabs, tab_general);
 		int remsrv = form.create_button("Remove a server");
 		form.assign_to_tab(remsrv, tabs, tab_general);
-		int hvc = form.create_checkbox("Hear your voice when sending voice messages", hearvoice);
+		int hvc = form.create_checkbox("Hear your voice when streaming voice messages", hearvoice);
 		form.assign_to_tab(hvc, tabs, tab_game);
 		int hldk = form.create_checkbox("Require holding of voicechat key", int_to_bool(holdkey));
 		form.assign_to_tab(hldk, tabs, tab_game);

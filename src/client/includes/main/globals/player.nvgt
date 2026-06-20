@@ -11,8 +11,10 @@ string name;
 int x, y;            // map position (2D; z is always 0 since the game has no height).
 timer beacontimer;   // paces the periodic beacon, like SimpleFighter's checktimer / objtimer.
 int beaconsound=-1;  // sound_pool handle for this player's beacon; -1 when nothing is playing.
-int voicesound=-1;   // sound_pool handle for this player's current voice clip; -1 when none.
-string voicefile="";  // temp .ogg path of this player's current clip, so the previous one can be deleted.
+opus_decoder@ voice_dec=null; // per-speaker opus decoder (stateful; reset after a silence gap).
+sound@ voice_snd=null;        // positioned push-stream playing this speaker's live voice; null when idle.
+timer voice_rxtimer;          // time since their last voice packet; drives the gap reset and cleanup.
+bool voice_started=false;     // whether play() has been called on the current voice_snd yet.
 int beaconpitch;     // this player's beacon pitch (80-120), rolled once so it stays constant per player.
 string vrank="player"; // visible rank for the P tracker: the rank only when they're staff with their flag on, else "player".
 bool afk=false;        // whether this player is currently away (for the tracker's AFK prefix).
@@ -66,6 +68,7 @@ void remove_player(string pname)
 {
 int i=get_player_index(pname);
 if(i<0) return;
+if(@players[i].voice_snd != null) players[i].voice_snd.close();
 players.remove_at(i);
 }
 
@@ -73,6 +76,8 @@ players.remove_at(i);
 // only hear the players sharing our current space (lobby or room).
 void clear_players()
 {
+for(uint i=0; i<players.length(); i++)
+if(@players[i].voice_snd != null) players[i].voice_snd.close();
 players.resize(0);
 }
 
