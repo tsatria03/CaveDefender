@@ -75,6 +75,7 @@ string[] opts;
 opts.insert_last("Start game"); players[index].menu_actions.insert_last("startgame");
 opts.insert_last("Join game"); players[index].menu_actions.insert_last("joingame");
 opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stopgame");
+opts.insert_last("Invite a player"); players[index].menu_actions.insert_last("invite");
 opts.insert_last("Kick a player"); players[index].menu_actions.insert_last("kick");
 if(rooms[ri].is_private)
 {
@@ -111,6 +112,28 @@ return;
 send_menu(peer, "kick", "Kick a player", opts);
 }
 
+// The list of players a room member can invite: everyone currently standing in the main lobby (room_id 0,
+// which already excludes anyone in another room or in a game), minus yourself. Their usernames go in
+// menu_targets so the returned choice maps back to a player; the actual invite is sent by do_invite.
+void push_invite_list(int index)
+{
+int peer = players[index].peer_id;
+players[index].menu_targets.resize(0);
+string[] opts;
+for(uint i = 0; i < players.length(); i++)
+{
+if(players[i].room_id != 0) continue;            // only people in the lobby
+if(int(players[i].peer_id) == peer) continue;    // not yourself
+players[index].menu_targets.insert_last(players[i].name);
+opts.insert_last(afk_prefix(int(i)) + display_name_flagged(int(i)));
+}
+if(opts.length() == 0)
+{
+send(peer, "There is no one in the lobby to invite.", 0, true);
+return;
+}
+send_menu(peer, "invite", "Invite a player", opts);
+}
 // The list of games in the player's room for either joining or stopping. mode = "join" (skip full and
 // others' solo games) or "stop" (staff see all, others only their own). Game ids go in menu_targets;
 // the actual join/stop is enforced by the existing joingame/stopgame handlers.
@@ -322,9 +345,15 @@ if(!staff and !host) send(peer, "Only the host can delete the room.", 0, true);
 else if(!staff and ri > -1 and rooms[ri].members.length() > 1) send(peer, "You can't delete the room while other players are in it.", 0, true);
 else confirm_menu(peer, "deleteroom", "Are you sure you want to delete this room? Everyone in it will be sent back to the lobby.");
 }
+else if(act == "invite") push_invite_list(player_index); // any room member may invite a lobby player
 else if(act == "joingame") push_game_list(player_index, "join");
 else if(act == "stopgame") push_game_list(player_index, "stop");
 else if(act == "startgame") push_start_mode(player_index);
+}
+else if(id == "invite")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+do_invite(player_index, players[player_index].menu_targets[choice]);
 }
 else if(id == "kick")
 {

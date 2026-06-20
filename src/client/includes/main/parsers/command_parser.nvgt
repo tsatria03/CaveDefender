@@ -90,6 +90,16 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/channel"); return; }
 		send(0, "channel", 0, true); // everyone: the server pushes the language-channel chooser
 	}
+	else if(base == "/accept")
+	{
+		if(parsed.length() != 1) { syntax_error("/accept"); return; }
+		send(0, "acceptinvite", 0, true); // accept a pending room invitation
+	}
+	else if(base == "/reject")
+	{
+		if(parsed.length() != 1) { syntax_error("/reject"); return; }
+		send(0, "rejectinvite", 0, true); // refuse a pending room invitation
+	}
 	else if(base == "/restart" or base == "/rt")
 	{
 		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }

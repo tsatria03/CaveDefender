@@ -320,10 +320,10 @@ void handle_roundover(string message)
 	results += "Collected wood: " + collected + ".\r\n";
 	results += "Completed rounds: " + rounds + ".\r\n";
 	results += "Survival time: " + dur + ".\r\n";
-	results += "Better luck next time! Press enter to continue.";
+	results += (bonus > 0 ? "That's amazing. Keep going!" : "Better luck next time!") + " Press enter to continue.";
 	dlgmessage(results);
 	// Milestone: a fresh personal-best round earned bonus starting wood for the next round.
-	if(bonus > 0) dlgmessage("Congratulations! You just gained " + bonus + " wood for reaching round " + milestone + ". Great job! Press enter to continue.");
+	if(bonus > 0) dlgmessage("Congratulations! You just gained " + bonus + " starter wood for reaching round " + milestone + ". Great job! Press enter to continue.");
 	setupmenu();
 	m.add_item("Yes");
 	m.add_item("No");
@@ -464,6 +464,13 @@ void netloop_impl()
 		{
 			// Server feedback routed to the misc buffer (and spoken), e.g. command confirmations.
 			add_buffer_item("misc", message.substr(5));
+		}
+		else if (parsed[0] == "roominvite")
+		{
+			// A room invitation: "roominvite\n<message>". Play the invite cue and route the text to the misc buffer.
+			p.play_stationary("sounds/ui/misc/invite.ogg", false);
+			string[] ril = string_split(message, "\n", true);
+			if(ril.length() > 1) add_buffer_item("misc", ril[1]);
 		}
 		else if (parsed[0] == "alert" and message.length() > 6)
 		{
@@ -666,7 +673,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "notify" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/notify"+random(1, 2)+".ogg", false);
+			p.play_stationary("sounds/ui/misc/notify.ogg", false);
 			add_buffer_item("alerts", message.substr(7));
 		}
 		else if (parsed[0] == "muted" and parsed.length() > 2)

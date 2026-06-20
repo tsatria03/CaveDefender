@@ -1,10 +1,10 @@
 ####These are the things that need to be finished for future versions of the game.
 
-****Unfinished. Add an option to Invite players to rooms and games.
 ****Unfinished. Add the ability to spectate games.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add the ability to invite a lobby player to your room, accepted with /accept or refused with /reject, with the invitation expiring after two minutes.
 **Finished. Add in-game controls to change the ambience and music volumes, with the levels saved between sessions.
 **Finished. Add live voice chatting, a continuous real-time voice instead of only recorded push-to-talk clips.
 **Finished. Lower and even out enemy weapon damage so a cluster of bots can no longer strip a well built wall as quickly.
