@@ -29,6 +29,24 @@ break;
 }
 }
 }
+if(st.d.exists("recname"))
+{
+recname=st.read_string("recname");
+recdev=-1;
+if(recname!="Default")
+{
+string[]@idevs=get_sound_input_devices();
+for(uint i=0; i<idevs.length(); i++)
+{
+if(idevs[i]==recname)
+{
+recdev=int(i);
+break;
+}
+}
+if(recdev<0) recname="Default"; // the saved device isn't present now; fall back to the system default
+}
+}
 if(st.d.exists("fademode"))
 {
 fademode=st.read_int("fademode");
@@ -116,6 +134,7 @@ st.add("echomode",echomode);
 st.add("menumusvolume",menumusvolume);
 st.add("tts_config", tts_dump_config(tts, true));
 st.add("soundcard",soundcard);
+st.add("recname",recname);
 st.add("fademode",fademode);
 st.add("hearvoice",hearvoice);
 st.add("holdkey",holdkey);

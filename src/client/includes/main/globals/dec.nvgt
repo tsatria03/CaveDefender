@@ -10,6 +10,8 @@ int gamxit=1;
 bool autorun=false; // when on you run by default and holding a movement modifier (alt/ctrl/shift) walks instead; toggled in-map with Alt+R, saved in prefs
 string preffsPath = DIRECTORY_APPDATA + "tsatria03/CaveDefender/preffs/";
 string soundcard="Default";
+int recdev=-1; // voice-chat input device index for microphone.start_recording; -1 = system default. Resolved from recname at load.
+string recname="Default"; // display name of the chosen recording device (also the saved key); "Default" = system default
 string mapmode="2d";
 string motd = "Welcome to the server.";
 string passc="rscs123";
