@@ -28,22 +28,22 @@ if(mapname=="lobby")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallbuilding");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "carpet");
-spawn_ambience(minx, maxx, miny, maxy, "lobby", -10); // sounds/ambience/lobby.ogg across the whole lobby.
-spawn_music(minx, maxx, miny, maxy, "lobby", -10); // sounds/music/lobby.ogg across the whole lobby.
+spawn_ambience(minx, maxx, miny, maxy, "lobby", ambvolume); // sounds/ambience/lobby.ogg across the whole lobby.
+spawn_music(minx, maxx, miny, maxy, "lobby", musvolume); // sounds/music/lobby.ogg across the whole lobby.
 }
 if(mapname=="office")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallgeneric");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "marble");
-spawn_ambience(minx, maxx, miny, maxy, "office", -10); // sounds/ambience/office.ogg across the whole office.
-spawn_music(minx, maxx, miny, maxy, "office", -10); // sounds/music/office.ogg across the whole office (add the file).
+spawn_ambience(minx, maxx, miny, maxy, "office", ambvolume); // sounds/ambience/office.ogg across the whole office.
+spawn_music(minx, maxx, miny, maxy, "office", musvolume); // sounds/music/office.ogg across the whole office (add the file).
 }
 if(mapname=="cavern")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallwood");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "cave");
-spawn_ambience(minx, maxx, miny, maxy, "cavern", -10); // sounds/ambience/cavern.ogg across the whole cavern.
-spawn_music(minx, maxx, miny, maxy, "cavern", -10); // sounds/music/cavern.ogg across the whole cavern.
+spawn_ambience(minx, maxx, miny, maxy, "cavern", ambvolume); // sounds/ambience/cavern.ogg across the whole cavern.
+spawn_music(minx, maxx, miny, maxy, "cavern", musvolume); // sounds/music/cavern.ogg across the whole cavern.
 }
 }
 void playstep()

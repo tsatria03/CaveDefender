@@ -218,6 +218,17 @@ buffercheck();
 				speak("beacons disabled");
 			}
 		}
+		// Live world-volume keys: Page up/down adjust music, Home/End adjust ambience. Stepped by 2 and
+		// clamped to -100..0 on a 50 ms repeat (so holding ramps smoothly), saved only when it changes.
+		if(worldvoltimer.elapsed>=50)
+		{
+			bool volchanged=false;
+			if(key_down(KEY_PAGEUP)) { if(musvolume<0) { set_music_volume(musvolume+2); volchanged=true; } worldvoltimer.restart(); }
+			else if(key_down(KEY_PAGEDOWN)) { if(musvolume>-100) { set_music_volume(musvolume-2); volchanged=true; } worldvoltimer.restart(); }
+			else if(key_down(KEY_HOME)) { if(ambvolume<0) { set_ambience_volume(ambvolume+2); volchanged=true; } worldvoltimer.restart(); }
+			else if(key_down(KEY_END)) { if(ambvolume>-100) { set_ambience_volume(ambvolume-2); volchanged=true; } worldvoltimer.restart(); }
+			if(volchanged) writepreffs();
+		}
 		if(key_pressed(KEY_SLASH))
 		{
 			string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "");

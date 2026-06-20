@@ -37,6 +37,18 @@ void update_ambiences(double lx, double ly)
 {
 for(uint i = 0; i < ambiences.length(); i++) ambiences[i].update(lx, ly);
 }
+// Set the volume of every live ambience bed and remember it as the in-world ambience volume, so newly
+// drawn maps spawn at the same level. Updates each sound's start volume (the pool keeps subtracting
+// distance attenuation from that base, so the new level sticks frame to frame).
+void set_ambience_volume(double vol)
+{
+ambvolume = vol;
+for(uint i = 0; i < ambiences.length(); i++)
+{
+ambiences[i].volume = vol;
+ambpool.update_sound_start_values(ambiences[i].handle, 0, vol, 100);
+}
+}
 void clear_ambiences()
 {
 for(uint i = 0; i < ambiences.length(); i++) ambpool.destroy_sound(ambiences[i].handle);
