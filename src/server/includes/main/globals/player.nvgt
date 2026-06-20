@@ -15,6 +15,8 @@ string[] menu_targets; // the argument behind each option of the last server-pus
 string[] menu_actions; // for a HETEROGENEOUS menu (e.g. the room menu), the action key behind each option.
 string menu_pending;   // a value carried across a cascading menu (e.g. the chosen game mode while picking the size).
 inventory inv; // what this player is carrying (wood, etc.); authoritative here, mirrored to the client. Wired in 6c.
+int wood_collected=0;     // wood this player has personally picked up off the ground this game run; reset at each build start, reported at game over.
+int pending_bonus_wood=0; // milestone bonus wood to add to this player's stockpile at the next build phase (earned by beating their best round); cleared once granted.
 bool playagain_answered=false; // during a game's "over" phase: has this member answered the play-again prompt yet?
 bool flagged=false; // staff-attention flag: when true this staff member's rank shows to regular players; default off (incognito). Loaded from flag.usr at spawn.
 bool afk=false; // away-from-keyboard: set when the player goes AFK (self via /afk countdown, or an admin via /afk <name>); cleared on any input. Not persisted (resets each session).

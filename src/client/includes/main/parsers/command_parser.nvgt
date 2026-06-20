@@ -216,13 +216,13 @@ void comparse(string text, string channel = "global")
 	else if(base == "/mute")
 	{
 		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
-		if(parsed.length() < 2) { syntax_error("/mute username, or /mute username seconds"); return; }
+		if(parsed.length() < 3) { syntax_error("/mute username channel, or /mute username channel seconds"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/unmute")
 	{
 		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
-		if(parsed.length() != 2) { syntax_error("/unmute username"); return; }
+		if(parsed.length() != 3) { syntax_error("/unmute username channel"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/ban")
