@@ -523,6 +523,7 @@ if(players[m].room_id == rid) send(players[m].peer_id, "removeitem "+iid, 0, tru
 }
 if(got > 0)
 {
+players[pindex].wood_collected += got; // running tally of ground pickups this game run, reported at game over
 send(players[pindex].peer_id, "play_item wood take", 0, true);
 // Let others in the game hear the pickup in 3D at the gatherer's spot (reuses the positional footstep relay).
 for(uint wm=0; wm<players.length(); wm++)

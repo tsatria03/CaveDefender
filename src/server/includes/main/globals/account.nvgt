@@ -57,6 +57,10 @@ bool set_nickname(string name, string nick) { return write_field(name, "nickname
 // languages.svr to take effect -- an invalid value falls back to English at spawn (is_valid_language).
 string get_language(string name) { return read_field(name, "language", "English"); }
 bool set_language(string name, string lang) { return write_field(name, "language", lang); }
+// The highest round (wave count) this player has ever reached in a game (bestround.usr): their personal
+// best. A game-over that beats it grants a one-time milestone wood bonus and updates the record. Defaults to 0.
+int get_best_round(string name) { return int(string_to_number(read_field(name, "bestround", "0"))); }
+bool set_best_round(string name, int round) { return write_field(name, "bestround", "" + round); }
 // Read a single field file, trimmed (so hand-added trailing newlines don't break things). Returns
 // def when the file is missing or empty.
 string read_field(string name, string field, string def="")

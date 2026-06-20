@@ -301,17 +301,29 @@ void dispatch_modal(string message)
 	else if(parsed[0]=="helptext") handle_helptext(message);
 	else if(parsed[0]=="askinput") handle_askinput(message);
 }
-// The round ended (all walls fell): "roundover <seconds>". Announce how we did, then ask whether to play
-// again or leave; the reply goes back as playagain yes/no and the server waits until everyone has answered.
+// The round ended (all walls fell): "roundover <seconds> <collected> <rounds> <bonus> <milestone>". Show the
+// results dialog (and a milestone-reward dialog if we earned bonus wood), then ask whether to play again or
+// leave; the reply goes back as playagain yes/no and the server waits until everyone has answered.
 void handle_roundover(string message)
 {
 	string[] parsed = string_split(message, " ", true);
 	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
-	string who = (players.length() > 0) ? "Your team survived " : "You survived ";
-	string dur = format_duration(string_to_number(parsed[1]));
-	add_buffer_item("alerts", "All walls destroyed! " + who + dur + ".");
+	int secs = string_to_number(parsed[1]);
+	int collected = (parsed.length() > 2) ? string_to_number(parsed[2]) : 0;
+	int rounds = (parsed.length() > 3) ? string_to_number(parsed[3]) : 0;
+	int bonus = (parsed.length() > 4) ? string_to_number(parsed[4]) : 0;
+	int milestone = (parsed.length() > 5) ? string_to_number(parsed[5]) : 0;
+	string dur = format_duration(secs);
+	add_buffer_item("alerts", "Game over! You completed " + rounds + (rounds == 1 ? " round" : " rounds") + " and survived " + dur + ".");
 	pause_objects(); // silence any lingering wood loops behind the results dialog and play-again prompt
-	dlgmessage("All walls destroyed! " + who + dur + ".");
+	string results = "Game over! Here are your results.\r\n";
+	results += "Collected wood: " + collected + ".\r\n";
+	results += "Completed rounds: " + rounds + ".\r\n";
+	results += "Survival time: " + dur + ".\r\n";
+	results += "Better luck next time! Press enter to continue.";
+	dlgmessage(results);
+	// Milestone: a fresh personal-best round earned bonus starting wood for the next round.
+	if(bonus > 0) dlgmessage("Congratulations! You just gained " + bonus + " wood for reaching round " + milestone + ". Great job! Press enter to continue.");
 	setupmenu();
 	m.add_item("Yes");
 	m.add_item("No");

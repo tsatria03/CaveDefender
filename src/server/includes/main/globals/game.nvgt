@@ -171,13 +171,19 @@ if(phase=="build")
 {
 games[gindex].phasetimer.restart();
 games[gindex].warned=false; // arm the heads-up for the first wave
-// Hand each defender a random starting stockpile (15-30 wood) so they can immediately shore up a weak
+// Hand each defender a random starting stockpile (10-20 wood) so they can immediately shore up a weak
 // wall before gathering ramps up. The inventory was cleared between rounds, so this is a clean grant.
 for(uint i=0; i<games[gindex].members.length(); i++)
 {
 int pi=get_player_index(games[gindex].members[i]);
 if(pi<0) continue;
-players[pi].inv.give("wood", random(15, 30));
+players[pi].wood_collected=0; // start a fresh ground-pickup tally for this game run
+players[pi].inv.give("wood", random(10, 20));
+if(players[pi].pending_bonus_wood>0) // milestone reward earned at the last game over: add it to the starting stockpile
+{
+players[pi].inv.give("wood", players[pi].pending_bonus_wood);
+players[pi].pending_bonus_wood=0;
+}
 send_wood_count(pi);
 }
 }
@@ -330,14 +336,28 @@ void end_round_loss(int gi)
 {
 int gameid = games[gi].id;
 int secs = int(games[gi].wavetimer.elapsed/1000);
+int rounds = games[gi].wave_number; // the round (attack burst) reached when the last wall fell
 games[gi].phase = "over";
 clear_enemies(gameid);
 clear_items(gameid);
 for(uint m=0; m<games[gi].members.length(); m++)
 {
 int pi = get_player_index(games[gi].members[m]);
-if(pi > -1) players[pi].playagain_answered = false; // start everyone "awaiting an answer"
-send(games[gi].members[m], "roundover "+secs, 0, true);
+if(pi < 0) continue;
+players[pi].playagain_answered = false; // start everyone "awaiting an answer"
+int collected = players[pi].wood_collected;
+// Milestone: beating your personal-best round grants a one-time 20-40 wood bonus (added to next round's
+// starting stockpile) and updates the record. Matching or falling short of your best grants nothing.
+int bonus = 0, milestone = 0;
+if(rounds > get_best_round(players[pi].name))
+{
+bonus = random(20, 40);
+milestone = rounds;
+set_best_round(players[pi].name, rounds);
+players[pi].pending_bonus_wood = bonus;
+}
+// roundover <survival-seconds> <wood-collected> <rounds-reached> <bonus-wood> <milestone-round> (last two 0 = no milestone).
+send(games[gi].members[m], "roundover "+secs+" "+collected+" "+rounds+" "+bonus+" "+milestone, 0, true);
 }
 }
 // True once every member still in the game has answered the play-again prompt (the no's have already left

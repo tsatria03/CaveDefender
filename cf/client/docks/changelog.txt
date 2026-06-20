@@ -1,4 +1,5 @@
 New in 2.5.
+The game over screen now lays out your results in full, listing the wood you gathered, the rounds you completed, and how long you survived, and whenever you beat your best round ever you earn a bonus of twenty to forty wood that is waiting in your stockpile when the next round begins; the ordinary starting wood has been lowered from fifteen to thirty down to ten to twenty to make room for it.
 You can now adjust the ambience and music volumes while you play: page up and page down change the music, and home and end change the ambience, with each setting remembered for next time.
 Each piece of wood you spend reinforcing a wall now adds ten to twenty strength instead of five to ten, so repairs go further.
 The limit on attackers has been removed, so every round now adds one more bot to each wall with no upper bound instead of leveling off.
