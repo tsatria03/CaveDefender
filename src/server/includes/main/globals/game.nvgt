@@ -190,7 +190,7 @@ games[gindex].wave_attacking = true;
 games[gindex].wave_cycletimer.restart();
 games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
 // First attack burst: one bot per standing wall. The per-wall count grows by 1 on each later flip back
-// to attacking, up to a flat ceiling of 8 per wall (bots_per_wall_cap).
+// to attacking, with no ceiling -- every round adds one more bot per wall.
 games[gindex].wave_bot_target = 1;
 // First attack burst is round 1; the counter climbs by 1 on each later flip back to attacking (uncapped).
 games[gindex].wave_number = 1;
@@ -283,11 +283,11 @@ if(games[i].phase=="wave" and games[i].wave_cycletimer.elapsed >= games[i].wave_
 {
 games[i].wave_cycletimer.restart();
 games[i].wave_attacking = !games[i].wave_attacking;
-// Each time a fresh attack burst begins, every wall grows by one bot, up to the cap.
+// Each time a fresh attack burst begins, every wall grows by one bot (no ceiling).
 if(games[i].wave_attacking)
 {
-if(games[i].wave_bot_target < bots_per_wall_cap) games[i].wave_bot_target++;
-games[i].wave_number++; // the round number keeps climbing each burst even after the bot count caps
+games[i].wave_bot_target++;
+games[i].wave_number++; // round number and per-wall bot count now climb together every burst
 fill_walls_to(games[i].id, games[i].size, games[i].wave_bot_target);
 }
 else games[i].warned=false; // a rest segment just opened; arm the heads-up for the next wave
