@@ -768,6 +768,14 @@ else if(parsed[0]=="channel" and index>-1)
 {
 push_language_menu(index); // the /channel chooser, available to everyone
 }
+else if(parsed[0]=="acceptinvite" and index>-1)
+{
+accept_invite(index); // /accept: join the room you were invited to
+}
+else if(parsed[0]=="rejectinvite" and index>-1)
+{
+reject_invite(index); // /reject: refuse the pending room invite
+}
 else if(parsed[0]=="afk" and index>-1)
 {
 // The client's self-AFK countdown finished: mark this player away and tell everyone (flag-aware name).
