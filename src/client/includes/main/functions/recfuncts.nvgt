@@ -27,8 +27,8 @@ void voice_init()
 	voice_enc.set_expected_loss(5);
 	voice_enc.set_signal(OPUS_SIGNAL_VOICE);
 	@voice_mic = microphone();
-	// mono, float, no self-monitor pass-through, fresh buffer.
-	if(@voice_mic == null or !voice_mic.start_recording(-1, VOICE_RATE, 1, true, false, false))
+	// mono, float, no self-monitor pass-through, fresh buffer; recdev (-1 = system default) is the chosen input device.
+	if(@voice_mic == null or !voice_mic.start_recording(recdev, VOICE_RATE, 1, true, false, false))
 	{
 		@voice_mic = null;
 		@voice_enc = null;

@@ -61,6 +61,8 @@ tts.set_pitch(0);
 tts.set_volume(100);
 soundcard="Default";
 sound_output_device=1;
+recname="Default";
+recdev=-1;
 fademode=0;
 hearvoice=true;
 holdkey=1;
