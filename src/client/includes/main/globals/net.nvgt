@@ -199,6 +199,7 @@ save_last_account();
 while(true)
 {
 game();
+voice_shutdown(); // release the mic whenever game() returns; the next entry (including after a reconnect) reopens it on demand
 if(kicked)
 {
 kicked=false;

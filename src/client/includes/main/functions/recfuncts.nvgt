@@ -1,117 +1,152 @@
-// Voice-chat recording, playback, and transmission. Modeled on buffer.nvgt's buffercheck(): the in-game
-// loop just calls recordcheck() each frame and all the O-key logic lives here. prep_recording() starts a
-// take, prep_playback() ends one (transmit + your own centered playback), and play_remote_voice() plays an
-// incoming clip in 3D at the speaker's position so you can move around them.
-int voiceclip_id = 0;     // ever-increasing id giving each voice clip (yours and others') a unique temp filename, so NVGT's filename-keyed preload cache can't replay a previous clip.
-int selfvoicesound = -1;  // voice-pool handle for your own last playback clip; -1 when none.
-string selfvoicefile = ""; // temp path of your own last playback clip, for cleanup before the next one.
+// Live voice chat over the opus codec. Replaces the old record-a-clip + oggenc2 path entirely: while you
+// hold (or toggle) O, the mic streams 10ms float frames that are opus-encoded and sent on channel 3; the
+// server prepends a "name x y" header and relays them to everyone sharing your space. Incoming packets are
+// opus-decoded and played per-speaker through a positioned push stream that follows the speaker around the
+// map. The in-game loop just calls recordcheck() (capture/send) and voiceloop() (position/cleanup) each frame.
+// Requires the opus plugin (loaded via #pragma plugin opus in includes.nvgt); microphone is a built-in engine type.
 
-// Begin a recording (O pressed while idle): cue, start capture, mark recording, restart the limit timer.
-void prep_recording()
-{
-	spamtimer.restart();
-	vc.record();
-	p.play_stationary("sounds/ui/misc/von.ogg", false);
-	recording = true;
-	rectimer.restart();
-}
+const int VOICE_RATE = 48000;   // capture/codec sample rate
+const int VOICE_FRAME = 480;    // samples per channel per opus frame = 10ms at 48000 Hz
+const int VOICE_GAP_MS = 800;   // after this much silence a speaker's stream is reset/closed
 
-// End a recording (any of the three stop triggers): cue, stop capture, send it, and — if you have "hear my
-// voice" on — play your own clip back centered through the voice pool. The own-voice copy uses a unique
-// filename so NVGT's filename-keyed preload cache can't replay your previous take.
-void prep_playback()
+opus_encoder@ voice_enc = null; // our outgoing encoder
+microphone@ voice_mic = null;   // our capture device
+bool voice_ready = false;       // mic + encoder are up
+bool voice_toggle_on = false;   // toggle-mode latch (when "require holding" is off)
+sound voice_monitor;            // local centered playback of our own voice ("hear your voice when streaming")
+
+// Bring up the mic and encoder for this session (idempotent). Honors the "enable voice chat" preference.
+void voice_init()
 {
-	p.play_stationary("sounds/ui/misc/voff.ogg", false);
-	vc.stop(true, outfile);
-	recording = false;
-	spamtimer.restart();
-	if(rectimer.elapsed < 300) { speak("Recording too short"); return; }
-	if(!file_exists(outfile)) { speak("Playback failed. File missing."); return; }
-	transmit_voice();
-	if(hearvoice)
+	if(voicechat != 1 or voice_ready) return;
+	@voice_enc = opus_encoder(VOICE_RATE, 1, OPUS_APPLICATION_VOIP);
+	if(@voice_enc == null or !voice_enc.valid) { @voice_enc = null; return; }
+	voice_enc.set_bitrate(24000);
+	voice_enc.set_complexity(5);
+	voice_enc.set_inband_fec(true);
+	voice_enc.set_expected_loss(5);
+	voice_enc.set_signal(OPUS_SIGNAL_VOICE);
+	@voice_mic = microphone();
+	// mono, float, no self-monitor pass-through, fresh buffer.
+	if(@voice_mic == null or !voice_mic.start_recording(-1, VOICE_RATE, 1, true, false, false))
 	{
-		string st = DIRECTORY_TEMP + "\\cvf_self_" + (voiceclip_id++) + ".ogg";
-		if(file_copy(outfile, st, true))
-		{
-			if(selfvoicesound != -1) vpool.destroy_sound(selfvoicesound);
-			if(selfvoicefile != "" and file_exists(selfvoicefile)) file_delete(selfvoicefile);
-			selfvoicesound = vpool.play_stationary(st, false); // centered: you're the listener, so no 3D for your own voice
-			selfvoicefile = st;
-		}
-		int sec = rectimer.elapsed / 1000;
-		speak("Playing back " + sec + " seconds");
+		@voice_mic = null;
+		@voice_enc = null;
+		return;
 	}
+	voice_ready = true;
 }
 
-// Per-frame O-key handler, like buffercheck() for the buffer keys: start on press, and stop on the toggle
-// press, the time limit, or the key release, depending on the hold-to-talk preference.
+// Tear the mic and encoder down when the session ends.
+void voice_shutdown()
+{
+	if(@voice_mic != null) { voice_mic.stop_recording(false); @voice_mic = null; }
+	@voice_enc = null;
+	voice_monitor.close();
+	recording = false;
+	voice_toggle_on = false;
+	voice_ready = false;
+}
+
+// Per-frame O-key handling plus live capture/encode/send. Honors the hold-vs-toggle preference (holdkey).
 void recordcheck()
 {
-	if(voicechat != 1) return;
-	if(key_pressed(KEY_O) && spamtimer.elapsed >= spamtime)
+	if(voicechat != 1) { if(voice_ready) voice_shutdown(); return; }
+	if(!voice_ready) { voice_init(); if(!voice_ready) return; }
+
+	// Decide whether we want to transmit this frame.
+	bool want;
+	if(holdkey == 1)
+		want = key_down(KEY_O); // push-to-talk: stream while held
+	else
 	{
-		if(!recording) prep_recording();
-		else if(holdkey == 0) prep_playback(); // toggle mode: a second press stops
+		if(key_pressed(KEY_O) and spamtimer.elapsed >= spamtime) { voice_toggle_on = !voice_toggle_on; spamtimer.restart(); }
+		want = voice_toggle_on; // toggle: each press flips it
 	}
-	if(recording && rectimer.elapsed >= rectime) prep_playback(); // hit the time limit
-	if(key_released(KEY_O) && recording && holdkey == 1) prep_playback(); // push-to-talk: stop on release
+
+	// Start/stop transitions: play the cue and drop any audio captured while idle so it doesn't burst out.
+	if(want and !recording)
+	{
+		recording = true;
+		p.play_stationary("sounds/ui/misc/von.ogg", false);
+		voice_mic.flush_capture();
+	}
+	else if(!want and recording)
+	{
+		recording = false;
+		p.play_stationary("sounds/ui/misc/voff.ogg", false);
+	}
+	if(!recording) { voice_mic.flush_capture(); return; } // idle: keep the mic buffer from growing while we're not talking
+
+	// Drain every full frame the mic has buffered, encode it, send it, and optionally monitor it locally.
+	while(voice_mic.available_frames >= uint(VOICE_FRAME))
+	{
+		string pcm = voice_mic.read_data(VOICE_FRAME);
+		if(pcm.length() == 0) break;
+		string pkt = voice_enc.encode_float(pcm);
+		if(pkt.length() > 0) send(0, pkt, 3, true); // server adds the header and relays to your space
+		if(hearvoice)
+		{
+			voice_monitor.push_memory(pcm, false, VOICE_RATE, 1); // your own voice, centered
+			if(!voice_monitor.playing) voice_monitor.play();
+		}
+	}
 }
 
-// Read the recorded clip off disk and send it on the voice channel (3). The server prepends the speaker
-// header and relays it to everyone else.
-void transmit_voice()
-{
-	if(!file_exists(outfile)) return;
-	file vf;
-	if(!vf.open(outfile, "rb")) return;
-	string data = vf.read();
-	vf.close();
-	if(data != "") send(0, data, 3, true);
-}
-
-// Play an incoming voice clip in 3D at the speaker's map position. Message format: "name x y\n<ogg bytes>".
-// Each clip is written to a unique temp file so the preload cache can't replay the speaker's previous clip;
-// the speaker's prior file is deleted once its sound is freed.
+// Play an incoming voice packet in 3D at the speaker's map position. Format: "name x y\n<opus bytes>".
+// A fresh decoder/stream is started for a speaker we haven't heard recently (gap reset), otherwise the
+// packet is decoded and appended to their existing positioned push stream.
 void play_remote_voice(string msg)
 {
 	int nl = string_contains(msg, "\n", 1);
 	if(nl <= 0) return;
 	string[] h = string_split(string_left(msg, nl), " ", true);
 	if(h.length() < 3 or h[0] == name) return;
-	string audio = msg.substr(nl + 1);
+	string opusdata = msg.substr(nl + 1);
+	if(opusdata == "") return;
 	int vx = string_to_number(h[1]);
 	int vy = string_to_number(h[2]);
-	string vt = DIRECTORY_TEMP + "\\cvf_voice_" + h[0] + "_" + (voiceclip_id++) + ".ogg";
 	add_player(h[0], vx, vy);
 	int vi = get_player_index(h[0]);
 	if(vi < 0) return;
-	if(players[vi].voicesound != -1) vpool.destroy_sound(players[vi].voicesound);
-	if(players[vi].voicefile != "" and file_exists(players[vi].voicefile)) file_delete(players[vi].voicefile);
-	file vf;
-	vf.open(vt, "wb");
-	vf.write(audio);
-	vf.close();
-	players[vi].voicesound = vpool.play_3d(vt, me.x, me.y, me.z, vx, vy, 0, calculate_theta(me_rotation), false);
-	players[vi].voicefile = vt;
+	set_player_position(h[0], vx, vy); // keep their roster spot current so voiceloop can follow them
+
+	// Start a clean stream if this is their first packet or they've been silent past the gap.
+	if(@players[vi].voice_snd == null or players[vi].voice_rxtimer.elapsed > VOICE_GAP_MS)
+	{
+		if(@players[vi].voice_snd != null) players[vi].voice_snd.close();
+		@players[vi].voice_snd = sound();
+		if(@players[vi].voice_dec == null) @players[vi].voice_dec = opus_decoder(VOICE_RATE, 1);
+		else players[vi].voice_dec.reset_state();
+		players[vi].voice_started = false;
+	}
+	players[vi].voice_rxtimer.restart();
+
+	string pcm = players[vi].voice_dec.decode_float(opusdata, VOICE_FRAME);
+	if(pcm.length() == 0) return;
+	players[vi].voice_snd.push_memory(pcm, false, VOICE_RATE, 1);
+	players[vi].voice_snd.set_position(me.x, me.y, me.z, vx, vy, 0, calculate_theta(me_rotation), vpool.pan_step, vpool.volume_step);
+	if(!players[vi].voice_started)
+	{
+		players[vi].voice_snd.play();
+		players[vi].voice_started = true;
+	}
 }
 
-// Make each playing voice clip follow its speaker around the map, every frame (called from game()'s loop
-// right after the listener is repositioned). A voice is one continuous clip, so unlike footsteps it can't
-// re-emit at the speaker's new spot; instead we move the playing sound's source to the speaker's current
-// roster position (the same position that drives their footsteps and beacon). update_sound_3d also re-pans
-// against the listener, so this covers you moving around a still speaker too. The unique clip filename
-// guards against a finished slot having been reused by another voice; we clear the handle once it stops.
+// Each frame: keep every active voice stream positioned at its speaker (and re-panned as you move), and
+// close a stream once its speaker has been silent past the gap so finished voices don't linger.
 void voiceloop()
 {
 	for(uint i=0; i<players.length(); i++)
 	{
-		int s = players[i].voicesound;
-		if(s < 0) continue;
-		if(s >= int(vpool.items.length()) or @vpool.items[s].handle == null or !vpool.items[s].handle.playing or vpool.items[s].filename != players[i].voicefile)
+		if(@players[i].voice_snd == null) continue;
+		if(players[i].voice_rxtimer.elapsed > VOICE_GAP_MS)
 		{
-			players[i].voicesound = -1;
+			players[i].voice_snd.close();
+			@players[i].voice_snd = null;
+			players[i].voice_started = false;
 			continue;
 		}
-		vpool.update_sound_3d(s, players[i].x, players[i].y, 0);
+		players[i].voice_snd.set_position(me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), vpool.pan_step, vpool.volume_step);
 	}
 }

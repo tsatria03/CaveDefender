@@ -5,13 +5,12 @@ int rectime = 10000;
 int spamtime = 500;
 int voicechat = 1;
 int holdkey = 1;
-bool hearvoice=true;
+bool hearvoice=false; // "Hear your voice when streaming voice messages": live self-monitor while you talk, off by default
 int gamxit=1;
 bool autorun=false; // when on you run by default and holding a movement modifier (alt/ctrl/shift) walks instead; toggled in-map with Alt+R, saved in prefs
 string preffsPath = DIRECTORY_APPDATA + "tsatria03/CaveDefender/preffs/";
 string soundcard="Default";
 string mapmode="2d";
-string outfile = DIRECTORY_TEMP + "\\convert.ogg";
 string motd = "Welcome to the server.";
 string passc="rscs123";
 string name="";
@@ -61,5 +60,4 @@ form_menu m;
 instance gamstence;
 kh keyhook;
 sound_pool p, pool, spool, temp, beaconpool, vpool, ambpool, musicpool, objpool;
-voicechatting vc;
 virtual_dialogs vd;

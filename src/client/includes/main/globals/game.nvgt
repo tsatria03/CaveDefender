@@ -174,7 +174,7 @@ buffercheck();
 			lasty=int(me.y);
 			send(0, "move "+lastx+" "+lasty, 0, true);
 		}
-		recordcheck(); // all O-key voice handling (start, the three stop paths, transmit, own playback) lives in recfuncts.nvgt
+		recordcheck(); // all O-key voice handling (live capture, opus encode, send, optional self-monitor) lives in recfuncts.nvgt
 		if(key_pressed(KEY_F1))
 		{
 			send(0,"who",0,true);
