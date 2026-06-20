@@ -113,18 +113,21 @@ buffercheck();
 			speak(me.x+", "+me.y+" on "+gmt()+". Facing "+facing_name(facing)+".");
 		}
 		if (key_pressed(KEY_P)) track_players();
-		if (key_pressed(KEY_R) and alt_is_down())
+		if (key_pressed(KEY_R)) // read once: key_pressed is one-shot, so a second read in the same frame misses it
 		{
-			// Alt+R toggles auto-running anywhere you can move; saved so it sticks next session.
-			autorun = !autorun;
-			p.play_stationary(autorun ? "sounds/ui/misc/toggleon.ogg" : "sounds/ui/misc/toggleoff.ogg", false);
-			speak(autorun ? "auto running enabled" : "auto running disabled");
-			writepreffs();
-		}
-		else if (key_pressed(KEY_R) and !in_game)
-		{
-			if(current_room != 0) announce_members("scopemembers", "in this room");
-			else announce_rooms();
+			if(alt_is_down())
+			{
+				// Alt+R toggles auto-running anywhere you can move; saved so it sticks next session.
+				autorun = !autorun;
+				p.play_stationary(autorun ? "sounds/ui/misc/toggleon.ogg" : "sounds/ui/misc/toggleoff.ogg", false);
+				speak(autorun ? "auto running enabled" : "auto running disabled");
+				writepreffs();
+			}
+			else if(!in_game)
+			{
+				if(current_room != 0) announce_members("scopemembers", "in this room");
+				else announce_rooms();
+			}
 		}
 		if (key_pressed(KEY_L) and !in_game) announce_members("scopemembers 0", "in the lobby");
 		if (key_pressed(KEY_G))
@@ -288,7 +291,7 @@ void speak_game_status()
 	else if(game_phase == "wave")
 	{
 		if(wave_attacking) speak("Round " + wave_number + ", the enemies are attacking.");
-		else speak("Round " + wave_number + ", the enemies are resting.");
+		else speak("Round " + wave_number + " complete. The enemies are resting.");
 	}
 	else speak("The round has not started yet.");
 }

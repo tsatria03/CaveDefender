@@ -48,15 +48,14 @@ if(best=="" or c<bestcount) { best=dirs[i]; bestcount=c; }
 return best;
 }
 // Move every bot off a now-destroyed wall onto the standing wall with the fewest attackers (recomputed
-// per bot so they spread), but never past the per-wall cap: a bot with no room under bots_per_wall_cap
-// (or no wall left standing) simply leaves the game, so a wall never piles up beyond 8.
+// per bot so they spread). With no per-wall cap, a bot only leaves the game when no wall is left standing.
 void redistribute_bots(int gameid, string deadwall, double size)
 {
 for(int i=int(enemies.length())-1; i>=0; i--)
 {
 if(@enemies[i]==null or enemies[i].game_id!=gameid or enemies[i].wall!=deadwall) continue;
 string nw = least_attacked_wall(gameid, size);
-if(nw != "" and enemies_on_wall(gameid, nw) < bots_per_wall_cap) enemies[i].wall = nw;
+if(nw != "") enemies[i].wall = nw;
 else enemies.remove_at(i);
 }
 }
@@ -67,10 +66,6 @@ enemy e(next_enemy_id, gameid, wall, weapon);
 next_enemy_id++;
 enemies.insert_last(e);
 }
-// The per-wall bot ceiling: a flat 8 for every game, regardless of player count. A wave grows by one bot
-// per wall on each attack burst up to this, then holds. A wall NEVER exceeds 8 -- even a destroyed wall's
-// redistributed bots respect it (excess simply leave). So at most 32 bots in a game (4 walls x 8).
-const int bots_per_wall_cap=8;
 // Bring every STANDING wall in a game up to `target` bots, adding fresh random-weapon bots to fill any
 // shortfall. Walls already at or above target (e.g. piled up by redistribution after a collapse) are left
 // alone -- this never removes bots, so losing a wall only ever makes the survivors busier.
@@ -86,13 +81,13 @@ int have = enemies_on_wall(gameid, dirs[d]);
 for(int n=have; n<target; n++) spawn_enemy(gameid, dirs[d], random(1, 4));
 }
 }
-// Random damage for a weapon: axe 1-2, bat 2-3, crowbar 3-4, hammer 4-5.
+// Flat (non-random) damage per weapon: axe 1, bat 2, crowbar 3, hammer 4.
 int enemy_damage(int weapon)
 {
-if(weapon==1) return random(1, 2);
-if(weapon==4) return random(2, 3);
-if(weapon==2) return random(3, 4);
-return random(4, 5);
+if(weapon==1) return 1; // axe
+if(weapon==4) return 2; // bat
+if(weapon==2) return 3; // crowbar
+return 4;               // hammer
 }
 // Every server tick: each bot whose attack timer is up swings at its wall, dealing its weapon's damage,
 // then the new wall strengths and a hit event (wall + weapon) go out to the game so clients play the
