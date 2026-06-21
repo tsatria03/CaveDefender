@@ -123,11 +123,13 @@ buffercheck();
 				speak(autorun ? "auto running enabled" : "auto running disabled");
 				writepreffs();
 			}
-			else if(!in_game)
+			else if(in_game)
 			{
-				if(current_room != 0) announce_members("scopemembers", "in this room");
-				else announce_rooms();
+				// In a game, R reports who's standing in the game's room (its office), handy for inviting people in.
+				if(current_room != 0) announce_members("scopemembers "+current_room, "in your room");
 			}
+			else if(current_room != 0) announce_members("scopemembers", "in this room");
+			else announce_rooms();
 		}
 		if (key_pressed(KEY_L) and !in_game) announce_members("scopemembers 0", "in the lobby");
 		if (key_pressed(KEY_G))

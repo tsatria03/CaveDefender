@@ -76,8 +76,8 @@ opts.insert_last("Start game"); players[index].menu_actions.insert_last("startga
 opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stopgame");
 opts.insert_last("Join game"); players[index].menu_actions.insert_last("joingame");
 opts.insert_last("Watch game"); players[index].menu_actions.insert_last("watchgame");
-opts.insert_last("Invite a player"); players[index].menu_actions.insert_last("invite");
-opts.insert_last("Kick a player"); players[index].menu_actions.insert_last("kick");
+opts.insert_last("Invite to room"); players[index].menu_actions.insert_last("invite");
+opts.insert_last("Kick from room"); players[index].menu_actions.insert_last("kick");
 if(rooms[ri].is_private)
 {
 opts.insert_last("Set password"); players[index].menu_actions.insert_last("setpw");
@@ -88,6 +88,11 @@ opts.insert_last("Leave room"); players[index].menu_actions.insert_last("leave")
 send_menu(peer, "room", "Room menu", opts);
 }
 
+// A spoken count for a list menu's intro, e.g. "There are 3 players in your room." / "There is 1 player in the lobby."
+string players_count_phrase(int n, string where)
+{
+return "There " + (n == 1 ? "is " : "are ") + n + (n == 1 ? " player " : " players ") + where + ".";
+}
 // The list of players the host can kick (everyone else actually in the office, not off in a game).
 void push_kick_list(int index)
 {
@@ -110,7 +115,7 @@ if(opts.length() == 0)
 send(peer, "There is no one in your room to kick.", 0, true);
 return;
 }
-send_menu(peer, "kick", "Kick a player", opts);
+send_menu(peer, "kick", "Choose a player to kick from your room. " + players_count_phrase(opts.length(), "in your room"), opts);
 }
 
 // The list of players a room member can invite: everyone currently standing in the main lobby (room_id 0,
@@ -133,7 +138,57 @@ if(opts.length() == 0)
 send(peer, "There is no one in the lobby to invite.", 0, true);
 return;
 }
-send_menu(peer, "invite", "Invite a player", opts);
+send_menu(peer, "invite", "Choose a player to invite to your room. " + players_count_phrase(opts.length(), "in the lobby"), opts);
+}
+// The list of players the game host can invite into their open game: everyone standing in the game's room
+// (its parent office) who isn't already in a game, minus the host. Usernames go in menu_targets; the actual
+// invite is sent by do_game_invite. Offered only for open games (see push_game_menu).
+void push_game_invite_list(int index)
+{
+int peer = players[index].peer_id;
+int gi = get_game_index(players[index].room_id);
+if(gi < 0) return;
+int proom = games[gi].parent_room;
+if(games[gi].members.length() >= 4) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full
+players[index].menu_targets.resize(0);
+string[] opts;
+for(uint i = 0; i < players.length(); i++)
+{
+if(players[i].room_id != proom) continue;         // only people standing in this game's room
+if(int(players[i].peer_id) == peer) continue;     // not yourself
+players[index].menu_targets.insert_last(players[i].name);
+opts.insert_last(afk_prefix(int(i)) + display_name_flagged(int(i)));
+}
+if(opts.length() == 0)
+{
+send(peer, "There is no one in your room to invite.", 0, true);
+return;
+}
+send_menu(peer, "gameinvite", "Choose a player to invite to your game. " + players_count_phrase(opts.length(), "in your room"), opts);
+}
+// The list of players the game host can kick out of their game (every member but the host). Usernames go in
+// menu_targets; the removal is done by the kickfromgame command.
+void push_game_kick_list(int index)
+{
+int peer = players[index].peer_id;
+int gi = get_game_index(players[index].room_id);
+if(gi < 0) return;
+players[index].menu_targets.resize(0);
+string[] opts;
+for(uint j = 0; j < games[gi].members.length(); j++)
+{
+if(games[gi].members[j] == peer) continue;        // not yourself (the host)
+int pi = get_player_index(games[gi].members[j]);
+if(pi < 0) continue;
+players[index].menu_targets.insert_last(players[pi].name);
+opts.insert_last(afk_prefix(pi) + display_name_flagged(pi));
+}
+if(opts.length() == 0)
+{
+send(peer, "There is no one in your game to kick.", 0, true);
+return;
+}
+send_menu(peer, "gamekick", "Choose a player to kick from your game. " + players_count_phrase(opts.length(), "in your game"), opts);
 }
 // The list of games in the player's room for either joining or stopping. mode = "join" (skip full and
 // others' solo games) or "stop" (staff see all, others only their own). Game ids go in menu_targets;
@@ -223,6 +278,13 @@ players[index].menu_actions.resize(0);
 string[] opts;
 if(host and phase == "idle") { opts.insert_last("Begin round"); players[index].menu_actions.insert_last("beginround"); }
 else if(host and phase == "build" and staff) { opts.insert_last("Skip build phase"); players[index].menu_actions.insert_last("skipbuild"); }
+// Invite/kick are open-game host options (a solo game has only the host). Invite shows while the game is still
+// joinable and has a free slot; kick shows whenever there's someone other than the host to remove.
+if(host and !games[gi].solo)
+{
+if(phase == "idle" or phase == "build") { opts.insert_last("Invite to game"); players[index].menu_actions.insert_last("gameinvite"); } // full games still show it, to report the cap when chosen
+opts.insert_last("Kick from game"); players[index].menu_actions.insert_last("gamekick"); // always shown; reports "no one to kick" when you're alone
+}
 if(opts.length() == 0) return; // nothing actionable: stay silent and let Tab report the round status
 send_menu(peer, "game", "Round menu. " + status, opts);
 }
@@ -323,6 +385,91 @@ players[index].menu_targets.resize(0);
 for(uint i=0; i<langs.length(); i++) players[index].menu_targets.insert_last(langs[i]);
 send_menu(peer, "channel", "Select a language channel to use.", langs);
 }
+// Read the configured pronoun options (one per line, "masculine (he/him/his/his/himself)") from
+// data/preffs/pronouns.svr, skipping blanks. Read fresh each time so a host can edit the list without restarting.
+string[] load_pronoun_options()
+{
+string[] opts;
+if(!file_exists("data/preffs/pronouns.svr")) return opts;
+file pf;
+if(!pf.open("data/preffs/pronouns.svr", "rb")) return opts;
+string content = pf.read();
+pf.close();
+string[] lines = string_split(content, "\n", true);
+for(uint i=0; i<lines.length(); i++)
+{
+string ln = lines[i].trim_whitespace();
+if(ln != "") opts.insert_last(ln);
+}
+return opts;
+}
+// The bare key of a pronoun line ("masculine (he/him/...)" -> "masculine"). The parenthetical lists the
+// grammatical forms (or "name only") and is parsed by pronoun_forms.
+string pronoun_bare(string line)
+{
+int paren = string_contains(line, " (", 1);
+if(paren > 0) return string_left(line, paren);
+return line;
+}
+// Is `key` one of the configured pronoun options? Case-insensitive on the bare key. Validates a hand-edited
+// pronoun.usr so an invalid one falls back to none at spawn.
+bool is_valid_pronoun(string key)
+{
+string[] opts = load_pronoun_options();
+for(uint i=0; i<opts.length(); i++)
+if(string_to_lower_case(pronoun_bare(opts[i])) == string_to_lower_case(key)) return true;
+return false;
+}
+// The five grammatical forms for a pronoun key, parsed from its pronouns.svr line (the slash-separated list
+// inside the parentheses): subject, object, possessive determiner, possessive pronoun, reflexive -- e.g.
+// he/him/his/his/himself. Returns an empty array for an unknown key or a non-five-form entry like "name only".
+string[] pronoun_forms(string key)
+{
+string[] forms;
+string[] opts = load_pronoun_options();
+for(uint i=0; i<opts.length(); i++)
+{
+if(string_to_lower_case(pronoun_bare(opts[i])) != string_to_lower_case(key)) continue;
+int lp = string_contains(opts[i], "(", 1);
+int rp = string_contains(opts[i], ")", 1);
+if(lp >= 0 and rp > lp)
+{
+string inside = opts[i].substr(lp+1, rp-lp-1);
+string[] parts = string_split(inside, "/", true);
+if(parts.length() == 5) forms = parts;
+}
+break;
+}
+return forms;
+}
+// The right pronoun word for `key` and `form` ("subject", "object", "possessive", "possessivepronoun",
+// "reflexive"). For a name-only entry (e.g. "none") there are no forms, so it falls back to `displayname` --
+// with "'s" for either possessive -- so a sentence reads with the player's name in place of a pronoun.
+string pronoun_word(string key, string form, string displayname)
+{
+string[] f = pronoun_forms(key);
+if(f.length() == 5)
+{
+if(form == "subject") return f[0];
+if(form == "object") return f[1];
+if(form == "possessive") return f[2];
+if(form == "possessivepronoun") return f[3];
+if(form == "reflexive") return f[4];
+}
+if(form == "possessive" or form == "possessivepronoun") return displayname + "'s";
+return displayname;
+}
+// The /pronoun chooser: list every configured pronoun option for the player to pick from. The full lines go
+// in menu_targets so the returned choice maps back to one. Available to everyone.
+void push_pronoun_menu(int index)
+{
+int peer = players[index].peer_id;
+string[] opts = load_pronoun_options();
+if(opts.length() == 0) { send(peer, "No pronoun options are configured.", 0, true); return; }
+players[index].menu_targets.resize(0);
+for(uint i=0; i<opts.length(); i++) players[index].menu_targets.insert_last(opts[i]);
+send_menu(peer, "pronoun", "Select the pronouns used to refer to you in messages.", opts);
+}
 void on_menu_result(int player_index, string id, int choice)
 {
 if(player_index < 0 or player_index >= int(players.length())) return;
@@ -341,6 +488,14 @@ string cname = language_bare(players[player_index].menu_targets[choice]); // bar
 players[player_index].language = cname;
 set_language(players[player_index].name, cname); // persist to language.usr so it sticks across sessions
 send(peer, "misc Channel language set to "+cname+".", 0, true);
+}
+else if(id == "pronoun")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+string pkey = pronoun_bare(players[player_index].menu_targets[choice]);
+players[player_index].pronoun = pkey;
+set_pronoun(players[player_index].name, pkey); // persist to pronoun.usr so it sticks across sessions
+send(peer, "misc Your pronouns are now set to "+pkey+".", 0, true);
 }
 else if(id == "joinpublic" or id == "joinprivate")
 {
@@ -413,6 +568,18 @@ if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) ret
 string act = players[player_index].menu_actions[choice];
 if(act == "beginround") send(peer, "runcommand beginround", 0, true);
 else if(act == "skipbuild") send(peer, "runcommand skipbuild", 0, true);
+else if(act == "gameinvite") push_game_invite_list(player_index);
+else if(act == "gamekick") push_game_kick_list(player_index);
+}
+else if(id == "gameinvite")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return;
+do_game_invite(player_index, players[player_index].menu_targets[choice]);
+}
+else if(id == "gamekick")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return;
+send(peer, "runcommand kickfromgame " + players[player_index].menu_targets[choice], 0, true);
 }
 else if(id == "pause")
 {

@@ -1,5 +1,5 @@
 // Client-side roster of OTHER players we can currently hear. The local player stays as `me`
-// (map.nvgt) plus the identity globals (name, gender); this class is only for the remote players
+// (map.nvgt) plus the identity globals (name); this class is only for the remote players
 // the server tells us about. Each carries a position so we can place their sounds (footsteps, a
 // locator beacon) in 3D relative to `me`, plus a beacon timer/handle so the beacon can pulse at
 // their spot — the same shape as SimpleFighter's checkpoint/item looping-sound objects.

@@ -211,6 +211,74 @@ send(peer, "gameleft", 0, true);
 set_room_scope(pi, proom);
 }
 }
+// Perform the actual join of player `index` into games[gi] (caller has already validated): add them as a
+// member, tell their client, scope them into the cavern, and cue the members already inside. Shared by the
+// joingame command and an accepted game invite.
+void join_game_now(int index, int gi)
+{
+int peer = players[index].peer_id;
+games[gi].members.insert_last(peer);
+send(peer, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0,true);
+set_room_scope(index, games[gi].id);
+int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
+if(rem<0) rem=0;
+send(peer, "gamephase "+games[gi].phase+" "+rem, 0,true);
+for(uint mj=0; mj<games[gi].members.length(); mj++)
+{
+if(games[gi].members[mj]==peer) continue;
+send(games[gi].members[mj], "playerjoinedgame "+display_name_flagged(index), 0,true);
+}
+}
+// The game host invites a player standing in the game's room into their open game. Re-validates, stores the
+// pending invite on the target (a newer invite replaces any older one of either kind), and alerts them with
+// the invite sound. The prompt reuses the roominvite client message, so /accept and /reject answer it.
+void do_game_invite(int inviter_index, string target_name)
+{
+int peer = players[inviter_index].peer_id;
+int gi = get_game_index(players[inviter_index].room_id);
+if(gi < 0) { send(peer, "You are not in a game.", 0, true); return; }
+if(games[gi].host_peer != peer) { send(peer, "Only the host can invite players to the game.", 0, true); return; }
+if(games[gi].members.length() >= 4) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // filled up while the list was open
+int ti = get_online_index(target_name);
+if(ti < 0) { send(peer, "misc That player is no longer online.", 0, true); return; }
+if(players[ti].room_id != games[gi].parent_room) { send(peer, "misc That player is no longer in your room.", 0, true); return; }
+players[ti].invite_game = games[gi].id;
+players[ti].invite_room = 0;
+players[ti].invite_from = players[inviter_index].name;
+players[ti].invite_timer.restart();
+string gposs = pronoun_word(players[inviter_index].pronoun, "possessive", display_name_flagged(inviter_index));
+string msg = display_name_flagged(inviter_index) + " has invited you to " + gposs + " game. Would you like to accept? Type /accept, or /reject to refuse.";
+send(players[ti].peer_id, "roominvite\n" + msg, 0, true);
+send(peer, "misc Invitation sent to " + display_name_flagged(ti) + ".", 0, true);
+}
+// The invited player typed /accept on a pending GAME invite: re-validate (still in the room, game still open,
+// not full, round not yet underway) and drop them in, then tell the host. Clears the invite on any outcome.
+void accept_game_invite(int index)
+{
+int peer = players[index].peer_id;
+if(players[index].invite_timer.elapsed >= invite_timeout) { players[index].invite_game = 0; send(peer, "misc That invitation has expired.", 0, true); return; }
+int gi = get_game_index(players[index].invite_game);
+if(gi < 0) { players[index].invite_game = 0; send(peer, "misc That game is no longer available.", 0, true); return; }
+if(players[index].room_id != games[gi].parent_room) { send(peer, "misc You can only accept a game invite from its room.", 0, true); return; }
+if(games[gi].solo) { players[index].invite_game = 0; send(peer, "misc That game is no longer open.", 0, true); return; }
+if(games[gi].members.length() >= 4) { players[index].invite_game = 0; send(peer, "misc That game is full.", 0, true); return; }
+if(games[gi].phase != "idle" and games[gi].phase != "build") { players[index].invite_game = 0; send(peer, "misc That game is already in progress.", 0, true); return; }
+string inviter = players[index].invite_from;
+players[index].invite_game = 0; // consume the invite before joining
+join_game_now(index, gi);
+int hi = get_online_index(inviter);
+if(hi > -1) send(players[hi].peer_id, "misc " + display_name_flagged(index) + " has accepted your game invite.", 0, true);
+}
+// The invited player typed /reject on a pending GAME invite: clear it and tell the host they declined.
+void reject_game_invite(int index)
+{
+int peer = players[index].peer_id;
+string inviter = players[index].invite_from;
+players[index].invite_game = 0;
+int hi = get_online_index(inviter);
+if(hi > -1) send(players[hi].peer_id, "misc " + display_name_flagged(index) + " has declined your game invite.", 0, true);
+send(peer, "misc You declined the game invitation.", 0, true);
+}
 // Called when a peer disconnects: drop them from any game they were in, ending it if they were the
 // last player or migrating the host if they hosted an Open game with others still inside. (Remaining
 // members keep their game scope, so no rescoping is needed here.)

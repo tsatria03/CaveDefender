@@ -158,11 +158,6 @@ bool newaccountform()
 	form.create_window("New account", false);
 	int unamebox=form.create_input_box("Username", "", "");
 	int passbox=form.create_input_box("Password", "", "*");
-	int genderlist=form.create_list("Gender");
-	form.add_list_item(genderlist, "Male", "male");
-	form.add_list_item(genderlist, "Female", "female");
-	form.add_list_item(genderlist, "Non binary", "nonbinary");
-	form.set_list_position(genderlist, 0);
 	int createbtn=form.create_button("&Create account", true);
 	int cancelbtn=form.create_button("&Cancel", false, true);
 	form.focus(unamebox);
@@ -179,7 +174,6 @@ bool newaccountform()
 		{
 			string uname=form.get_text(unamebox).trim_whitespace();
 			string pass=form.get_text(passbox);
-			int gpos=form.get_list_position(genderlist);
 			if(uname.length()<6 or uname.length()>24)
 			{
 				dlgmessage("Usernames must be between 6 and 24 characters. Press enter to continue.");
@@ -204,15 +198,8 @@ bool newaccountform()
 				form.focus(passbox);
 				continue;
 			}
-			if(gpos<0)
-			{
-				dlgmessage("Please select a gender. Press enter to continue.");
-				form.focus(genderlist);
-				continue;
-			}
 			name=uname;
 			password=pass;
-			gender=form.get_list_item_id(genderlist, gpos);
 			return true;
 		}
 	}

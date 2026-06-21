@@ -78,7 +78,6 @@ ip="localhost";
 port=25562;
 name="";
 password="";
-gender="";
 }
 
 // Restart the client. Compiled: relaunch the exe (appid) from the bundle. Uncompiled: relaunch the pinned
