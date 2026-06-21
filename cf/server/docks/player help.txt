@@ -27,11 +27,15 @@ Slash opens global chat, which everyone on the server hears.
 Backslash opens local chat, which only the people sharing your current space hear, whether that is the lobby or your room.
 Apostrophe opens staff chat, which only staff can send to or hear; as a regular player you can't use it.
 
-Global and local chat are also divided into language channels. You only hear global and local messages from people on the same language channel as you, so each language has its own conversation; private messages and staff chat reach across all channels. Choose yours with /channel, everyone starts on English, and your choice is saved for next time.
+Global chat is also divided into language channels. You only hear global messages from people on the same language channel as you, so each language has its own conversation. Local chat, private messages, and staff chat all reach across channels, so local chat reaches everyone sharing your space whatever channel they are on. Choose your language with /channel, everyone starts on English, and your choice is saved for next time.
 
-One of the channels is named Unfiltered. It works like any other channel, in that you only chat with people who have also chosen it, but it is the single place where the word filter is switched off. It is meant for talking freely, including adult or NSFW topics, so pick it only if you are happy to both read and write that kind of language. No one is ever put there automatically, and you can leave it any time by choosing another channel with /channel.
+One of the channels is named Unfiltered. It works like any other channel, in that you only hear global chat from people who have also chosen it, but it is the one channel where the word filter is switched off for global chat. Local chat is always filtered no matter which channel you are on, since it reaches everyone sharing your space. Unfiltered is meant for talking freely, including adult or NSFW topics, so pick it only if you are happy to both read and write that kind of language. No one is ever put there automatically, and you can leave it any time by choosing another channel with /channel.
 
 You can run any command from any chat you have access to.
+
+Pronouns.
+
+Messages that talk about you in the third person can use your pronouns, for example when you raise your staff flag, change your nickname, or join a room. Choose them with /pronoun, which opens a menu of the options the server offers, such as masculine, feminine, singular they, or one of several neopronoun sets. Everyone starts on singular they, and your choice is saved for next time. There is also a none option, which simply uses your name in place of a pronoun, so the message reads with your name rather than he, she, or they.
 
 Moving around.
 

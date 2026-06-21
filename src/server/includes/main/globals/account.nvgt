@@ -57,10 +57,10 @@ bool set_nickname(string name, string nick) { return write_field(name, "nickname
 // languages.svr to take effect -- an invalid value falls back to English at spawn (is_valid_language).
 string get_language(string name) { return read_field(name, "language", "English"); }
 bool set_language(string name, string lang) { return write_field(name, "language", lang); }
-// The pronoun set (pronoun.usr): the bare key from pronouns.svr, e.g. "Masculine", deciding how third-person
-// messages refer to the player. Defaults to "Singular" (they/them). Hand-editable, but must match a configured
-// option in pronouns.svr to take effect -- an invalid value falls back to Singular at spawn (is_valid_pronoun).
-string get_pronoun(string name) { return read_field(name, "pronoun", "Singular"); }
+// The pronoun set (pronoun.usr): the bare key from pronouns.svr, e.g. "Masculine/male", deciding how third-person
+// messages refer to the player. Defaults to the configured they/them option (default_pronoun). Hand-editable, but
+// must match a configured option in pronouns.svr to take effect -- an invalid value falls back at spawn.
+string get_pronoun(string name) { return read_field(name, "pronoun", default_pronoun()); }
 bool set_pronoun(string name, string p) { return write_field(name, "pronoun", p); }
 // The highest round (wave count) this player has ever reached in a game (bestround.usr): their personal
 // best. A game-over that beats it grants a one-time milestone wood bonus and updates the record. Defaults to 0.
@@ -128,7 +128,7 @@ string hash = string_hash_sha256(salt + password);
 write_field(name, "username", name);
 write_field(name, "nickname", name); // display name starts equal to the username
 write_field(name, "language", "English"); // everyone starts on the English channel
-write_field(name, "pronoun", "Singular"); // default: they/them, until the player picks with /pronoun
+write_field(name, "pronoun", default_pronoun()); // default: the configured they/them option, until the player picks with /pronoun
 write_field(name, "password", salt + ":" + hash);
 write_field(name, "rank", is_owner(name) ? "developer" : "player");
 write_field(name, "pubroom", "");

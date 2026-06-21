@@ -8,7 +8,7 @@ timer messagetimer;
 double version;
 string rank="player";
 string language="English"; // the player's current language chat channel (bare name); loaded from language.usr at spawn, defaults to English.
-string pronoun="Singular"; // how third-person messages refer to this player; the bare key from pronouns.svr, loaded from pronoun.usr at spawn, defaults to Singular (they/them).
+string pronoun=""; // how third-person messages refer to this player; the bare key from pronouns.svr, set from pronoun.usr at spawn (default_pronoun() if unset or invalid).
 int64 mute_global=-1, mute_local=-1, mute_voice=-1; // per channel: -1 = not muted, 0 = indefinite, >0 = epoch it expires at. (Staff can't be muted, so there's no staff channel.)
 int x=1, y=1; // map position; defaults to the client's spawn at (1,1) until a position update arrives.
 int room_id=0; // 0 = main lobby; otherwise the id of the room this player is currently in.
