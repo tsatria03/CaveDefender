@@ -109,8 +109,7 @@ if(wi<0 or walls[wi].health<=0) continue; // wall destroyed/missing; don't keep 
 damage_wall(wi, enemy_damage(enemies[i].weapon));
 broadcast_wall_strength(gid);
 string hit = "wallhit "+enemies[i].wall+" "+enemies[i].weapon;
-for(uint m=0; m<games[gi].members.length(); m++)
-send(games[gi].members[m], hit, 0, true);
+send_to_game(gid, hit); // members + spectators hear the strike
 if(walls[wi].health<=0) on_wall_destroyed(gid, gi, enemies[i].wall); // this hit just brought it down
 }
 }

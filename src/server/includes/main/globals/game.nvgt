@@ -47,6 +47,39 @@ for(uint i=0; i<games.length(); i++)
 if(games[i].id==id) return i;
 return -1;
 }
+// Up to this many spectators may watch one game at once, mirroring the 4-player join cap.
+const int spectator_cap=4;
+// How many spectators are currently watching a game (players with room_id == the game id and spectating).
+int spectator_count(int gameid)
+{
+int n=0;
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id==gameid and players[i].spectating) n++;
+return n;
+}
+// Send a message (channel 0) to EVERYONE present in a game's space -- its members AND any spectators, since
+// both share the game's room_id. Use this for audio/event broadcasts (wall hits, wave announcements, phase,
+// pause, wood drops) so spectators hear them too; gameplay-control messages (roundover, wood counts) stay
+// members-only and are sent by looping members directly.
+void send_to_game(int gameid, string msg)
+{
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id==gameid) send(players[i].peer_id, msg, 0, true);
+}
+// Eject every spectator watching a game (when the game is removed): return them to the room they came from
+// (the lobby if that's gone), clear their spectator state, and tell their client to leave the watch.
+void eject_spectators(int gameid)
+{
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].room_id!=gameid or !players[i].spectating) continue;
+int back = (get_room_index(players[i].spectate_room)>-1) ? players[i].spectate_room : 0;
+players[i].spectating=false;
+players[i].spectate_room=0;
+send(players[i].peer_id, "watchleft", 0, true);
+set_room_scope(int(i), back);
+}
+}
 // Create a game inside a room and return its id. Uses the shared room_id namespace so a player's
 // room_id can point at a game just like a room, and spawns the four destroyable cavern walls.
 int create_game(int parent_room, string hostname, int hostpeer, int size, bool solo)
@@ -57,6 +90,57 @@ game g(gid, parent_room, hostname, hostpeer, size, solo);
 games.insert_last(g);
 spawn_border_walls(gid, size, 400, 400, true); // the four destroyable cavern walls (max health 400).
 return gid;
+}
+// Start watching a game from the overhead deck. Validates (in a room, game exists in that room, watch
+// slots free), then moves the player into the game's scope as a SPECTATOR (room_id = game id, spectating
+// true) without adding them to members -- so they hear everything but take no part. Sends them the cavern,
+// the players' positions, ground wood, walls, and current phase, and quietly tells the game someone joined.
+void do_spectate(int index, int gameid)
+{
+int peer = players[index].peer_id;
+int ri = get_room_index(players[index].room_id);
+if(ri < 0) { send(peer, "You must be in a room to watch a game.", 0, true); return; }
+int gi = get_game_index(gameid);
+if(gi < 0) { send(peer, "That game no longer exists.", 0, true); return; }
+if(games[gi].parent_room != players[index].room_id) { send(peer, "That game isn't in your room.", 0, true); return; }
+if(spectator_count(gameid) >= spectator_cap) { send(peer, "That game's watch slots are full.", 0, true); return; }
+int office = players[index].room_id;
+for(uint i=0; i<players.length(); i++) // despawn the watcher from the office they're leaving
+if(i!=uint(index) and players[i].room_id==office) send(players[i].peer_id, "despawn "+players[index].name, 0, true);
+players[index].spectating = true;
+players[index].spectate_room = office;
+players[index].room_id = gameid;
+int center = games[gi].size / 2;
+players[index].x = center;
+players[index].y = center;
+send(peer, "spectatejoined "+gameid+" "+games[gi].size+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0, true);
+for(uint i=0; i<players.length(); i++) // give the watcher the players' positions (for P / beacons) -- not other spectators
+if(i!=uint(index) and players[i].room_id==gameid and !players[i].spectating) send(peer, pos_msg(int(i)), 0, true);
+for(uint i=0; i<items.length(); i++) // the ground wood already lying in the cavern
+if(@items[i]!=null and items[i].room_id==gameid) send(peer, "spawnitem "+items[i].id+" "+items[i].type+" "+items[i].x+" "+items[i].y, 0, true);
+send(peer, wall_strength_msg(gameid), 0, true);
+int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
+if(rem<0) rem=0;
+send(peer, "gamephase "+games[gi].phase+" "+rem+" "+games[gi].wave_number, 0, true);
+if(games[gi].paused) send(peer, "gamepaused", 0, true);
+string wn = display_name_flagged(index)+" is now watching.";
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id==gameid and i!=uint(index)) send(players[i].peer_id, "misc "+wn, 0, true);
+}
+// Stop watching: tell the game the watcher left, clear the spectator state, and return them to their office
+// (the lobby if it's gone). set_room_scope re-spawns them normally there (spectating is already cleared).
+void leave_watch(int index)
+{
+if(!players[index].spectating) return;
+int gameid = players[index].room_id;
+int back = (get_room_index(players[index].spectate_room)>-1) ? players[index].spectate_room : 0;
+string wn = display_name_flagged(index)+" stopped watching.";
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id==gameid and i!=uint(index)) send(players[i].peer_id, "misc "+wn, 0, true);
+players[index].spectating=false;
+players[index].spectate_room=0;
+send(players[index].peer_id, "watchleft", 0, true);
+set_room_scope(index, back);
 }
 // End a game for everyone: return each member to the parent room (office), drop the cavern walls, and
 // remove the game. Used by Stop game and when the last player leaves.
@@ -72,6 +156,7 @@ if(pi<0) continue;
 send(games[gindex].members[i], "gameleft", 0, true);
 set_room_scope(pi, proom);
 }
+eject_spectators(gid); // send any watchers back to their room before the game disappears
 clear_walls(gid);
 clear_items(gid);
 clear_enemies(gid);
@@ -95,6 +180,7 @@ if(games[gi].members.length()==0)
 // it closes only on Stop or when the room closes. Once a round has started, an emptied game just ends.
 if(games[gi].phase != "idle")
 {
+eject_spectators(games[gi].id); // no players left and the game is closing; send watchers back to their room
 clear_walls(games[gi].id);
 clear_items(games[gi].id);
 clear_enemies(games[gi].id);
@@ -133,6 +219,7 @@ if(mi<0) continue;
 games[i].members.remove_at(mi);
 if(games[i].members.length()==0)
 {
+eject_spectators(games[i].id); // last player disconnected; send any watchers back to their room
 clear_walls(games[i].id);
 clear_items(games[i].id);
 clear_enemies(games[i].id);
@@ -203,8 +290,7 @@ games[gindex].wave_number = 1;
 fill_walls_to(games[gindex].id, games[gindex].size, games[gindex].wave_bot_target);
 }
 int secs = (phase=="build") ? games[gindex].buildduration : 0;
-for(uint i=0; i<games[gindex].members.length(); i++)
-send(games[gindex].members[i], "gamephase "+phase+" "+secs+" "+games[gindex].wave_number, 0, true);
+send_to_game(games[gindex].id, "gamephase "+phase+" "+secs+" "+games[gindex].wave_number); // members + spectators
 }
 // Host-only shared pause: freeze a game's entire simulation for everyone. The phase/wood/wave timers
 // and every bot's attack timer all pause where they are, so nothing advances until the host
@@ -222,8 +308,7 @@ games[gi].wavetimer.pause();
 games[gi].wave_cycletimer.pause();
 for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.pause();
-for(uint m=0; m<games[gi].members.length(); m++)
-send(games[gi].members[m], "gamepaused", 0, true);
+send_to_game(games[gi].id, "gamepaused"); // members + spectators freeze together
 }
 // Unfreeze a paused game: resume every timer where it left off (so a half-elapsed build phase keeps its
 // remaining time) and tell everyone in the game. No-op if the game isn't paused.
@@ -237,8 +322,7 @@ games[gi].wavetimer.resume();
 games[gi].wave_cycletimer.resume();
 for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.resume();
-for(uint m=0; m<games[gi].members.length(); m++)
-send(games[gi].members[m], "gameresumed", 0, true);
+send_to_game(games[gi].id, "gameresumed"); // members + spectators unfreeze together
 }
 // Called every server tick: advance any finished build phase to the wave, and drop wood in active games.
 void gametick()
@@ -257,15 +341,13 @@ set_game_phase(int(i), "wave");
 if(games[i].phase=="build" and !games[i].warned and games[i].phasetimer.elapsed >= (games[i].buildduration - wave_warning_seconds)*1000)
 {
 games[i].warned=true;
-for(uint m=0; m<games[i].members.length(); m++)
-send(games[i].members[m], "wavewarning "+wave_warning_seconds, 0, true);
+send_to_game(games[i].id, "wavewarning "+wave_warning_seconds); // members + spectators
 }
 // Heads-up before each later wave: once per rest segment, wave_warning_seconds before it ends.
 if(games[i].phase=="wave" and !games[i].wave_attacking and !games[i].warned and games[i].wave_cycletimer.elapsed >= games[i].wave_cycle - wave_warning_seconds*1000)
 {
 games[i].warned=true;
-for(uint m=0; m<games[i].members.length(); m++)
-send(games[i].members[m], "wavewarning "+wave_warning_seconds, 0, true);
+send_to_game(games[i].id, "wavewarning "+wave_warning_seconds); // members + spectators
 }
 // Wood drops during the build and wave phases, on a random 1-5s cadence, up to a size-scaled cap.
 if((games[i].phase=="build" or games[i].phase=="wave") and games[i].woodtimer.elapsed >= games[i].woodinterval)
@@ -280,8 +362,7 @@ if(wood_count_in(games[i].id) >= wood_cap(games[i].size)) break;
 int wx = random(1, games[i].size-1); // interior only; the 0 and size edges are walls
 int wy = random(1, games[i].size-1);
 int iid = spawn_item(games[i].id, wx, wy, "wood");
-for(uint m=0; m<games[i].members.length(); m++)
-send(games[i].members[m], "spawnitem "+iid+" wood "+wx+" "+wy, 0, true);
+send_to_game(games[i].id, "spawnitem "+iid+" wood "+wx+" "+wy); // members + spectators hear the drop
 }
 }
 // Flip between attacking and resting every half-build-phase: bots hammer, then back off so players rebuild.
@@ -299,8 +380,7 @@ fill_walls_to(games[i].id, games[i].size, games[i].wave_bot_target);
 else games[i].warned=false; // a rest segment just opened; arm the heads-up for the next wave
 // Announce the swing of the cycle to everyone in the game so their clients replay the wave cue when the
 // bots resume and a rest cue when they pull back.
-for(uint m=0; m<games[i].members.length(); m++)
-send(games[i].members[m], "waveseg "+(games[i].wave_attacking?"1":"0")+" "+games[i].wave_number, 0, true);
+send_to_game(games[i].id, "waveseg "+(games[i].wave_attacking?"1":"0")+" "+games[i].wave_number); // members + spectators
 }
 }
 enemy_attacks(); // process every bot's attack timer across all games (breaches a wall when it hits 0)
@@ -325,8 +405,7 @@ return true;
 // all-walls-down game over is checked in gametick, not here, so we never reset mid bot-loop.)
 void on_wall_destroyed(int gameid, int gi, string dir)
 {
-for(uint m=0; m<games[gi].members.length(); m++)
-send(games[gi].members[m], "walldestroyed "+dir, 0, true);
+send_to_game(games[gi].id, "walldestroyed "+dir); // members + spectators hear the breach
 redistribute_bots(gameid, dir, games[gi].size);
 }
 // All walls down: end the round. Clear the bots and wood, drop into the "over" phase, and ask every
@@ -359,6 +438,9 @@ players[pi].pending_bonus_wood = bonus;
 // roundover <survival-seconds> <wood-collected> <rounds-reached> <bonus-wood> <milestone-round> (last two 0 = no milestone).
 send(games[gi].members[m], "roundover "+secs+" "+collected+" "+rounds+" "+bonus+" "+milestone, 0, true);
 }
+// Spectators don't get the play-again prompt; just tell them the round ended (they keep watching if it resets).
+for(uint s=0; s<players.length(); s++)
+if(players[s].room_id==gameid and players[s].spectating) send(players[s].peer_id, "misc The defenders lost the round after "+rounds+(rounds==1?" round":" rounds")+".", 0, true);
 }
 // True once every member still in the game has answered the play-again prompt (the no's have already left
 // via leave_game, so this means the remaining players all chose to stay). False for an empty game.
@@ -387,8 +469,9 @@ for(uint m=0; m<games[gi].members.length(); m++)
 {
 int pi = get_player_index(games[gi].members[m]);
 if(pi > -1) { players[pi].inv.clear(); send_wood_count(pi); } // a fresh round starts with no wood
-send(games[gi].members[m], "gamereset "+int(size), 0, true);
-send(games[gi].members[m], "gamephase idle 0", 0, true);
 }
+// Redraw the fresh idle cavern for members AND spectators (so watchers see the reset walls too).
+send_to_game(gameid, "gamereset "+int(size));
+send_to_game(gameid, "gamephase idle 0");
 broadcast_wall_strength(gameid);
 }

@@ -73,8 +73,9 @@ if(ri < 0) return;
 players[index].menu_actions.resize(0);
 string[] opts;
 opts.insert_last("Start game"); players[index].menu_actions.insert_last("startgame");
-opts.insert_last("Join game"); players[index].menu_actions.insert_last("joingame");
 opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stopgame");
+opts.insert_last("Join game"); players[index].menu_actions.insert_last("joingame");
+opts.insert_last("Watch game"); players[index].menu_actions.insert_last("watchgame");
 opts.insert_last("Invite a player"); players[index].menu_actions.insert_last("invite");
 opts.insert_last("Kick a player"); players[index].menu_actions.insert_last("kick");
 if(rooms[ri].is_private)
@@ -166,6 +167,32 @@ send(peer, (mode == "join") ? "There are no games to join in this room." : (staf
 return;
 }
 send_menu(peer, (mode == "join") ? "joingame" : "stopgame", (mode == "join") ? "Choose a game to join" : "Choose a game to stop", opts);
+}
+// The list of games a player can WATCH: every game in their room, any mode (solo or open) and any phase
+// (idle through in-progress) -- unlike the Join list, which hides solo and started games. Game ids go in
+// menu_targets; do_spectate enforces the 4-watcher cap.
+void push_watch_list(int index)
+{
+int peer = players[index].peer_id;
+int rid = players[index].room_id;
+players[index].menu_targets.resize(0);
+string[] opts;
+for(uint i = 0; i < games.length(); i++)
+{
+if(games[i].parent_room != rid) continue;
+players[index].menu_targets.insert_last("" + games[i].id);
+string label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
+if(games[i].phase != "idle") label += ", in progress";
+int sc = spectator_count(games[i].id);
+if(sc > 0) label += ", " + sc + (sc == 1 ? " watcher" : " watchers");
+opts.insert_last(label);
+}
+if(opts.length() == 0)
+{
+send(peer, "There are no games to watch in this room.", 0, true);
+return;
+}
+send_menu(peer, "watchgame", "Choose a game to watch", opts);
 }
 
 // The in-game round-control menu (Enter while in a game). The host gets "Begin round" (idle) or, if
@@ -347,6 +374,7 @@ else confirm_menu(peer, "deleteroom", "Are you sure you want to delete this room
 }
 else if(act == "invite") push_invite_list(player_index); // any room member may invite a lobby player
 else if(act == "joingame") push_game_list(player_index, "join");
+else if(act == "watchgame") push_watch_list(player_index); // any room member may watch a game
 else if(act == "stopgame") push_game_list(player_index, "stop");
 else if(act == "startgame") push_start_mode(player_index);
 }
@@ -364,6 +392,11 @@ else if(id == "joingame")
 {
 if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return;
 send(peer, "runcommand joingame " + players[player_index].menu_targets[choice], 0, true);
+}
+else if(id == "watchgame")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return;
+send(peer, "runcommand spectategame " + players[player_index].menu_targets[choice], 0, true);
 }
 else if(id == "stopgame")
 {

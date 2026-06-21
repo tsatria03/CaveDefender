@@ -472,6 +472,12 @@ void netloop_impl()
 			string[] ril = string_split(message, "\n", true);
 			if(ril.length() > 1) add_buffer_item("misc", ril[1]);
 		}
+		else if (parsed[0] == "invitexpired")
+		{
+			// A pending room invitation ran out before you answered it.
+			p.play_stationary("sounds/ui/misc/alert.ogg", false);
+			add_buffer_item("misc", "Your invitation has expired.");
+		}
 		else if (parsed[0] == "alert" and message.length() > 6)
 		{
 			// Generic server announcement → alerts buffer, with the standard alert cue (used by alerts that
@@ -552,7 +558,7 @@ void netloop_impl()
 				add_player(parsed[1], px, py);
 				set_player_position(parsed[1], px, py, pvr, pafk);
 				int pidx = get_player_index(parsed[1]);
-				if(pidx > -1) players[pidx].nickname = (parsed.length() > 6) ? parsed[6] : parsed[1];
+				if(pidx > -1) { players[pidx].nickname = (parsed.length() > 6) ? parsed[6] : parsed[1]; players[pidx].tracked = true; } // a real pos: this is a tracked cavern player
 			}
 		}
 		else if (parsed[0] == "despawn" and parsed.length() > 1)
@@ -752,6 +758,46 @@ void netloop_impl()
 			current_game = 0;
 			current_game_host = "";
 			add_buffer_item("misc", "You left the game.");
+			draw_map("office");
+			lastx = int(me.x);
+			lasty = int(me.y);
+		}
+		else if (parsed[0] == "spectatejoined" and parsed.length() > 3)
+		{
+			// We're now watching a game from the overhead deck: "spectatejoined <gameid> <size> <host>\n<hostdisplay>".
+			p.play_stationary("sounds/ui/misc/joingame.ogg", false);
+			clear_players();
+			int gsize = string_to_number(parsed[2]);
+			cavern_size = gsize;
+			in_game = true;     // so the wall/Tab keys work
+			watching = true;    // gates out the gameplay keys and makes Escape leave the watch
+			game_phase = "idle";
+			game_paused = false;
+			current_game = string_to_number(parsed[1]);
+			current_game_host = parsed[3]; // plain name (we're never the host while watching)
+			string[] sjl = string_split(message, "\n", true);
+			string shost = (sjl.length() > 1) ? sjl[1] : parsed[3];
+			add_buffer_item("misc", "You are now watching " + shost + "'s game.");
+			draw_map("cavern2", 0, gsize, 0, gsize); // the deck: cave floor with an indestructible wallcrate border
+			setup_cavern_walls(gsize); // audio mirror for the defenders' walls below (hit/death volume)
+			me.z = spectate_height; // lift the listener onto the deck above the action (draw_map leaves z alone)
+			lastx = int(me.x);
+			lasty = int(me.y);
+		}
+		else if (parsed[0] == "watchleft")
+		{
+			// Stopped watching (we left, the game ended, or the room closed): return to the office.
+			clear_players();
+			clear_walls();
+			in_game = false;
+			watching = false;
+			game_phase = "idle";
+			game_paused = false;
+			resume_pools(); // in case the game was paused while we watched
+			current_game = 0;
+			current_game_host = "";
+			me.z = 0; // back down to ground level
+			add_buffer_item("misc", "You stopped watching.");
 			draw_map("office");
 			lastx = int(me.x);
 			lasty = int(me.y);

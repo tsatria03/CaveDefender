@@ -52,6 +52,10 @@ When the wave begins, enemies attack your walls with axes, bats, crowbars, and h
 
 Press escape for the pause menu. If you host the game and a round is running, opening it pauses the game for everyone until you resume; a solo game stays paused, while an open game resumes on its own after a minute and a half. Anyone can leave from this menu at any time, and the host can stop the game from it.
 
+Watching games.
+
+You can also watch a game instead of playing it. Choose watch game from the room menu to see every game in the room, including single-player games and games already in progress, and pick one; up to four people can watch a game at once. You float on a deck above the cavern and roam it freely while the whole battle plays out below you, and the players are told you are watching. You are only an observer, so you carry no wood, cannot reinforce, and the enemies ignore you, but you hear everything and can still chat and use voice with the players. Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. Press escape to stop watching and return to the room.
+
 What only staff can do.
 
 A few things are reserved for staff, the lowest staff rank being moderator. As a regular player you cannot use staff chat, skip a game's build phase, stop a game you don't host, or delete a room that isn't yours or that still has people in it. The full staff list is in the staff help.

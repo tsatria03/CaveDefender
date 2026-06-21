@@ -45,6 +45,16 @@ spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "cave");
 spawn_ambience(minx, maxx, miny, maxy, "cavern", ambvolume); // sounds/ambience/cavern.ogg across the whole cavern.
 spawn_music(minx, maxx, miny, maxy, "cavern", musvolume); // sounds/music/cavern.ogg across the whole cavern.
 }
+if(mapname=="cavern2")
+{
+// The spectator deck: the same cave floor and ambience as the cavern, but its four border walls are
+// indestructible wallcrate (so a watcher roaming above is fenced in and they never break like the
+// defenders' wallwood does). The destructible walls and the fight play out below on the cavern plane.
+spawn_platform(minx, maxx, miny, maxy, "wallcrate");
+spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "cave");
+spawn_ambience(minx, maxx, miny, maxy, "cavern", ambvolume);
+spawn_music(minx, maxx, miny, maxy, "cavern", musvolume);
+}
 }
 void playstep()
 {
