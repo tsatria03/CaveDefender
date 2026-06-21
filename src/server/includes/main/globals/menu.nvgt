@@ -459,6 +459,21 @@ if(form == "reflexive") return f[4];
 if(form == "possessive" or form == "possessivepronoun") return displayname + "'s";
 return displayname;
 }
+// The pronoun key new accounts get, and that a missing or invalid one falls back to at spawn: the configured
+// option whose SUBJECT form is "they" (the neutral singular they) -- found by its grammar, so it survives the
+// host renaming the key (e.g. "Singular" -> "Singular/they"). If there's no they/them option it uses the first
+// configured one, or "None" if the list is empty.
+string default_pronoun()
+{
+string[] opts = load_pronoun_options();
+for(uint i=0; i<opts.length(); i++)
+{
+string[] f = pronoun_forms(pronoun_bare(opts[i]));
+if(f.length() == 5 and string_to_lower_case(f[0]) == "they") return pronoun_bare(opts[i]);
+}
+if(opts.length() > 0) return pronoun_bare(opts[0]);
+return "None";
+}
 // The /pronoun chooser: list every configured pronoun option for the player to pick from. The full lines go
 // in menu_targets so the returned choice maps back to one. Available to everyone.
 void push_pronoun_menu(int index)
