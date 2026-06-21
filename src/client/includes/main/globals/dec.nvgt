@@ -33,6 +33,7 @@ bool have_public_room=false, have_private_room=false; // whether we own a saved 
 bool in_game=false; // true while we're inside a game cavern (Escape/Enter open the game menu)
 bool watching=false; // true while we're spectating a game from the overhead deck (in_game is also true); gates out gameplay keys and makes Escape leave the watch
 const double spectate_height=5; // the height (z) of the spectator deck above the cavern floor; tune to taste (HRTF height is subtle; lower = closer to the action)
+string watch_host=""; // display name of the game we're watching, for the "stop watching X's game?" confirmation
 int current_game=0; // the id of the game we're in (0 = none); a space id in the room_id namespace
 string current_game_host=""; // host of the game we're in, so we know whether we may Stop it
 string pending_gamelist=""; // last game-list payload from the server (used by the join / stop menus)
