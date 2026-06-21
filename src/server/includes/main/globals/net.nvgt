@@ -207,7 +207,7 @@ if(cont==true)
 send(event.peer_id, "done", 0,true);
 }
 }
-void register_account(string name, string password, string gender)
+void register_account(string name, string password)
 {
 if(name.length()<6 or name.length()>24)
 {
@@ -229,12 +229,7 @@ if(password.length()<6 or password.length()>24)
 send(event.peer_id, "error: passwords must be between 6 and 24 characters.", 0,true);
 return;
 }
-if(gender!="male" and gender!="female" and gender!="nonbinary")
-{
-send(event.peer_id, "error: invalid gender selection.", 0,true);
-return;
-}
-if(create_account(name, password, gender))
+if(create_account(name, password))
 {
 send(event.peer_id, "registered", 0,true);
 // Tell everyone already online that a new account was made, right now at creation time (before the new
@@ -416,7 +411,8 @@ if(string_to_lower_case(players[i].nickname) == string_to_lower_case(newnick) or
 string oldannounce = afk_prefix(ti) + display_name_flagged(ti); // old display, AFK + flag aware
 players[ti].nickname = newnick;
 set_nickname(uname, newnick);
-string verb = byself ? " has changed their nickname to " : "'s nickname has been changed to ";
+string poss = pronoun_word(players[ti].pronoun, "possessive", oldannounce);
+string verb = byself ? (" has changed "+poss+" nickname to ") : "'s nickname has been changed to ";
 for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "alert "+oldannounce+verb+newnick+".", 0, true);
 broadcast_pos(ti); // refresh the nickname shown in the player tracker
 return true;
@@ -579,12 +575,13 @@ announce_mute_to_others(display_name(int(i)), players[i].peer_id, expired[e], fa
 }
 }
 }
-// Expire pending room invitations: once one passes invite_timeout, clear it and tell the invited player.
+// Expire pending invitations (room or game): once one passes invite_timeout, clear it and tell the invited player.
 for(uint i=0; i<players.length(); i++)
 {
-if(players[i].invite_room != 0 and players[i].invite_timer.elapsed >= invite_timeout)
+if((players[i].invite_room != 0 or players[i].invite_game != 0) and players[i].invite_timer.elapsed >= invite_timeout)
 {
 players[i].invite_room = 0;
+players[i].invite_game = 0;
 players[i].invite_from = "";
 send(players[i].peer_id, "invitexpired", 0, true);
 }
@@ -636,9 +633,9 @@ else if(parsed[0]=="login" and parsed.length()>3)
 {
 login(parsed[1], parsed[2], parsed[3]);
 }
-else if(parsed[0]=="register" and parsed.length()>3)
+else if(parsed[0]=="register" and parsed.length()>2)
 {
-register_account(parsed[1], parsed[2], parsed[3]);
+register_account(parsed[1], parsed[2]);
 }
 else if(parsed[0]=="spawn_player" and parsed.length()>2)
 {
@@ -666,6 +663,8 @@ players[index].flagged = get_flag(players[index].name); // staff-attention flag,
 players[index].nickname = get_nickname(players[index].name); // display name (nickname.usr), defaults to the username
 string lang = get_language(players[index].name); // language channel (language.usr); fall back to English if it's not a configured channel
 players[index].language = is_valid_language(lang) ? lang : "English";
+string pron = get_pronoun(players[index].name); // pronoun set (pronoun.usr); fall back to Singular if it's not a configured option
+players[index].pronoun = is_valid_pronoun(pron) ? pron : "Singular";
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 // New accounts are announced at creation time (see register_account), so logging in for the first time
 // is just a normal "online" notice like anyone else.
@@ -793,6 +792,10 @@ send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
 else if(parsed[0]=="channel" and index>-1)
 {
 push_language_menu(index); // the /channel chooser, available to everyone
+}
+else if(parsed[0]=="pronoun" and index>-1)
+{
+push_pronoun_menu(index); // the /pronoun chooser, available to everyone
 }
 else if(parsed[0]=="acceptinvite" and index>-1)
 {
@@ -940,7 +943,8 @@ string ltype = (lri>-1 and rooms[lri].is_private) ? "private" : "public";
 remove_member(event.peer_id);
 send(event.peer_id, "roomleft", 0,true);
 set_room_scope(index, 0);
-string lwhere = (lhost=="") ? "a room" : (players[index].name==lhost ? "their own "+ltype+" room" : display_name_flagged_for(lhost)+"'s "+ltype+" room");
+string lposs = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
+string lwhere = (lhost=="") ? "a room" : (players[index].name==lhost ? lposs+" own "+ltype+" room" : display_name_flagged_for(lhost)+"'s "+ltype+" room");
 broadcast_event(display_name_flagged(index)+" left "+lwhere+".", event.peer_id);
 }
 }
@@ -1101,18 +1105,7 @@ send(event.peer_id, "That game is already in progress.", 0,true);
 }
 else
 {
-games[gi].members.insert_last(event.peer_id);
-send(event.peer_id, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0,true);
-set_room_scope(index, games[gi].id);
-int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
-if(rem<0) rem=0;
-send(event.peer_id, "gamephase "+games[gi].phase+" "+rem, 0,true);
-// Tell the players already in the game that someone joined, so their clients play the join cue.
-for(uint mj=0; mj<games[gi].members.length(); mj++)
-{
-if(games[gi].members[mj]==event.peer_id) continue;
-send(games[gi].members[mj], "playerjoinedgame "+display_name_flagged(index), 0,true);
-}
+join_game_now(index, gi);
 }
 }
 }
@@ -1241,6 +1234,49 @@ send(targetpeer, "roomkicked "+hostname+" "+kind+"\n"+display_name_flagged_for(h
 if(tpi>-1) set_room_scope(tpi, 0);
 send(event.peer_id, "misc You kicked "+tdisp+".", 0,true); // kicker: first-person
 broadcast_event(tdisp+" was kicked from "+display_name_flagged_for(hostname)+"'s "+kind+" room.", event.peer_id, targetpeer); // everyone else
+}
+}
+}
+else if(parsed[0]=="kickfromgame" and index>-1 and parsed.length()>1)
+{
+int gi=get_game_index(players[index].room_id);
+if(gi==-1)
+{
+send(event.peer_id, "You are not in a game.", 0,true);
+}
+else if(games[gi].host_peer != event.peer_id)
+{
+send(event.peer_id, "Only the host can kick players from the game.", 0,true);
+}
+else
+{
+int targetpeer=-1, targetmi=-1;
+for(uint j=0; j<games[gi].members.length(); j++)
+{
+int pi=get_player_index(games[gi].members[j]);
+if(pi>-1 and string_to_lower_case(players[pi].name)==string_to_lower_case(parsed[1])) { targetpeer=games[gi].members[j]; targetmi=int(j); break; }
+}
+if(targetpeer==-1)
+{
+send(event.peer_id, "misc This player is not in your game.", 0,true);
+}
+else if(targetpeer==event.peer_id)
+{
+send(event.peer_id, "You can't kick yourself.", 0,true);
+}
+else
+{
+string hostname=games[gi].host;
+string hostdisp=display_name_flagged_for(hostname);
+int tpi=get_player_index(targetpeer);
+string tdisp=(tpi>-1)?display_name_flagged(tpi):parsed[1]; // flag-aware kicked name, captured before removal
+int proom=games[gi].parent_room;
+games[gi].members.remove_at(targetmi);
+send(targetpeer, "gamekicked "+hostname+"\n"+hostdisp, 0,true); // 2nd line: rank-aware host name (may contain a space)
+if(tpi>-1) set_room_scope(tpi, proom); // back to the game's room
+send(event.peer_id, "misc You kicked "+tdisp+".", 0,true); // kicker: first-person
+send_to_game(games[gi].id, "misc "+tdisp+" was kicked from the game."); // remaining members and any watchers
+if(games[gi].phase=="over" and all_answered_playagain(gi)) reset_for_new_round(gi); // the holdout may have just left
 }
 }
 }
@@ -1457,7 +1493,8 @@ else
                     set_flag(players[index].name, players[index].flagged);
                     string fverb = players[index].flagged ? "raised" : "lowered";
                     // Announce the flip to everyone with the rank shown (always, regardless of the flag state).
-                    string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+players[index].rank+" "+players[index].nickname+" has "+fverb+" their staff flag.";
+                    string fposs = pronoun_word(players[index].pronoun, "possessive", players[index].rank+" "+players[index].nickname);
+string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+players[index].rank+" "+players[index].nickname+" has "+fverb+" "+fposs+" staff flag.";
                     for(uint ffi=0; ffi<players.length(); ffi++) send(players[ffi].peer_id, fann, 0, true);
                     broadcast_pos(index); // refresh the visible rank in everyone's player tracker
                 }

@@ -164,7 +164,7 @@ connected=true;
 if(registering)
 {
 speak("creating account");
-send(0, "register "+name+" "+password+" "+gender, 0,true);
+send(0, "register "+name+" "+password, 0,true);
 }
 else
 {
@@ -758,6 +758,25 @@ void netloop_impl()
 			current_game = 0;
 			current_game_host = "";
 			add_buffer_item("misc", "You left the game.");
+			draw_map("office");
+			lastx = int(me.x);
+			lasty = int(me.y);
+		}
+		else if (parsed[0] == "gamekicked" and parsed.length() > 1)
+		{
+			// The game host kicked you: like gameleft, but with the kick cue and back into the game's room.
+			clear_players();
+			clear_walls();
+			in_game = false;
+			game_phase = "idle";
+			game_paused = false;
+			resume_pools();
+			current_game = 0;
+			current_game_host = "";
+			p.play_stationary("sounds/ui/misc/kick.ogg", false);
+			string[] gkl = string_split(message, "\n", true);
+			string gkhost = (gkl.length() > 1) ? gkl[1] : parsed[1]; // rank-aware host name; fall back to the plain username
+			add_buffer_item("misc", "You have been kicked from " + gkhost + "'s game.");
 			draw_map("office");
 			lastx = int(me.x);
 			lasty = int(me.y);

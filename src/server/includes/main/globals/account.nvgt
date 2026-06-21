@@ -1,5 +1,5 @@
 // Account storage. Each account is a FOLDER at data/players/<username>/, holding one small file per
-// field: username.usr, password.usr, gender.usr, rank.usr, muted.usr, banned.usr.
+// field: username.usr, password.usr, pronoun.usr, rank.usr, muted.usr, banned.usr.
 // This lets a server host read or edit a single field by hand without parsing a combined file.
 //
 // Passwords are never stored in plaintext: password.usr holds "<salt>:<hash>" -- a random salt
@@ -57,6 +57,11 @@ bool set_nickname(string name, string nick) { return write_field(name, "nickname
 // languages.svr to take effect -- an invalid value falls back to English at spawn (is_valid_language).
 string get_language(string name) { return read_field(name, "language", "English"); }
 bool set_language(string name, string lang) { return write_field(name, "language", lang); }
+// The pronoun set (pronoun.usr): the bare key from pronouns.svr, e.g. "Masculine", deciding how third-person
+// messages refer to the player. Defaults to "Singular" (they/them). Hand-editable, but must match a configured
+// option in pronouns.svr to take effect -- an invalid value falls back to Singular at spawn (is_valid_pronoun).
+string get_pronoun(string name) { return read_field(name, "pronoun", "Singular"); }
+bool set_pronoun(string name, string p) { return write_field(name, "pronoun", p); }
 // The highest round (wave count) this player has ever reached in a game (bestround.usr): their personal
 // best. A game-over that beats it grants a one-time milestone wood bonus and updates the record. Defaults to 0.
 int get_best_round(string name) { return int(string_to_number(read_field(name, "bestround", "0"))); }
@@ -115,7 +120,7 @@ salt += charset.substr(random(0, int(charset.length())-1), 1);
 return salt;
 }
 
-bool create_account(string name, string password, string gender)
+bool create_account(string name, string password)
 {
 if(account_exists(name)) return false;
 string salt = make_salt();
@@ -123,8 +128,8 @@ string hash = string_hash_sha256(salt + password);
 write_field(name, "username", name);
 write_field(name, "nickname", name); // display name starts equal to the username
 write_field(name, "language", "English"); // everyone starts on the English channel
+write_field(name, "pronoun", "Singular"); // default: they/them, until the player picks with /pronoun
 write_field(name, "password", salt + ":" + hash);
-write_field(name, "gender", gender);
 write_field(name, "rank", is_owner(name) ? "developer" : "player");
 write_field(name, "pubroom", "");
 write_field(name, "privroom", "");
@@ -133,15 +138,14 @@ write_field(name, "banned", "");
 return true;
 }
 
-// Loads an account's fields into a dictionary (keys: name, salt, password, gender, rank, map, muted,
-// banned). Kept for callers that want several fields at once, such as the /staff listing.
+// Loads an account's fields into a dictionary (keys: name, password, rank, muted, banned). Kept for
+// callers that want several fields at once, such as the /staff listing.
 dictionary@ load_account(string name)
 {
 dictionary@ d = dictionary();
 if(!account_exists(name)) return d;
 d.set("name", read_field(name, "username"));
 d.set("password", read_field(name, "password"));
-d.set("gender", read_field(name, "gender"));
 d.set("rank", read_field(name, "rank", "player"));
 d.set("muted", read_field(name, "muted"));
 d.set("banned", read_field(name, "banned"));

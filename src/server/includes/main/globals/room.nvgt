@@ -84,9 +84,10 @@ for(uint k=0; k<rooms[ri].members.length(); k++) if(rooms[ri].members[k]==peer) 
 if(!already) rooms[ri].members.insert_last(peer);
 send(peer, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"private":"public")+" "+rooms[ri].host+"\n"+display_name_flagged_for(rooms[ri].host), 0,true);
 set_room_scope(index, rooms[ri].id);
-// Tell everyone else (player events) that this player joined the room ("their own" when it's the host).
+// Tell everyone else (player events) that this player joined the room (the host's own room reads with their pronoun).
 string jtype = rooms[ri].is_private?"private":"public";
-string jwhere = (players[index].name == rooms[ri].host) ? "their own "+jtype+" room" : display_name_flagged_for(rooms[ri].host)+"'s "+jtype+" room";
+string jposs = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
+string jwhere = (players[index].name == rooms[ri].host) ? jposs+" own "+jtype+" room" : display_name_flagged_for(rooms[ri].host)+"'s "+jtype+" room";
 broadcast_event(display_name_flagged(index)+" joined "+jwhere+".", peer);
 }
 // How long a pending room invitation stays valid before /accept refuses it (2 minutes, in ms).
@@ -109,6 +110,7 @@ int ti = get_online_index(target_name);
 if(ti < 0) { send(peer, "misc That player is no longer online.", 0, true); return; }
 if(players[ti].room_id != 0) { send(peer, "misc That player is no longer in the lobby.", 0, true); return; }
 players[ti].invite_room = rooms[ri].id;
+players[ti].invite_game = 0; // a newer invite replaces any older one of either kind
 players[ti].invite_from = players[inviter_index].name;
 players[ti].invite_timer.restart();
 string msg = display_name_flagged(inviter_index) + " has invited you to " + room_display(ri) + ". Would you like to accept? Type /accept, or /reject to refuse.";
@@ -120,7 +122,8 @@ send(peer, "misc Invitation sent to " + display_name_flagged(ti) + ".", 0, true)
 void accept_invite(int index)
 {
 int peer = players[index].peer_id;
-if(players[index].invite_room == 0) { send(peer, "misc You have no pending room invitation.", 0, true); return; }
+if(players[index].invite_game != 0) { accept_game_invite(index); return; } // a pending game invite takes the same /accept
+if(players[index].invite_room == 0) { send(peer, "misc You have no pending invitation.", 0, true); return; }
 if(players[index].invite_timer.elapsed >= invite_timeout) { players[index].invite_room = 0; send(peer, "misc That invitation has expired.", 0, true); return; }
 int ri = get_room_index(players[index].invite_room);
 if(ri < 0) { players[index].invite_room = 0; send(peer, "misc That room is no longer available.", 0, true); return; }
@@ -135,7 +138,8 @@ if(hi > -1) send(players[hi].peer_id, "misc " + display_name_flagged(index) + " 
 void reject_invite(int index)
 {
 int peer = players[index].peer_id;
-if(players[index].invite_room == 0) { send(peer, "misc You have no pending room invitation.", 0, true); return; }
+if(players[index].invite_game != 0) { reject_game_invite(index); return; } // a pending game invite takes the same /reject
+if(players[index].invite_room == 0) { send(peer, "misc You have no pending invitation.", 0, true); return; }
 string inviter = players[index].invite_from;
 players[index].invite_room = 0;
 int hi = get_online_index(inviter);

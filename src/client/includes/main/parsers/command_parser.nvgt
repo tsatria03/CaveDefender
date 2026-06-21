@@ -90,6 +90,11 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/channel"); return; }
 		send(0, "channel", 0, true); // everyone: the server pushes the language-channel chooser
 	}
+	else if(base == "/pronoun")
+	{
+		if(parsed.length() != 1) { syntax_error("/pronoun"); return; }
+		send(0, "pronoun", 0, true); // everyone: the server pushes the pronoun chooser
+	}
 	else if(base == "/accept")
 	{
 		if(parsed.length() != 1) { syntax_error("/accept"); return; }
