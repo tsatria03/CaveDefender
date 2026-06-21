@@ -105,6 +105,8 @@ if(ri < 0) { send(peer, "You must be in a room to watch a game.", 0, true); retu
 int gi = get_game_index(gameid);
 if(gi < 0) { send(peer, "That game no longer exists.", 0, true); return; }
 if(games[gi].parent_room != players[index].room_id) { send(peer, "That game isn't in your room.", 0, true); return; }
+if(games[gi].host == players[index].name) { send(peer, "You can't watch your own game.", 0, true); return; }
+for(uint m=0; m<games[gi].members.length(); m++) if(games[gi].members[m]==peer) { send(peer, "You can't watch a game you're playing in.", 0, true); return; }
 if(spectator_count(gameid) >= spectator_cap) { send(peer, "That game's watch slots are full.", 0, true); return; }
 int office = players[index].room_id;
 for(uint i=0; i<players.length(); i++) // despawn the watcher from the office they're leaving

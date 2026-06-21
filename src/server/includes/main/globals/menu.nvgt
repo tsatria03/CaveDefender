@@ -180,6 +180,10 @@ string[] opts;
 for(uint i = 0; i < games.length(); i++)
 {
 if(games[i].parent_room != rid) continue;
+if(games[i].host == players[index].name) continue; // can't watch your own game
+bool ismember = false;
+for(uint m = 0; m < games[i].members.length(); m++) if(games[i].members[m] == peer) { ismember = true; break; }
+if(ismember) continue; // can't watch a game you're playing in
 players[index].menu_targets.insert_last("" + games[i].id);
 string label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
 if(games[i].phase != "idle") label += ", in progress";
