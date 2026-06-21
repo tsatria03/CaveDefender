@@ -467,9 +467,12 @@ string vr = (is_staff(players[pindex].rank) and players[pindex].flagged) ? playe
 string af = players[pindex].afk ? "1" : "0";
 return "pos "+players[pindex].name+" "+players[pindex].x+" "+players[pindex].y+" "+vr+" "+af+" "+players[pindex].nickname;
 }
-// Broadcast a player's current position to everyone sharing their room scope (used on each move).
+// Broadcast a player's current position to everyone sharing their room scope (used on each move). A
+// spectator is never advertised -- this single guard keeps watchers out of everyone's player tracker and
+// beacons (no "pos" means they're never added to other clients' rosters).
 void broadcast_pos(int pindex)
 {
+if(players[pindex].spectating) return;
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==players[pindex].room_id) send(players[i].peer_id, pos_msg(pindex), 0, true);
 }
@@ -576,12 +579,31 @@ announce_mute_to_others(display_name(int(i)), players[i].peer_id, expired[e], fa
 }
 }
 }
+// Expire pending room invitations: once one passes invite_timeout, clear it and tell the invited player.
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].invite_room != 0 and players[i].invite_timer.elapsed >= invite_timeout)
+{
+players[i].invite_room = 0;
+players[i].invite_from = "";
+send(players[i].peer_id, "invitexpired", 0, true);
+}
+}
 if(key_pressed(KEY_ESCAPE))
 {
 exit();
 }
 if(event.type==event_disconnect)
 {
+int dindex=get_player_index(event.peer_id);
+// If a spectator drops, tell the game they stopped watching before everything else is torn down.
+if(dindex>-1 and players[dindex].spectating)
+{
+int wgame=players[dindex].room_id;
+string wn=display_name_flagged(dindex)+" stopped watching.";
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id==wgame and int(players[i].peer_id)!=event.peer_id) send(players[i].peer_id, "misc "+wn, 0, true);
+}
 handle_disconnect_games(event.peer_id);
 handle_disconnect_rooms(event.peer_id);
 int index=get_player_index(event.peer_id);
@@ -688,8 +710,8 @@ else if(parsed[0]=="move" and parsed.length()>2 and index>-1)
 {
 players[index].x=string_to_number(parsed[1]);
 players[index].y=string_to_number(parsed[2]);
-broadcast_pos(index);
-gather_wood(index, 5); // auto-grab any wood within 5 tiles of where you just stepped
+broadcast_pos(index); // no-op for spectators (guarded), so watchers aren't tracked as players
+if(!players[index].spectating) gather_wood(index, 5); // auto-grab nearby wood -- but a watcher never picks up the players' wood
 }
 else if(parsed[0]=="reinforce" and index>-1)
 {
@@ -728,10 +750,14 @@ broadcast_wall_strength(games[gi].id);
 }
 else if(parsed[0]=="step" and parsed.length()>3 and index>-1)
 {
-// Relay a footstep/wall-bump sound to everyone sharing the stepper's room, so they hear the move.
+// Relay a footstep/wall-bump sound to everyone sharing the stepper's room, so they hear the move. A
+// spectator's own steps are NOT relayed -- watchers move unheard by the players below.
+if(!players[index].spectating)
+{
 string fs="footstep "+parsed[1]+" "+parsed[2]+" "+parsed[3];
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==players[index].room_id and players[i].peer_id!=event.peer_id) send(players[i].peer_id, fs, 0, true);
+}
 }
 else if(parsed[0]=="disconnect")
 {
@@ -1090,6 +1116,14 @@ send(games[gi].members[mj], "playerjoinedgame "+display_name_flagged(index), 0,t
 }
 }
 }
+else if(parsed[0]=="spectategame" and index>-1 and parsed.length()>1)
+{
+do_spectate(index, int(string_to_number(parsed[1]))); // start watching a game from the overhead deck
+}
+else if(parsed[0]=="leavewatch" and index>-1)
+{
+leave_watch(index); // stop watching, return to the room
+}
 else if(parsed[0]=="listrooms" and index>-1 and parsed.length()>1)
 {
 string which=parsed[1];
@@ -1130,7 +1164,7 @@ else if(parsed[0]=="scopemembers" and index>-1)
 int target = (parsed.length()>1) ? int(string_to_number(parsed[1])) : players[index].room_id;
 string payload="scopememberlist";
 for(uint i=0; i<players.length(); i++)
-if(players[i].room_id == target) payload+="\n"+afk_prefix(i)+display_name_flagged(i);
+if(players[i].room_id == target and !players[i].spectating) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // spectators aren't listed as participants
 send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="roomgamemembers" and index>-1)
@@ -1143,7 +1177,7 @@ string payload="roomgamelist "+gamecount;
 for(uint i=0; i<players.length(); i++)
 {
 int gi=get_game_index(players[i].room_id);
-if(gi>-1 and games[gi].parent_room == rid) payload+="\n"+afk_prefix(i)+display_name_flagged(i);
+if(gi>-1 and games[gi].parent_room == rid and !players[i].spectating) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // spectators aren't counted as game players
 }
 send(event.peer_id, payload, 0,true);
 }
@@ -1153,7 +1187,7 @@ else if(parsed[0]=="allgamemembers" and index>-1)
 // the roomgamelist reply format with roomgamemembers; the client just labels it "on the server".
 string payload="roomgamelist "+games.length();
 for(uint i=0; i<players.length(); i++)
-if(get_game_index(players[i].room_id)>-1) payload+="\n"+afk_prefix(i)+display_name_flagged(i);
+if(get_game_index(players[i].room_id)>-1 and !players[i].spectating) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // spectators aren't counted as game players
 send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="roomsoverview" and index>-1)
@@ -1251,6 +1285,9 @@ int pi=get_player_index(rooms[ri].members[j]);
 send(rooms[ri].members[j], "roomdeleted "+disp+" "+kind+"\n"+hostdisp, 0,true); // 2nd line: rank-aware host name (may contain a space)
 if(pi>-1) set_room_scope(pi, 0);
 }
+// end_game above ejected any game spectators into this now-deleted office; sweep them on to the lobby too.
+for(uint s=0; s<players.length(); s++)
+if(players[s].room_id==rooms[ri].id and int(players[s].peer_id)!=event.peer_id) { send(players[s].peer_id, "roomleft", 0, true); set_room_scope(int(s), 0); }
 if(rooms[ri].is_private) set_saved_private(rooms[ri].host, "");
 else set_saved_public(rooms[ri].host, false);
 clear_walls(rooms[ri].id); // the office is gone, so drop its walls.

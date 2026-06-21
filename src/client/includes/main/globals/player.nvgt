@@ -19,6 +19,7 @@ int beaconpitch;     // this player's beacon pitch (80-120), rolled once so it s
 string vrank="player"; // visible rank for the P tracker: the rank only when they're staff with their flag on, else "player".
 bool afk=false;        // whether this player is currently away (for the tracker's AFK prefix).
 string nickname="";    // display name (synced via pos); the tracker shows this instead of the username key.
+bool tracked=false;    // true once a real "pos" update arrives. Voice can add a speaker we don't track (e.g. a spectator, whose pos is never sent) -- those play their voice but are kept out of beacons and the P tracker.
 player(string pname, int px, int py)
 {
 name=pname;
@@ -94,6 +95,7 @@ void beaconloop()
 if(!beacons_enabled) return;
 for(uint i=0; i<players.length(); i++)
 {
+if(!players[i].tracked) continue; // skip voice-only entries (e.g. a spectator) -- no beacon for them
 if(players[i].beacontimer.elapsed>=beacontime)
 {
 players[i].beaconsound=beaconpool.play_extended_3d("sounds/ui/misc/beacon.ogg", me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, players[i].beaconpitch, false);

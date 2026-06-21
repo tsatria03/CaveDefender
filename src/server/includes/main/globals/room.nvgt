@@ -197,6 +197,9 @@ int pi = get_player_index(mp);
 send(mp, "roomleft", 0, true);
 if(pi > -1) set_room_scope(pi, 0);
 }
+// end_game above ejected any game spectators into this now-closing office; sweep them on to the lobby too.
+for(uint s=0; s<players.length(); s++)
+if(players[s].room_id==rooms[i].id and int(players[s].peer_id)!=peer) { send(players[s].peer_id, "roomleft", 0, true); set_room_scope(int(s), 0); }
 clear_walls(rooms[i].id); // the office is gone, so drop its walls.
 rooms.remove_at(i);
 }

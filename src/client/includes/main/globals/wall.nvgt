@@ -136,5 +136,5 @@ else return;
 int h = p.play_extended_3d("sounds/objects/walls/wallwood/death.ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
 p.update_sound_3d(h, minx, miny, 0);
 p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
-spawn_platform(minx, maxx, miny, maxy, "wood"); // breach becomes a walkable wood platform
+if(!watching) spawn_platform(minx, maxx, miny, maxy, "wood"); // breach becomes a walkable wood platform -- but a spectator's wallcrate deck border never breaks
 }

@@ -47,6 +47,7 @@ double[] dists;
 string[] lines;
 for(uint i=0; i<players.length(); i++)
 {
+if(!players[i].tracked) continue; // voice-only entries (e.g. a spectator) aren't real cavern players
 double d = get_2d_distance(me.x, me.y, players[i].x, players[i].y);
 double ang = calculate_x_y_angle(me.x, me.y, players[i].x, players[i].y, facing_degrees(facing));
 int td = int(d + 0.5);
@@ -58,6 +59,7 @@ string line = disp + " is " + calculate_x_y_string(ang) + ", about " + td + (td=
 dists.insert_last(d);
 lines.insert_last(line);
 }
+if(lines.length()==0) { speak("No players nearby."); return; } // only voice-only/spectator entries were present
 for(uint i=0; i<dists.length(); i++)
 {
 uint best=i;

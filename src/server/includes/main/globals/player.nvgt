@@ -20,6 +20,8 @@ int pending_bonus_wood=0; // milestone bonus wood to add to this player's stockp
 bool playagain_answered=false; // during a game's "over" phase: has this member answered the play-again prompt yet?
 bool flagged=false; // staff-attention flag: when true this staff member's rank shows to regular players; default off (incognito). Loaded from flag.usr at spawn.
 bool afk=false; // away-from-keyboard: set when the player goes AFK (self via /afk countdown, or an admin via /afk <name>); cleared on any input. Not persisted (resets each session).
+bool spectating=false;   // true while this player is watching a game from the overhead deck (room_id points at the watched game). Spectators are NOT in games[].members, so they're excluded from all gameplay; they only observe.
+int spectate_room=0;     // the room (office) to return a spectator to when they stop watching, since they aren't a game member.
 int invite_room=0;       // a pending room invitation: the room id this player was invited to (0 = none). Accepted with /accept, refused with /reject; a newer invite replaces it; expires after 2 minutes.
 string invite_from="";   // the username of whoever sent the pending invite, so accept/reject can tell them the outcome.
 timer invite_timer;      // started when the pending invite arrives; the invite expires once it passes invite_timeout.
