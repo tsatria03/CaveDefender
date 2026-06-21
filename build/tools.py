@@ -37,10 +37,6 @@ SERVER_BUNDLE = os.path.join(SRC_SERVER, SERVER_OUT)
 CLIENT_VERSION_NVGT = os.path.join(SRC_CLIENT, "includes", "version.nvgt")
 SERVER_VERSION_NVGT = os.path.join(SRC_SERVER, "includes", "version.nvgt")
 
-SITE_HTML    = _cfg["site"]["html"]
-SITE_REPO    = _cfg["site"]["repo"]
-SITE_PATH    = _cfg["site"]["path"]
-
 NVGT    = _tools["tools"]["nvgt"]  # shared across all the legacy-engine games; set to the legacy build in ~/.game_tools/tools.ini
 SEVENZIP = _tools["tools"]["sevenzip"]
 GH      = _tools["tools"]["gh"]
@@ -350,53 +346,7 @@ def do_reset(sha):
 
 # ── Release ───────────────────────────────────────────────────────────────────
 
-def do_website_update(version, tag, skip_website):
-    do_website = False
-    if skip_website == DO:
-        do_website = True
-    elif skip_website == SKIP:
-        do_website = ask("Do you want to update the game's website?")
-
-    if not do_website:
-        if skip_website == SKIP:
-            print("Skipping website update.\n")
-        return
-
-    print("Updating website...")
-    ps1 = os.path.join(SCRIPT_DIR, "site_updater.ps1")
-    if not run_cmd(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, "-HtmlFile", SITE_HTML, "-Version", version, "-Tag", tag]):
-        print("ERROR: Failed to update website HTML.")
-        return
-    print("Website updated.\n")
-
-    version_txt = os.path.join(os.path.dirname(SITE_HTML), "version.txt")
-    version_txt_relpath = os.path.dirname(SITE_PATH).replace("\\", "/") + "/version.txt"
-    version_txt_updated = False
-    if os.path.exists(version_txt):
-        with open(version_txt, "w", encoding="utf-8") as f:
-            f.write(version)
-        print(f"Updated {version_txt} to {version}.\n")
-        version_txt_updated = True
-
-    print("Committing website changes...")
-    log = subprocess.run(["git", "log", "--oneline"], cwd=SITE_REPO, capture_output=True, text=True).stdout
-    if f"Updated {GAME} to version {version}." in log:
-        print("WARNING: Commit already exists. Skipping commit.\n")
-        return
-
-    add_targets = [SITE_PATH]
-    if version_txt_updated:
-        add_targets.append(version_txt_relpath)
-    run_cmd(["git", "add"] + add_targets, cwd=SITE_REPO)
-    if not run_cmd(["git", "commit", "-m", f"Updated {GAME} to version {version}."], cwd=SITE_REPO):
-        print("ERROR: Failed to commit website changes.")
-        return
-    if not run_cmd(["git", "push"], cwd=SITE_REPO):
-        print("ERROR: Failed to push website changes.")
-        return
-    print("Website committed and pushed.\n")
-
-def run_release(skip_compile, skip_package, skip_release, skip_website, skip_empty_release, interactive=True):
+def run_release(skip_compile, skip_package, skip_release, skip_empty_release, interactive=True):
     version = get_version()
     if not version:
         print("ERROR: Could not read version from version.txt.")
@@ -488,7 +438,6 @@ def run_release(skip_compile, skip_package, skip_release, skip_website, skip_emp
     if not do_rel:
         if skip_release == SKIP:
             print("Skipping release.\n")
-        do_website_update(version, tag, skip_website)
         return
 
     assets = []
@@ -522,12 +471,6 @@ def run_release(skip_compile, skip_package, skip_release, skip_website, skip_emp
 
     print("\nRelease complete.\n")
 
-    if not assets:
-        print("WARNING: No assets were released. Skipping website update.\n")
-        return
-
-    do_website_update(version, tag, skip_website)
-
 # ── Main menu ─────────────────────────────────────────────────────────────────
 
 def menu():
@@ -548,9 +491,8 @@ def menu():
         print(" 7. Compile only")
         print(" 8. Package only")
         print(" 9. Release only")
-        print(" 10. Website only")
         print(" ---")
-        print(" 11. Exit")
+        print(" 10. Exit")
         print("========================")
         choice = input("Choose an option: ").strip()
         print()
@@ -565,19 +507,17 @@ def menu():
         elif choice == "5":
             do_create_tag()
         elif choice == "6":
-            run_release(SKIP, SKIP, SKIP, SKIP, SKIP)
+            run_release(SKIP, SKIP, SKIP, SKIP)
         elif choice == "7":
-            run_release(DO, SILENT_SKIP, SILENT_SKIP, SILENT_SKIP, SILENT_SKIP)
+            run_release(DO, SILENT_SKIP, SILENT_SKIP, SILENT_SKIP)
         elif choice == "8":
-            run_release(SILENT_SKIP, DO, SILENT_SKIP, SILENT_SKIP, SILENT_SKIP)
+            run_release(SILENT_SKIP, DO, SILENT_SKIP, SILENT_SKIP)
         elif choice == "9":
-            run_release(SILENT_SKIP, SILENT_SKIP, DO, SILENT_SKIP, DO)
+            run_release(SILENT_SKIP, SILENT_SKIP, DO, DO)
         elif choice == "10":
-            run_release(SILENT_SKIP, SILENT_SKIP, SILENT_SKIP, DO, SILENT_SKIP)
-        elif choice == "11":
             sys.exit(0)
         else:
-            print("Invalid choice. Please enter 1-11.")
+            print("Invalid choice. Please enter 1-10.")
 
 if __name__ == "__main__":
     args = sys.argv[1:]
@@ -585,12 +525,11 @@ if __name__ == "__main__":
         menu()
     else:
         usage = (
-            "Usage: tools.py <skip_compile> <skip_package> <skip_release> "
-            "<skip_website> <skip_empty_release>\n"
+            "Usage: tools.py <skip_compile> <skip_package> <skip_release> <skip_empty_release>\n"
             f"  Each flag must be {SKIP} (ask), {DO} (force run), or {SILENT_SKIP} (skip silently)."
         )
-        if len(args) != 5:
-            print(f"Error: expected 5 args, got {len(args)}.\n{usage}")
+        if len(args) != 4:
+            print(f"Error: expected 4 args, got {len(args)}.\n{usage}")
             sys.exit(2)
         try:
             flags = [int(a) for a in args]
