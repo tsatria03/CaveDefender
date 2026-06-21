@@ -36,7 +36,7 @@ buffercheck();
 			// The host has the game paused: everything is frozen except Escape, which opens the leave menu.
 			// Audio was already suspended on the gamepaused message, so we skip the per-frame audio and
 			// gameplay updates too — nothing moves or restarts until the host resumes.
-			if(key_pressed(KEY_ESCAPE)) { if(watching) send(0, "leavewatch", 0, true); else send(0, "openpausemenu", 0, true); }
+			if(key_pressed(KEY_ESCAPE)) { if(watching) stop_watching_prompt(); else send(0, "openpausemenu", 0, true); }
 			continue;
 		}
 		update_sound_pools();
@@ -266,7 +266,7 @@ buffercheck();
 		if(key_pressed(KEY_TAB) and in_game) speak_game_status(); // in a game, Tab speaks the current round status
 		if(key_pressed(KEY_ESCAPE))
 		{
-			if(in_game) { if(watching) send(0, "leavewatch", 0, true); else send(0, "openpausemenu", 0, true); continue; } // spectators leave the watch; players get the pause menu
+			if(in_game) { if(watching) stop_watching_prompt(); else send(0, "openpausemenu", 0, true); continue; } // spectators leave the watch; players get the pause menu
 			bool doexit=true;
 			if(gamxit==1)
 			{
@@ -288,6 +288,21 @@ buffercheck();
 			}
 		}
 }
+}
+// Escape while watching: confirm before stopping (mirrors the lobby exit confirm, gated by the same gamxit
+// preference), then send leavewatch. Says "canceled" on No or escape.
+void stop_watching_prompt()
+{
+	bool doleave=true;
+	if(gamxit==1)
+	{
+		setupmenu();
+		m.add_item("yes");
+		m.add_item("no");
+		m.intro_text="Are you sure you want to stop watching " + (watch_host!="" ? watch_host+"'s game" : "this game") + "?";
+		if(m.run()!=0) { speak("canceled"); doleave=false; }
+	}
+	if(doleave) send(0, "leavewatch", 0, true);
 }
 // Tab in a game: speak the current round status. Enter now opens the game menu, so Tab is free to read
 // out where the round stands -- the build countdown, or whether the enemies are attacking or resting.

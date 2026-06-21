@@ -70,13 +70,15 @@ if(players[i].room_id==gameid) send(players[i].peer_id, msg, 0, true);
 // (the lobby if that's gone), clear their spectator state, and tell their client to leave the watch.
 void eject_spectators(int gameid)
 {
+int gi = get_game_index(gameid);
+string hostdisp = (gi>-1) ? display_name_flagged_for(games[gi].host) : ""; // captured before the game is removed, for the watcher's notice
 for(uint i=0; i<players.length(); i++)
 {
 if(players[i].room_id!=gameid or !players[i].spectating) continue;
 int back = (get_room_index(players[i].spectate_room)>-1) ? players[i].spectate_room : 0;
 players[i].spectating=false;
 players[i].spectate_room=0;
-send(players[i].peer_id, "watchleft", 0, true);
+send(players[i].peer_id, "watchleft\n"+hostdisp, 0, true);
 set_room_scope(int(i), back);
 }
 }
@@ -133,13 +135,15 @@ void leave_watch(int index)
 {
 if(!players[index].spectating) return;
 int gameid = players[index].room_id;
+int gi = get_game_index(gameid);
+string hostdisp = (gi>-1) ? display_name_flagged_for(games[gi].host) : ""; // the game's host name for the watcher's "you stopped watching X's game" notice
 int back = (get_room_index(players[index].spectate_room)>-1) ? players[index].spectate_room : 0;
 string wn = display_name_flagged(index)+" stopped watching.";
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==gameid and i!=uint(index)) send(players[i].peer_id, "misc "+wn, 0, true);
 players[index].spectating=false;
 players[index].spectate_room=0;
-send(players[index].peer_id, "watchleft", 0, true);
+send(players[index].peer_id, "watchleft\n"+hostdisp, 0, true);
 set_room_scope(index, back);
 }
 // End a game for everyone: return each member to the parent room (office), drop the cavern walls, and
