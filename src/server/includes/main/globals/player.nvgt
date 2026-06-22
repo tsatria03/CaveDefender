@@ -27,6 +27,7 @@ int invite_room=0;       // a pending ROOM invitation: the room id this player w
 int invite_game=0;       // a pending GAME invitation: the game id the host invited this player into (0 = none). Mutually exclusive with invite_room (the newer one clears the other); shares invite_from/invite_timer and /accept,/reject.
 string invite_from="";   // the username of whoever sent the pending invite (room or game), so accept/reject can tell them the outcome.
 timer invite_timer;      // started when the pending invite arrives; the invite expires once it passes invite_timeout.
+int pregame_room=0;      // the scope (room_id) this player was in right before joining their current game, so leaving/kick/stop returns them there: a room member goes back to the room, a lobby invitee back to the lobby. Captured when they join a game.
 player(int id, string username, double ver)
 {
 name=username;
