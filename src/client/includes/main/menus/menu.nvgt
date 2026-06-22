@@ -58,6 +58,7 @@ void connectionmenu()
 		if(sel=="changeip")
 		{
 			// Ad-hoc server address (no preset); saved at once so it sticks without opening settings.
+m.fade_music();
 			string newip=vd.input_box("Server", "Enter the new server.", ip);
 			if(newip!="") { ip=newip; server_custom=true; writepreffs(); }
 			else speak("canceled");
@@ -65,6 +66,7 @@ void connectionmenu()
 		}
 		if(sel=="changeport")
 		{
+m.fade_music();
 			string newport=vd.input_box("Port", "Enter the new port.", ""+port);
 			if(newport!="")
 			{

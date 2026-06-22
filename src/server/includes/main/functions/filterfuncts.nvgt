@@ -1,9 +1,54 @@
-// Chat and input filters, kept apart from the networking code so the word list is easy to find.
-//   - filter_chat(): the WORD filter, run over global and local chat. The Unfiltered language channel skips it
-//                    for global chat only; local chat is always filtered. Add forbidden words/patterns below.
-//   - filterchar() : the CHARACTER filter for identifiers (usernames, nicknames) -- unrelated to the word filter.
+// Chat and input filters, kept apart from the networking code.
+//   - filter_crash(): the SCREEN-READER CRASH-STRING filter. Blocks text known to crash TTS engines (Eloquence
+//                     / IBMTTS under NVDA, etc.) when spoken. ALWAYS ON, applied to EVERY text chat channel
+//                     (global on any language including Unfiltered, local, and staff) because crashing other
+//                     players is an attack, not a language preference. Hardcoded on purpose -- DO NOT remove or
+//                     make skippable, and do NOT move these into chatfilter.svr (a host could delete them).
+//   - filter_chat() : the host WORD filter (profanity etc.). Rules live in the hand-editable
+//                     data/preffs/chatfilter.svr (see load_filter_rules), read fresh each call -- no restart.
+//                     The Unfiltered language channel skips it for global chat; local chat is always filtered.
+//   - filterchar()  : the CHARACTER filter for identifiers (usernames, nicknames) -- unrelated to the above.
 
-int filterstuff=1; // word-filter master switch: 1 = on, 0 = off (filter_chat() returns false when off).
+int filterstuff=1; // host word-filter switch: 1 = on, 0 = off (filter_chat() returns false when off). Does NOT affect filter_crash, which is always on.
+
+// True if `message` contains a known screen-reader crash string. Hardcoded and always applied (see header).
+// message is lowercased; each pattern is matched ANYWHERE via a .*(...).* wrap (regexp.match is whole-string).
+bool filter_crash(string message)
+{
+message=string_to_lower_case(message);
+string[] crash;
+crash.insert_last("\\b(\\w+[bdflmnrvzqh])hes([bcdfgjklmnprtw]\\w+)\\b");
+crash.insert_last("(\\d):(\\d\\d[snrt][tdh])");
+crash.insert_last("(h)'([bdfjkptvx]+)'(r[aeiou]?)");
+crash.insert_last("(re|un|non|anti)cosp");
+crash.insert_last("(t+)zsche");
+crash.insert_last("(anti|non|re|un)caesure");
+crash.insert_last("(eur[a-z]+)(\\d+)");
+for(uint i=0; i<crash.length(); i++)
+if(regex(message, ".*(" + crash[i] + ").*")) return true;
+return false;
+}
+
+// Read the chat word-filter rules from data/preffs/chatfilter.svr, one per line, skipping blank lines and #
+// comments. Read fresh each call so a host can edit the list without restarting. Each rule is "re=<pattern>"
+// (regex) or a plain lowercase substring -- interpreted by filter_chat().
+string[] load_filter_rules()
+{
+string[] rules;
+if(!file_exists("data/preffs/chatfilter.svr")) return rules;
+file ff;
+if(!ff.open("data/preffs/chatfilter.svr", "rb")) return rules;
+string content = ff.read();
+ff.close();
+string[] lines = string_split(content, "\n", true);
+for(uint i=0; i<lines.length(); i++)
+{
+string ln = lines[i].trim_whitespace();
+if(ln == "" or string_left(ln, 1) == "#") continue; // skip blanks and comments
+rules.insert_last(ln);
+}
+return rules;
+}
 
 // True if the message trips the word filter -- a forbidden word or pattern. Each rule is either a plain
 // lowercase substring (literal match, e.g. "badword") or an "re=" PCRE pattern. Add rules to the array.
@@ -11,15 +56,8 @@ bool filter_chat(string message)
 {
 if(filterstuff==0) return false;
 message=string_to_lower_case(message);
-string[] filter;
-filter.insert_last("re=\\b(\\w+[bdflmnrvzqh])hes([bcdfgjklmnprtw]\\w+)\\b");
-filter.insert_last("re=(\\d):(\\d\\d[snrt][tdh])");
-filter.insert_last("re=([hH])'([bBdDfFjJkKpPtTvVxX]+)'([rR][aAeEiIoOuU]?)");
-filter.insert_last("re=(re|un|non|anti)cosp");
-filter.insert_last("re=(t+)zsche");
-filter.insert_last("re=(anti|non|re|un)caesure");
-filter.insert_last("re=(EUR[A-Z]+)(\\d+)");
-for(int counter=0; counter<filter.length(); counter++)
+string[] filter=load_filter_rules(); // the rules in data/preffs/chatfilter.svr, read fresh each call
+for(uint counter=0; counter<filter.length(); counter++)
 {
 string banned=filter[counter];
 if(string_left(banned, 3)=="re=")

@@ -89,7 +89,10 @@ Server files (under `src/server/`, same `includes/main/{deps,functions,globals}`
 - `includes/main/globals/enemy.nvgt` — the wall-smasher bots: one weapon each (1 axe / 4 bat / 2 crowbar / 3 hammer, each its own attack speed and damage), spawned onto the least-attacked standing wall, swinging in `enemy_attacks`, and redistributing when a wall falls.
 - `includes/main/globals/wall.nvgt` and `globals/item.nvgt` — server-authoritative walls (health, `damage_wall`/`repair_wall`, `border_wall`; cavern walls start at a random 20–80%) and ground wood (spawn/pickup, size-scaled cap).
 - `includes/main/globals/menu.nvgt` — the server-pushed menus (`broadcast_menu`/`send_menu`, `on_menu_result`), including the host pause menu and the in-game leave menu.
-- `includes/main/functions/filterfuncts.nvgt` — the chat **word filter** (`filter_chat()`, run over global and local chat; uses NVGT's native `regexp` via the `regex()` helper in `extrafuncts.nvgt`; the old third-party `filter.dll` is gone — see memory) and the **character filter** (`filterchar()`) for usernames/nicknames, plus the `filterstuff` on/off switch.
+- `includes/main/functions/filterfuncts.nvgt` — the chat filters (uses NVGT's native `regexp` via `regex()` in `extrafuncts.nvgt`; matched anywhere via a `.*(...).*` wrap since `regexp.match()` is whole-string; the old third-party `filter.dll` is gone — see memory):
+  - `filter_crash()` — the **screen-reader crash-string filter**: hardcoded patterns that crash TTS engines (Eloquence/IBMTTS under NVDA) when spoken. **Always on, applied to every text chat channel** (global on any language incl. Unfiltered, local, and staff) — crashing other players is an attack, not a language choice. Hardcoded on purpose; never make it skippable or move it into `chatfilter.svr` (a host could delete it).
+  - `filter_chat()` — the host **word filter** (profanity): rules in the hand-editable `data/preffs/chatfilter.svr`, read fresh each call via `load_filter_rules()` (one per line, `re=<pattern>` regex or a plain substring, `#` comments/blanks skipped). Unfiltered-exempt for global chat; local chat always filtered. The `filterstuff` switch toggles it (does not affect `filter_crash`).
+  - `filterchar()` — the **character filter** for usernames/nicknames (unrelated to the above).
 
 ## Version
 

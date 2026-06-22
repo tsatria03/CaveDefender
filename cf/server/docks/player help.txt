@@ -33,6 +33,14 @@ One of the channels is named Unfiltered. It works like any other channel, in tha
 
 You can run any command from any chat you have access to.
 
+Chat filtering.
+
+Chat is filtered for forbidden words, a list set by the server's host. If a message you send contains one it is not delivered to anyone, and you are told that it contains forbidden words. Global chat skips this word filter only on the Unfiltered language channel; local chat is always filtered no matter your channel, and staff chat is not word filtered.
+
+Separately, there is always-on protection against screen reader crash strings: character sequences that can crash text to speech engines such as Eloquence or IBMTTS when spoken aloud. This protection covers every chat channel, including Unfiltered, local, and staff, and cannot be turned off, so no one can crash other players' speech by sending one in chat.
+
+For the server host: the word list lives in data/preffs/chatfilter.svr, one rule per line, read fresh each message so it can be edited while the server runs. A rule is either re= followed by a regular expression matched anywhere in the message, or a plain word or phrase matched as a substring. Messages are lowercased before matching, so write rules in lowercase, and lines beginning with a number sign are comments. The crash string protection is hardcoded separately and is not in this file.
+
 Pronouns.
 
 Messages that talk about you in the third person can use your pronouns, for example when you raise your staff flag, change your nickname, or join a room. Choose them with /pronoun, which opens a menu of the options the server offers, such as masculine, feminine, singular they, or one of several neopronoun sets. Everyone starts on singular they, and your choice is saved for next time. There is also a none option, which simply uses your name in place of a pronoun, so the message reads with your name rather than he, she, or they.
