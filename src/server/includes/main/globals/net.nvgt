@@ -777,25 +777,27 @@ broadcast_pos(index);
 else if(parsed[0]=="staffchat" and index>-1 and is_staff(players[index].rank) and parsed.length()>1)
 {
 string msg=string_join(parsed, " ", 1, parsed.length());
-relay_to_staff("staffmsg "+afk_prefix(index)+display_name(index)+": "+msg);
+if(filter_crash(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // crash-string protection applies to staff chat too
+else relay_to_staff("staffmsg "+afk_prefix(index)+display_name(index)+": "+msg);
 }
 else if(parsed[0]=="staffme" and index>-1 and is_staff(players[index].rank) and parsed.length()>1)
 {
 string action=string_join(parsed, " ", 1, parsed.length());
-relay_to_staff("staffmsg "+afk_prefix(index)+display_name(index)+" "+action);
+if(filter_crash(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // crash-string protection applies to staff chat too
+else relay_to_staff("staffmsg "+afk_prefix(index)+display_name(index)+" "+action);
 }
 else if(parsed[0]=="localchat" and index>-1 and parsed.length()>1)
 {
 string msg=string_join(parsed, " ", 1, parsed.length());
 if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
-else if(filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered; the Unfiltered channel only loosens global chat
+else if(filter_crash(msg) or filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
 else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg); // local chat reaches everyone in the space, regardless of language channel
 }
 else if(parsed[0]=="localme" and index>-1 and parsed.length()>1)
 {
 string action=string_join(parsed, " ", 1, parsed.length());
 if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
-else if(filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered; the Unfiltered channel only loosens global chat
+else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
 else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+" "+action); // local chat reaches everyone in the space, regardless of language channel
 }
 else if(parsed[0]=="help" and index>-1 and parsed.length()>1)
@@ -1381,7 +1383,7 @@ if(event.type == event_receive && event.channel == 1)
         if(message.length() > 0)
 {
             if(players[index].messagetimer.elapsed < 50) messend = false;            
-            if(string_to_lower_case(players[index].language) != "unfiltered" and filter_chat(get_event_message()))
+            if(filter_crash(message) or (string_to_lower_case(players[index].language) != "unfiltered" and filter_chat(message)))
 {
                 send(event.peer_id, "misc Your message contains forbidden words.", 0, true); // misc buffer: spoken and logged
                 messend = false;
