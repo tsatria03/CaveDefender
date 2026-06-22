@@ -912,6 +912,7 @@ int size=int(string_to_number(parsed[1]));
 if(size!=25 and size!=50 and size!=100) size=50;
 bool solo=(parsed[2]=="solo");
 int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo);
+players[index].pregame_room = players[index].room_id; // the host started from their room; leaving the game returns them there
 send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
 set_room_scope(index, gid);
 send(event.peer_id, "gamephase idle 0", 0,true);
@@ -1221,10 +1222,9 @@ string hostname=games[gi].host;
 string hostdisp=display_name_flagged_for(hostname);
 int tpi=get_player_index(targetpeer);
 string tdisp=(tpi>-1)?display_name_flagged(tpi):parsed[1]; // flag-aware kicked name, captured before removal
-int proom=games[gi].parent_room;
 games[gi].members.remove_at(targetmi);
 send(targetpeer, "gamekicked "+hostname+"\n"+hostdisp, 0,true); // 2nd line: rank-aware host name (may contain a space)
-if(tpi>-1) set_room_scope(tpi, proom); // back to the game's room
+if(tpi>-1) set_room_scope(tpi, players[tpi].pregame_room); // back to where they came from: the room, or the lobby if invited from there
 send(event.peer_id, "misc You kicked "+tdisp+".", 0,true); // kicker: first-person
 send_to_game(games[gi].id, "misc "+tdisp+" was kicked from the game."); // remaining members and any watchers
 if(games[gi].phase=="over" and all_answered_playagain(gi)) reset_for_new_round(gi); // the holdout may have just left

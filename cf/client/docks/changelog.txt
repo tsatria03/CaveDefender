@@ -1,4 +1,7 @@
 New in 2.6.
+Starting a game now begins by choosing a game mode, currently just PVE, before you pick who can play and the map size, making room for more modes to come.
+Kicking a player from a game now returns them to wherever they came from: a player who joined through your room goes back to the room as before, but one you invited in from the lobby is sent back to the lobby instead.
+When you invite a player into your game, you now first choose whether to invite someone from your room or straight from the lobby, so you can pull a lobby player right into the cavern, skipping the room and its password. A player you invited from the lobby is sent back to the lobby when they leave the game or it ends, rather than being left in your room.
 Local chat now reaches everyone sharing your space, whatever language channel they are on, so people in the same room or the lobby no longer have to switch to the same channel just to talk. Global chat is still split by language channel.
 You can now set the pronouns used when messages refer to you, with the new slash pronoun command: masculine, feminine, singular they, it, or none, which simply uses your name instead. Creating an account no longer asks for a gender; your pronouns default to singular they, can be changed any time, and are saved for next time.
 Pressing R while in a game now reads out who is waiting in the game's room, rather than only who is in the game with you, so you can see at a glance who you could invite in.

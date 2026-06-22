@@ -140,31 +140,46 @@ return;
 }
 send_menu(peer, "invite", "Choose a player to invite to your room. " + players_count_phrase(opts.length(), "in the lobby"), opts);
 }
-// The list of players the game host can invite into their open game: everyone standing in the game's room
-// (its parent office) who isn't already in a game, minus the host. Usernames go in menu_targets; the actual
-// invite is sent by do_game_invite. Offered only for open games (see push_game_menu).
-void push_game_invite_list(int index)
+// First step of a game invite: ask the host which area to pull a player from -- their room (the parent
+// office) or the main lobby. The chosen area then drives push_game_invite_list. Offered only for open games
+// (see push_game_menu); the full-game cap is reported here so the host needn't pick an area first.
+void push_game_invite_area(int index)
 {
 int peer = players[index].peer_id;
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) return;
-int proom = games[gi].parent_room;
+if(games[gi].members.length() >= 4) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full
+string[] opts;
+opts.insert_last("Lobby");     // option 0
+opts.insert_last("Your room"); // option 1
+send_menu(peer, "gameinvitearea", "Where would you like to invite a player from?", opts);
+}
+// The list of players the game host can invite into their open game, from one area: when from_lobby is false,
+// everyone standing in the game's room (its parent office); when true, everyone in the main lobby. Either way
+// minus the host, and minus anyone already in a game (room_id only matches their plain office/lobby scope).
+// Usernames go in menu_targets; the actual invite is sent by do_game_invite.
+void push_game_invite_list(int index, bool from_lobby)
+{
+int peer = players[index].peer_id;
+int gi = get_game_index(players[index].room_id);
+if(gi < 0) return;
+int wantroom = from_lobby ? 0 : games[gi].parent_room;
 if(games[gi].members.length() >= 4) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full
 players[index].menu_targets.resize(0);
 string[] opts;
 for(uint i = 0; i < players.length(); i++)
 {
-if(players[i].room_id != proom) continue;         // only people standing in this game's room
+if(int(players[i].room_id) != wantroom) continue; // only people standing in the chosen area
 if(int(players[i].peer_id) == peer) continue;     // not yourself
 players[index].menu_targets.insert_last(players[i].name);
 opts.insert_last(afk_prefix(int(i)) + display_name_flagged(int(i)));
 }
 if(opts.length() == 0)
 {
-send(peer, "There is no one in your room to invite.", 0, true);
+send(peer, from_lobby ? "There is no one in the lobby to invite." : "There is no one in your room to invite.", 0, true);
 return;
 }
-send_menu(peer, "gameinvite", "Choose a player to invite to your game. " + players_count_phrase(opts.length(), "in your room"), opts);
+send_menu(peer, "gameinvite", "Choose a player to invite to your game. " + players_count_phrase(opts.length(), from_lobby ? "in the lobby" : "in your room"), opts);
 }
 // The list of players the game host can kick out of their game (every member but the host). Usernames go in
 // menu_targets; the removal is done by the kickfromgame command.
@@ -319,13 +334,22 @@ if(canstop) { opts.insert_last("Stop game"); players[index].menu_actions.insert_
 send_menu(peer, "leavemenu", "Game menu", opts);
 }
 
-// Start-game cascade: pick a mode, then a size; the chosen mode rides in menu_pending across the two.
+// Start-game cascade, step 1: pick the gameplay mode. For now there is only PVE (Player versus environment),
+// so the chosen mode isn't threaded into game creation yet; the step exists so later modes (e.g. a reversed
+// siege) slot straight in, and choosing the one option just advances to the who-can-play step.
+void push_start_gamemode(int index)
+{
+string[] opts;
+opts.insert_last("PVE (Player versus environment)");
+send_menu(players[index].peer_id, "startgamemode", "Choose a game mode to play.", opts);
+}
+// Start-game cascade, step 2: pick who can play (solo/open), then a size; the choice rides in menu_pending across the two.
 void push_start_mode(int index)
 {
 string[] opts;
 opts.insert_last("Solo, single player");
 opts.insert_last("Open, up to four players");
-send_menu(players[index].peer_id, "startmode", "Choose a game mode", opts);
+send_menu(players[index].peer_id, "startmode", "Choose who can play", opts);
 }
 void push_start_size(int index)
 {
@@ -550,7 +574,7 @@ else if(act == "invite") push_invite_list(player_index); // any room member may 
 else if(act == "joingame") push_game_list(player_index, "join");
 else if(act == "watchgame") push_watch_list(player_index); // any room member may watch a game
 else if(act == "stopgame") push_game_list(player_index, "stop");
-else if(act == "startgame") push_start_mode(player_index);
+else if(act == "startgame") push_start_gamemode(player_index);
 }
 else if(id == "invite")
 {
@@ -583,8 +607,13 @@ if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) ret
 string act = players[player_index].menu_actions[choice];
 if(act == "beginround") send(peer, "runcommand beginround", 0, true);
 else if(act == "skipbuild") send(peer, "runcommand skipbuild", 0, true);
-else if(act == "gameinvite") push_game_invite_list(player_index);
+else if(act == "gameinvite") push_game_invite_area(player_index); // pick an area (room/lobby) first
 else if(act == "gamekick") push_game_kick_list(player_index);
+}
+else if(id == "gameinvitearea")
+{
+if(choice < 0) return; // cancelled the area picker
+push_game_invite_list(player_index, choice == 0); // option 0 = Lobby, option 1 = Your room
 }
 else if(id == "gameinvite")
 {
@@ -613,6 +642,11 @@ if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) ret
 string act = players[player_index].menu_actions[choice];
 if(act == "leave") confirm_menu(peer, "leavegame", "Are you sure you want to leave the game?");
 else if(act == "stop") confirm_menu(peer, "stopgame", "Are you sure you want to stop the game? It will end for everyone.");
+}
+else if(id == "startgamemode")
+{
+if(choice < 0) return; // cancelled the mode picker
+push_start_mode(player_index); // only PVE for now, so any valid choice just advances to who-can-play
 }
 else if(id == "startmode")
 {
