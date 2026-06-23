@@ -445,6 +445,7 @@ void gather_wood(int pindex, int radius)
 int rid = players[pindex].room_id;
 int gi = get_game_index(rid);
 if(gi < 0) return;
+if(games[gi].mode == "evp") return; // EVP: the builder bots gather the wood, not the players
 if(games[gi].phase != "build" and games[gi].phase != "wave") return;
 int px = players[pindex].x;
 int py = players[pindex].y;
@@ -692,6 +693,42 @@ broadcast_wall_strength(games[gi].id);
 }
 }
 }
+else if(parsed[0]=="attack" and index>-1 and parsed.length()>1)
+{
+// EVP: a player's swing landed (the client times the windup). Apply this weapon's damage to the NEAREST
+// wall in reach -- the mirror of reinforce -- then broadcast the strike so everyone hears the impact. A
+// swing with no wall in reach simply whiffs (no message, since the swing is a continuous held action).
+int gi = get_game_index(players[index].room_id);
+if(gi < 0) {} // not in a game
+else if(games[gi].mode != "evp") {} // PVE players defend; they don't attack walls
+else if(games[gi].phase != "build" and games[gi].phase != "wave") {} // only during a round
+else
+{
+string dir = wall_in_reach(players[index].x, players[index].y, games[gi].size);
+if(dir != "") // a wall is in reach; otherwise the swing whiffs (silent)
+{
+int wi = border_wall(games[gi].id, dir, games[gi].size);
+if(wi > -1 and walls[wi].health > 0)
+{
+int wid = weapon_id_for_name(parsed[1]);
+if(games[gi].phase == "wave")
+{
+// The wave is on: the swing actually damages the wall, and everyone (and watchers) hear the strike.
+damage_wall(wi, enemy_damage(wid));
+broadcast_wall_strength(games[gi].id);
+send_to_game(games[gi].id, "wallhit "+dir+" "+wid); // EVP plays it at constant volume
+if(walls[wi].health <= 0) on_wall_destroyed(games[gi].id, gi, dir);
+}
+else
+{
+// Build phase: the wall isn't being hurt yet (the bots are still reinforcing), so the swing just
+// ricochets -- the weapon's hit clip plays (no damage) so everyone (and watchers) hears the swing connect.
+send_to_game(games[gi].id, "wallrico "+dir+" "+wid);
+}
+}
+}
+}
+}
 else if(parsed[0]=="step" and parsed.length()>3 and index>-1)
 {
 // Relay a footstep/wall-bump sound to everyone sharing the stepper's room, so they hear the move. A
@@ -911,13 +948,14 @@ else
 int size=int(string_to_number(parsed[1]));
 if(size!=25 and size!=50 and size!=100) size=50;
 bool solo=(parsed[2]=="solo");
-int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo);
+string mode=(parsed.length()>3 and parsed[3]=="evp") ? "evp" : "pve"; // gameplay mode; anything but "evp" (incl. a missing arg) defaults to the original pve
+int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo, mode);
 players[index].pregame_room = players[index].room_id; // the host started from their room; leaving the game returns them there
-send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
+send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+mode+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
 set_room_scope(index, gid);
 send(event.peer_id, "gamephase idle 0", 0,true);
-// Only open games are joinable, so only those announce the "you can join" notice.
-if(!solo) broadcast_event(display_name_flagged(index)+" started a game. You can join it from the room menu.", event.peer_id);
+// Only open games are joinable, so only those announce the "you can join" notice (mode-aware: "an EVP game" / "a PVE game").
+if(!solo) broadcast_event(display_name_flagged(index)+" started "+(mode=="evp"?"an":"a")+" "+mode_tag(mode)+" game. You can join it from the room menu.", event.peer_id);
 }
 }
 else if(parsed[0]=="leavegame" and index>-1)

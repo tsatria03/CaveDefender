@@ -1,0 +1,84 @@
+// Client-side player weapon for EVP (the outdoor attack mode): the player carries all four weapons on the
+// number row and draws (equips) one at a time. Only meaningful while game_outside is true; PVE players
+// defend and never wield a weapon. The selection here is purely local state + the draw sound — the actual
+// attack (windup, damage, fire/hit sounds) is wired in a later sub-section.
+string current_weapon=""; // the equipped weapon's name ("axe"/"bat"/"crowbar"/"hammer"), or "" when not in an EVP game.
+// Map a number-row key (1-4) to its weapon name. This is the PLAYER key layout (1 axe, 2 bat, 3 crowbar,
+// 4 hammer) -- deliberately distinct from the bots' internal weapon-id scheme; keep the two from being confused.
+string weapon_name_for_key(int keynum)
+{
+if(keynum==1) return "axe";
+if(keynum==2) return "bat";
+if(keynum==3) return "crowbar";
+if(keynum==4) return "hammer";
+return "";
+}
+// Draw (equip) the weapon for a number key, playing its draw sound. Does nothing if that weapon is already
+// the one in hand (no pointless redraw) or the key isn't a weapon.
+void draw_weapon(int keynum)
+{
+string wname = weapon_name_for_key(keynum);
+if(wname=="" or wname==current_weapon) return; // unknown key, or already drawn
+current_weapon = wname;
+p.destroy_sound(wepslot); // cut off the previous DRAW still ringing so switching weapons doesn't stack draws
+wepslot = p.play_3d("sounds/weapons/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+send(0, "step weapons/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
+add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
+}
+// Force-equip a weapon and ALWAYS play its draw sound, even if it's already current. Used to arm the player
+// when a round starts. The "x equipped" notice always goes to the misc buffer (speaks + logs).
+void equip_weapon(string wname)
+{
+current_weapon = wname;
+p.destroy_sound(wepslot);
+wepslot = p.play_3d("sounds/weapons/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+send(0, "step weapons/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
+add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
+}
+// --- EVP attack (the swing) ---
+// Holding Space swings the equipped weapon at the nearest wall in reach (the mirror of Shift+Enter reinforce).
+// A swing has two phases timed by swingtimer: a per-weapon WINDUP (Space-press -> the hit lands), then a
+// per-weapon RECOVERY (cooldown) before the next swing may begin. `swinging` does NOT block movement or weapon
+// switching -- like SimpleFighter's is_swinging it only stops you starting ANOTHER swing until this one lands;
+// you keep walking freely. The swing locks in its weapon at the start (swing_weapon) so switching mid-swing
+// doesn't change the pending hit. The fire (swing) sound plays at the start; the impact + damage come from the
+// server's wallhit broadcast once the hit is reported, so all players (and watchers) hear it. key_down + our
+// own timer, not key_repeating, so the windup/cooldown alone pace the swing regardless of the OS repeat rate.
+bool swinging=false; // true during a swing's windup; only blocks starting another swing (NOT movement/switching)
+timer swingtimer;    // while swinging: measures the windup; while idle: measures recovery since the last hit
+string swing_weapon=""; // the weapon the in-flight swing began with, so switching weapons mid-swing doesn't change the pending hit
+// Per-weapon windup (ms): from the Space-press to the impact. Heavier weapons wind up slower (and hit harder, server-side).
+int swing_windup(string w) { if(w=="axe") return 300; if(w=="bat") return 375; if(w=="crowbar") return 450; return 600; } // hammer slowest
+// Per-weapon recovery (ms): the cooldown after a hit before another swing can start.
+int swing_recovery(string w) { if(w=="axe") return 200; if(w=="bat") return 250; if(w=="crowbar") return 325; return 450; } // hammer slowest
+// Run every frame in an EVP game: drive the held-Space swing. When a windup completes, tells the server to
+// apply the hit. No-op for PVE, spectators, a paused game, or with no weapon in hand.
+void swingloop()
+{
+if(!game_outside or !in_game or watching or game_paused or current_weapon=="") { swinging=false; return; }
+if(swinging)
+{
+if(swingtimer.elapsed >= swing_windup(swing_weapon))
+{
+// The hit lands with the weapon the swing started with: the server picks the nearest wall from our
+// position, applies that weapon's damage, and broadcasts wallhit so everyone plays the impact. No wall in
+// reach just whiffs. We don't return here, so the recovery timer is free to let the NEXT swing start.
+send(0, "attack "+swing_weapon, 0, true);
+swinging=false;
+swingtimer.restart(); // now measures the recovery cooldown
+}
+return;
+}
+// Idle: start a new swing if Space is held and the recovery cooldown has elapsed.
+if(key_down(KEY_SPACE) and swingtimer.elapsed >= swing_recovery(current_weapon))
+{
+swinging=true;
+swing_weapon=current_weapon; // lock in this swing's weapon
+swingtimer.restart();
+string firepath = "weapons/"+swing_weapon+"/fire"+random(1,3); // pick the variant once so our local cue and the relayed one match
+// Play the swing in 3D at our spot, UNTRACKED (no wepslot): so consecutive swings overlap and, crucially, a
+// new swing never destroys a still-ringing hit clip (which the pool may have given a recycled slot).
+p.play_3d("sounds/"+firepath+".ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+send(0, "step "+firepath+" "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the swing in 3D at our spot
+}
+}

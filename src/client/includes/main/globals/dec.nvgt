@@ -1,5 +1,6 @@
 bool hrtf=false, recording = false;
 
+int tileslot=-1, wepslot=-1, wallslot=-1; // sound_pool slots (-1 = none yet): tileslot = footsteps, wepslot = weapon DRAW only (so re-drawing cuts the old draw; fire/hit are untracked and overlap), wallslot = wall strikes
 int echomode=1, fademode=1;
 int rectime = 10000;
 int spamtime = 500;
@@ -30,6 +31,7 @@ string pending_roommembers=""; // last room-member list received (used by kick /
 bool roommembers_received=false;
 bool have_public_room=false, have_private_room=false; // whether we own a saved public/private room
 bool in_game=false; // true while we're inside a game cavern (Escape/Enter open the game menu)
+bool game_outside=false; // true while the current game is EVP (the outdoor variant): drives the gravel/exterior map and the no-volume-scaling wall strikes; false for the original PVE (inside the cave). Set on entering a game, cleared on leaving.
 bool watching=false; // true while we're spectating a game from the overhead deck (in_game is also true); gates out gameplay keys and makes Escape leave the watch
 const double spectate_height=5; // the height (z) of the spectator deck above the cavern floor; tune to taste (HRTF height is subtle; lower = closer to the action)
 string watch_host=""; // display name of the game we're watching, for the "stop watching X's game?" confirmation

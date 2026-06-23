@@ -93,6 +93,11 @@ string players_count_phrase(int n, string where)
 {
 return "There " + (n == 1 ? "is " : "are ") + n + (n == 1 ? " player " : " players ") + where + ".";
 }
+// The short gameplay-mode tag shown in game-list labels: "EVP" or "PVE".
+string mode_tag(string mode)
+{
+return mode == "evp" ? "EVP" : "PVE";
+}
 // The list of players the host can kick (everyone else actually in the office, not off in a game).
 void push_kick_list(int index)
 {
@@ -226,8 +231,8 @@ if(games[i].members.length() >= 4) continue;                          // full
 else if(!staff and games[i].host != players[index].name) continue;      // stop: non-staff only their own
 players[index].menu_targets.insert_last("" + games[i].id);
 string label;
-if(mode == "join" and games[i].solo) label = "Your single-player game, " + games[i].size + " by " + games[i].size;
-else label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
+if(mode == "join" and games[i].solo) label = "Your single-player " + mode_tag(games[i].mode) + " game, " + games[i].size + " by " + games[i].size;
+else label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " " + mode_tag(games[i].mode) + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
 if(games[i].phase != "idle") label += ", in progress";
 opts.insert_last(label);
 }
@@ -255,7 +260,7 @@ bool ismember = false;
 for(uint m = 0; m < games[i].members.length(); m++) if(games[i].members[m] == peer) { ismember = true; break; }
 if(ismember) continue; // can't watch a game you're playing in
 players[index].menu_targets.insert_last("" + games[i].id);
-string label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
+string label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " " + mode_tag(games[i].mode) + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
 if(games[i].phase != "idle") label += ", in progress";
 int sc = spectator_count(games[i].id);
 if(sc > 0) label += ", " + sc + (sc == 1 ? " watcher" : " watchers");
@@ -334,13 +339,13 @@ if(canstop) { opts.insert_last("Stop game"); players[index].menu_actions.insert_
 send_menu(peer, "leavemenu", "Game menu", opts);
 }
 
-// Start-game cascade, step 1: pick the gameplay mode. For now there is only PVE (Player versus environment),
-// so the chosen mode isn't threaded into game creation yet; the step exists so later modes (e.g. a reversed
-// siege) slot straight in, and choosing the one option just advances to the who-can-play step.
+// Start-game cascade, step 1: pick the gameplay mode. The choice (evp/pve) is stored in pending_mode and
+// carried through the rest of the cascade to the startgame command. EVP is listed first.
 void push_start_gamemode(int index)
 {
 string[] opts;
-opts.insert_last("PVE (Player versus environment)");
+opts.insert_last("EVP (Environment versus player)"); // option 0
+opts.insert_last("PVE (Player versus environment)"); // option 1
 send_menu(players[index].peer_id, "startgamemode", "Choose a game mode to play.", opts);
 }
 // Start-game cascade, step 2: pick who can play (solo/open), then a size; the choice rides in menu_pending across the two.
@@ -646,7 +651,8 @@ else if(act == "stop") confirm_menu(peer, "stopgame", "Are you sure you want to 
 else if(id == "startgamemode")
 {
 if(choice < 0) return; // cancelled the mode picker
-push_start_mode(player_index); // only PVE for now, so any valid choice just advances to who-can-play
+players[player_index].pending_mode = (choice == 0) ? "evp" : "pve"; // option 0 = EVP, option 1 = PVE
+push_start_mode(player_index); // on to who-can-play
 }
 else if(id == "startmode")
 {
@@ -658,7 +664,7 @@ else if(id == "startsize")
 {
 if(choice < 0) return;
 int size = (choice == 0) ? 25 : (choice == 2) ? 100 : 50;
-send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending, 0, true);
+send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode, 0, true);
 }
 else if(id.substr(0, 8) == "confirm:")
 {
