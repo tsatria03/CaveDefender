@@ -333,6 +333,30 @@ void handle_roundover(string message)
 	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next round to begin."); }
 	else send(0, "playagain no", 0, true);
 }
+// EVP game over (a loss): "evpover <rounds-cleared> <reason>" (reason "time" = ran out the round timer, "stall"
+// = couldn't make progress). Show the results and the play-again prompt, mirroring handle_roundover; the score
+// is rounds cleared. Play again -> a fresh round-1 game the host begins; no -> leave to the room.
+void handle_evp_over(string message)
+{
+	string[] parsed = string_split(message, " ", true);
+	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
+	int cleared = string_to_number(parsed[1]);
+	string reason = (parsed.length() > 2) ? parsed[2] : "";
+	pause_objects(); // silence lingering loops behind the results dialog and play-again prompt
+	string why = (reason == "time") ? "You ran out of time before bringing the walls down." : "The bots held you off; you couldn't break through.";
+	string results = "Game over! You cleared " + cleared + (cleared == 1 ? " round.\r\n" : " rounds.\r\n");
+	results += why + "\r\n";
+	results += "Press enter to continue.";
+	dlgmessage(results);
+	setupmenu();
+	m.add_item("Yes");
+	m.add_item("No");
+	m.intro_text = "Play again?";
+	int again = m.run();
+	resume_objects();
+	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next game to begin."); }
+	else send(0, "playagain no", 0, true);
+}
 // Server-sent help: "helptext\n<which>\n<content>" -> open it in the doc reader.
 void handle_helptext(string message)
 {
@@ -571,6 +595,24 @@ void netloop_impl()
 			int fy = string_to_number(parsed[3]);
 			p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 		}
+		else if (parsed[0] == "botspawn" and parsed.length() > 3)
+		{
+			// An EVP builder bot appeared (or its position on join): "botspawn <id> <x> <y>". Roster only, no sound.
+			set_clientbot(string_to_number(parsed[1]), string_to_number(parsed[2]), string_to_number(parsed[3]));
+		}
+		else if (parsed[0] == "botstep" and parsed.length() > 3)
+		{
+			// A builder took a step: "botstep <id> <x> <y>". Update its roster spot AND play its caveground footstep in 3D.
+			int bx = string_to_number(parsed[2]);
+			int by = string_to_number(parsed[3]);
+			set_clientbot(string_to_number(parsed[1]), bx, by);
+			p.play_3d("sounds/objects/platforms/caveground/step" + random(1, 5) + ".ogg", me.x, me.y, me.z, bx, by, 0, calculate_theta(me_rotation), false);
+		}
+		else if (parsed[0] == "botclear")
+		{
+			// Every builder cleared (round/game end): drop the whole bot roster.
+			clear_clientbots();
+		}
 		else if (parsed[0] == "spawnitem" and parsed.length() > 4)
 		{
 			// A ground item appeared: "spawnitem <id> <type> <x> <y>". Plays its drop + loop on objpool.
@@ -606,8 +648,14 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "wallhit" and parsed.length() > 2)
 		{
-			// A bot struck a wall: "wallhit <direction> <weapon>". Play it in 3D at that wall.
+			// A wall was struck: "wallhit <direction> <weapon>" -- a bot (PVE) or a player's swing (EVP). Play it in 3D at that wall.
 			play_wall_hit(parsed[1], string_to_number(parsed[2]));
+		}
+		else if (parsed[0] == "wallrico" and parsed.length() > 2)
+		{
+			// EVP build phase: your swing connected with a wall that can't be hurt yet, so play the weapon's
+			// hit clip as a ricochet (no wall creak, no damage) -- feedback that you're on a wall.
+			play_wall_rico(parsed[1], string_to_number(parsed[2]));
 		}
 		else if (parsed[0] == "walldestroyed" and parsed.length() > 1)
 		{
@@ -620,13 +668,27 @@ void netloop_impl()
 			if(netloop_depth>1) net_deferred.insert_last(message);
 			else handle_roundover(message);
 		}
+		else if (parsed[0] == "evpcleared" and parsed.length() > 1)
+		{
+			// EVP: you brought all four walls down -- round cleared! "evpcleared <round-number>". The build
+			// phase for the next (tougher) round follows right after.
+			int n = string_to_number(parsed[1]);
+			p.play_stationary("sounds/ui/misc/roundcleared.ogg", false); // add this cue; missing = silent until then
+			add_buffer_item("alerts", "Round " + n + " cleared! The bots rebuild, tougher.");
+		}
+		else if (parsed[0] == "evpover" and parsed.length() > 2)
+		{
+			// EVP game over (loss): "evpover <rounds-cleared> <reason>". Results + play-again, like roundover.
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_evp_over(message);
+		}
 		else if (parsed[0] == "gamereset" and parsed.length() > 1)
 		{
 			// The round reset to a fresh idle cavern: "gamereset <size>". Redraw the cavern; the server
 			// re-sends the fresh wall strengths and wood count right after.
 			int gs = string_to_number(parsed[1]);
 			cavern_size = gs;
-			draw_map("cavern", 0, gs, 0, gs);
+			draw_map("cavern", 0, gs, 0, gs, game_outside);
 			setup_cavern_walls(gs);
 			lastx = int(me.x);
 			lasty = int(me.y);
@@ -728,7 +790,7 @@ void netloop_impl()
 			lastx = int(me.x);
 			lasty = int(me.y);
 		}
-		else if (parsed[0] == "gamejoined" and parsed.length() > 4)
+		else if (parsed[0] == "gamejoined" and parsed.length() > 5)
 		{
 			p.play_stationary("sounds/ui/misc/joingame.ogg", false); // personal cue: you entered a game
 			clear_players();
@@ -738,12 +800,14 @@ void netloop_impl()
 			game_phase = "idle";
 			game_paused = false;
 			current_game = string_to_number(parsed[1]);
-			current_game_host = parsed[4]; // plain name, for host comparison
+			game_outside = (parsed[4] == "evp"); // EVP plays the outdoor cavern (gravel/exterior); PVE the inside
+			current_game_host = parsed[5]; // plain name, for host comparison (parsed[4] is the mode tag)
 			string[] gjl = string_split(message, "\n", true);
-			string ghost = (gjl.length() > 1) ? gjl[1] : parsed[4]; // rank-aware display name for the announcement
-			add_buffer_item("misc", "You are now in " + ghost + "'s " + parsed[3] + " game.");
-			draw_map("cavern", 0, gsize, 0, gsize);
+			string ghost = (gjl.length() > 1) ? gjl[1] : parsed[5]; // rank-aware display name for the announcement
+			add_buffer_item("misc", "You are now in " + ghost + "'s " + parsed[3] + " " + (parsed[4] == "evp" ? "EVP" : "PVE") + " game.");
+			draw_map("cavern", 0, gsize, 0, gsize, game_outside);
 			setup_cavern_walls(gsize);
+			// No weapon on entry: EVP players are unarmed until a round starts (handled in the gamephase handler).
 			lastx = int(me.x);
 			lasty = int(me.y);
 		}
@@ -755,6 +819,7 @@ void netloop_impl()
 			game_phase = "idle";
 			game_paused = false;
 			resume_pools(); // in case we leave (or are stopped) while the host had the game paused
+			game_outside = false;
 			current_game = 0;
 			current_game_host = "";
 			add_buffer_item("misc", "You left the game.");
@@ -771,6 +836,7 @@ void netloop_impl()
 			game_phase = "idle";
 			game_paused = false;
 			resume_pools();
+			game_outside = false;
 			current_game = 0;
 			current_game_host = "";
 			p.play_stationary("sounds/ui/misc/kick.ogg", false);
@@ -781,9 +847,9 @@ void netloop_impl()
 			lastx = int(me.x);
 			lasty = int(me.y);
 		}
-		else if (parsed[0] == "spectatejoined" and parsed.length() > 3)
+		else if (parsed[0] == "spectatejoined" and parsed.length() > 4)
 		{
-			// We're now watching a game from the overhead deck: "spectatejoined <gameid> <size> <host>\n<hostdisplay>".
+			// We're now watching a game from the overhead deck: "spectatejoined <gameid> <size> <mode> <host>\n<hostdisplay>".
 			p.play_stationary("sounds/ui/misc/joingame.ogg", false);
 			clear_players();
 			int gsize = string_to_number(parsed[2]);
@@ -793,12 +859,13 @@ void netloop_impl()
 			game_phase = "idle";
 			game_paused = false;
 			current_game = string_to_number(parsed[1]);
-			current_game_host = parsed[3]; // plain name (we're never the host while watching)
+			game_outside = (parsed[3] == "evp"); // EVP deck is the outdoor variant; drives the no-volume-scaling wall strikes for watchers too
+			current_game_host = parsed[4]; // plain name (we're never the host while watching); parsed[3] is the mode tag
 			string[] sjl = string_split(message, "\n", true);
-			string shost = (sjl.length() > 1) ? sjl[1] : parsed[3];
+			string shost = (sjl.length() > 1) ? sjl[1] : parsed[4];
 			watch_host = shost; // remembered for the stop-watching confirmation
-			add_buffer_item("misc", "You are now watching " + shost + "'s game.");
-			draw_map("cavern2", 0, gsize, 0, gsize); // the deck: cave floor with an indestructible wallcrate border
+			add_buffer_item("misc", "You are now watching " + shost + "'s " + (parsed[3] == "evp" ? "EVP" : "PVE") + " game.");
+			draw_map("cavern2", 0, gsize, 0, gsize, game_outside); // the deck (the outdoor gravel/wallwoodpile retheme is task #65)
 			setup_cavern_walls(gsize); // audio mirror for the defenders' walls below (hit/death volume)
 			me.z = spectate_height; // lift the listener onto the deck above the action (draw_map leaves z alone)
 			lastx = int(me.x);
@@ -814,6 +881,7 @@ void netloop_impl()
 			game_phase = "idle";
 			game_paused = false;
 			resume_pools(); // in case the game was paused while we watched
+			game_outside = false;
 			current_game = 0;
 			current_game_host = "";
 			me.z = 0; // back down to ground level
@@ -833,14 +901,24 @@ void netloop_impl()
 			if (game_phase == "build")
 			{
 				p.play_stationary("sounds/ui/misc/buildprep.ogg", false);
-				add_buffer_item("alerts", "Build phase. " + int(game_build_seconds) + " seconds to prepare.");
+				if (game_outside) add_buffer_item("alerts", "Build phase. The bots are reinforcing for " + int(game_build_seconds) + " seconds.");
+				else add_buffer_item("alerts", "Build phase. " + int(game_build_seconds) + " seconds to prepare.");
 			}
 			else if (game_phase == "wave")
 			{
 				wave_attacking = true; // the wave opens with an attack segment
 				wave_number = (parsed.length() > 3) ? string_to_number(parsed[3]) : 1; // round number rides on the message
 				p.play_stationary("sounds/ui/misc/wavestart.ogg", false);
-				add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
+				if (game_outside) add_buffer_item("alerts", "Round " + wave_number + ", tear down the walls!");
+				else add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
+			}
+			// EVP: you have no weapon until a round is underway. Arm with the axe when a round is active (build or
+			// wave -- covers both the round starting and a mid-round join), disarm between rounds (idle/over). The
+			// guard keeps a build->wave transition from re-drawing.
+			if (game_outside)
+			{
+				if (game_phase == "build" or game_phase == "wave") { if (current_weapon == "") equip_weapon("axe"); }
+				else current_weapon = ""; // idle / over: unarmed
 			}
 		}
 		else if (parsed[0] == "waveseg" and parsed.length() > 1)

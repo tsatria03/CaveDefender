@@ -1,0 +1,30 @@
+// Client-side roster of the EVP builder bots in the game we're in, kept so the B key can locate them (and so
+// a bot's step can carry a position). The server is authoritative; we just track id -> position from the
+// botspawn / botstep / botclear messages. Mirrors the clientitem roster in item.nvgt. Only EVP games populate
+// this; it's cleared on botclear and whenever we switch maps (draw_map).
+clientbot@[] clientbots;
+class clientbot
+{
+int id;
+int x, y;
+clientbot(int bid, int ix, int iy) { id=bid; x=ix; y=iy; }
+}
+// The clientbots[] index of the bot with this id, or -1.
+int get_clientbot_index(int id)
+{
+for(uint i=0; i<clientbots.length(); i++) if(clientbots[i].id==id) return i;
+return -1;
+}
+// Add a bot, or move it if we already know it (handles both botspawn and botstep).
+void set_clientbot(int id, int x, int y)
+{
+int i = get_clientbot_index(id);
+if(i>-1) { clientbots[i].x=x; clientbots[i].y=y; return; }
+clientbot b(id, x, y);
+clientbots.insert_last(b);
+}
+// Drop the whole bot roster (botclear, or on leaving a game / drawing a new map).
+void clear_clientbots()
+{
+clientbots.resize(0);
+}

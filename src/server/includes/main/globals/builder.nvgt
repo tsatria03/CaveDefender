@@ -1,0 +1,196 @@
+// Wall-builder bots — the "enemies" of an EVP game, the mirror of the wall-smasher enemies. Each is tied to
+// a game (by its game id / room_id) and PHYSICALLY MOVES around the cavern floor: it walks to a piece of
+// ground wood, picks it up, carries it to the weakest standing wall, and (within wall_reach tiles) places it
+// to repair the wall, then goes for more. Players hear the bots by their footsteps (caveground steps, which
+// sound distinct from players' gravel steps) plus the wood take/place sounds, all played positionally at the
+// bot's spot. Builders are PURELY builders -- they never attack players. Server-authoritative; clients just
+// play the relayed sounds. (Syncing bot POSITIONS to clients for the B-key locator is a separate pass; this
+// file is movement + footsteps only.) SPAWNING/escalation is driven by the EVP phase loop, not here.
+int next_builder_id=1;
+builder@[] builders;
+class builder
+{
+int id;
+int game_id;        // the game (room_id) this builder belongs to
+int x, y;           // its tile on the cavern floor
+int movespeed;      // ms per step (and the place pause); rolled once at spawn (100-200) and kept -> walkers/runners
+timer movetimer;    // times each step and the place pause
+bool carrying=false;  // false = seeking wood; true = carrying a piece to its target wall
+string target_wall="";// the wall it's carrying wood to (the weakest standing, chosen at pickup)
+bool placing=false;   // true = paused at the wall, placing the wood this beat
+builder(int bid, int gid, int ix, int iy, int spd)
+{
+id=bid; game_id=gid; x=ix; y=iy; movespeed=spd;
+}
+}
+// EVP difficulty: how many builders defend on a given round -- base 3 plus one for every round already
+// cleared, capped at 8 (the cap keeps the footstep/position traffic and the floor sane). Each builder still
+// rolls its own 100-200ms move speed at spawn, so the round-to-round ramp is "more defenders".
+int evp_builders_for_round(int rounds_cleared) { int n = 3 + rounds_cleared; return n > 8 ? 8 : n; }
+// How many builders are working in a game right now.
+int builders_in(int gameid)
+{
+int n=0;
+for(uint i=0; i<builders.length(); i++)
+if(@builders[i]!=null and builders[i].game_id==gameid) n++;
+return n;
+}
+// Spawn `count` builders in a game, each at a random interior tile with its own random move speed.
+void spawn_builders(int gameid, int count)
+{
+int gi = get_game_index(gameid);
+if(gi<0) return;
+int s = games[gi].size;
+for(int i=0; i<count; i++)
+{
+builder b(next_builder_id, gameid, random(1, s-1), random(1, s-1), random(100, 200));
+next_builder_id++;
+builders.insert_last(b);
+send_to_game(gameid, "botspawn "+b.id+" "+b.x+" "+b.y); // clients add it to their bot roster (for the B locator)
+}
+}
+// Send one peer the current positions of every builder in a game (on join/spectate, so a late arrival's bot
+// roster -- and the B locator -- starts correct).
+void send_builders_to(int peer, int gameid)
+{
+for(uint i=0; i<builders.length(); i++)
+if(@builders[i]!=null and builders[i].game_id==gameid) send(peer, "botspawn "+builders[i].id+" "+builders[i].x+" "+builders[i].y, 0, true);
+}
+// Remove every builder in a game (when the game/round ends).
+void clear_builders(int gameid)
+{
+send_to_game(gameid, "botclear"); // clients drop this game's bot roster
+for(int i=int(builders.length())-1; i>=0; i--)
+if(@builders[i]!=null and builders[i].game_id==gameid) builders.remove_at(i);
+}
+// The STANDING wall in a game with the LOWEST health (the most urgent to repair), or "" if none stand.
+// Builders never rebuild a fallen wall (health 0) -- once a wall breaks it stays a breach, so the attackers
+// can clear walls one at a time and the round is won when the last one falls.
+string weakest_standing_wall(int gameid, double size)
+{
+string[] dirs;
+dirs.insert_last("west"); dirs.insert_last("east"); dirs.insert_last("north"); dirs.insert_last("south");
+string best="";
+double besthp=0;
+for(uint i=0; i<dirs.length(); i++)
+{
+int wi = border_wall(gameid, dirs[i], size);
+if(wi<0 or walls[wi].health<=0) continue; // skip missing/fallen walls
+if(best=="" or walls[wi].health<besthp) { best=dirs[i]; besthp=walls[wi].health; }
+}
+return best;
+}
+// Distance (tiles) from a point to the border wall in the given direction (the border ring sits at 0/size).
+int wall_distance(string dir, int x, int y, int size)
+{
+if(dir=="west") return x;
+if(dir=="east") return size - x;
+if(dir=="north") return size - y;
+if(dir=="south") return y;
+return 999999;
+}
+// The items[] index of the nearest ground wood in a game to (x,y), or -1 if none. Manhattan distance, since
+// the bots step orthogonally so that's the real path length.
+int nearest_wood_index(int gameid, int x, int y)
+{
+int best=-1; int bestd=0;
+for(uint i=0; i<items.length(); i++)
+{
+if(@items[i]==null or items[i].room_id!=gameid or items[i].type!="wood") continue;
+int dx=items[i].x-x; if(dx<0) dx=-dx;
+int dy=items[i].y-y; if(dy<0) dy=-dy;
+int d=dx+dy;
+if(best<0 or d<bestd) { best=int(i); bestd=d; }
+}
+return best;
+}
+// Step a builder one tile orthogonally toward (tx,ty): close the x gap first, then the y gap (an L-path).
+void builder_step_toward(int bi, int tx, int ty)
+{
+if(builders[bi].x < tx) builders[bi].x++;
+else if(builders[bi].x > tx) builders[bi].x--;
+else if(builders[bi].y < ty) builders[bi].y++;
+else if(builders[bi].y > ty) builders[bi].y--;
+}
+// Every server tick: advance each builder one beat if its move timer is up. A builder walks to the nearest
+// wood, grabs it, carries it to the weakest standing wall, and within wall_reach tiles pauses to place it
+// (repairing the wall) -- footsteps and the wood take/place sounds play positionally as it travels. It idles
+// (silent) when there's no wood to fetch or no wall left to fix. Skips paused games and anything outside an
+// active round. (Called from gametick beside enemy_attacks.)
+void builder_tick()
+{
+for(uint i=0; i<builders.length(); i++)
+{
+if(@builders[i]==null) continue;
+int gid = builders[i].game_id;
+int gi = get_game_index(gid);
+if(gi<0) continue;
+if(games[gi].paused) continue; // frozen by the host; builders wait (their timers are paused too)
+if(games[gi].phase!="build" and games[gi].phase!="wave") continue; // only work during a round
+if(builders[i].movetimer.elapsed < builders[i].movespeed) continue; // not time for this bot's next beat yet
+int s = games[gi].size;
+if(builders[i].placing)
+{
+// The place beat finished: feed the carried wood into the target wall (if it still stands), heard at the bot.
+builders[i].movetimer.restart();
+builders[i].placing=false;
+builders[i].carrying=false;
+int wi = border_wall(gid, builders[i].target_wall, s);
+if(wi>-1 and walls[wi].health>0)
+{
+repair_wall(wi, random(8, 16));
+broadcast_wall_strength(gid);
+send_to_game(gid, "footstep objects/items/wood/place "+builders[i].x+" "+builders[i].y);
+}
+builders[i].target_wall="";
+continue;
+}
+if(builders[i].carrying)
+{
+// If the target wall fell, re-pick the weakest standing; if none stand, drop the wood and idle.
+int wi = border_wall(gid, builders[i].target_wall, s);
+if(wi<0 or walls[wi].health<=0)
+{
+string nw = weakest_standing_wall(gid, s);
+if(nw==""){ builders[i].carrying=false; builders[i].target_wall=""; continue; }
+builders[i].target_wall=nw;
+}
+string dir = builders[i].target_wall;
+if(wall_distance(dir, builders[i].x, builders[i].y, s) <= wall_reach)
+{
+// In reach: pause this beat to place (the placement pause equals the bot's move speed).
+builders[i].placing=true;
+builders[i].movetimer.restart();
+continue;
+}
+// Walk one tile toward that wall (close on the axis that approaches the border).
+builders[i].movetimer.restart();
+int tx=builders[i].x, ty=builders[i].y;
+if(dir=="west") tx=0; else if(dir=="east") tx=s; else if(dir=="north") ty=s; else if(dir=="south") ty=0;
+builder_step_toward(int(i), tx, ty);
+send_to_game(gid, "botstep "+builders[i].id+" "+builders[i].x+" "+builders[i].y); // plays the footstep AND updates the client roster
+continue;
+}
+// Seeking wood. Nothing to do if no wall stands (round effectively won) -- idle.
+if(weakest_standing_wall(gid, s)=="") continue;
+int wfound = nearest_wood_index(gid, builders[i].x, builders[i].y);
+if(wfound<0) continue; // no wood on the ground -- idle (quiet) until the next drop
+builders[i].movetimer.restart();
+if(builders[i].x==items[wfound].x and builders[i].y==items[wfound].y)
+{
+// On the wood: take it (remove + sound) and pick the weakest standing wall to carry it to.
+int wx=items[wfound].x, wy=items[wfound].y, wid=items[wfound].id;
+items.remove_at(wfound);
+send_to_game(gid, "removeitem "+wid);
+send_to_game(gid, "footstep objects/items/wood/take "+wx+" "+wy);
+builders[i].carrying=true;
+builders[i].target_wall=weakest_standing_wall(gid, s);
+}
+else
+{
+// Walk one tile toward the wood.
+builder_step_toward(int(i), items[wfound].x, items[wfound].y);
+send_to_game(gid, "botstep "+builders[i].id+" "+builders[i].x+" "+builders[i].y); // plays the footstep AND updates the client roster
+}
+}
+}

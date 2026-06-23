@@ -12,7 +12,7 @@ if (key_repeating(KEY_C) and dlgcoppy==true)
 {
 temp.destroy_all();
 temp.play_stationary("sounds/ui/dlg/coppy.ogg", false);
-string clean_message = string_replace(message, " Press enter or space to continue.", "", true);
+string clean_message = string_replace(message, " Press enter to continue.", "", true);
 clipboard_copy_text(clean_message);
 speak("Text copied");
 }
@@ -26,7 +26,7 @@ if (key_repeating(KEY_ESCAPE))
 temp.destroy_all();
 return true;
 }
-if(key_repeating(KEY_RETURN) or key_repeating(KEY_SPACE)  or key_down(KEY_A))
+if(key_repeating(KEY_RETURN) or key_down(KEY_A))
 {
 temp.destroy_all();
 break;

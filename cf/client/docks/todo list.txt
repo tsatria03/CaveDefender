@@ -1,9 +1,8 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Add a reversed game mode, environment versus player, where you attack the four walls from outside while the bots build and repair them, surviving as many rounds as you can.
-
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a reversed game mode, environment versus player, where you attack the four walls from outside with weapons while builder bots gather wood and repair them; clear a round by bringing all four down, the defense grows each round, and a round timer plus a stall check end the game, scored by rounds cleared.
 **Finished. Add the ability to watch a game from an overhead deck, chosen with watch game from the room menu, up to four watchers per game, who roam above the action but take no part.
 **Finished. Add the ability to invite a lobby player to your room, accepted with /accept or refused with /reject, with the invitation expiring after two minutes.
 **Finished. Add a full game over results screen showing wood collected, rounds completed, and survival time, with a milestone bonus of starter wood for beating your best round ever.

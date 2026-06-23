@@ -57,7 +57,7 @@ Anyone in a room can invite someone to it. Choose Invite to room from the room m
 
 Games.
 
-Inside a room you can start a game, choosing a mode and a map size, and others can join your open games while a game still has room. In a game you defend four walls that each start at a random strength. If you host the game, press enter for the round menu, where you begin the round.
+Inside a room you can start a game, choosing a game mode, then who can play, then a map size, and others can join your open games while a game still has room. There are two modes. This section describes the original, player versus environment, or PVE, where you defend four walls that each start at a random strength; the reverse mode, environment versus player, has its own section below. If you host the game, press enter for the round menu, where you begin the round.
 
 If your game is open, that menu also has Invite to game and Kick from game, which are the same idea as the room's Invite to room and Kick from room but one step further in. Invite to game first asks where to invite from, your room or the lobby, then lists the players there for you to pick; the player you pick answers the same way, with /accept or /reject. Choosing the lobby pulls someone straight into the cavern, past a private room's password, without their having to join the room first. A player you invited from the lobby returns to the lobby when they leave the game or it ends, while a player who joined through your room returns to the room; Kick from game follows the same rule, sending each player back to wherever they came from.
 
@@ -69,9 +69,21 @@ When the wave begins, enemies attack your walls with axes, bats, crowbars, and h
 
 Press escape for the pause menu. If you host the game and a round is running, opening it pauses the game for everyone until you resume; a solo game stays paused, while an open game resumes on its own after a minute and a half. Anyone can leave from this menu at any time, and the host can stop the game from it.
 
+Environment versus player.
+
+Environment versus player, or EVP, flips the game around: instead of defending the walls you attack them, and the bots defend. You play from the gravel outside the cave, and your job is to smash all four walls down while the bots build them back up. Choose EVP when you pick your game mode at the start.
+
+You fight with weapons, not wood. When a round starts you are handed all four on the number row: press one for the axe, two for the bat, three for the crowbar, or four for the hammer, and you hear which one you have drawn. Before the round begins you carry nothing and cannot attack. Walk up to a wall and hold space to swing the weapon in your hand at the nearest wall, the same five tile reach as reinforcing. Each weapon takes a moment to wind up before the blow lands, and heavier weapons hit harder but swing slower, so the hammer does the most damage while the axe lands the fastest. You can keep moving and switch weapons freely while you swing.
+
+The walls are defended by builder bots. They wander the cavern, pick up the wood that drops, carry it to whichever wall is weakest, and repair it, so you hear their footsteps moving around and the wood going onto the walls. You do not gather wood yourself in this mode; the bots do. Press b to hear where the bots are, nearest first, the same way p locates players, and the wall keys n, e, s, w, and t still tell you how the walls are holding up.
+
+Each round has two parts. First a build phase, where the bots reinforce the walls and you cannot hurt them yet; if you swing during this time your weapon only ricochets off the wall, so you know you are lined up, but no damage is done. Then the wave, where your hits finally count while the bots keep repairing as fast as they can. You have a time limit for the wave, which tab reads out, to bring all four walls down.
+
+Bring every wall down and you clear the round; the cavern is rebuilt and the next round sends more bots to defend it, so it gets harder each time. The game ends when the bots hold you off, either because the wave's time runs out with a wall still standing, or because you stall, going too long without making any headway. You are then shown how many rounds you cleared and asked whether to play again or leave. The pause menu works just as it does in the other mode.
+
 Watching games.
 
-You can also watch a game instead of playing it. Choose watch game from the room menu to see every game in the room, including single-player games and games already in progress, and pick one; up to four people can watch a game at once. You float on a deck above the cavern and roam it freely while the whole battle plays out below you, and the players are told you are watching. You are only an observer, so you carry no wood, cannot reinforce, and the enemies ignore you, but you hear everything and can still chat and use voice with the players. Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. Press escape to stop watching and return to the room.
+You can also watch a game instead of playing it. Choose watch game from the room menu to see every game in the room, including single-player games and games already in progress, and pick one; up to four people can watch a game at once. You float on a deck above the cavern and roam it freely while the whole battle plays out below you, and the players are told you are watching. You are only an observer, so you carry no wood, cannot reinforce, and the enemies ignore you, but you hear everything and can still chat and use voice with the players. Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. When you watch an environment versus player game, the deck sits out on the gravel to match, and the b key locates the builder bots as well. Press escape to stop watching and return to the room.
 
 What only staff can do.
 
