@@ -21,7 +21,7 @@ timer phasetimer;    // times the current phase (drives the build-phase countdow
 int buildduration=0; // how many seconds the build phase lasts (set per map size when the round begins)
 timer woodtimer;     // drives wood drops during the build and wave phases
 int woodinterval=0;  // ms until the next wood drop, re-rolled to a random 1000-5000 after each one
-int wave_bot_target=0; // per-wall bot count for the current wave; +1 on each attack burst, capped per player count
+int wave_bot_target=0; // per-wall bot count for the current wave; +1 on each attack burst, no ceiling (intentional since 2.5 -- more bots make the walls fall faster, so the round self-limits)
 int wave_number=0; // which attack burst (round) the wave is on; 1 on the first attack, +1 each later burst, uncapped (announced to clients)
 bool warned=false; // set once the heads-up for the upcoming wave has been sent; re-armed at build start and at each rest segment
 timer wavetimer;     // started when the wave begins; its elapsed time is the survival score
@@ -339,14 +339,13 @@ return 75;
 // size. Constant per size -- the escalation comes from the defenders (more builders each round), not a
 // shrinking clock. Tunable.
 int evp_round_seconds(int size) { if(size<=25) return 60; if(size<=50) return 100; return 160; }
-// EVP stall window (ms): the no-progress cutoff -- a third of the round timer, so it's always shorter than the
+// EVP stall window (ms): the no-progress cutoff -- half the round timer, so it's always shorter than the
 // round and scales with map size (bigger maps give more grace for travel/regroup).
-int evp_stall_window_ms(int round_secs) { return round_secs * 1000 / 3; }
+int evp_stall_window_ms(int round_secs) { return round_secs * 1000 / 2; }
 // Total remaining health across a game's four standing walls (for EVP stall detection / progress tracking).
 double total_wall_hp(int gameid, double size)
 {
-string[] dirs;
-dirs.insert_last("west"); dirs.insert_last("east"); dirs.insert_last("north"); dirs.insert_last("south");
+string[]@ dirs = WALL_DIRS; // alias the shared constant; iterated read-only, not rebuilt per call
 double t=0;
 for(uint i=0; i<dirs.length(); i++) { int wi=border_wall(gameid, dirs[i], size); if(wi>-1 and walls[wi].health>0) t+=walls[wi].health; }
 return t;
@@ -539,8 +538,7 @@ else if(games[i].evp_stalltimer.elapsed >= evp_stall_window_ms(games[i].evp_roun
 // True if all four cavern walls of a game are down (health 0).
 bool all_walls_destroyed(int gameid, double size)
 {
-string[] dirs;
-dirs.insert_last("west"); dirs.insert_last("east"); dirs.insert_last("north"); dirs.insert_last("south");
+string[]@ dirs = WALL_DIRS; // alias the shared constant; iterated read-only, not rebuilt per call
 for(uint i=0; i<dirs.length(); i++)
 {
 int wi = border_wall(gameid, dirs[i], size);

@@ -70,6 +70,7 @@ void remove_player(string pname)
 int i=get_player_index(pname);
 if(i<0) return;
 if(@players[i].voice_snd != null) players[i].voice_snd.close();
+beaconpool.destroy_sound(players[i].beaconsound); // stop their last beacon pulse if it's still ringing
 players.remove_at(i);
 }
 
@@ -78,7 +79,10 @@ players.remove_at(i);
 void clear_players()
 {
 for(uint i=0; i<players.length(); i++)
+{
 if(@players[i].voice_snd != null) players[i].voice_snd.close();
+beaconpool.destroy_sound(players[i].beaconsound); // stop any beacon still ringing before we drop the roster
+}
 players.resize(0);
 }
 

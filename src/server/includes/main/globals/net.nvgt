@@ -76,22 +76,29 @@ return i;
 }
 return -1;
 }
-// Resolve a typed name to an ONLINE player: exact username first (the stable identity), then exact
-// nickname (the display name). Both case-sensitive; nicknames are unique among online players, so a
-// nickname match is unambiguous, and a real username always wins over a coincidental nickname.
+// Resolve a typed name to an ONLINE player: username first (the stable identity), then nickname (the
+// display name). Case-INSENSITIVE, matching login/account lookups and get_online_index -- an account is a
+// case-insensitive identity (you can't have both "bob" and "Bob"), so "/mute Bob" correctly targets account
+// "bob". Nicknames are unique case-insensitively among online players (and vs usernames), so a nickname match
+// stays unambiguous, and a real username always wins over a coincidental nickname.
 int get_player_index_from(string name)
 {
+string low=string_to_lower_case(name);
 for(int i=0; i<players.length(); i++)
-if(players[i].name==name) return i;
+if(string_to_lower_case(players[i].name)==low) return i;
 for(int i=0; i<players.length(); i++)
-if(players[i].nickname==name) return i;
+if(string_to_lower_case(players[i].nickname)==low) return i;
 return -1;
 }
+// Maps a peer id -> the username it successfully authenticated as in login(). spawn_player seats a peer ONLY
+// as its verified name, so a peer can't log in as one account and spawn as another, and can't spawn without
+// logging in at all. The entry is removed when the peer disconnects.
+dictionary verified_logins;
 void login(string name, string password, string ver)
 {
 if(ver != version)
 {
-send(event.peer_id, "Error: Your client is incompatible. your version: "+ver+". Latest version: "+version+". Please update the game to connect to the server.", 0,true);
+send(event.peer_id, "error: your client is incompatible. your version: "+ver+". latest version: "+version+". Please update the game to connect to the server.", 0,true);
 return;
 }
 if(!account_exists(name))
@@ -149,6 +156,7 @@ send(event.peer_id, "error: the server has exceeded the limit. the maximum numbe
 }
 if(cont==true)
 {
+verified_logins.set(""+event.peer_id, name); // remember who this peer authenticated as; spawn_player trusts only this
 send(event.peer_id, "done", 0,true);
 }
 }
@@ -353,6 +361,10 @@ if(int(i) == ti) continue;
 if(string_to_lower_case(players[i].nickname) == string_to_lower_case(newnick) or string_to_lower_case(players[i].name) == string_to_lower_case(newnick))
 { send(issuer_peer, "misc This nickname is already taken. Try again.", 0, true); return false; }
 }
+// Also reject any EXISTING account's username other than your own (online OR offline), so you can't take a
+// logged-out player's identity as your display name. Your own username is fine -- that's the default nickname.
+if(string_to_lower_case(newnick) != string_to_lower_case(uname) and account_exists(newnick))
+{ send(issuer_peer, "misc This nickname is already taken. Try again.", 0, true); return false; }
 string oldannounce = afk_prefix(ti) + display_name_flagged(ti); // old display, AFK + flag aware
 players[ti].nickname = newnick;
 set_nickname(uname, newnick);
@@ -555,6 +567,7 @@ if(index>-1)
 send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
 players.remove_at(index);
 }
+verified_logins.delete(""+event.peer_id); // forget this peer's authenticated identity so a recycled peer id can't inherit it
 }
 if(event.type==event_receive and event.channel==0)
 {
@@ -577,26 +590,42 @@ send(event.peer_id, uptime_message, 0, true);
 }
 else if(parsed[0]=="login" and parsed.length()>3)
 {
-login(parsed[1], parsed[2], parsed[3]);
+// login is exactly "login <name> <password> <version>"; extra tokens mean a space slipped into the name
+// or password (the client forms block this, but a non-standard client could still send it), which would
+// verify a truncated credential -- reject it so a space never causes a failed login or unloggable account.
+if(parsed.length()>4) send(event.peer_id, "error: usernames and passwords cannot contain spaces.", 0,true);
+else login(parsed[1], parsed[2], parsed[3]);
 }
 else if(parsed[0]=="register" and parsed.length()>2)
 {
-register_account(parsed[1], parsed[2]);
+// register is exactly "register <name> <password>"; extra tokens mean a space in the name or password,
+// which would silently truncate the stored password and make the account impossible to log into.
+if(parsed.length()>3) send(event.peer_id, "error: usernames and passwords cannot contain spaces.", 0,true);
+else register_account(parsed[1], parsed[2]);
 }
 else if(parsed[0]=="spawn_player" and parsed.length()>2)
 {
+// A peer may seat itself ONLY as the account it authenticated as in login() -- never the name the client
+// sends in the packet. This closes the bypass where a peer could skip login (or log in as a throwaway) and
+// spawn as any account, inheriting its rank (including the owner's forced developer).
+string vname;
+if(!verified_logins.get(""+event.peer_id, vname))
+{
+send(event.peer_id, "error: you must log in before spawning.", 0,true);
+}
+else
+{
 bool spawnable=true;
-string n=parsed[1];
 for(uint i=0; i<players.length(); i++)
 {
-if(players[i].name==n)
+if(players[i].name==vname)
 {
 spawnable=false;
 }
 }
 if(spawnable==true)
 {
-spawn_player(event.peer_id, parsed[1], string_to_number(parsed[2]));
+spawn_player(event.peer_id, vname, string_to_number(parsed[2]));
 index=get_player_index(event.peer_id);
 players[index].rank=get_rank(players[index].name);
 if(is_owner(players[index].name) and players[index].rank != "developer")
@@ -648,6 +677,7 @@ for(uint i=0; i<players.length(); i++)
 {
 if(i==uint(index) or players[i].room_id!=players[index].room_id) continue;
 send(event.peer_id, pos_msg(int(i)), 0,true);
+}
 }
 }
 }
@@ -1050,18 +1080,6 @@ broadcast_event(display_name_flagged_for(games[gi].host)+"'s game was stopped.",
 end_game(gi);
 }
 }
-else if(parsed[0]=="listgames" and index>-1)
-{
-// List every game in the player's current room (the client filters: Join shows non-full games and
-// reports started ones; the staff Stop list shows all). Fields: id host members size solo|open phase.
-string payload="gamelist";
-for(uint i=0; i<games.length(); i++)
-{
-if(games[i].parent_room != players[index].room_id) continue;
-payload+="\n"+games[i].id+" "+games[i].host+" "+games[i].members.length()+" "+games[i].size+" "+(games[i].solo?"solo":"open")+" "+games[i].phase;
-}
-send(event.peer_id, payload, 0,true);
-}
 else if(parsed[0]=="joingame" and index>-1 and parsed.length()>1)
 {
 int ri=get_room_index(players[index].room_id);
@@ -1107,38 +1125,10 @@ else if(parsed[0]=="leavewatch" and index>-1)
 {
 leave_watch(index); // stop watching, return to the room
 }
-else if(parsed[0]=="listrooms" and index>-1 and parsed.length()>1)
-{
-string which=parsed[1];
-bool wantpriv=(which=="private");
-string payload="roomlist "+which;
-for(uint i=0; i<rooms.length(); i++)
-{
-if(rooms[i].is_private != wantpriv) continue;
-int gc=0;
-for(uint g=0; g<games.length(); g++) if(games[g].parent_room==rooms[i].id) gc++;
-payload+="\n"+rooms[i].id+" "+rooms[i].host+" "+rooms[i].members.length()+" "+gc;
-}
-send(event.peer_id, payload, 0,true);
-}
 else if(parsed[0]=="joinroom" and index>-1 and parsed.length()>1)
 {
 string pw = (parsed.length()>2) ? parsed[2] : "";
 do_join_room(index, event.peer_id, int(string_to_number(parsed[1])), pw);
-}
-else if(parsed[0]=="roommembers" and index>-1)
-{
-string payload="roommemberlist";
-int ri=get_room_index(players[index].room_id);
-if(ri>-1)
-{
-for(uint j=0; j<rooms[ri].members.length(); j++)
-{
-int pi=get_player_index(rooms[ri].members[j]);
-if(pi>-1 and players[pi].room_id==rooms[ri].id) payload+=" "+players[pi].name; // only those actually in the office, not off in a game.
-}
-}
-send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="scopemembers" and index>-1)
 {
@@ -1460,7 +1450,7 @@ send(players[target_index].peer_id, "PM from " + afk_prefix(index) + display_nam
                     }
 else
 {
-                        if(account_exists_exact(target_user)) send(event.peer_id, "misc This player is not online.", 0, true);
+                        if(account_exists(target_user)) send(event.peer_id, "misc This player is not online.", 0, true);
                         else send(event.peer_id, "misc This player does not exist.", 0, true);
                     }
                 }
@@ -1499,7 +1489,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         int ti = get_player_index_from(parsed[1]);
                         if(ti < 0)
                         {
-                            if(account_exists_exact(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
+                            if(account_exists(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
                             else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else apply_nickname(ti, parsed[2], event.peer_id, false);
@@ -1530,7 +1520,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                 broadcast_pos(ti);
                             }
                         }
-                        else if(account_exists_exact(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
+                        else if(account_exists(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
 else send(event.peer_id, "misc This player does not exist.", 0, true);
                     }
                     else send(event.peer_id, "Usage: /afk username", 0, true);
@@ -1555,7 +1545,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else
                         {
-                            if(account_exists_exact(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
+                            if(account_exists(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
 else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                     }
@@ -1581,7 +1571,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(ti < 0)
                         {
-                            if(account_exists_exact(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
+                            if(account_exists(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
                             else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
@@ -1619,7 +1609,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(ti < 0)
                         {
-                            if(account_exists_exact(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
+                            if(account_exists(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
                             else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(is_owner(players[ti].name))
@@ -1661,7 +1651,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else
                         {
-                            if(account_exists_exact(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
+                            if(account_exists(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
 else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                     }
@@ -1684,7 +1674,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(ti < 0)
                         {
-                            if(account_exists_exact(wname)) send(event.peer_id, "misc This player is not online.", 0, true);
+                            if(account_exists(wname)) send(event.peer_id, "misc This player is not online.", 0, true);
                             else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
@@ -1729,7 +1719,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         int ti = get_player_index_from(tname); // online-only, by username or nickname
                         if(ti < 0)
                         {
-                            if(account_exists_exact(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
+                            if(account_exists(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
                             else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(channel != "all" && !valid_mute_channel(channel))
@@ -1774,7 +1764,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         int ti = get_player_index_from(tname); // online-only, by username or nickname
                         if(ti < 0)
                         {
-                            if(account_exists_exact(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
+                            if(account_exists(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
                             else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(channel != "all" && !valid_mute_channel(channel))
@@ -1815,7 +1805,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         int ti = get_player_index_from(tname); // online-only, by username or nickname
                         if(ti < 0)
                         {
-                            if(account_exists_exact(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
+                            if(account_exists(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
                             else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
@@ -1853,7 +1843,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                     if(parsed.length() >= 2)
                     {
                         string tname = parsed[1];
-                        if(!account_exists_exact(tname))
+                        if(!account_exists(tname)) // case-insensitive, like login/account_dir: /unban Bob resolves account bob
                         {
                             send(event.peer_id, "misc This player does not exist.", 0, true);
                         }

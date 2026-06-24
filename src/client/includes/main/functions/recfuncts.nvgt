@@ -133,18 +133,26 @@ void play_remote_voice(string msg)
 	}
 }
 
-// Each frame: keep every active voice stream positioned at its speaker (and re-panned as you move), and
-// close a stream once its speaker has been silent past the gap so finished voices don't linger.
+// Each frame: keep every active voice stream positioned at its speaker (and re-panned as you move), close a
+// stream once its speaker has been silent past the gap so finished voices don't linger, and drop voice-only
+// roster entries (a speaker we never got a pos for, e.g. a spectator) once they stop talking. Iterates
+// backwards so a removal is index-safe.
 void voiceloop()
 {
-	for(uint i=0; i<players.length(); i++)
+	for(int i=int(players.length())-1; i>=0; i--)
 	{
-		if(@players[i].voice_snd == null) continue;
-		if(players[i].voice_rxtimer.elapsed > VOICE_GAP_MS)
+		if(@players[i].voice_snd != null and players[i].voice_rxtimer.elapsed > VOICE_GAP_MS)
 		{
 			players[i].voice_snd.close();
 			@players[i].voice_snd = null;
 			players[i].voice_started = false;
+		}
+		if(@players[i].voice_snd == null)
+		{
+			// A voice-only entry (tracked==false: no pos ever arrived) has no reason to stay once its voice
+			// stops -- drop it so a missed or never-sent "offline" can't leave a stale entry with a frozen
+			// position forever. A tracked cavern player keeps their entry (beacons/pos need it) while silent.
+			if(!players[i].tracked and players[i].voice_rxtimer.elapsed > VOICE_GAP_MS) remove_player(players[i].name);
 			continue;
 		}
 		players[i].voice_snd.set_position(me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), vpool.pan_step, vpool.volume_step);

@@ -1,3 +1,10 @@
+New in 2.7.
+Account passwords are now protected with much stronger, modern encryption; because of this, every existing account must be created again, as older accounts can no longer sign in.
+Usernames and passwords can no longer contain spaces, and the username, password, and private room password fields now reject the space key as you type.
+When your game version does not match the server's, you are now clearly told that your client is incompatible and asked to update, rather than the connection simply failing.
+Staff commands that target a player now accept the name typed in any capitalization, so a command works whether or not it matches the account's exact case.
+You can no longer set your nickname to another account's username, so no one can borrow another player's identity while they are signed out.
+The server now firmly ties each player to the account they signed in with, closing a loophole that could let a modified client appear as someone else.
 New in 2.6.
 In an EVP game, press B to hear where the builder bots are, by direction and distance, nearest first, the same way the P key locates other players.
 You can now play a brand new game mode, EVP, short for environment versus player, the mirror of the original: instead of defending the four walls you attack them from outside with weapons drawn on the number row, while builder bots roam the cavern gathering the wood that drops to repair them. Each round opens with a build phase where your swings only ricochet, then a wave with a time limit to bring all four walls down, and every round you clear sends more bots to defend the next. The game ends when the bots hold you off, by running out the clock or stalling you out, and you are scored by the rounds you cleared.

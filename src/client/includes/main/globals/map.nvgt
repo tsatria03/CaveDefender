@@ -26,6 +26,10 @@ clear_ambiences(); // drop the previous space's ambient bed before laying the ne
 clear_musics(); // and its music track, same as the ambience.
 clear_clientitems(); // and any ground items (wood) from the previous space.
 clear_clientbots(); // and the EVP builder-bot roster from the previous space.
+// Stop a footstep or wall-bump still ringing from the space we're leaving. These overlap during normal
+// play (each step/bump is a fresh untracked-by-replay sound); only a space change cuts the last one.
+p.destroy_sound(wallslot);
+p.destroy_sound(tileslot);
 me.x=int((minx+maxx)/2);
 me.y=int((miny+maxy)/2);
 if(mapname=="lobby")

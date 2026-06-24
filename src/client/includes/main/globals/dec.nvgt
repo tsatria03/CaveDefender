@@ -1,6 +1,6 @@
 bool hrtf=false, recording = false;
 
-int tileslot=-1, wepslot=-1, wallslot=-1; // sound_pool slots (-1 = none yet): tileslot = footsteps, wepslot = weapon DRAW only (so re-drawing cuts the old draw; fire/hit are untracked and overlap), wallslot = wall strikes
+int tileslot=-1, wepslot=-1, wallslot=-1; // sound_pool slots (-1 = none yet): tileslot = footsteps, wallslot = wall strikes -- both overlap during play (a new step/bump never cuts the last one) and are destroyed only on a space change (draw_map) to stop a lingering one; wepslot = weapon DRAW only, which DOES cut on re-draw so switching weapons doesn't stack draws (fire/hit are untracked and overlap)
 int echomode=1, fademode=1;
 int rectime = 10000;
 int spamtime = 500;
@@ -24,11 +24,7 @@ string myrank="player";
 string last_pm_sender=""; // the most recent player to PM us, used by /reply (/r)
 int current_room=0; // 0 = main lobby; otherwise the id of the room we're in (Enter opens its menu)
 bool current_room_private=false; // whether the room we're in is private (controls room-menu options)
-string pending_roomlist=""; // last room-list payload received from the server (used by the join menu)
-bool roomlist_received=false;
 string current_room_host=""; // host name of the room we're in, so we know whether we host it
-string pending_roommembers=""; // last room-member list received (used by kick / delete)
-bool roommembers_received=false;
 bool have_public_room=false, have_private_room=false; // whether we own a saved public/private room
 bool in_game=false; // true while we're inside a game cavern (Escape/Enter open the game menu)
 bool game_outside=false; // true while the current game is EVP (the outdoor variant): drives the gravel/exterior map and the no-volume-scaling wall strikes; false for the original PVE (inside the cave). Set on entering a game, cleared on leaving.
@@ -37,8 +33,6 @@ const double spectate_height=5; // the height (z) of the spectator deck above th
 string watch_host=""; // display name of the game we're watching, for the "stop watching X's game?" confirmation
 int current_game=0; // the id of the game we're in (0 = none); a space id in the room_id namespace
 string current_game_host=""; // host of the game we're in, so we know whether we may Stop it
-string pending_gamelist=""; // last game-list payload from the server (used by the join / stop menus)
-bool gamelist_received=false;
 string pending_scopemembers=""; // last scope-member list (used by the R/L/G roster keys)
 bool scopemembers_received=false;
 string pending_roomgames=""; // last games summary (game count + players), used by the G key (room or lobby)
