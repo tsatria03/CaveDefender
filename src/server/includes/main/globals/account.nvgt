@@ -2,8 +2,9 @@
 // field: username.usr, password.usr, pronoun.usr, rank.usr, muted.usr, banned.usr.
 // This lets a server host read or edit a single field by hand without parsing a combined file.
 //
-// Passwords are never stored in plaintext: password.usr holds "<salt>:<hash>" -- a random salt
-// (plaintext, NOT secret) and the SHA-256 hash of salt+password, joined by a colon. rank is one of
+// Passwords are never stored in plaintext: password.usr holds "argon2id$<nb_blocks>$<nb_passes>$<salt>$<hash>"
+// -- a random CSPRNG salt (plaintext, NOT secret) and the memory-hard Argon2id hash of the password, with the
+// cost params inline so a verify reproduces them (no SHA-256 fallback). rank is one of
 // player / moderator / administrator / developer. muted.usr and banned.usr each use the same scheme:
 // empty = not muted/banned, "0" = indefinite/permanent, any other number = the absolute epoch it
 // expires at.
@@ -27,18 +28,12 @@ string field_path(string name, string field)
 {
 return account_dir(name) + "/" + field + ".usr";
 }
+// Case-insensitive (account_dir resolves an existing folder regardless of case): login relies on it (sign in
+// regardless of case), registration relies on it (you can't create both "Bob" and "bob" -- the second resolves
+// to the first's folder and is refused), and command targeting resolves names case-insensitively too.
 bool account_exists(string name)
 {
 return directory_exists(account_dir(name));
-}
-// Case-sensitive existence: the account exists AND the given name matches the stored username exactly.
-// Used for command targeting (so /demote BOB does NOT act on account "bob"). account_exists itself stays
-// case-insensitive (account_dir resolves an existing folder regardless of case), which login relies on
-// (sign in regardless of case) and registration relies on (you can't create both "Bob" and "bob", since
-// the second create resolves to the first's folder and is refused).
-bool account_exists_exact(string name)
-{
-return account_exists(name) and read_field(name, "username", "") == name;
 }
 // True if this name is the configured owner account (case-insensitive); the owner is always developer.
 bool is_owner(string name)
@@ -109,27 +104,38 @@ if(w == "") return 0;
 return int(string_split(w, "\n", true).length());
 }
 
+// Argon2id cost parameters for password hashing (see string_argon2id in the engine): 4 MiB of memory
+// (nb_blocks * 1024) and 3 passes -- memory-hard, so a stolen password.usr can't be brute-forced cheaply.
+const uint argon2_blocks = 4096; // 4 MiB work area
+const uint argon2_passes = 3;
+const uint argon2_hashlen = 32;  // 32-byte (256-bit) derived hash
+// A random per-account salt from the engine CSPRNG (random_bytes), mapped to printable lowercase-alphanumeric
+// so it stays a single colon/$-free token inside the stored "argon2id$blocks$passes$salt$hash" blob.
 string make_salt()
 {
 string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
+string rb = random_bytes(24); // cryptographically-random bytes
 string salt = "";
-for(int i=0; i<24; i++)
-{
-salt += charset.substr(random(0, int(charset.length())-1), 1);
-}
+for(uint i=0; i<rb.length(); i++) salt += charset.substr(character_to_ascii(rb[i]) % charset.length(), 1); // rb[i] is a 1-char string here, so convert it to its byte value first
 return salt;
+}
+// The stored password blob for a salt+password: "argon2id$<nb_blocks>$<nb_passes>$<salt>$<hex hash>". The cost
+// params ride along so a verify recomputes with the exact settings the hash was made with (and they can be
+// raised later without breaking existing accounts).
+string password_blob(string salt, string password)
+{
+return "argon2id$"+argon2_blocks+"$"+argon2_passes+"$"+salt+"$"+string_argon2id(password, salt, argon2_blocks, argon2_passes, argon2_hashlen);
 }
 
 bool create_account(string name, string password)
 {
 if(account_exists(name)) return false;
 string salt = make_salt();
-string hash = string_hash_sha256(salt + password);
 write_field(name, "username", name);
 write_field(name, "nickname", name); // display name starts equal to the username
 write_field(name, "language", "English"); // everyone starts on the English channel
 write_field(name, "pronoun", default_pronoun()); // default: the configured they/them option, until the player picks with /pronoun
-write_field(name, "password", salt + ":" + hash);
+write_field(name, "password", password_blob(salt, password));
 write_field(name, "rank", is_owner(name) ? "developer" : "player");
 write_field(name, "pubroom", "");
 write_field(name, "privroom", "");
@@ -156,11 +162,17 @@ bool verify_password(string name, string password)
 {
 if(!account_exists(name)) return false;
 string blob = read_field(name, "password");
-int c = string_contains(blob, ":", 1);
-if(c < 1) return false;
-string salt = string_left(blob, c);
-string hash = blob.substr(c + 1);
-return string_hash_sha256(salt + password) == hash;
+// Format: "argon2id$<nb_blocks>$<nb_passes>$<salt>$<hex hash>". Anything else (e.g. a pre-Argon2 account) is
+// rejected -- there is no legacy SHA-256 fallback, so any such account must be re-registered. The cost params
+// and hash length are read back from the blob, so a verify always matches how the stored hash was produced.
+string[] parts = string_split(blob, "$", true);
+if(parts.length() != 5 or parts[0] != "argon2id") return false;
+uint blocks = uint(string_to_number(parts[1]));
+uint passes = uint(string_to_number(parts[2]));
+string salt = parts[3];
+string expect = parts[4];
+uint hsz = uint(expect.length()/2); // hex chars -> bytes
+return string_argon2id(password, salt, blocks, passes, hsz) == expect;
 }
 
 // Returns the stored rank for an account, defaulting to "player" when missing.

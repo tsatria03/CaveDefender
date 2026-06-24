@@ -68,8 +68,7 @@ if(@builders[i]!=null and builders[i].game_id==gameid) builders.remove_at(i);
 // can clear walls one at a time and the round is won when the last one falls.
 string weakest_standing_wall(int gameid, double size)
 {
-string[] dirs;
-dirs.insert_last("west"); dirs.insert_last("east"); dirs.insert_last("north"); dirs.insert_last("south");
+string[]@ dirs = WALL_DIRS; // alias the shared constant; iterated read-only, not rebuilt per call
 string best="";
 double besthp=0;
 for(uint i=0; i<dirs.length(); i++)

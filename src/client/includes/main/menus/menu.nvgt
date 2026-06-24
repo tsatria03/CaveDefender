@@ -119,6 +119,8 @@ bool signinasform()
 	form.create_window("Sign in as", false);
 	int unamebox=form.create_input_box("Username", "", "");
 	int passbox=form.create_input_box("Password", "", "*");
+	form.set_disallowed_chars(unamebox, " ", false, "Spaces are not allowed."); // names/passwords are space-delimited on the wire, so spaces would break login
+	form.set_disallowed_chars(passbox, " ", false, "Spaces are not allowed.");
 	int signbtn=form.create_button("&Sign in", true);
 	int cancelbtn=form.create_button("&Cancel", false, true);
 	form.focus(unamebox);
@@ -160,6 +162,8 @@ bool newaccountform()
 	form.create_window("New account", false);
 	int unamebox=form.create_input_box("Username", "", "");
 	int passbox=form.create_input_box("Password", "", "*");
+	form.set_disallowed_chars(unamebox, " ", false, "Spaces are not allowed."); // names/passwords are space-delimited on the wire, so spaces would break login/register
+	form.set_disallowed_chars(passbox, " ", false, "Spaces are not allowed.");
 	int createbtn=form.create_button("&Create account", true);
 	int cancelbtn=form.create_button("&Cancel", false, true);
 	form.focus(unamebox);
@@ -182,21 +186,9 @@ bool newaccountform()
 				form.focus(unamebox);
 				continue;
 			}
-			if(string_contains(uname, " ", 1)>-1)
-			{
-				dlgmessage("Usernames cannot contain spaces. Press enter to continue.");
-				form.focus(unamebox);
-				continue;
-			}
 			if(pass.length()<6 or pass.length()>24)
 			{
 				dlgmessage("Passwords must be between 6 and 24 characters. Press enter to continue.");
-				form.focus(passbox);
-				continue;
-			}
-			if(string_contains(pass, " ", 1)>-1)
-			{
-				dlgmessage("Passwords cannot contain spaces. Press enter to continue.");
 				form.focus(passbox);
 				continue;
 			}

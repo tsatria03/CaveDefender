@@ -4,7 +4,8 @@
 # Pin game-data and script files to CRLF so the engine's parsers and the AngelScript compiler always see Windows line endings on every platform.
 *.nvgt text eol=crlf
 *.txt text eol=crlf
-*.srv text eol=crlf
+*.svr text eol=crlf
+*.usr text eol=crlf
 *.map text eol=crlf
 *.md text eol=crlf
 *.ini text eol=crlf

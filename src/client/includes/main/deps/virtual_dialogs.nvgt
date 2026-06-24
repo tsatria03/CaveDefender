@@ -160,7 +160,9 @@ this.destroy_window();
 return result;
 }
 // Like input_box, but the typed text is masked with * (for passwords). Returns "" if cancelled.
-string password_box(const string title, const string text, const string default_text = "")
+// disallowed_chars (if set) are blocked at keypress and paste, e.g. " " to keep passwords space-free; the
+// chars come straight from the argument (not the shared instance state) so they never leak into later dialogs.
+string password_box(const string title, const string text, const string default_text = "", string disallowed_chars = "", string char_disallowed_description = "This character is not allowed.")
 {
 string result;
 int text_box, ok_button, cancel_button;
@@ -170,6 +172,7 @@ text_box = this.form.create_input_box(text, default_text, "*");
 ok_button = this.form.create_button("&OK", true);
 cancel_button = this.form.create_button("&Cancel", cancel = true);
 this.form.focus(text_box);
+if (disallowed_chars.length() > 0) this.form.set_disallowed_chars(text_box, disallowed_chars, false, char_disallowed_description);
 while (true)
 {
 wait(5);

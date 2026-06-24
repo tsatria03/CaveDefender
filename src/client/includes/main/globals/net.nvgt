@@ -376,7 +376,7 @@ void handle_askinput(string message)
 	if (alines.length() >= 3)
 	{
 		bool amask = (alines.length() > 3 and alines[3] == "1");
-		string aval = amask ? vd.password_box("Private room", alines[1]) : vd.input_box("Input", alines[1], "");
+		string aval = amask ? vd.password_box("Private room", alines[1], "", " ", "Spaces are not allowed.") : vd.input_box("Input", alines[1], "");
 		if (aval == "") speak("canceled");
 		else send(0, alines[2] + " " + aval, 0, true);
 	}
@@ -402,9 +402,9 @@ void netloop_impl()
 	if (event.type == event_receive and event.channel == 0)
 	{
 		string message = get_event_message();
-		// Dispatch on the first word of the FIRST line. Multi-line payloads (e.g. gamelist) put no
+		// Dispatch on the first word of the FIRST line. Multi-line payloads (e.g. scopememberlist) put no
 		// space after the command word, so splitting the whole message on spaces would glue the
-		// command to the next line's first field ("gamelist\n3" instead of "gamelist").
+		// command to the next line's first field ("scopememberlist\nAlice" instead of "scopememberlist").
 		string[] firstline = string_split(message, "\n", true);
 		string[] parsed = string_split(firstline[0], " ", true);
 		if (message == "ping_response")
@@ -961,21 +961,6 @@ void netloop_impl()
 			resume_pools();
 			p.play_stationary("sounds/ui/misc/resume.ogg", false);
 			speak("Game resumed.");
-		}
-		else if (parsed[0] == "roomlist")
-		{
-			pending_roomlist = message;
-			roomlist_received = true;
-		}
-		else if (parsed[0] == "gamelist")
-		{
-			pending_gamelist = message;
-			gamelist_received = true;
-		}
-		else if (parsed[0] == "roommemberlist")
-		{
-			pending_roommembers = message;
-			roommembers_received = true;
 		}
 		else if (parsed[0] == "scopememberlist")
 		{
