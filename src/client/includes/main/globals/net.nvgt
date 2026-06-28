@@ -333,17 +333,16 @@ void handle_roundover(string message)
 	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next round to begin."); }
 	else send(0, "playagain no", 0, true);
 }
-// EVP game over (a loss): "evpover <rounds-cleared> <reason>" (reason "time" = ran out the round timer, "stall"
-// = couldn't make progress). Show the results and the play-again prompt, mirroring handle_roundover; the score
-// is rounds cleared. Play again -> a fresh round-1 game the host begins; no -> leave to the room.
+// EVP game over (a loss): "evpover <rounds-cleared>". The only loss is the round timer running out. Show the
+// results and the play-again prompt, mirroring handle_roundover; the score is rounds cleared. Play again -> a
+// fresh round-1 game the host begins; no -> leave to the room.
 void handle_evp_over(string message)
 {
 	string[] parsed = string_split(message, " ", true);
 	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
 	int cleared = string_to_number(parsed[1]);
-	string reason = (parsed.length() > 2) ? parsed[2] : "";
 	pause_objects(); // silence lingering loops behind the results dialog and play-again prompt
-	string why = (reason == "time") ? "You ran out of time before bringing the walls down." : "The bots held you off; you couldn't break through.";
+	string why = "You ran out of time before bringing the walls down.";
 	string results = "Game over! You cleared " + cleared + (cleared == 1 ? " round.\r\n" : " rounds.\r\n");
 	results += why + "\r\n";
 	results += "Press enter to continue.";
@@ -676,9 +675,9 @@ void netloop_impl()
 			p.play_stationary("sounds/ui/misc/roundcleared.ogg", false); // add this cue; missing = silent until then
 			add_buffer_item("alerts", "Round " + n + " cleared! The bots rebuild, tougher.");
 		}
-		else if (parsed[0] == "evpover" and parsed.length() > 2)
+		else if (parsed[0] == "evpover" and parsed.length() > 1)
 		{
-			// EVP game over (loss): "evpover <rounds-cleared> <reason>". Results + play-again, like roundover.
+			// EVP game over (loss): "evpover <rounds-cleared>". Results + play-again, like roundover.
 			if(netloop_depth>1) net_deferred.insert_last(message);
 			else handle_evp_over(message);
 		}
