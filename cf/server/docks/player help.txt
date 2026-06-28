@@ -79,7 +79,7 @@ The walls are defended by builder bots. They wander the cavern, pick up the wood
 
 Each round has two parts. First a build phase, where the bots reinforce the walls and you cannot hurt them yet; if you swing during this time your weapon only ricochets off the wall, so you know you are lined up, but no damage is done. Then the wave, where your hits finally count while the bots keep repairing as fast as they can. You have a time limit for the wave, which tab reads out, to bring all four walls down.
 
-Bring every wall down and you clear the round; the cavern is rebuilt and the next round sends more bots to defend it, so it gets harder each time. The game ends when the bots hold you off, either because the wave's time runs out with a wall still standing, or because you stall, going too long without making any headway. You are then shown how many rounds you cleared and asked whether to play again or leave. The pause menu works just as it does in the other mode.
+Bring every wall down and you clear the round; the cavern is rebuilt and the next round sends more bots to defend it, so it gets harder each time. The game ends when the bots hold you off, that is, when the wave's time runs out with a wall still standing. You are then shown how many rounds you cleared and asked whether to play again or leave. The pause menu works just as it does in the other mode.
 
 Watching games.
 

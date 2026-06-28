@@ -32,8 +32,6 @@ timer wave_cycletimer;    // times the current attack or rest segment of the wav
 int wave_cycle=0;         // ms per attack/rest segment (half the build phase); set when the wave begins
 int evp_rounds_cleared=0; // EVP: how many rounds the attackers have cleared this game -- the score.
 int evp_round_secs=0;     // EVP: the current wave's time limit in seconds (the round timer; wavetimer counts against it).
-double evp_lowest_hp=0;   // EVP: the lowest total wall HP seen this wave; a new low = progress (resets evp_stalltimer).
-timer evp_stalltimer;     // EVP: time since the last new low; no progress for the stall window = a stall loss.
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl, string md)
 {
 id=gid;
@@ -339,17 +337,6 @@ return 75;
 // size. Constant per size -- the escalation comes from the defenders (more builders each round), not a
 // shrinking clock. Tunable.
 int evp_round_seconds(int size) { if(size<=25) return 60; if(size<=50) return 100; return 160; }
-// EVP stall window (ms): the no-progress cutoff -- half the round timer, so it's always shorter than the
-// round and scales with map size (bigger maps give more grace for travel/regroup).
-int evp_stall_window_ms(int round_secs) { return round_secs * 1000 / 2; }
-// Total remaining health across a game's four standing walls (for EVP stall detection / progress tracking).
-double total_wall_hp(int gameid, double size)
-{
-string[]@ dirs = WALL_DIRS; // alias the shared constant; iterated read-only, not rebuilt per call
-double t=0;
-for(uint i=0; i<dirs.length(); i++) { int wi=border_wall(gameid, dirs[i], size); if(wi>-1 and walls[wi].health>0) t+=walls[wi].health; }
-return t;
-}
 // Set a game's round phase and tell everyone in it, so their clients announce the change and run the
 // build countdown. The seconds value is the build duration when entering build, 0 otherwise.
 void set_game_phase(int gindex, string phase)
@@ -391,12 +378,9 @@ games[gindex].wavetimer.restart(); // the survival clock starts now
 if(games[gindex].mode=="evp")
 {
 // EVP: no attacker bots and no attack/rest cycle -- the wave is one continuous attack-enabled phase where
-// players smash and the builders keep repairing. Start the round timer (wavetimer counts against
-// evp_round_secs) and the stall watchdog (track the lowest total wall HP; a new low resets evp_stalltimer).
+// players smash and the builders keep repairing. Start the round timer (wavetimer counts against evp_round_secs).
 games[gindex].wave_number = games[gindex].evp_rounds_cleared + 1; // 1-based current round
 games[gindex].evp_round_secs = evp_round_seconds(games[gindex].size);
-games[gindex].evp_lowest_hp = total_wall_hp(games[gindex].id, games[gindex].size);
-games[gindex].evp_stalltimer.restart();
 }
 else
 {
@@ -431,7 +415,6 @@ games[gi].phasetimer.pause();
 games[gi].woodtimer.pause();
 games[gi].wavetimer.pause();
 games[gi].wave_cycletimer.pause();
-games[gi].evp_stalltimer.pause(); // EVP stall watchdog freezes too, so a pause can't trip a stall loss
 for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.pause();
 for(uint i=0; i<builders.length(); i++)
@@ -448,7 +431,6 @@ games[gi].phasetimer.resume();
 games[gi].woodtimer.resume();
 games[gi].wavetimer.resume();
 games[gi].wave_cycletimer.resume();
-games[gi].evp_stalltimer.resume();
 for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.resume();
 for(uint i=0; i<builders.length(); i++)
@@ -522,17 +504,13 @@ builder_tick(); // process every EVP builder's repair timer (feeds ground wood i
 for(uint i=0; i<games.length(); i++)
 if(games[i].mode!="evp" and !games[i].paused and games[i].phase=="wave" and all_walls_destroyed(games[i].id, games[i].size)) end_round_loss(int(i));
 // EVP round resolution (separate pass, same reason): during a wave, all walls down = round CLEARED (advance to
-// the next, tougher round); the round timer running out, or a stall (no net progress for the stall window), = a
-// LOSS that ends the game with the results screen.
+// the next, tougher round); the round timer running out = a LOSS that ends the game with the results screen.
 for(uint i=0; i<games.length(); i++)
 {
 if(games[i].mode!="evp" or games[i].paused or games[i].phase!="wave") continue;
 int gid = games[i].id; double size = games[i].size;
 if(all_walls_destroyed(gid, size)) { evp_clear_round(int(i)); continue; } // win -> next round
-if(games[i].wavetimer.elapsed >= games[i].evp_round_secs*1000) { end_evp_loss(int(i), "time"); continue; } // round timer expired
-double hp = total_wall_hp(gid, size); // stall watchdog: a new low resets the timer; no new low for the window = stalled out
-if(hp < games[i].evp_lowest_hp) { games[i].evp_lowest_hp = hp; games[i].evp_stalltimer.restart(); }
-else if(games[i].evp_stalltimer.elapsed >= evp_stall_window_ms(games[i].evp_round_secs)) { end_evp_loss(int(i), "stall"); continue; }
+if(games[i].wavetimer.elapsed >= games[i].evp_round_secs*1000) { end_evp_loss(int(i)); continue; } // round timer expired -> loss
 }
 }
 // True if all four cavern walls of a game are down (health 0).
@@ -602,6 +580,22 @@ return true;
 }
 // Everyone who stayed has answered: rebuild a fresh idle cavern for the next round. The host then begins
 // it manually with Begin round (gated to the idle phase, which is what enforces "wait for all answers").
+// Snap every member of a game back to the cavern centre on the SERVER, matching where the client re-centres
+// `me` after a "gamereset" redraw (draw_map centres the player). Without this the server keeps each player's
+// stale position from the previous round -- the client suppresses its move report right after a reset -- so
+// position-based reach checks (notably the EVP attack handler's wall_in_reach) would fire from the wrong spot.
+void recenter_game_members(int gi)
+{
+int center = int(games[gi].size / 2);
+for(uint m=0; m<games[gi].members.length(); m++)
+{
+int pi = get_player_index(games[gi].members[m]);
+if(pi < 0) continue;
+players[pi].x = center;
+players[pi].y = center;
+broadcast_pos(pi); // refresh other members' rosters with the reset position
+}
+}
 void reset_for_new_round(int gi)
 {
 int gameid = games[gi].id;
@@ -620,12 +614,13 @@ if(pi > -1) { players[pi].inv.clear(); send_wood_count(pi); } // a fresh round s
 }
 // Redraw the fresh idle cavern for members AND spectators (so watchers see the reset walls too).
 send_to_game(gameid, "gamereset "+int(size));
+recenter_game_members(gi); // server position must match the client's re-centred `me`, or reach checks misfire
 send_to_game(gameid, "gamephase idle 0");
 broadcast_wall_strength(gameid);
 }
 // EVP: the attackers brought all four walls down -- the round is CLEARED. Bump the score, announce it, then
 // rebuild a fresh (tougher: more builders next round) cavern and drop back into a build phase. There is no
-// results screen on a clear -- an EVP game only ends on a loss (timer/stall). The build phase re-fortifies the
+// results screen on a clear -- an EVP game only ends on a loss (the round timer running out). The build phase re-fortifies the
 // new walls before the next wave. Players keep their weapon across rounds (no idle/over in between).
 void evp_clear_round(int gi)
 {
@@ -637,13 +632,14 @@ clear_items(gameid);
 clear_walls(gameid);
 spawn_border_walls(gameid, games[gi].size, 400, 400, true); // fresh walls, new random starting strengths
 send_to_game(gameid, "gamereset "+int(games[gi].size)); // redraw the fresh cavern for members + spectators
+recenter_game_members(gi); // server position must match the client's re-centred `me`, or reach checks misfire
 broadcast_wall_strength(gameid);
 set_game_phase(gi, "build"); // next round's build phase spawns the escalated builder count and re-fortifies
 }
-// EVP: the attackers failed -- they ran out of time ("time") or stalled out, unable to make progress
-// ("stall"). End the game with the results screen and the play-again prompt, the same flow as a PVE loss; the
-// score is the rounds cleared. Spectators get a notice. The cavern resets once everyone has answered.
-void end_evp_loss(int gi, string reason)
+// EVP: the attackers failed -- they ran out of time before bringing the walls down. End the game with the
+// results screen and the play-again prompt, the same flow as a PVE loss; the score is the rounds cleared.
+// Spectators get a notice. The cavern resets once everyone has answered.
+void end_evp_loss(int gi)
 {
 int gameid = games[gi].id;
 int cleared = games[gi].evp_rounds_cleared;
@@ -655,7 +651,7 @@ for(uint m=0; m<games[gi].members.length(); m++)
 int pi = get_player_index(games[gi].members[m]);
 if(pi < 0) continue;
 players[pi].playagain_answered = false; // awaiting the play-again answer
-send(games[gi].members[m], "evpover "+cleared+" "+reason, 0, true); // client: results dialog + play-again
+send(games[gi].members[m], "evpover "+cleared, 0, true); // client: results dialog + play-again
 }
 for(uint s=0; s<players.length(); s++)
 if(players[s].room_id==gameid and players[s].spectating) send(players[s].peer_id, "misc The attackers were held off after clearing "+cleared+(cleared==1?" round":" rounds")+".", 0, true);
