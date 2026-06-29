@@ -610,7 +610,7 @@ void settingsmenu()
 		form.assign_to_tab(rest, tabs, tab_general);
 		int preffsok = form.create_button("&save settings", true);
 		int preffscn = form.create_button("&cancel");
-		form.focus(tabs);
+		form.focus(rest); // the first control on the General tab (Reset settings) now that the server buttons moved out
 		while(true)
 		{
 			wait(5);

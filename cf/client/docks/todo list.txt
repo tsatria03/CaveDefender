@@ -1,10 +1,10 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Add an account storage that saves players' accounts so they can pick one for easy sign in.
 **Add an F6 player menu (F5 already toggles beacons) listing every player with where they are, the channel they are in, their username and nickname, and their AFK and rank.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add account storage on the connection menu: save several accounts on this computer with add, edit, remove, and select which one you sign in as; the sign in option shows the active account, set up an existing account replaces sign in as, and new account also offers to save the account.
 **Finished. Show how many players are on each language channel in the channel menu, for example English (English) 26 players in this channel, so you can see which channels are active before switching.
 **Finished. Store private room passwords encrypted on the server instead of in plain text, each kept beside its own random key, while still letting the host retrieve the password.
 **Finished. Add a reversed game mode, environment versus player, where you attack the four walls from outside with weapons while builder bots gather wood and repair them; clear a round by bringing all four down, the defense grows each round, and a round timer plus a stall check end the game, scored by rounds cleared.
