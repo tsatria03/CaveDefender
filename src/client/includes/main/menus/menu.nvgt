@@ -44,9 +44,11 @@ void connectionmenu()
 	while(true)
 	{
 		setupmenu(true);
-		m.add_item("sign in", "signin");
-		m.add_item("sign in as", "signinas");
-		m.add_item("new account", "newaccount");
+		if(name!="") m.add_item("Sign in as "+name, "signin"); // the active account; hidden until one is set up or selected
+		m.add_item("Set up an existing account", "setupaccount");
+		m.add_item("New account", "newaccount");
+		if(accounts.length()>0) m.add_item("Select an account. Currently set to "+current_account_label(), "selectaccount"); // hidden until at least one account is saved
+		m.add_item("Account storage", "accountstorage");
 		m.add_item("change server IP. Currently set to " + ip, "changeip");
 		m.add_item("change server port. Currently set to " + port, "changeport");
 		m.add_item("Select a server. Currently set to " + current_server_label(), "selectserver");
@@ -88,25 +90,29 @@ m.fade_music();
 			serverstoragemenu();
 			continue;
 		}
+		if(sel=="accountstorage")
+		{
+			accountstoragemenu();
+			continue;
+		}
+		if(sel=="selectaccount")
+		{
+			loadaccountmenu();
+			continue;
+		}
 		m.fade_music();
 		if(sel=="signin")
 		{
-			if(!load_last_account())
-			{
-				dlgmessage("There is no saved account on this computer. Please use new account, or sign in as. Press enter to continue.");
-			}
-			else
-			{
-				registering=false;
-				login(); // when the session ends (exit/kick/drop), fall back to the connection menu, not the main menu
-			}
+			// "Sign in as <username>" only appears when an active account exists, so just sign in with it.
+			registering=false;
+			login(); // when the session ends (exit/kick/drop), fall back to the connection menu, not the main menu
 		}
-		else if(sel=="signinas")
+		else if(sel=="setupaccount")
 		{
-			if(signinasform())
+			if(signinasform()) // same username/password form; sets name/password as the active account, does NOT sign in
 			{
-				registering=false;
-				login(); // when the session ends (exit/kick/drop), fall back to the connection menu, not the main menu
+				save_last_account(); // persist as the active/last account so "Sign in as <username>" shows it
+				offer_save_account(name, password); // then ask whether to also save it into account storage
 			}
 		}
 		else if(sel=="newaccount")
@@ -122,12 +128,12 @@ m.fade_music();
 bool signinasform()
 {
 	form.reset();
-	form.create_window("Sign in as", false);
+	form.create_window("Set up account", false);
 	int unamebox=form.create_input_box("Username", "", "");
 	int passbox=form.create_input_box("Password", "", "*");
 	form.set_disallowed_chars(unamebox, " ", false, "Spaces are not allowed."); // names/passwords are space-delimited on the wire, so spaces would break login
 	form.set_disallowed_chars(passbox, " ", false, "Spaces are not allowed.");
-	int signbtn=form.create_button("&Sign in", true);
+	int signbtn=form.create_button("&Okay", true);
 	int cancelbtn=form.create_button("&Cancel", false, true);
 	form.focus(unamebox);
 	while(true)
@@ -221,33 +227,38 @@ string current_server_label()
 }
 // Server presets are added/edited/removed from the connection menu's Server storage submenu and chosen from its
 // Select a server option. Loading one fills in ip/port so the connection menu connects to it; saved in settings.cvf.
-// All input-box based (no forms): each of name, IP, and port is entered one at a time.
-// Prompt for a port (pre-filled with def), re-asking until it's a valid 1-65535 number; returns -1 if canceled.
-int ask_server_port(string title, string def)
-{
-	while(true)
-	{
-		string ptv=vd.input_box(title, "Enter the server's port.", def).trim_whitespace();
-		if(ptv=="") return -1; // canceled / left blank
-		int pnum=string_to_number(ptv);
-		if(pnum>=1 and pnum<=65535) return pnum;
-		dlgmessage("That is not a valid port. Please enter a number between 1 and 65535. Press enter to continue.");
-	}
-	return -1;
-}
-// Add a server preset by entering its name, IP, and port one at a time (input boxes, like the connection menu's
-// change IP / change port). A blank name or IP cancels; the port re-prompts until valid or canceled.
+// Add/edit use a form with Name, IP, and Port fields (like the account form), not sequential dialogs.
+// Add a server preset via a Name/IP/Port form.
 void addserver()
 {
-	string nm=vd.input_box("Add a server", "Enter a name for the server.", "").trim_whitespace();
-	if(nm=="") { speak("canceled"); return; }
-	string ipv=vd.input_box("Add a server", "Enter the server's IP or address.", "").trim_whitespace();
-	if(ipv=="") { speak("canceled"); return; }
-	int pnum=ask_server_port("Add a server", "25562");
-	if(pnum<0) { speak("canceled"); return; }
-	servers.insert_last(serverpreset(nm, ipv, pnum));
-	writepreffs();
-	dlgmessage("Server added. Press enter to continue.");
+	form.reset();
+	form.create_window("Add a server", false);
+	int namebox=form.create_input_box("Name", "", "");
+	int ipbox=form.create_input_box("IP", "", "");
+	int portbox=form.create_input_box("Port", "25562", "");
+	int addbtn=form.create_button("&Add", true);
+	int cancelbtn=form.create_button("&Cancel", false, true);
+	form.focus(namebox);
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		if(form.is_pressed(cancelbtn) or key_pressed(KEY_ESCAPE)) { speak("canceled"); return; }
+		if(form.is_pressed(addbtn))
+		{
+			string nm=form.get_text(namebox).trim_whitespace();
+			string ipv=form.get_text(ipbox).trim_whitespace();
+			string ptv=form.get_text(portbox).trim_whitespace();
+			if(nm=="") { dlgmessage("Please enter a name. Press enter to continue."); form.focus(namebox); continue; }
+			if(ipv=="") { dlgmessage("Please enter an IP. Press enter to continue."); form.focus(ipbox); continue; }
+			int pnum=string_to_number(ptv);
+			if(pnum<1 or pnum>65535) { dlgmessage("That is not a valid port. Please enter a number between 1 and 65535. Press enter to continue."); form.focus(portbox); continue; }
+			servers.insert_last(serverpreset(nm, ipv, pnum));
+			writepreffs();
+			dlgmessage("Server added. Press enter to continue.");
+			return;
+		}
+	}
 }
 // Load a server preset into ip/port so the connection menu connects to it (it does not connect by itself).
 // The default top entry is Custom: it keeps whatever ip/port are set (a manually entered, non-preset server).
@@ -319,21 +330,39 @@ void editservermenu()
 	if(idx<0 or idx>=int(servers.length())) return;
 	editserverdetails(idx);
 }
-// Edit the chosen server's name, IP, and port via input boxes, each pre-filled with the current value. A blank
-// name or IP cancels (leaving the server unchanged); the port re-prompts until valid or canceled.
+// Edit the chosen server via a form pre-filled with its name, IP, and port.
 void editserverdetails(int idx)
 {
-	string nm=vd.input_box("Edit a server", "Enter a name for the server.", servers[idx].sname).trim_whitespace();
-	if(nm=="") { speak("canceled"); return; }
-	string ipv=vd.input_box("Edit a server", "Enter the server's IP or address.", servers[idx].sip).trim_whitespace();
-	if(ipv=="") { speak("canceled"); return; }
-	int pnum=ask_server_port("Edit a server", ""+servers[idx].sport);
-	if(pnum<0) { speak("canceled"); return; }
-	servers[idx].sname=nm;
-	servers[idx].sip=ipv;
-	servers[idx].sport=pnum;
-	writepreffs();
-	dlgmessage("Server saved. Press enter to continue.");
+	form.reset();
+	form.create_window("Edit a server", false);
+	int namebox=form.create_input_box("Name", servers[idx].sname, "");
+	int ipbox=form.create_input_box("IP", servers[idx].sip, "");
+	int portbox=form.create_input_box("Port", ""+servers[idx].sport, "");
+	int savebtn=form.create_button("&Save", true);
+	int cancelbtn=form.create_button("&Cancel", false, true);
+	form.focus(namebox);
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		if(form.is_pressed(cancelbtn) or key_pressed(KEY_ESCAPE)) { speak("canceled"); return; }
+		if(form.is_pressed(savebtn))
+		{
+			string nm=form.get_text(namebox).trim_whitespace();
+			string ipv=form.get_text(ipbox).trim_whitespace();
+			string ptv=form.get_text(portbox).trim_whitespace();
+			if(nm=="") { dlgmessage("Please enter a name. Press enter to continue."); form.focus(namebox); continue; }
+			if(ipv=="") { dlgmessage("Please enter an IP. Press enter to continue."); form.focus(ipbox); continue; }
+			int pnum=string_to_number(ptv);
+			if(pnum<1 or pnum>65535) { dlgmessage("That is not a valid port. Please enter a number between 1 and 65535. Press enter to continue."); form.focus(portbox); continue; }
+			servers[idx].sname=nm;
+			servers[idx].sip=ipv;
+			servers[idx].sport=pnum;
+			writepreffs();
+			dlgmessage("Server saved. Press enter to continue.");
+			return;
+		}
+	}
 }
 // The connection menu's Server storage submenu: add, edit, or remove saved server presets, all menu/input-box
 // based (no forms). Loops until you back out, so several changes can be made in one visit.
@@ -354,6 +383,188 @@ void serverstoragemenu()
 		if(sel=="add") addserver();
 		else if(sel=="edit") editservermenu();
 		else if(sel=="remove") removeservermenu();
+	}
+}
+// One account preset formatted for a list item: just the username (the password is never shown).
+string account_list_text(uint i)
+{
+	return accounts[i].uname;
+}
+// The active account's username, shown in the "Select an account. Currently set to X" label; "none" if unset.
+string current_account_label()
+{
+	return name!="" ? name : "none";
+}
+// Pick a saved account to make active (fills name/password). It does NOT sign in -- you then use "Sign in as
+// <username>". The choice is saved as the last/active account so it sticks across sessions. Mirrors loadservermenu.
+void loadaccountmenu()
+{
+	if(accounts.length()==0) { dlgmessage("There are no saved accounts. Press enter to continue."); return; }
+	setupmenu(true);
+	for(uint i=0; i<accounts.length(); i++)
+		m.add_item(account_list_text(i), ""+i);
+	m.add_item("back", "back");
+	m.intro_text="Choose an account to use.";
+	int mres=m.run();
+	string sel=mres<0?"back":m.selected_item_id;
+	if(sel=="back") { speak("canceled"); return; }
+	int idx=string_to_number(sel);
+	if(idx<0 or idx>=int(accounts.length())) return;
+	name=accounts[idx].uname;
+	password=accounts[idx].pword;
+	save_last_account(); // the selected account becomes the active/last account
+	dlgmessage("Account changed to " + name + ". Press enter to continue.");
+}
+// Append an account to storage (no dedup, like server presets) and persist.
+void add_account_to_storage(string u, string p)
+{
+	accounts.insert_last(accountpreset(u, p));
+	writepreffs();
+}
+// Ask whether to save the given account into account storage; on yes, store it. Used after Set up an existing
+// account and after New account. The account is already the active one either way; this only affects storage.
+void offer_save_account(string u, string p)
+{
+	setupmenu();
+	m.add_item("yes");
+	m.add_item("no");
+	m.intro_text="Would you like to add this account to your account storage? This is useful for managing several accounts at once.";
+	if(m.run()==0)
+	{
+		add_account_to_storage(u, p);
+		dlgmessage("Account added to your account storage. Press enter to continue.");
+	}
+	else speak("canceled");
+}
+// Add an account preset via a form with username and masked password fields (modeled on the sign-in-as form),
+// not sequential dialogs -- credentials read better as one form. Spaces are disallowed, like the sign-in form.
+void addaccount()
+{
+	form.reset();
+	form.create_window("Add an account", false);
+	int unamebox=form.create_input_box("Username", "", "");
+	int passbox=form.create_input_box("Password", "", "*");
+	form.set_disallowed_chars(unamebox, " ", false, "Spaces are not allowed."); // names/passwords are space-delimited on the wire
+	form.set_disallowed_chars(passbox, " ", false, "Spaces are not allowed.");
+	int addbtn=form.create_button("&Add", true);
+	int cancelbtn=form.create_button("&Cancel", false, true);
+	form.focus(unamebox);
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		if(form.is_pressed(cancelbtn) or key_pressed(KEY_ESCAPE)) { speak("canceled"); return; }
+		if(form.is_pressed(addbtn))
+		{
+			string u=form.get_text(unamebox).trim_whitespace();
+			string p=form.get_text(passbox);
+			if(u=="") { dlgmessage("Please enter a username. Press enter to continue."); form.focus(unamebox); continue; }
+			if(p=="") { dlgmessage("Please enter a password. Press enter to continue."); form.focus(passbox); continue; }
+			accounts.insert_last(accountpreset(u, p));
+			writepreffs();
+			dlgmessage("Account added. Press enter to continue.");
+			return;
+		}
+	}
+}
+// Edit the chosen account via a form pre-filled with its username and password (the password field is pre-filled
+// too, masked, so leaving it as-is keeps the current password). Blank username or password cancels.
+void editaccountdetails(int idx)
+{
+	form.reset();
+	form.create_window("Edit an account", false);
+	int unamebox=form.create_input_box("Username", accounts[idx].uname, "");
+	int passbox=form.create_input_box("Password", accounts[idx].pword, "*");
+	form.set_disallowed_chars(unamebox, " ", false, "Spaces are not allowed.");
+	form.set_disallowed_chars(passbox, " ", false, "Spaces are not allowed.");
+	int savebtn=form.create_button("&Save", true);
+	int cancelbtn=form.create_button("&Cancel", false, true);
+	form.focus(unamebox);
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		if(form.is_pressed(cancelbtn) or key_pressed(KEY_ESCAPE)) { speak("canceled"); return; }
+		if(form.is_pressed(savebtn))
+		{
+			string u=form.get_text(unamebox).trim_whitespace();
+			string p=form.get_text(passbox);
+			if(u=="") { dlgmessage("Please enter a username. Press enter to continue."); form.focus(unamebox); continue; }
+			if(p=="") { dlgmessage("Please enter a password. Press enter to continue."); form.focus(passbox); continue; }
+			accounts[idx].uname=u;
+			accounts[idx].pword=p;
+			writepreffs();
+			dlgmessage("Account saved. Press enter to continue.");
+			return;
+		}
+	}
+}
+void editaccountmenu()
+{
+	if(accounts.length()==0)
+	{
+		dlgmessage("There are no saved accounts to edit. Press enter to continue.");
+		return;
+	}
+	setupmenu();
+	for(uint i=0; i<accounts.length(); i++)
+		m.add_item(account_list_text(i), ""+i);
+	m.add_item("back", "back");
+	m.intro_text="Edit an account. Choose the account you want to edit.";
+	int mres=m.run();
+	string sel=mres<0?"back":m.selected_item_id;
+	if(sel=="back") { speak("canceled"); return; }
+	int idx=string_to_number(sel);
+	if(idx<0 or idx>=int(accounts.length())) return;
+	editaccountdetails(idx);
+}
+// Remove a saved account preset.
+void removeaccountmenu()
+{
+	if(accounts.length()==0)
+	{
+		dlgmessage("There are no saved accounts to remove. Press enter to continue.");
+		return;
+	}
+	setupmenu();
+	for(uint i=0; i<accounts.length(); i++)
+		m.add_item(account_list_text(i), ""+i);
+	m.add_item("back", "back");
+	m.intro_text="Remove an account. Choose the account you want to remove.";
+	int mres=m.run();
+	string sel=mres<0?"back":m.selected_item_id;
+	if(sel=="back") { speak("canceled"); return; }
+	int idx=string_to_number(sel);
+	if(idx<0 or idx>=int(accounts.length())) return;
+	setupmenu();
+	m.add_item("yes");
+	m.add_item("no");
+	m.intro_text="Are you sure you want to remove " + accounts[idx].uname + "?";
+	if(m.run()!=0) { speak("canceled"); return; }
+	string removed=accounts[idx].uname;
+	accounts.remove_at(idx);
+	writepreffs();
+	dlgmessage(removed + " removed. Press enter to continue.");
+}
+// The connection menu's Account storage submenu: add, edit, or remove saved account presets (add/edit use a
+// username+password form; remove is a menu). Loops until you back out, so several changes can be made in one visit.
+void accountstoragemenu()
+{
+	while(true)
+	{
+		setupmenu(true);
+		m.add_item("Add an account", "add");
+		m.add_item("Edit an account", "edit");
+		m.add_item("Remove an account", "remove");
+		m.add_item("back", "back");
+		m.intro_text="Account storage.";
+		int mres=m.run();
+		string sel=mres<0?"back":m.selected_item_id;
+		if(sel=="back") return;
+		m.fade_music(); // fade once for any of the actions below (back already returned)
+		if(sel=="add") addaccount();
+		else if(sel=="edit") editaccountmenu();
+		else if(sel=="remove") removeaccountmenu();
 	}
 }
 void settingsmenu()
