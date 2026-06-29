@@ -1,3 +1,6 @@
+New in 2.9.
+Choosing which saved server or account to use has moved into the Server storage and Account storage menus, where it is now a Select option, instead of being a separate item in the connection menu.
+The F2 and F4 keys have swapped: F2 now reads the server's message of the day, and F4 now reports the server's uptime.
 New in 2.8.
 When you create a new account, it now also asks whether to add it to your account storage, before asking whether to log in.
 The sign in option now shows which account it will use, for example Sign in as Bob, and only appears once you have set up or selected an account.

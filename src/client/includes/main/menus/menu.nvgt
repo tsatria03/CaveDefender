@@ -47,11 +47,9 @@ void connectionmenu()
 		if(name!="") m.add_item("Sign in as "+name, "signin"); // the active account; hidden until one is set up or selected
 		m.add_item("Set up an existing account", "setupaccount");
 		m.add_item("New account", "newaccount");
-		if(accounts.length()>0) m.add_item("Select an account. Currently set to "+current_account_label(), "selectaccount"); // hidden until at least one account is saved
 		m.add_item("Account storage", "accountstorage");
 		m.add_item("change server IP. Currently set to " + ip, "changeip");
 		m.add_item("change server port. Currently set to " + port, "changeport");
-		m.add_item("Select a server. Currently set to " + current_server_label(), "selectserver");
 		m.add_item("Server storage", "serverstorage");
 		m.add_item("back", "back");
 		m.intro_text="Connection menu.";
@@ -80,11 +78,6 @@ m.fade_music();
 			else speak("canceled");
 			continue;
 		}
-		if(sel=="selectserver")
-		{
-			loadservermenu();
-			continue;
-		}
 		if(sel=="serverstorage")
 		{
 			serverstoragemenu();
@@ -93,11 +86,6 @@ m.fade_music();
 		if(sel=="accountstorage")
 		{
 			accountstoragemenu();
-			continue;
-		}
-		if(sel=="selectaccount")
-		{
-			loadaccountmenu();
 			continue;
 		}
 		m.fade_music();
@@ -364,8 +352,8 @@ void editserverdetails(int idx)
 		}
 	}
 }
-// The connection menu's Server storage submenu: add, edit, or remove saved server presets, all menu/input-box
-// based (no forms). Loops until you back out, so several changes can be made in one visit.
+// The connection menu's Server storage submenu: select which server to use, and add, edit, or remove saved
+// server presets (add/edit use a Name/IP/Port form). Loops until you back out, so several changes fit in one visit.
 void serverstoragemenu()
 {
 	while(true)
@@ -374,13 +362,15 @@ void serverstoragemenu()
 		m.add_item("Add a server", "add");
 		m.add_item("Edit a server", "edit");
 		m.add_item("Remove a server", "remove");
+		m.add_item("Select a server. Currently set to " + current_server_label(), "select");
 		m.add_item("back", "back");
 		m.intro_text="Server storage.";
 		int mres=m.run();
 		string sel=mres<0?"back":m.selected_item_id;
 		if(sel=="back") return;
 		m.fade_music(); // fade once for any of the actions below (back already returned)
-		if(sel=="add") addserver();
+		if(sel=="select") loadservermenu();
+		else if(sel=="add") addserver();
 		else if(sel=="edit") editservermenu();
 		else if(sel=="remove") removeservermenu();
 	}
@@ -546,8 +536,8 @@ void removeaccountmenu()
 	writepreffs();
 	dlgmessage(removed + " removed. Press enter to continue.");
 }
-// The connection menu's Account storage submenu: add, edit, or remove saved account presets (add/edit use a
-// username+password form; remove is a menu). Loops until you back out, so several changes can be made in one visit.
+// The connection menu's Account storage submenu: select which saved account to use, and add, edit, or remove
+// saved account presets (add/edit use a username+password form; remove is a menu). Loops until you back out.
 void accountstoragemenu()
 {
 	while(true)
@@ -556,13 +546,15 @@ void accountstoragemenu()
 		m.add_item("Add an account", "add");
 		m.add_item("Edit an account", "edit");
 		m.add_item("Remove an account", "remove");
+		m.add_item("Select an account. Currently set to "+current_account_label(), "select");
 		m.add_item("back", "back");
 		m.intro_text="Account storage.";
 		int mres=m.run();
 		string sel=mres<0?"back":m.selected_item_id;
 		if(sel=="back") return;
 		m.fade_music(); // fade once for any of the actions below (back already returned)
-		if(sel=="add") addaccount();
+		if(sel=="select") loadaccountmenu();
+		else if(sel=="add") addaccount();
 		else if(sel=="edit") editaccountmenu();
 		else if(sel=="remove") removeaccountmenu();
 	}
