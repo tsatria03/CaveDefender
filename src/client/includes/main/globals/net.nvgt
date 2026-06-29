@@ -11,6 +11,17 @@ class serverpreset
 }
 serverpreset[] servers;
 bool server_custom=false; // true = on a manually entered (non-preset) server; forces the label to "Custom" even if ip/port happen to match a preset
+// Saved account presets, managed from the connection menu's Account storage. Selecting one fills name/password
+// (the active account). Passwords are stored locally in the encrypted settings.cvf -- obfuscation-grade local
+// convenience, the same place the last-used account is already cached.
+class accountpreset
+{
+	string uname;
+	string pword;
+	accountpreset(){}
+	accountpreset(string u, string p){ uname=u; pword=p; }
+}
+accountpreset[] accounts;
 
 bool encrypting=true, connected, registering, pinging, connection_dropped, kicked, justregistered, reconnect_aborted, reconnecting, reconnected;
 
@@ -175,7 +186,8 @@ send(0, "login "+name+" "+password+" "+version, 0,true);
 if(event.type==event_receive and get_event_message()=="registered")
 {
 registering=false;
-save_last_account(); // remember the new account locally so "sign in" can use it whether or not we log in now.
+save_last_account(); // remember the new account locally (the active account) whether or not we log in now.
+offer_save_account(name, password); // ask whether to also save the new account into account storage
 setupmenu();
 m.add_item("yes");
 m.add_item("no");
