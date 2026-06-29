@@ -13,6 +13,7 @@ class wall
 int room_id;
 double minx, maxx, miny, maxy;
 double health, maxhealth;
+double floor; // EVP only: the ceiling builder repair may not pass. Starts at the wall's initial strength, rises as the bots fortify during the build phase, then ratchets DOWN by the permanent share of each player hit (see lower_wall_floor / builder_tick) so the attackers always gain ground. Unused by PVE.
 bool destroyable;
 wall(int rid, double mnx, double mxx, double mny, double mxy, double hp, double maxhp, bool dtb)
 {
@@ -23,6 +24,7 @@ miny=mny;
 maxy=mxy;
 health=hp;
 maxhealth=maxhp;
+floor=hp; // the EVP repair ceiling begins at the wall's starting strength
 destroyable=dtb;
 }
 }
@@ -80,6 +82,17 @@ if(id<0 or id>=int(walls.length()) or @walls[id]==null) return;
 walls[id].health+=amount;
 double cap = walls[id].maxhealth * wall_overbuild_cap;
 if(walls[id].health > cap) walls[id].health = cap;
+}
+// EVP damage ratchet: how much of each player hit is PERMANENT -- it lowers the wall's repair ceiling (floor)
+// so the builders can never restore a wall above the damage the attackers have already done. The remaining
+// share is repairable, so the bots clawing back during a rest window still matters. Tunable (0..1).
+const double evp_permanent_fraction = 0.5;
+// EVP: lower a wall's repair ceiling by `amount` (the permanent part of a player's hit), never below 0.
+void lower_wall_floor(int id, double amount)
+{
+if(id<0 or id>=int(walls.length()) or @walls[id]==null) return;
+walls[id].floor -= amount;
+if(walls[id].floor < 0) walls[id].floor = 0;
 }
 // The walls[] index of a cavern's border wall in a compass direction (its size is the grid size).
 int border_wall(int room_id, string dir, double size)

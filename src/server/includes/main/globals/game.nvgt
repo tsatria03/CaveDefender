@@ -377,10 +377,17 @@ if(phase=="wave")
 games[gindex].wavetimer.restart(); // the survival clock starts now
 if(games[gindex].mode=="evp")
 {
-// EVP: no attacker bots and no attack/rest cycle -- the wave is one continuous attack-enabled phase where
-// players smash and the builders keep repairing. Start the round timer (wavetimer counts against evp_round_secs).
+// EVP: the wave alternates attack and rest segments like PVE, but with the roles reversed -- during an attack
+// segment players smash the walls (and the builders gather wood but hold off repairing); during a rest segment
+// players are locked out (their swings only ricochet) while the builders place wood and repair. The wave opens
+// on an attack segment. The round number is the current EVP round and stays fixed across the round's segments
+// (escalation is per round cleared -- more builders -- not per segment). Start the round timer too (wavetimer
+// counts against evp_round_secs).
 games[gindex].wave_number = games[gindex].evp_rounds_cleared + 1; // 1-based current round
 games[gindex].evp_round_secs = evp_round_seconds(games[gindex].size);
+games[gindex].wave_attacking = true;
+games[gindex].wave_cycletimer.restart();
+games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
 }
 else
 {
@@ -478,12 +485,20 @@ int iid = spawn_item(games[i].id, wx, wy, "wood");
 send_to_game(games[i].id, "spawnitem "+iid+" wood "+wx+" "+wy); // members + spectators hear the drop
 }
 }
-// Flip between attacking and resting every half-build-phase: bots hammer, then back off so players rebuild. (PVE only -- EVP's wave is one continuous phase.)
-if(games[i].mode!="evp" and games[i].phase=="wave" and games[i].wave_cycletimer.elapsed >= games[i].wave_cycle)
+// Flip between attacking and resting every half-build-phase. In PVE the bots hammer, then back off so players
+// rebuild; in EVP the roles are reversed -- players smash during attack, the builders repair during rest.
+if(games[i].phase=="wave" and games[i].wave_cycletimer.elapsed >= games[i].wave_cycle)
 {
 games[i].wave_cycletimer.restart();
 games[i].wave_attacking = !games[i].wave_attacking;
-// Each time a fresh attack burst begins, every wall grows by one bot (no ceiling).
+if(games[i].mode=="evp")
+{
+// EVP: just flip the window. No bot escalation (that's per round cleared) and the round number is fixed for
+// the round, so neither climbs here. The attack handler and builders gate their actions on wave_attacking.
+}
+else
+{
+// PVE: each time a fresh attack burst begins, every wall grows by one bot (no ceiling).
 if(games[i].wave_attacking)
 {
 games[i].wave_bot_target++;
@@ -491,8 +506,8 @@ games[i].wave_number++; // round number and per-wall bot count now climb togethe
 fill_walls_to(games[i].id, games[i].size, games[i].wave_bot_target);
 }
 else games[i].warned=false; // a rest segment just opened; arm the heads-up for the next wave
-// Announce the swing of the cycle to everyone in the game so their clients replay the wave cue when the
-// bots resume and a rest cue when they pull back.
+}
+// Announce the swing of the cycle to everyone in the game so their clients replay the wave/rest cue.
 send_to_game(games[i].id, "waveseg "+(games[i].wave_attacking?"1":"0")+" "+games[i].wave_number); // members + spectators
 }
 }

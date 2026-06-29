@@ -115,11 +115,9 @@ if(players[pi].room_id != rooms[ri].id) continue;     // in a game, can't be kic
 players[index].menu_targets.insert_last(players[pi].name);
 opts.insert_last(players[pi].name);
 }
-if(opts.length() == 0)
-{
-send(peer, "There is no one in your room to kick.", 0, true);
-return;
-}
+// You can also kick yourself out -- a quick way to leave your own room from this same menu.
+players[index].menu_targets.insert_last(players[index].name);
+opts.insert_last("Yourself (leave the room)");
 send_menu(peer, "kick", "Choose a player to kick from your room. " + players_count_phrase(opts.length(), "in your room"), opts);
 }
 
@@ -203,11 +201,9 @@ if(pi < 0) continue;
 players[index].menu_targets.insert_last(players[pi].name);
 opts.insert_last(afk_prefix(pi) + display_name_flagged(pi));
 }
-if(opts.length() == 0)
-{
-send(peer, "There is no one in your game to kick.", 0, true);
-return;
-}
+// You can also kick yourself out -- a quick way to leave your own game from this same menu.
+players[index].menu_targets.insert_last(players[index].name);
+opts.insert_last("Yourself (leave the game)");
 send_menu(peer, "gamekick", "Choose a player to kick from your game. " + players_count_phrase(opts.length(), "in your game"), opts);
 }
 // The list of games in the player's room for either joining or stopping. mode = "join" (skip full and

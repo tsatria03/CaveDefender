@@ -333,7 +333,7 @@ void speak_game_status()
 		{
 			int rem = int(game_build_seconds) - int(game_phasetimer.elapsed / 1000); // EVP wave carries the round timer in game_build_seconds
 			if(rem < 0) rem = 0;
-			speak("Round " + wave_number + ", tear down the walls, " + rem + (rem == 1 ? " second" : " seconds") + " left.");
+			speak("Round " + wave_number + (wave_attacking ? ", tear down the walls, " : ", the bots are repairing, ") + rem + (rem == 1 ? " second" : " seconds") + " left.");
 		}
 		else if(wave_attacking) speak("Round " + wave_number + ", the enemies are attacking.");
 		else speak("Round " + wave_number + " complete. The enemies are resting.");
