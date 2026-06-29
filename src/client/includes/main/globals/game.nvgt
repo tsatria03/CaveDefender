@@ -196,7 +196,7 @@ buffercheck();
 		}
 		if(key_pressed(KEY_F2))
 		{
-			send(0, "/serveruptime", 0, true);
+			send(0, "/getmotd", 0, true);
 		}
 		if(key_pressed(KEY_F3) and !pinging)
 		{
@@ -214,7 +214,7 @@ buffercheck();
 		}
 		if(key_pressed(KEY_F4))
 		{
-			send(0, "/getmotd", 0, true);
+			send(0, "/serveruptime", 0, true);
 		}
 		if(key_pressed(KEY_F5))
 		{
