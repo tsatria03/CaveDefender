@@ -741,18 +741,22 @@ int wi = border_wall(games[gi].id, dir, games[gi].size);
 if(wi > -1 and walls[wi].health > 0)
 {
 int wid = weapon_id_for_name(parsed[1]);
-if(games[gi].phase == "wave")
+if(games[gi].phase == "wave" and games[gi].wave_attacking)
 {
-// The wave is on: the swing actually damages the wall, and everyone (and watchers) hear the strike.
-damage_wall(wi, enemy_damage(wid));
+// The wave's attack segment is on: the swing actually damages the wall, and everyone (and watchers) hear the
+// strike. Half of the hit (evp_permanent_fraction) is permanent -- it lowers the wall's repair ceiling, so the
+// builders can claw the rest back during a rest window but never the whole hit, and the attackers always gain ground.
+int dmg = enemy_damage(wid);
+damage_wall(wi, dmg);
+lower_wall_floor(wi, dmg * evp_permanent_fraction);
 broadcast_wall_strength(games[gi].id);
 send_to_game(games[gi].id, "wallhit "+dir+" "+wid); // EVP plays it at constant volume
 if(walls[wi].health <= 0) on_wall_destroyed(games[gi].id, gi, dir);
 }
 else
 {
-// Build phase: the wall isn't being hurt yet (the bots are still reinforcing), so the swing just
-// ricochets -- the weapon's hit clip plays (no damage) so everyone (and watchers) hears the swing connect.
+// Build phase or a rest segment: the wall can't be hurt right now (the bots are repairing), so the swing
+// just ricochets -- the weapon's hit clip plays (no damage) so everyone (and watchers) hears the swing connect.
 send_to_game(games[gi].id, "wallrico "+dir+" "+wid);
 }
 }
@@ -1197,7 +1201,15 @@ send(event.peer_id, "misc This player is not in your room.", 0,true);
 }
 else if(targetpeer==event.peer_id)
 {
-send(event.peer_id, "You can't kick yourself.", 0,true);
+// Kicking yourself = leaving your own room. Mirror the leaveroom path: drop out to the lobby and tell everyone.
+string lhost = rooms[ri].host;
+string ltype = rooms[ri].is_private ? "private" : "public";
+remove_member(event.peer_id);
+send(event.peer_id, "roomleft", 0,true);
+set_room_scope(index, 0);
+string lposs = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
+string lwhere = (players[index].name==lhost) ? lposs+" own "+ltype+" room" : display_name_flagged_for(lhost)+"'s "+ltype+" room";
+broadcast_event(display_name_flagged(index)+" left "+lwhere+".", event.peer_id);
 }
 else if(get_player_index(targetpeer)>-1 and players[get_player_index(targetpeer)].room_id != rooms[ri].id)
 {
@@ -1242,7 +1254,9 @@ send(event.peer_id, "misc This player is not in your game.", 0,true);
 }
 else if(targetpeer==event.peer_id)
 {
-send(event.peer_id, "You can't kick yourself.", 0,true);
+// Kicking yourself = leaving your own game. Mirror the leavegame path (host migration / game-end handled by leave_game).
+broadcast_event(display_name_flagged(index)+" left the game.", event.peer_id);
+leave_game(event.peer_id);
 }
 else
 {
@@ -1430,8 +1444,10 @@ if(event.type == event_receive && event.channel == 1)
         f.open("data/preffs/motd.svr", "w");
         f.write(motd);
         f.close();
-        send(0, "Message of the Day has been changed to: " + motd, 0, true);
-                    send(0, "play newmotd.ogg", 0, true);
+        send(event.peer_id, "misc Message of the Day has been changed to: " + motd, 0, true); // actor: first-person confirmation in misc
+        send(0, "play newmotd.ogg", 0, true); // everyone hears the dedicated new-MOTD cue
+        string motdnotice = afk_prefix(index) + display_name_flagged(index) + " has changed the Message of the Day to: " + motd; // AFK + flag/nickname-aware (commands can be issued while AFK)
+        send(0, "alertsilent "+motdnotice, 0, true); // the third-person notice into everyone's alerts buffer, the changer included, with no extra cue (newmotd already played for all)
     }
     else
     {

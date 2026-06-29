@@ -128,6 +128,10 @@ if(games[gi].paused) continue; // frozen by the host; builders wait (their timer
 if(games[gi].phase!="build" and games[gi].phase!="wave") continue; // only work during a round
 if(builders[i].movetimer.elapsed < builders[i].movespeed) continue; // not time for this bot's next beat yet
 int s = games[gi].size;
+// EVP attack/rest cycle: builders may PLACE wood (repair walls) during the build phase and the wave's REST
+// segments, but during an ATTACK segment they hold -- they still roam and carry wood, just don't repair, so
+// the players' damage sticks until the rest window opens.
+bool can_build = !(games[gi].phase=="wave" and games[gi].wave_attacking);
 if(builders[i].placing)
 {
 // The place beat finished: feed the carried wood into the target wall (if it still stands), heard at the bot.
@@ -138,6 +142,11 @@ int wi = border_wall(gid, builders[i].target_wall, s);
 if(wi>-1 and walls[wi].health>0)
 {
 repair_wall(wi, random(8, 16));
+// EVP damage ratchet (see lower_wall_floor): during the build phase the bots fortify freely, so the wall's
+// repair ceiling rises with the work; during a wave rest they may only restore up to that ceiling, never
+// past the permanent damage the attackers have already done.
+if(games[gi].phase=="build") { if(walls[wi].health > walls[wi].floor) walls[wi].floor = walls[wi].health; }
+else if(walls[wi].health > walls[wi].floor) walls[wi].health = walls[wi].floor;
 broadcast_wall_strength(gid);
 send_to_game(gid, "footstep objects/items/wood/place "+builders[i].x+" "+builders[i].y);
 }
@@ -157,9 +166,15 @@ builders[i].target_wall=nw;
 string dir = builders[i].target_wall;
 if(wall_distance(dir, builders[i].x, builders[i].y, s) <= wall_reach)
 {
-// In reach: pause this beat to place (the placement pause equals the bot's move speed).
+// In reach. During a build/rest window, pause this beat to place (the placement pause equals the bot's move
+// speed). During an attack window, hold at the wall -- carrying, silent -- until the rest segment opens.
+if(can_build)
+{
 builders[i].placing=true;
 builders[i].movetimer.restart();
+continue;
+}
+builders[i].movetimer.restart(); // attack window: stand by with the wood until it's time to repair
 continue;
 }
 // Walk one tile toward that wall (close on the axis that approaches the border).

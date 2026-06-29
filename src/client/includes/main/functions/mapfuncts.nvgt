@@ -78,7 +78,7 @@ speak(spoken);
 // facing plus a rough distance (the B key). Same idea as track_players, for the builder bots (no names).
 void track_bots()
 {
-if(clientbots.length()==0) { speak("No builders nearby."); return; }
+if(clientbots.length()==0) { speak("No bots nearby."); return; }
 double[] dists;
 string[] lines;
 for(uint i=0; i<clientbots.length(); i++)
@@ -87,7 +87,7 @@ double d = get_2d_distance(me.x, me.y, clientbots[i].x, clientbots[i].y);
 double ang = calculate_x_y_angle(me.x, me.y, clientbots[i].x, clientbots[i].y, facing_degrees(facing));
 int td = int(d + 0.5);
 dists.insert_last(d);
-lines.insert_last("Builder is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
+lines.insert_last("Bot is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
 }
 for(uint i=0; i<dists.length(); i++)
 {

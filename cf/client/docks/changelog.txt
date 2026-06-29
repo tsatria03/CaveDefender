@@ -1,6 +1,8 @@
 New in 2.7.
+You can now kick yourself from your own room or game; both the Kick from room and Kick from game lists include a Yourself option that simply leaves, just like the normal leave options do.
+In an environment versus player game, each round now alternates between attack windows, when your swings tear the walls down, and rest windows, when your swings only ricochet while the builder bots gather wood and repair the damage; part of every hit you land is permanent, so the bots can never fully rebuild a wall you have been working on and you always gain ground.
 In an environment versus player game, a round can no longer end early for lack of progress; the only way to lose is to run out the wave's time.
-Fixed a bug in an environment versus player game where, right after you chose to play again, your weapon could strike a wall from well out of range until you moved.
+Fixed a bug in an environment versus player game where right after you chose to play again, your weapon could strike a wall from well out of range until you moved.
 Account passwords are now protected with much stronger, modern encryption; because of this, every existing account must be created again, as older accounts can no longer sign in.
 Usernames and passwords can no longer contain spaces, and the username, password, and private room password fields now reject the space key as you type.
 When your game version does not match the server's, you are now clearly told that your client is incompatible and asked to update, rather than the connection simply failing.

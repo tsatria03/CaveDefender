@@ -508,6 +508,12 @@ void netloop_impl()
 			p.play_stationary("sounds/ui/misc/alert.ogg", false);
 			add_buffer_item("alerts", message.substr(6));
 		}
+		else if (parsed[0] == "alertsilent" and message.length() > 12)
+		{
+			// Like "alert" but with no cue of its own: a notice into the alerts buffer when a shared sound has
+			// already been played for everyone (e.g. the MOTD change, where newmotd.ogg is the common cue).
+			add_buffer_item("alerts", message.substr(12));
+		}
 		else if (parsed[0] == "flagswitch" and parsed.length() > 1)
 		{
 			// A staff member flipped their attention flag: everyone hears the sound and gets the alert.
@@ -922,19 +928,22 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "waveseg" and parsed.length() > 1)
 		{
-			// The wave swung between attacking and resting: replay the wave cue when the bots resume, and a
-			// rest cue when they pull back so you know it's safe to rebuild.
+			// The wave swung between an attack window and a rest window. PVE: the bots resume hammering, then pull
+			// back so you can rebuild. EVP (reversed): an attack window is your turn to smash, a rest window locks
+			// you out (your swings only ricochet) while the builders repair.
 			wave_attacking = (parsed[1] == "1");
 			if (parsed[1] == "1")
 			{
 				wave_number = (parsed.length() > 2) ? string_to_number(parsed[2]) : wave_number + 1; // round number rides on the message
 				p.play_stationary("sounds/ui/misc/wavestart.ogg", false);
-				add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
+				if (game_outside) add_buffer_item("alerts", "Attack, tear the walls down!");
+				else add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
 			}
 			else
 			{
 				p.play_stationary("sounds/ui/misc/wavestop.ogg", false);
-				add_buffer_item("alerts", "The enemies stopped coming.");
+				if (game_outside) add_buffer_item("alerts", "The bots are repairing, hold your fire.");
+				else add_buffer_item("alerts", "The enemies stopped coming.");
 			}
 		}
 		else if (parsed[0] == "wavewarning" and parsed.length() > 1)
