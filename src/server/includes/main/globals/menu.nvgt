@@ -525,6 +525,74 @@ players[index].menu_targets.resize(0);
 for(uint i=0; i<opts.length(); i++) players[index].menu_targets.insert_last(opts[i]);
 send_menu(peer, "pronoun", "Select the pronouns used to refer to you in messages.", opts);
 }
+// The F6 player list: every connected player, server-wide (the same set F1/who reports), as a navigable
+// menu. Each label mirrors /who -- the AFK prefix, the rank-prefixed name, and "(username)" when the
+// nickname differs so the real account stays readable. Usernames go in menu_targets so the returned choice
+// maps back to a player, leaving room for a future per-player action menu.
+void push_player_list(int index)
+{
+int peer = players[index].peer_id;
+players[index].menu_targets.resize(0);
+string[] opts;
+for(uint i = 0; i < players.length(); i++)
+{
+players[index].menu_targets.insert_last(players[i].name);
+string label = afk_prefix(int(i)) + display_name(int(i));
+if(string_to_lower_case(players[i].nickname) != string_to_lower_case(players[i].name)) label += " (" + players[i].name + ")";
+opts.insert_last(label);
+}
+send_menu(peer, "playerlist", "Players menu. " + players_count_phrase(opts.length(), "on the server"), opts);
+}
+// Where a player currently is, for the F6 info viewer: the lobby, a room (named by its host), or a game
+// (named by its host and mode) -- and "Watching" instead of "In" for a spectator. room_id is 0 in the
+// lobby, a room id in a room office, or a game id in a game (the same field is reused for all three).
+string player_location_phrase(int ti)
+{
+int rid = players[ti].room_id;
+if(rid == 0) return "In the lobby.";
+int ri = get_room_index(rid);
+if(ri > -1) return "In " + display_name_flagged_for(rooms[ri].host) + "'s room.";
+int gi = get_game_index(rid);
+if(gi > -1) return (players[ti].spectating ? "Watching " : "In ") + display_name_flagged_for(games[gi].host) + "'s " + mode_tag(games[gi].mode) + " game.";
+return "Unknown.";
+}
+// Which channels a player is currently muted in, for the staff-only line of the F6 info viewer.
+string player_mute_phrase(int ti)
+{
+string[] ch;
+if(is_muted_now(ti, "global")) ch.insert_last("global");
+if(is_muted_now(ti, "local")) ch.insert_last("local");
+if(is_muted_now(ti, "voice")) ch.insert_last("voice");
+if(ch.length() == 0) return "Not muted.";
+string s;
+for(uint i = 0; i < ch.length(); i++) s += (i > 0 ? ", " : "") + ch[i];
+return "Muted in " + s + ".";
+}
+// Build and send the F6 read-only info card for one player to the viewer. viewer_index decides whether the
+// staff-only moderation lines (mute/ban/warnings) are included. The client renders it in an inline read-only
+// box. Title and body are joined by a single newline; the body's own lines are CRLF-separated for the box.
+void push_player_info(int viewer_index, int ti)
+{
+int peer = players[viewer_index].peer_id;
+string title = "Viewing info for " + afk_prefix(ti) + display_name(ti);
+string body = "Username: " + players[ti].name + "\r\n";
+body += "Nickname: " + players[ti].nickname + "\r\n";
+body += "Pronouns: " + players[ti].pronoun + "\r\n";
+body += "Channel: " + players[ti].language + "\r\n";
+body += "Rank: " + players[ti].rank + "\r\n";
+body += "AFK: " + (players[ti].afk ? "Yes" : "No") + "\r\n";
+body += "Location: " + player_location_phrase(ti) + "\r\n";
+body += "Client version: " + round(players[ti].version, 1); // round away the float->double precision tail (2.9000000954 -> 2.9)
+if(is_staff(players[viewer_index].rank))
+{
+int64 bu = get_ban_until(players[ti].name);
+string banline = (bu == -1) ? "Not banned." : (bu == 0 ? "Banned permanently." : "Banned until a set time.");
+body += "\r\nMute status: " + player_mute_phrase(ti);
+body += "\r\nBan status: " + banline;
+body += "\r\nWarnings: " + warning_count(players[ti].name);
+}
+send(peer, "playerinfo\n" + title + "\n" + body, 0, true);
+}
 void on_menu_result(int player_index, string id, int choice)
 {
 if(player_index < 0 or player_index >= int(players.length())) return;
@@ -681,5 +749,12 @@ else if(id.substr(0, 8) == "confirm:")
 {
 if(choice == 0) send(peer, "runcommand " + id.substr(8), 0, true); // Yes
 else { int gi = get_game_index(players[player_index].room_id); if(gi > -1) resume_game(gi); } // cancelled: if the host backed out of Leave/Stop, unfreeze the paused game (no-op otherwise)
+}
+else if(id == "playerlist")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+int ti = get_online_index(players[player_index].menu_targets[choice]); // the chosen username
+if(ti < 0) { send(peer, "This player is no longer online.", 0, true); return; } // logged off since the menu opened
+push_player_info(player_index, ti);
 }
 }
