@@ -271,8 +271,9 @@ if(!account_exists(name)) return false;
 return write_field(name, "banned", "");
 }
 // Saved rooms (recreated when the account logs in). pubroom.usr = "1" if they have a public room,
-// blank if not. privroom.usr = the private room's password, blank if they have no private room
-// (the password's presence IS the flag). A server host can hand-create these to pre-make rooms.
+// blank if not. privroom.usr = the private room's password (stored ENCRYPTED, base64-wrapped -- see
+// get_saved_private), blank if they have no private room (the password's presence IS the flag). A host can
+// hand-create pubroom.usr; privroom.usr is encrypted, so set a private room's password from in-game instead.
 bool get_saved_public(string name)
 {
 return read_field(name, "pubroom") == "1";
@@ -281,12 +282,26 @@ bool set_saved_public(string name, bool has)
 {
 return write_field(name, "pubroom", has ? "1" : "");
 }
-// The saved private-room password, or "" if the account has no private room.
+// The saved private-room password, or "" if the account has no private room. Stored in privroom.usr as a single
+// "<ciphertext>:<key>" blob (mirroring the old account "<salt>:<hash>" layout): a fresh random key (make_salt,
+// CSPRNG) and the AES-encrypted, base64-wrapped password, joined by a colon. Reversible on purpose so Retrieve
+// password still works. This is obfuscation -- the key sits beside the ciphertext, so it keeps the password out of
+// plain sight, not safe from someone who has the file. Neither base64 (A-Za-z0-9+/=) nor the key (a-z0-9) contains
+// a colon, so the first ":" cleanly splits the two. STRING_BASE64_DEFAULT is pinned on both encode and decode
+// (their registered defaults differ, padded vs padless). An empty field stays "" (the "no private room" flag).
 string get_saved_private(string name)
 {
-return read_field(name, "privroom");
+string blob = read_field(name, "privroom");
+if(blob == "") return "";
+int c = string_contains(blob, ":", 1);
+if(c < 0) return ""; // malformed or pre-colon legacy value: no usable room, the host re-sets it
+string cipher = string_left(blob, c);
+string key = blob.substr(c + 1);
+return string_decrypt(string_base64_decode(cipher, STRING_BASE64_DEFAULT), key);
 }
 bool set_saved_private(string name, string password)
 {
-return write_field(name, "privroom", password);
+if(password == "") return write_field(name, "privroom", "");
+string key = make_salt(); // a fresh random key per set, stored inline after the ciphertext
+return write_field(name, "privroom", string_base64_encode(string_encrypt(password, key), STRING_BASE64_DEFAULT) + ":" + key);
 }
