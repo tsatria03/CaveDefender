@@ -53,7 +53,7 @@ bool afk_wake_key_pressed()
 		if(k==KEY_M or k==KEY_C or k==KEY_BACKSLASH) continue;
 		if(k==KEY_LSHIFT or k==KEY_RSHIFT or k==KEY_LALT or k==KEY_RALT or k==KEY_LCTRL or k==KEY_RCTRL) continue;
 		if(k==KEY_SLASH or k==KEY_APOSTROPHE or k==KEY_ESCAPE) continue;
-		if(k==KEY_F1 or k==KEY_F2 or k==KEY_F3 or k==KEY_F4 or k==KEY_F5) continue;
+		if(k==KEY_F1 or k==KEY_F2 or k==KEY_F3 or k==KEY_F4 or k==KEY_F5 or k==KEY_F6) continue;
 		if(k==KEY_G or k==KEY_L or k==KEY_R or k==KEY_P or k==KEY_D) continue;
 		if(key_pressed(k)) return true;
 	}

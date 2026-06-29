@@ -230,6 +230,10 @@ buffercheck();
 				speak("beacons disabled");
 			}
 		}
+		if(key_pressed(KEY_F6))
+		{
+			send(0, "playerlist", 0, true); // open the server-pushed player roster menu (like F1's who, but viewable)
+		}
 		// Live world-volume keys: Page up/down adjust music, Home/End adjust ambience. Stepped by 2 and
 		// clamped to -100..0 on a 50 ms repeat (so holding ramps smoothly), saved only when it changes.
 		if(worldvoltimer.elapsed>=50)

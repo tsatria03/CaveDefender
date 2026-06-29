@@ -311,6 +311,7 @@ void dispatch_modal(string message)
 	if(parsed[0]=="showmenu") show_server_menu(message);
 	else if(parsed[0]=="roundover") handle_roundover(message);
 	else if(parsed[0]=="helptext") handle_helptext(message);
+	else if(parsed[0]=="playerinfo") handle_playerinfo(message);
 	else if(parsed[0]=="askinput") handle_askinput(message);
 }
 // The round ended (all walls fell): "roundover <seconds> <collected> <rounds> <bonus> <milestone>". Show the
@@ -377,6 +378,32 @@ void handle_helptext(string message)
 		string which = message.substr(9, nl - 9);
 		string content = message.substr(nl + 1);
 		dockread(which + " help.txt", content);
+	}
+}
+// The F6 player info card: "playerinfo\n<title>\n<body>". Shown inline in a read-only, multiline input box
+// (the same widget dockread builds, but with our own window title). The body's lines are already CRLF-
+// separated. The loop pumps net_keepalive() so the connection survives while you read (per the blocking-UI
+// note above); it's gated through the deferral check at the call site so it never stacks on another modal.
+void handle_playerinfo(string message)
+{
+	int nl1 = string_contains(message, "\n", 1);
+	if(nl1 < 0) return;
+	string rest = message.substr(nl1 + 1);
+	int nl2 = string_contains(rest, "\n", 1);
+	if(nl2 < 0) return;
+	string title = rest.substr(0, nl2);
+	string body = rest.substr(nl2 + 1);
+	form.reset();
+	form.create_window(title, false, false, false);
+	int infobox = form.create_input_box("Player information", body, read_only: true, multiline: true);
+	int infoclose = form.create_button("&close", false, true);
+	form.focus(infobox);
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		net_keepalive(); // keep the network serviced so enet doesn't time out while the card is open
+		if(form.is_pressed(infoclose)) return;
 	}
 }
 // A server-driven flow needs a typed value. Format: askinput\n<prompt>\n<command prefix>\n<mask>. We show a
@@ -734,6 +761,12 @@ void netloop_impl()
 			// Blocking UI: defer if another modal is already open (see the keepalive note above).
 			if(netloop_depth>1) net_deferred.insert_last(message);
 			else handle_helptext(message);
+		}
+		else if (parsed[0] == "playerinfo")
+		{
+			// Blocking UI (the F6 info card): defer if another modal is already open.
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_playerinfo(message);
 		}
 		else if (parsed[0] == "showmenu")
 		{

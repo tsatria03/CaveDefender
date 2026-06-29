@@ -49,6 +49,10 @@ Moving around.
 
 You move with the arrow keys, and holding alt, control, or shift while you move makes you run. Press alt plus R at any time to toggle auto-running: when it is on you run by default and hold one of those modifiers to walk instead, and when it is off it works the other way around. The game tells you auto running enabled or disabled as you switch it, and your choice is saved for next time.
 
+The players menu.
+
+Press F6 anywhere to open the players menu, a list of everyone on the server shown by their away status, rank, and name, the same people the /who command reads out. Choose a player to open a read-only information card about them, showing their username, nickname, pronouns, language channel, rank, whether they are away, where they are, the lobby, a room, or a game, and the version of the game they are running. Staff see a few extra lines on the card about the player's mute, ban, and warning record. Press escape or close to leave the card.
+
 Rooms.
 
 From the lobby, press enter to open the lobby menu, where you can create or join a public or private room. You can host up to one public and one private room of your own. Inside a room, press enter for the room menu. If you host the room you can use Kick from room to send a player back to the lobby, and, for a private room, set or retrieve its password. The Kick from room list also includes your own name, which you can pick to simply leave your own room, just like Leave room does. You can delete your own room, but only when you are the only one in it and no games are running.

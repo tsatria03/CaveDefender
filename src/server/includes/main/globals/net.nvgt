@@ -810,6 +810,10 @@ names.insert_last(we);
 }
 send(event.peer_id, roster_sentence("on the server", names), 0,true);
 }
+else if(parsed[0]=="playerlist" and index>-1)
+{
+push_player_list(index); // F6: the server-wide roster as a navigable menu (same set as /who)
+}
 else if(parsed[0]=="staff" and index>-1)
 {
 send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
