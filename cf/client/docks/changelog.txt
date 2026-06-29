@@ -1,3 +1,7 @@
+New in 2.8.
+The kick menu in a room now shows each player by their nickname, the same as the kick menu in a game, rather than always showing their account name.
+Staff are now told whenever another staff member promotes, demotes, unbans, or sends a private notification to a player, so these actions leave a record the whole team can see.
+When a staff member changes the message of the day, everyone is now told in their alerts who changed it and what it was changed to, instead of it changing silently.
 New in 2.7.
 You can now kick yourself from your own room or game; both the Kick from room and Kick from game lists now include your own name, which you can pick to simply leave, just like the normal leave options do.
 In an environment versus player game, each round now alternates between attack windows, when your swings tear the walls down, and rest windows, when your swings only ricochet while the builder bots gather wood and repair the damage; part of every hit you land is permanent, so the bots can never fully rebuild a wall you have been working on and you always gain ground.
