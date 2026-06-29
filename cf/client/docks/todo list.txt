@@ -1,5 +1,8 @@
 ####These are the things that need to be finished for future versions of the game.
 
+**Add an account storage that saves players' accounts so they can pick one for easy sign in.
+**Add an F5 player menu listing every player with where they are, the channel they are in, their username and nickname, and their AFK and rank.
+
 ##These are the things that are already finished from earlier versions of the game.
 
 **Finished. Add a reversed game mode, environment versus player, where you attack the four walls from outside with weapons while builder bots gather wood and repair them; clear a round by bringing all four down, the defense grows each round, and a round timer plus a stall check end the game, scored by rounds cleared.
