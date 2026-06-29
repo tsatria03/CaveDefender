@@ -399,16 +399,31 @@ for(uint i=0; i<langs.length(); i++)
 if(string_to_lower_case(language_bare(langs[i])) == string_to_lower_case(name)) return true;
 return false;
 }
-// The /channel chooser: list every configured language channel for the player to pick from. The names go
-// in menu_targets so the returned choice maps back to one. Available to everyone.
+// How many online players are currently on a given language channel (by its bare English name, case-insensitive).
+int players_on_channel(string bare)
+{
+int n = 0;
+for(uint i=0; i<players.length(); i++)
+if(string_to_lower_case(players[i].language) == string_to_lower_case(bare)) n++;
+return n;
+}
+// The /channel chooser: list every configured language channel for the player to pick from. The raw lines go
+// in menu_targets so the returned choice maps back to one; the DISPLAY appends how many players are on each
+// channel right now, e.g. "English (English) 26 players in this channel." Available to everyone.
 void push_language_menu(int index)
 {
 int peer = players[index].peer_id;
 string[] langs = load_language_channels();
 if(langs.length() == 0) { send(peer, "No language channels are configured.", 0, true); return; }
 players[index].menu_targets.resize(0);
-for(uint i=0; i<langs.length(); i++) players[index].menu_targets.insert_last(langs[i]);
-send_menu(peer, "channel", "Select a language channel to use.", langs);
+string[] opts;
+for(uint i=0; i<langs.length(); i++)
+{
+players[index].menu_targets.insert_last(langs[i]); // raw "English (English)" line, so the choice maps back via language_bare
+int n = players_on_channel(language_bare(langs[i]));
+opts.insert_last(langs[i] + " " + n + (n==1 ? " player in this channel." : " players in this channel."));
+}
+send_menu(peer, "channel", "Select a language channel to use.", opts);
 }
 // Read the configured pronoun options (one per line, "masculine (he/him/his/his/himself)") from
 // data/preffs/pronouns.svr, skipping blanks. Read fresh each time so a host can edit the list without restarting.
