@@ -1,4 +1,5 @@
 New in 3.0.
+The readme now includes a full keyboard reference that lists every key the game uses, grouped by purpose.
 The game now comes with a readme that explains how everything works, moving around, chatting, the players menu, rooms, and both game modes. The in-game help, opened with /help, is now just the list of chat commands.
 New in 2.9.
 The F6 players menu now shows each player's current language channel beside their name, so you can tell who is on which channel at a glance.

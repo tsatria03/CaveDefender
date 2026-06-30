@@ -4,7 +4,7 @@ CaveDefender is an online, audio only game. You sign in to an account on a serve
 
 Moving around.
 
-You move with the arrow keys, and holding alt, control, or shift while you move makes you run. Press alt plus R at any time to toggle auto-running: when it is on you run by default and hold one of those modifiers to walk instead, and when it is off it works the other way around. The game tells you auto running enabled or disabled as you switch it, and your choice is saved for next time.
+You move with the arrow keys, and holding alt while you move makes you run. Press alt plus R at any time to toggle auto-running: when it is on you run by default and hold alt to walk instead, and when it is off it works the other way around. The game tells you auto running enabled or disabled as you switch it, and your choice is saved for next time.
 
 Chat channels.
 
@@ -105,3 +105,89 @@ You can also watch a game instead of playing it. Choose watch game from the room
 You float on a deck above the cavern and roam it freely while the whole battle plays out below you, and the players are told you are watching. You are only an observer, so you carry no wood, cannot reinforce, and the enemies ignore you, but you hear everything and can still chat and use voice with the players.
 
 Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. When you watch an environment versus player game, the deck sits out on the gravel to match, and the b key locates the builder bots as well. Press escape to stop watching and return to the room.
+
+Keyboard commands.
+
+This is the full list of keys CaveDefender uses. Some keys only do something in the right place, for example the wall and weapon keys work only while you are in a game; where that matters it is noted. A few keys do one thing on their own and another with shift held, and both are listed.
+
+Movement.
+
+Left arrow. Step left.
+Right arrow. Step right.
+Up arrow. Step forward.
+Down arrow. Step backward.
+
+Alt. Held while moving, flips between walking and running for as long as you hold it: with auto-running off, holding alt runs; with auto-running on, holding alt walks.
+Alt plus letter R. Toggle auto-running on or off, saved between sessions.
+
+Letter, C. Speak your coordinates, the surface you are standing on, and the way you are facing.
+
+Chat.
+
+Slash. Open global chat to type a message or a slash command.
+Backslash. Open local chat, heard by everyone in your current space.
+Apostrophe. Open staff chat. Staff only.
+
+Glancing around.
+
+Letter, P. Locate the other players around you, nearest first, by direction and distance.
+Letter, R. List who is around: the rooms from the lobby, who is in your room from a room, or who is in the game's room from a game.
+Letter, L. List who is in the lobby. Works anywhere, including in a game.
+Letter, G. List games: every game on the server from the lobby, the games in your room from a room, or who is in your game from a game.
+
+Server information.
+
+F1. List everyone on the server.
+F2. Read the server's message of the day.
+F3. Ping the server and hear the round trip time.
+F4. Hear how long the server has been running.
+F5. Toggle player beacons on or off.
+F6. Open the players menu.
+
+Volume.
+
+Page up. Raise the music volume.
+Page down. Lower the music volume.
+Home. Raise the ambience volume.
+End. Lower the ambience volume.
+
+Voice chat.
+
+Letter, O. Talk over voice chat. With hold to talk on, hold O to talk; with it off, press O to start talking and press it again to stop.
+
+The message buffers.
+
+These review past messages, which are sorted into categories such as global chats, private chats, and alerts.
+
+Comma. Move to the previous message in the current category.
+Period. Move to the next message in the current category.
+Shift plus comma. Jump to the first message in the category.
+Shift plus period. Jump to the last message in the category.
+
+Left bracket. Move to the previous category.
+Right bracket. Move to the next category.
+Shift plus left bracket. Jump to the first category.
+Shift plus right bracket. Jump to the last category.
+
+Shift plus letter M. Mute or unmute the current category, so its new messages stop or resume being read aloud.
+Shift plus letter C. Copy the current message to the clipboard.
+Shift plus backslash. Export the current category to a log file, then clear it.
+
+Menus and leaving.
+
+Enter. Open the menu for where you are: the lobby menu in the lobby, the room menu in a room, or the round menu in a game you host.
+Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the connection menu, asking you to confirm first if that setting is on.
+
+In a game.
+
+These work while you are in a game.
+
+Tab. Hear the current round status.
+Letter, N, E, S, or W. Hear the strength of the north, east, south, or west wall.
+Letter, T. Hear a summary of all four walls.
+Letter, I. Hear how much wood you are carrying. PVE only, and not while watching.
+Letter, D. Locate the wood lying around you, nearest first. PVE only, and not while watching.
+Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. PVE only.
+Letter, B. Locate the builder bots, nearest first. EVP only.
+Number row, 1, 2, 3, or 4. Draw the axe, bat, crowbar, or hammer. EVP only.
+Spacebar. Held, swings your drawn weapon at the nearest wall in reach. EVP only.
