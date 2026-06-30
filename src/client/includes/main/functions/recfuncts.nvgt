@@ -6,7 +6,7 @@
 // Requires the opus plugin (loaded via #pragma plugin opus in includes.nvgt); microphone is a built-in engine type.
 
 const int VOICE_RATE = 48000;   // capture/codec sample rate
-const int VOICE_FRAME = 480;    // samples per channel per opus frame = 10ms at 48000 Hz
+const int VOICE_FRAME = 960;    // samples per channel per opus frame = 20ms at 48000 Hz (halves the packet rate vs 10ms)
 const int VOICE_GAP_MS = 800;   // after this much silence a speaker's stream is reset/closed
 
 opus_encoder@ voice_enc = null; // our outgoing encoder
@@ -84,7 +84,7 @@ void recordcheck()
 		string pcm = voice_mic.read_data(VOICE_FRAME);
 		if(pcm.length() == 0) break;
 		string pkt = voice_enc.encode_float(pcm);
-		if(pkt.length() > 0) send(0, pkt, 3, true); // server adds the header and relays to your space
+		if(pkt.length() > 0) send(0, pkt, 3, false); // unreliable: a dropped 10/20ms frame is inaudible (Opus FEC covers it), but reliable retransmits at ~50 pkts/sec stall enet's RTT and trip the peer timeout
 		if(hearvoice)
 		{
 			voice_monitor.push_memory(pcm, false, VOICE_RATE, 1); // your own voice, centered

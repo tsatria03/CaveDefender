@@ -1422,7 +1422,7 @@ string relay=players[index].name+" "+players[index].x+" "+players[index].y+"\n"+
 for(uint i=0; i<players.length(); i++)
 {
 if(players[i].peer_id==event.peer_id or players[i].room_id!=players[index].room_id) continue;
-send(players[i].peer_id, relay, 3, true);
+send(players[i].peer_id, relay, 3, false); // unreliable: voice is a real-time stream; reliable retransmits at this packet rate inflate enet RTT and trip the peer timeout over a VPN
 }
 }
 }
