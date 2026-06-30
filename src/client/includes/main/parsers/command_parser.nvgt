@@ -80,6 +80,15 @@ void comparse(string text, string channel = "global")
 			send(0, "help "+parsed[1], 0, true);
 		}
 	}
+	else if(base == "/rules")
+	{
+		// Anyone can read either page: plain /rules gives the player rules; /rules player or /rules staff picks
+		// one. Unlike the staff help, the staff RULES are open to everyone, so players can see the standards
+		// staff are held to.
+		if(parsed.length() == 1) send(0, "rules player", 0, true);
+		else if(parsed.length() == 2) send(0, "rules "+parsed[1], 0, true);
+		else { syntax_error("/rules, /rules player, or /rules staff"); return; }
+	}
 	else if(base == "/staff")
 	{
 		if(parsed.length() != 1) { syntax_error("/staff"); return; }

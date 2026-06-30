@@ -1,0 +1,19 @@
+Staff rules.
+
+These are the expectations for staff: moderators, administrators, and developers. They are in addition to the player rules, which apply to you as well. Being staff is a responsibility, and players judge the server by how you act.
+
+1. Lead by example. Everything expected of players is expected of you, and more. Hold yourself to a higher standard in chat and in how you treat people.
+
+2. Be fair and proportionate. Match your response to the violation, and use the lightest tool that fits. A private notification or message to the player is often enough for a small or first slip; a formal warning carries a level from 1 to 4, so save the higher levels for serious or repeated breaks. Use the server-wide notification for announcements to everyone, not for correcting one player. From there, escalate as needed: a mute, in one channel or all and either timed or indefinite, then a kick, and finally a ban, timed or permanent. Don't jump straight to the harshest option over something minor, but serious violations such as cheating or sharing harmful content can skip the ladder and go straight to a ban.
+
+3. Do not abuse your powers. Never use a mute, kick, ban, or rank change to win an argument, settle a grudge, or punish someone for disagreeing with you. The same goes for your room and game authority: you can delete any room and stop any game, even ones you don't host, but only to enforce the rules or protect players, never to clear people out, free up a slot, or break up a game you simply want to disrupt. Act on the rules, not on your feelings, and do not hand out ranks you were not asked to give.
+
+4. Stay impartial. Treat every player the same, whether or not you know or like them. No favoritism, and no going easy on friends or hard on rivals.
+
+5. Work within your rank. Act only within the limits of your rank, and do not try to get around who you are allowed to act on. If a situation is above your rank or you are unsure how to handle it, bring it to a higher ranked staff member or the owner instead of overstepping.
+
+6. Keep it professional. Settle disagreements between staff in private, in staff chat or with the owner, not in front of players. Do not share moderation details or staff-only information with players, and stay calm and respectful even with a difficult one.
+
+7. When in doubt, ask. If you are not sure whether something breaks the rules or how to respond, check with another staff member or the owner before you act. It is better to ask than to make a call you cannot take back.
+
+Staff status is a tool for keeping CaveDefender safe and welcoming, not a privilege. Use it that way and the rest follows.

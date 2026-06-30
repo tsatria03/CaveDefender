@@ -584,7 +584,7 @@ body += "Channel: " + players[ti].language + "\r\n";
 body += "Rank: " + players[ti].rank + "\r\n";
 body += "AFK: " + (players[ti].afk ? "Yes" : "No") + "\r\n";
 body += "Location: " + player_location_phrase(ti) + "\r\n";
-body += "Client version: " + round(players[ti].version, 1); // round away the float->double precision tail (2.9000000954 -> 2.9)
+body += "Client version: " + format_float(players[ti].version, "", 0, 1); // fixed one decimal so 3.0 reads "3.0" not "3", and the float->double precision tail (2.9000000954) is rounded off too
 if(is_staff(players[viewer_index].rank))
 {
 int64 bu = get_ban_until(players[ti].name);
