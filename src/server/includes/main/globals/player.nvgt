@@ -29,6 +29,7 @@ int invite_game=0;       // a pending GAME invitation: the game id the host invi
 string invite_from="";   // the username of whoever sent the pending invite (room or game), so accept/reject can tell them the outcome.
 timer invite_timer;      // started when the pending invite arrives; the invite expires once it passes invite_timeout.
 int pregame_room=0;      // the scope (room_id) this player was in right before joining their current game, so leaving/kick/stop returns them there: a room member goes back to the room, a lobby invitee back to the lobby. Captured when they join a game.
+string[] ignored;        // this player's personal ignore list (usernames): people whose chat and voice they've chosen not to receive. Loaded from ignored.usr at spawn, persisted on change; matched case-insensitively. Unrelated to staff mutes.
 player(int id, string username, double ver)
 {
 name=username;
@@ -41,6 +42,16 @@ void spawn_player(int id, string name, double version)
 {
 player p1(id, name, version);
 players.insert_last(p1);
+}
+// Does the recipient at roster index recipient_index have sender_name on their personal ignore list? Used to
+// drop chat/voice from an ignored player before it reaches them. Case-insensitive, keyed by username.
+bool player_ignores(int recipient_index, string sender_name)
+{
+if(recipient_index<0 or recipient_index>=int(players.length())) return false;
+string s = string_to_lower_case(sender_name);
+for(uint k=0; k<players[recipient_index].ignored.length(); k++)
+if(string_to_lower_case(players[recipient_index].ignored[k]) == s) return true;
+return false;
 }
 // The channels a mute can apply to. "all" expands to every channel; a specific channel stays itself.
 array<string> mute_channels_for(string ch)

@@ -1,4 +1,5 @@
 New in 2.9.
+The player information card, opened by choosing a player in the F6 players menu, now has a Mute this player checkbox and a Private message this player button. Muting someone hides their global chat, local chat, private messages, and voice from you only, and it stays muted across sessions until you uncheck it; the player is never told.
 In an environment versus player game, the round timer now counts down only while you can actually attack, so the rest windows where your swings ricochet no longer eat into your time. Rounds also begin with more time than before, and each round you clear adds ten more seconds, so a game no longer ends as quickly.
 The L key now works inside a game too, reading out who is in the lobby, the same as it already does from a room or the lobby itself.
 The voice key now behaves the same whether or not hold to talk is on: both ways are limited to one start or stop every half second, so quickly tapping the key can no longer spam the voice on and off sounds.

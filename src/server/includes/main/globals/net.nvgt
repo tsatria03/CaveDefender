@@ -311,14 +311,16 @@ for(uint i=0; i<players.length(); i++)
 if(is_staff(players[i].rank) and int(players[i].peer_id) != skip_peer) send(players[i].peer_id, "misc "+text, 0, true);
 }
 // Sends a message to everyone sharing the given room scope (used by local chat). room_id 0 = lobby.
-void relay_to_local(int room_id, string msg, string language="")
+void relay_to_local(int room_id, string msg, string language="", int sender_index=-1)
 {
+string sender_name = (sender_index>=0 and sender_index<int(players.length())) ? players[sender_index].name : "";
 for(uint i=0; i<players.length(); i++)
 {
 if(players[i].room_id != room_id) continue;
 // "" (the local-chat callers) = everyone in the space, regardless of language channel; an optional language
 // filter remains available for any future caller that wants same-language-only delivery in a space.
 if(language != "" and string_to_lower_case(players[i].language) != string_to_lower_case(language)) continue;
+if(sender_name != "" and player_ignores(int(i), sender_name)) continue; // recipient has the sender on their personal ignore list
 send(players[i].peer_id, msg, 0, true);
 }
 }
@@ -328,8 +330,9 @@ void relay_global(int sender_index, string what)
 {
 if(sender_index < 0 or sender_index >= int(players.length())) return;
 string lang = players[sender_index].language;
+string sender_name = players[sender_index].name;
 for(uint i=0; i<players.length(); i++)
-if(string_to_lower_case(players[i].language) == string_to_lower_case(lang)) send(players[i].peer_id, what, 1, true);
+if(string_to_lower_case(players[i].language) == string_to_lower_case(lang) and !player_ignores(int(i), sender_name)) send(players[i].peer_id, what, 1, true); // skip recipients ignoring the sender
 }
 // Broadcast a third-person lifecycle notice (room/game created, left, stopped, kicked, etc.) to everyone's
 // player events buffer, server-wide, skipping the actor(s) who instead get a first-person confirmation in
@@ -649,6 +652,7 @@ string lang = get_language(players[index].name); // language channel (language.u
 players[index].language = is_valid_language(lang) ? lang : "English";
 string pron = get_pronoun(players[index].name); // pronoun set (pronoun.usr); fall back to the they/them option if it's not a configured one
 players[index].pronoun = is_valid_pronoun(pron) ? pron : default_pronoun();
+players[index].ignored = get_ignored(players[index].name); // personal ignore list (ignored.usr): whose chat/voice this player drops
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 // New accounts are announced at creation time (see register_account), so logging in for the first time
 // is just a normal "online" notice like anyone else.
@@ -814,6 +818,25 @@ else if(parsed[0]=="playerlist" and index>-1)
 {
 push_player_list(index); // F6: the server-wide roster as a navigable menu (same set as /who)
 }
+else if(parsed[0]=="ignore" and index>-1 and parsed.length()>1)
+{
+// Personal mute from the F6 info card: add a username to this player's ignore list (their chat and voice
+// stop reaching this player). Silent and stealthy -- the target is never told. Can't ignore yourself.
+string tu = parsed[1];
+if(string_to_lower_case(tu) != string_to_lower_case(players[index].name) and account_exists(tu) and !player_ignores(index, tu))
+{
+players[index].ignored.insert_last(tu);
+set_ignored(players[index].name, players[index].ignored); // persist to ignored.usr
+}
+}
+else if(parsed[0]=="unignore" and index>-1 and parsed.length()>1)
+{
+// Lift a personal mute: drop a username from this player's ignore list (case-insensitive) and persist.
+string tu = parsed[1];
+for(int k=int(players[index].ignored.length())-1; k>=0; k--)
+if(string_to_lower_case(players[index].ignored[k]) == string_to_lower_case(tu)) players[index].ignored.remove_at(k);
+set_ignored(players[index].name, players[index].ignored);
+}
 else if(parsed[0]=="staff" and index>-1)
 {
 send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
@@ -875,14 +898,14 @@ else if(parsed[0]=="localchat" and index>-1 and parsed.length()>1)
 string msg=string_join(parsed, " ", 1, parsed.length());
 if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
 else if(filter_crash(msg) or filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
-else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg); // local chat reaches everyone in the space, regardless of language channel
+else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg, "", index); // local chat reaches everyone in the space, regardless of language channel (minus anyone ignoring the sender)
 }
 else if(parsed[0]=="localme" and index>-1 and parsed.length()>1)
 {
 string action=string_join(parsed, " ", 1, parsed.length());
 if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
 else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
-else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+" "+action); // local chat reaches everyone in the space, regardless of language channel
+else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+" "+action, "", index); // local chat reaches everyone in the space, regardless of language channel (minus anyone ignoring the sender)
 }
 else if(parsed[0]=="help" and index>-1 and parsed.length()>1)
 {
@@ -1422,6 +1445,7 @@ string relay=players[index].name+" "+players[index].x+" "+players[index].y+"\n"+
 for(uint i=0; i<players.length(); i++)
 {
 if(players[i].peer_id==event.peer_id or players[i].room_id!=players[index].room_id) continue;
+if(player_ignores(int(i), players[index].name)) continue; // listener has the speaker on their personal ignore list
 send(players[i].peer_id, relay, 3, false); // unreliable: voice is a real-time stream; reliable retransmits at this packet rate inflate enet RTT and trip the peer timeout over a VPN
 }
 }
@@ -1475,7 +1499,9 @@ if(event.type == event_receive && event.channel == 1)
                     if(target_index > -1)
 {
 send(event.peer_id, "PM to " + afk_prefix(target_index) + display_name_flagged(target_index) + ": " + pm_message, 2, true);
-send(players[target_index].peer_id, "PM from " + afk_prefix(index) + display_name_flagged(index) + ": " + pm_message, 2, true);
+// The sender always gets their own "PM to" copy above so they can't tell they're ignored; the recipient only
+// receives it if they haven't ignored the sender.
+if(!player_ignores(target_index, players[index].name)) send(players[target_index].peer_id, "PM from " + afk_prefix(index) + display_name_flagged(index) + ": " + pm_message, 2, true);
                     }
 else
 {
