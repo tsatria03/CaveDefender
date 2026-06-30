@@ -252,7 +252,7 @@ void addserver()
 // The default top entry is Custom: it keeps whatever ip/port are set (a manually entered, non-preset server).
 void loadservermenu()
 {
-	setupmenu(true);
+	setupmenu(false);
 	m.add_item("Custom", "custom");
 	for(uint i=0; i<servers.length(); i++)
 		m.add_item(server_list_text(i), ""+i);
@@ -390,7 +390,7 @@ string current_account_label()
 void loadaccountmenu()
 {
 	if(accounts.length()==0) { dlgmessage("There are no saved accounts. Press enter to continue."); return; }
-	setupmenu(true);
+	setupmenu(false);
 	for(uint i=0; i<accounts.length(); i++)
 		m.add_item(account_list_text(i), ""+i);
 	m.add_item("back", "back");
