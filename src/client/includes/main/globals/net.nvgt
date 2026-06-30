@@ -380,12 +380,37 @@ void handle_helptext(string message)
 		dockread(which + " help.txt", content);
 	}
 }
-// The F6 player info card: "playerinfo\n<username>\n<ignored>\n<is_self>\n<title>\n<body>". Shown inline in a
-// read-only, multiline input box (the same widget dockread builds, but with our own title), plus -- unless it's
-// your own card -- a Mute checkbox (Alt+M, a personal ignore of their chat and voice) and a Private message
-// button (Alt+P). The body's lines are already CRLF-separated. The loop pumps net_keepalive() so the connection
-// survives while it's open; it's gated through the deferral check at the call site so it never stacks on another
-// modal. The mute checkbox's change is persisted server-side on close (ignore/unignore).
+// A yes/no confirm before running one of the card's staff commands; runs it on Yes, speaks "canceled" otherwise.
+void card_confirm_command(string question, string command)
+{
+	setupmenu();
+	m.add_item("Yes");
+	m.add_item("No");
+	m.intro_text = question;
+	int c = m.run();
+	if(c == 0) comparse(command);
+	else speak("canceled");
+}
+// Pick a rank from a comma-separated list (the ranks the server said you may set), then run "<prefix><rank>".
+void card_rank_command(string question, string prefix, string ranklist)
+{
+	string[] ranks = string_split(ranklist, ",", true);
+	if(ranks.length() == 0) return;
+	setupmenu();
+	for(uint i = 0; i < ranks.length(); i++) m.add_item(ranks[i]);
+	m.intro_text = question;
+	int c = m.run();
+	if(c < 0 or c >= int(ranks.length())) { speak("canceled"); return; }
+	comparse(prefix + ranks[c]);
+}
+// The F6 player info card. Wire format:
+//   "playerinfo\n<username>\n<ignored>\n<is_self>\n<kick ban banned warn>\n<promote ranks>\n<demote ranks>\n<title>\n<body>"
+// Shown inline in a read-only, multiline input box (the same widget dockread builds, but with our own title).
+// Unless it's your own card it also gets a Mute checkbox (Alt+M, a personal ignore of their chat and voice), a
+// Private message button (Alt+P), and -- for staff, only the ones the server says you may use on this target --
+// Kick (Alt+K), Ban/Unban (Alt+B/U), Promote (Alt+R), Demote (Alt+D), and Warn (Alt+W). Every action routes
+// through comparse to the existing slash command, which re-validates. The loop pumps net_keepalive() so the
+// connection survives while it's open; it's deferral-gated at the call site so it never stacks on another modal.
 void handle_playerinfo(string message)
 {
 	int p1 = string_contains(message, "\n", 1); if(p1 < 0) return;
@@ -400,20 +425,41 @@ void handle_playerinfo(string message)
 	bool is_self = (r3.substr(0, p4) == "1");
 	string r4 = r3.substr(p4 + 1);
 	int p5 = string_contains(r4, "\n", 1); if(p5 < 0) return;
-	string title = r4.substr(0, p5);
-	string body = r4.substr(p5 + 1);
+	string flagline = r4.substr(0, p5);
+	string r5 = r4.substr(p5 + 1);
+	int p6 = string_contains(r5, "\n", 1); if(p6 < 0) return;
+	string prom = r5.substr(0, p6);
+	string r6 = r5.substr(p6 + 1);
+	int p7 = string_contains(r6, "\n", 1); if(p7 < 0) return;
+	string demo = r6.substr(0, p7);
+	string r7 = r6.substr(p7 + 1);
+	int p8 = string_contains(r7, "\n", 1); if(p8 < 0) return;
+	string title = r7.substr(0, p8);
+	string body = r7.substr(p8 + 1);
+	string[] fl = string_split(flagline, " ", true); // "kick ban banned warn"
+	bool can_kick = (fl.length() > 0 and fl[0] == "1");
+	bool can_ban = (fl.length() > 1 and fl[1] == "1");
+	bool is_banned = (fl.length() > 2 and fl[2] == "1");
+	bool can_warn = (fl.length() > 3 and fl[3] == "1");
+	bool can_promote = (prom != "");
+	bool can_demote = (demo != "");
 	form.reset();
 	form.create_window(title, false, false, false);
 	int infobox = form.create_input_box("Player information", body, read_only: true, multiline: true);
-	int mutebox = -1, pmbtn = -1;
+	int mutebox = -1, pmbtn = -1, kickbtn = -1, banbtn = -1, prombtn = -1, demobtn = -1, warnbtn = -1;
 	if(!is_self)
 	{
 		mutebox = form.create_checkbox("&mute this player", already_ignored); // Alt+M: personal ignore of their chat and voice
 		pmbtn = form.create_button("&private message this player"); // Alt+P
+		if(can_kick) kickbtn = form.create_button("&kick this player"); // Alt+K
+		if(can_ban) banbtn = form.create_button(is_banned ? "&unban this player" : "&ban this player"); // Alt+U / Alt+B
+		if(can_promote) prombtn = form.create_button("p&romote this player"); // Alt+R
+		if(can_demote) demobtn = form.create_button("&demote this player"); // Alt+D
+		if(can_warn) warnbtn = form.create_button("&warn this player"); // Alt+W
 	}
 	int infoclose = form.create_button("&close", false, true);
 	form.focus(infobox);
-	bool do_pm = false;
+	string action = ""; // set when a PM/staff button is pressed; dispatched after the card closes
 	bool now_ignored = already_ignored; // tracked live below; is_checked only works while the form is still active
 	while(true)
 	{
@@ -421,17 +467,59 @@ void handle_playerinfo(string message)
 		form.monitor();
 		net_keepalive(); // keep the network serviced so enet doesn't time out while the card is open
 		if(!is_self and mutebox > -1) now_ignored = form.is_checked(mutebox); // read the checkbox each frame, before any close deactivates the form
-		if(!is_self and form.is_pressed(pmbtn)) { do_pm = true; break; }
+		if(!is_self and form.is_pressed(pmbtn)) { action = "pm"; break; }
+		if(can_kick and form.is_pressed(kickbtn)) { action = "kick"; break; }
+		if(can_ban and form.is_pressed(banbtn)) { action = is_banned ? "unban" : "ban"; break; }
+		if(can_promote and form.is_pressed(prombtn)) { action = "promote"; break; }
+		if(can_demote and form.is_pressed(demobtn)) { action = "demote"; break; }
+		if(can_warn and form.is_pressed(warnbtn)) { action = "warn"; break; }
 		if(form.is_pressed(infoclose)) break;
 	}
 	// Persist any change to the mute checkbox (server stores it on the account) before we leave the card.
 	if(!is_self and now_ignored != already_ignored) send(0, (now_ignored ? "ignore " : "unignore ") + uname, 0, true);
-	// The Private message button: ask for the message, then send it as a normal /pm to this player's username.
-	if(do_pm)
+	// Dispatch the chosen action. Each routes through comparse to the existing slash command, which re-validates.
+	if(action == "pm")
 	{
 		string pm = vd.input_box("Private message to " + uname, "Type your private message.", "");
 		if(pm != "") comparse("/pm " + uname + " " + pm);
 		else speak("canceled");
+	}
+	else if(action == "kick") card_confirm_command("Kick " + uname + "?", "/kick " + uname);
+	else if(action == "unban") comparse("/unban " + uname);
+	else if(action == "ban")
+	{
+		setupmenu();
+		m.add_item("Permanent");
+		m.add_item("For a set time");
+		m.intro_text = "Ban " + uname + ". Choose a ban length.";
+		int bc = m.run();
+		if(bc == 0) card_confirm_command("Permanently ban " + uname + "?", "/ban " + uname);
+		else if(bc == 1)
+		{
+			string secs = vd.input_box("Ban " + uname, "Enter a ban length in seconds.", "");
+			if(secs != "") comparse("/ban " + uname + " " + secs);
+			else speak("canceled");
+		}
+		else speak("canceled");
+	}
+	else if(action == "promote") card_rank_command("Promote " + uname + " to which rank?", "/promote " + uname + " ", prom);
+	else if(action == "demote") card_rank_command("Demote " + uname + " to which rank?", "/demote " + uname + " ", demo);
+	else if(action == "warn")
+	{
+		setupmenu();
+		m.add_item("Level 1");
+		m.add_item("Level 2");
+		m.add_item("Level 3");
+		m.add_item("Level 4");
+		m.intro_text = "Warn " + uname + ". Choose a level.";
+		int wl = m.run();
+		if(wl < 0) speak("canceled");
+		else
+		{
+			string reason = vd.input_box("Warn " + uname, "Enter a reason.", "");
+			if(reason != "") comparse("/warn " + uname + " " + (wl + 1) + " " + reason);
+			else speak("canceled");
+		}
 	}
 }
 // A server-driven flow needs a typed value. Format: askinput\n<prompt>\n<command prefix>\n<mask>. We show a

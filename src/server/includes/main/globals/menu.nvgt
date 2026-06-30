@@ -591,12 +591,28 @@ body += "\r\nMute status: " + player_mute_phrase(ti);
 body += "\r\nBan status: " + banline;
 body += "\r\nWarnings: " + warning_count(players[ti].name);
 }
-// Header lines for the client's interactive controls: the target's canonical username (for the mute/PM
-// actions), whether the viewer already ignores them (the checkbox's starting state), and whether this is the
-// viewer's own card (so the client hides the mute/PM controls -- you can't mute or PM yourself).
+// Header lines for the client's interactive controls: the target's canonical username (for the mute/PM/staff
+// actions), whether the viewer already ignores them (the checkbox's starting state), whether this is the
+// viewer's own card (so the client hides the action controls -- you can't act on yourself), the staff-button
+// flags, and the rank lists the viewer may promote/demote the target to. The slash commands the buttons route
+// through re-validate everything; these just decide which controls to show, mirroring the command gating.
 int ign = player_ignores(viewer_index, players[ti].name) ? 1 : 0;
 int self = (viewer_index == ti) ? 1 : 0;
-send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + title + "\n" + body, 0, true);
+int vlevel = rank_level(players[viewer_index].rank);
+int tlevel = rank_level(players[ti].rank);
+bool other = (viewer_index != ti);
+int ckick = (other and vlevel>=2) ? 1 : 0;                     // /kick: administrator+, may target anyone
+int cban  = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;  // /ban: administrator+, at-or-below rank
+int cbanned = (get_ban_until(players[ti].name) != -1) ? 1 : 0; // drives the Ban vs Unban button label
+int cwarn = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;  // /warn: administrator+, not above your rank
+string[] RANKS = {"player", "moderator", "administrator", "developer"};
+string prom = ""; // ranks the viewer may PROMOTE the target to: above the target's current, up to the viewer's own (the grant cap)
+if(other and vlevel>=1 and tlevel<=vlevel)
+for(int L=tlevel+1; L<=vlevel; L++) prom += (prom=="" ? "" : ",") + RANKS[L];
+string demo = ""; // ranks the viewer may DEMOTE the target to: below the target's current (moderator+, owner protected)
+if(other and vlevel>=1 and tlevel<=vlevel and tlevel>=1 and !is_owner(players[ti].name))
+for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
+send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cbanned+" "+cwarn + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
 }
 void on_menu_result(int player_index, string id, int choice)
 {
