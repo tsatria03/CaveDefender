@@ -527,8 +527,9 @@ send_menu(peer, "pronoun", "Select the pronouns used to refer to you in messages
 }
 // The F6 player list: every connected player, server-wide (the same set F1/who reports), as a navigable
 // menu. Each label mirrors /who -- the AFK prefix, the rank-prefixed name, and "(username)" when the
-// nickname differs so the real account stays readable. Usernames go in menu_targets so the returned choice
-// maps back to a player, leaving room for a future per-player action menu.
+// nickname differs so the real account stays readable -- then appends "(<channel> channel)" so you can see
+// which language channel each player is on. Usernames go in menu_targets so the returned choice maps back
+// to a player, leaving room for a future per-player action menu.
 void push_player_list(int index)
 {
 int peer = players[index].peer_id;
@@ -539,6 +540,7 @@ for(uint i = 0; i < players.length(); i++)
 players[index].menu_targets.insert_last(players[i].name);
 string label = afk_prefix(int(i)) + display_name(int(i));
 if(string_to_lower_case(players[i].nickname) != string_to_lower_case(players[i].name)) label += " (" + players[i].name + ")";
+label += " (" + players[i].language + " channel)"; // their current language chat channel, for everyone
 opts.insert_last(label);
 }
 send_menu(peer, "playerlist", "Players menu. " + players_count_phrase(opts.length(), "on the server"), opts);
@@ -605,6 +607,7 @@ int ckick = (other and vlevel>=2) ? 1 : 0;                     // /kick: adminis
 int cban  = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;  // /ban: administrator+, at-or-below rank
 int cbanned = (get_ban_until(players[ti].name) != -1) ? 1 : 0; // drives the Ban vs Unban button label
 int cwarn = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;  // /warn: administrator+, not above your rank
+int cnotify = (other and vlevel>=1) ? 1 : 0;                   // /notifyplayer: moderator+, may target anyone
 string[] RANKS = {"player", "moderator", "administrator", "developer"};
 string prom = ""; // ranks the viewer may PROMOTE the target to: above the target's current, up to the viewer's own (the grant cap)
 if(other and vlevel>=1 and tlevel<=vlevel)
@@ -612,7 +615,7 @@ for(int L=tlevel+1; L<=vlevel; L++) prom += (prom=="" ? "" : ",") + RANKS[L];
 string demo = ""; // ranks the viewer may DEMOTE the target to: below the target's current (moderator+, owner protected)
 if(other and vlevel>=1 and tlevel<=vlevel and tlevel>=1 and !is_owner(players[ti].name))
 for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
-send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cbanned+" "+cwarn + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
+send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cbanned+" "+cwarn+" "+cnotify + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
 }
 void on_menu_result(int player_index, string id, int choice)
 {

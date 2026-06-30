@@ -436,17 +436,18 @@ void handle_playerinfo(string message)
 	int p8 = string_contains(r7, "\n", 1); if(p8 < 0) return;
 	string title = r7.substr(0, p8);
 	string body = r7.substr(p8 + 1);
-	string[] fl = string_split(flagline, " ", true); // "kick ban banned warn"
+	string[] fl = string_split(flagline, " ", true); // "kick ban banned warn notify"
 	bool can_kick = (fl.length() > 0 and fl[0] == "1");
 	bool can_ban = (fl.length() > 1 and fl[1] == "1");
 	bool is_banned = (fl.length() > 2 and fl[2] == "1");
 	bool can_warn = (fl.length() > 3 and fl[3] == "1");
+	bool can_notify = (fl.length() > 4 and fl[4] == "1");
 	bool can_promote = (prom != "");
 	bool can_demote = (demo != "");
 	form.reset();
 	form.create_window(title, false, false, false);
 	int infobox = form.create_input_box("Player information", body, read_only: true, multiline: true);
-	int mutebox = -1, pmbtn = -1, kickbtn = -1, banbtn = -1, prombtn = -1, demobtn = -1, warnbtn = -1;
+	int mutebox = -1, pmbtn = -1, kickbtn = -1, banbtn = -1, prombtn = -1, demobtn = -1, notifybtn = -1, warnbtn = -1;
 	if(!is_self)
 	{
 		mutebox = form.create_checkbox("&mute this player", already_ignored); // Alt+M: personal ignore of their chat and voice
@@ -455,6 +456,7 @@ void handle_playerinfo(string message)
 		if(can_ban) banbtn = form.create_button(is_banned ? "&unban this player" : "&ban this player"); // Alt+U / Alt+B
 		if(can_promote) prombtn = form.create_button("p&romote this player"); // Alt+R
 		if(can_demote) demobtn = form.create_button("&demote this player"); // Alt+D
+		if(can_notify) notifybtn = form.create_button("&notify this player"); // Alt+N
 		if(can_warn) warnbtn = form.create_button("&warn this player"); // Alt+W
 	}
 	int infoclose = form.create_button("&close", false, true);
@@ -472,6 +474,7 @@ void handle_playerinfo(string message)
 		if(can_ban and form.is_pressed(banbtn)) { action = is_banned ? "unban" : "ban"; break; }
 		if(can_promote and form.is_pressed(prombtn)) { action = "promote"; break; }
 		if(can_demote and form.is_pressed(demobtn)) { action = "demote"; break; }
+		if(can_notify and form.is_pressed(notifybtn)) { action = "notify"; break; }
 		if(can_warn and form.is_pressed(warnbtn)) { action = "warn"; break; }
 		if(form.is_pressed(infoclose)) break;
 	}
@@ -504,6 +507,12 @@ void handle_playerinfo(string message)
 	}
 	else if(action == "promote") card_rank_command("Promote " + uname + " to which rank?", "/promote " + uname + " ", prom);
 	else if(action == "demote") card_rank_command("Demote " + uname + " to which rank?", "/demote " + uname + " ", demo);
+	else if(action == "notify")
+	{
+		string note = vd.input_box("Notify " + uname, "Type the notification message.", "");
+		if(note != "") comparse("/notifyplayer " + uname + " " + note);
+		else speak("canceled");
+	}
 	else if(action == "warn")
 	{
 		setupmenu();
