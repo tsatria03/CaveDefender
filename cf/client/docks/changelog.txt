@@ -1,4 +1,5 @@
 New in 2.9.
+In an environment versus player game, the round timer now counts down only while you can actually attack, so the rest windows where your swings ricochet no longer eat into your time. Rounds also begin with more time than before, and each round you clear adds ten more seconds, so a game no longer ends as quickly.
 The L key now works inside a game too, reading out who is in the lobby, the same as it already does from a room or the lobby itself.
 The voice key now behaves the same whether or not hold to talk is on: both ways are limited to one start or stop every half second, so quickly tapping the key can no longer spam the voice on and off sounds.
 Voice chat no longer drives your ping up or drops the connection when two or more people talk at once. Voice is now sent in a way that simply skips the occasional lost moment of audio instead of forcing the whole connection to resend it, so talking stays smooth even over a slower link.

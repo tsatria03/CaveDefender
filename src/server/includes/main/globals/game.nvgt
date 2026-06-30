@@ -336,7 +336,7 @@ return 75;
 // EVP round timer (seconds the attackers have to bring all four walls down once the wave starts), by map
 // size. Constant per size -- the escalation comes from the defenders (more builders each round), not a
 // shrinking clock. Tunable.
-int evp_round_seconds(int size) { if(size<=25) return 60; if(size<=50) return 100; return 160; }
+int evp_round_seconds(int size) { if(size<=25) return 75; if(size<=50) return 120; return 180; }
 // Set a game's round phase and tell everyone in it, so their clients announce the change and run the
 // build countdown. The seconds value is the build duration when entering build, 0 otherwise.
 void set_game_phase(int gindex, string phase)
@@ -384,7 +384,7 @@ if(games[gindex].mode=="evp")
 // (escalation is per round cleared -- more builders -- not per segment). Start the round timer too (wavetimer
 // counts against evp_round_secs).
 games[gindex].wave_number = games[gindex].evp_rounds_cleared + 1; // 1-based current round
-games[gindex].evp_round_secs = evp_round_seconds(games[gindex].size);
+games[gindex].evp_round_secs = evp_round_seconds(games[gindex].size) + games[gindex].evp_rounds_cleared * 10; // +10s per round already cleared, so escalation lives in the bot count, not a shrinking clock
 games[gindex].wave_attacking = true;
 games[gindex].wave_cycletimer.restart();
 games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
@@ -436,7 +436,7 @@ if(gi<0 or gi>=int(games.length()) or !games[gi].paused) return;
 games[gi].paused=false;
 games[gi].phasetimer.resume();
 games[gi].woodtimer.resume();
-games[gi].wavetimer.resume();
+if(!(games[gi].mode=="evp" and games[gi].phase=="wave" and !games[gi].wave_attacking)) games[gi].wavetimer.resume(); // EVP: leave the round clock frozen if we unpaused mid-rest; the next attack window resumes it
 games[gi].wave_cycletimer.resume();
 for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.resume();
@@ -495,6 +495,11 @@ if(games[i].mode=="evp")
 {
 // EVP: just flip the window. No bot escalation (that's per round cleared) and the round number is fixed for
 // the round, so neither climbs here. The attack handler and builders gate their actions on wave_attacking.
+// The round clock only runs while you can actually attack: freeze it during the rest window (you're locked
+// out -- swings only ricochet) and resume it when the attack window reopens, so rest downtime never burns
+// your time limit. evp_round_secs is therefore a budget of real attacking seconds, not wall-clock.
+if(games[i].wave_attacking) games[i].wavetimer.resume();
+else games[i].wavetimer.pause();
 }
 else
 {
