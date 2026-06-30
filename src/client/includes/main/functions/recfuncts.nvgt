@@ -60,21 +60,25 @@ void recordcheck()
 		want = key_down(KEY_O); // push-to-talk: stream while held
 	else
 	{
-		if(key_pressed(KEY_O) and spamtimer.elapsed >= spamtime) { voice_toggle_on = !voice_toggle_on; spamtimer.restart(); }
-		want = voice_toggle_on; // toggle: each press flips it
+		if(key_pressed(KEY_O)) voice_toggle_on = !voice_toggle_on; // toggle: each press flips the intent
+		want = voice_toggle_on;
 	}
 
-	// Start/stop transitions: play the cue and drop any audio captured while idle so it doesn't burst out.
-	if(want and !recording)
+	// Start/stop transitions, rate-limited to spamtime in BOTH modes so mashing the key can't spam the cue
+	// or the stream: a state change only lands once spamtime has passed since the last one. (Previously only
+	// toggle mode was throttled, on its intent flip; push-to-talk could be spammed freely.)
+	if(want and !recording and spamtimer.elapsed >= spamtime)
 	{
 		recording = true;
 		p.play_stationary("sounds/ui/misc/von.ogg", false);
 		voice_mic.flush_capture();
+		spamtimer.restart();
 	}
-	else if(!want and recording)
+	else if(!want and recording and spamtimer.elapsed >= spamtime)
 	{
 		recording = false;
 		p.play_stationary("sounds/ui/misc/voff.ogg", false);
+		spamtimer.restart();
 	}
 	if(!recording) { voice_mic.flush_capture(); return; } // idle: keep the mic buffer from growing while we're not talking
 

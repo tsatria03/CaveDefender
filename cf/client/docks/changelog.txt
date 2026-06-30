@@ -1,4 +1,5 @@
 New in 2.9.
+The voice key now behaves the same whether or not hold to talk is on: both ways are limited to one start or stop every half second, so quickly tapping the key can no longer spam the voice on and off sounds.
 Voice chat no longer drives your ping up or drops the connection when two or more people talk at once. Voice is now sent in a way that simply skips the occasional lost moment of audio instead of forcing the whole connection to resend it, so talking stays smooth even over a slower link.
 You can now press F6 to open a players menu that lists everyone on the server, each shown with their away status, rank, and name. Choose a player to open a read-only information card about them, with their username, nickname, pronouns, channel, away state, location, and game version; staff also see the player's mute, ban, and warning details.
 Choosing which saved server or account to use has moved into the Server storage and Account storage menus, where it is now a Select option, instead of being a separate item in the connection menu.
