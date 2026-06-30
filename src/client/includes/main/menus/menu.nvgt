@@ -389,12 +389,12 @@ string current_account_label()
 // <username>". The choice is saved as the last/active account so it sticks across sessions. Mirrors loadservermenu.
 void loadaccountmenu()
 {
-	if(accounts.length()==0) { dlgmessage("There are no saved accounts. Press enter to continue."); return; }
+	if(accounts.length()==0) { dlgmessage("There are no saved accounts to use. Press enter to continue."); return; }
 	setupmenu(false);
 	for(uint i=0; i<accounts.length(); i++)
 		m.add_item(account_list_text(i), ""+i);
 	m.add_item("back", "back");
-	m.intro_text="Choose an account to use.";
+	m.intro_text="Choose an account to use in the game.";
 	int mres=m.run();
 	string sel=mres<0?"back":m.selected_item_id;
 	if(sel=="back") { speak("canceled"); return; }

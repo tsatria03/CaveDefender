@@ -977,6 +977,9 @@ void netloop_impl()
 			// back so you can rebuild. EVP (reversed): an attack window is your turn to smash, a rest window locks
 			// you out (your swings only ricochet) while the builders repair.
 			wave_attacking = (parsed[1] == "1");
+			// EVP: the server only runs the round clock during attack windows now, so keep our local countdown
+			// (used by the Tab readout) in step -- pause it during a rest window, resume it when attack reopens.
+			if (game_outside) { if (wave_attacking) game_phasetimer.resume(); else game_phasetimer.pause(); }
 			if (parsed[1] == "1")
 			{
 				wave_number = (parsed.length() > 2) ? string_to_number(parsed[2]) : wave_number + 1; // round number rides on the message
