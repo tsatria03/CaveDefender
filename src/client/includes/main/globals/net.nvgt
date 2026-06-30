@@ -380,30 +380,58 @@ void handle_helptext(string message)
 		dockread(which + " help.txt", content);
 	}
 }
-// The F6 player info card: "playerinfo\n<title>\n<body>". Shown inline in a read-only, multiline input box
-// (the same widget dockread builds, but with our own window title). The body's lines are already CRLF-
-// separated. The loop pumps net_keepalive() so the connection survives while you read (per the blocking-UI
-// note above); it's gated through the deferral check at the call site so it never stacks on another modal.
+// The F6 player info card: "playerinfo\n<username>\n<ignored>\n<is_self>\n<title>\n<body>". Shown inline in a
+// read-only, multiline input box (the same widget dockread builds, but with our own title), plus -- unless it's
+// your own card -- a Mute checkbox (Alt+M, a personal ignore of their chat and voice) and a Private message
+// button (Alt+P). The body's lines are already CRLF-separated. The loop pumps net_keepalive() so the connection
+// survives while it's open; it's gated through the deferral check at the call site so it never stacks on another
+// modal. The mute checkbox's change is persisted server-side on close (ignore/unignore).
 void handle_playerinfo(string message)
 {
-	int nl1 = string_contains(message, "\n", 1);
-	if(nl1 < 0) return;
-	string rest = message.substr(nl1 + 1);
-	int nl2 = string_contains(rest, "\n", 1);
-	if(nl2 < 0) return;
-	string title = rest.substr(0, nl2);
-	string body = rest.substr(nl2 + 1);
+	int p1 = string_contains(message, "\n", 1); if(p1 < 0) return;
+	string r1 = message.substr(p1 + 1);
+	int p2 = string_contains(r1, "\n", 1); if(p2 < 0) return;
+	string uname = r1.substr(0, p2);
+	string r2 = r1.substr(p2 + 1);
+	int p3 = string_contains(r2, "\n", 1); if(p3 < 0) return;
+	bool already_ignored = (r2.substr(0, p3) == "1");
+	string r3 = r2.substr(p3 + 1);
+	int p4 = string_contains(r3, "\n", 1); if(p4 < 0) return;
+	bool is_self = (r3.substr(0, p4) == "1");
+	string r4 = r3.substr(p4 + 1);
+	int p5 = string_contains(r4, "\n", 1); if(p5 < 0) return;
+	string title = r4.substr(0, p5);
+	string body = r4.substr(p5 + 1);
 	form.reset();
 	form.create_window(title, false, false, false);
 	int infobox = form.create_input_box("Player information", body, read_only: true, multiline: true);
+	int mutebox = -1, pmbtn = -1;
+	if(!is_self)
+	{
+		mutebox = form.create_checkbox("&mute this player", already_ignored); // Alt+M: personal ignore of their chat and voice
+		pmbtn = form.create_button("&private message this player"); // Alt+P
+	}
 	int infoclose = form.create_button("&close", false, true);
 	form.focus(infobox);
+	bool do_pm = false;
+	bool now_ignored = already_ignored; // tracked live below; is_checked only works while the form is still active
 	while(true)
 	{
 		wait(5);
 		form.monitor();
 		net_keepalive(); // keep the network serviced so enet doesn't time out while the card is open
-		if(form.is_pressed(infoclose)) return;
+		if(!is_self and mutebox > -1) now_ignored = form.is_checked(mutebox); // read the checkbox each frame, before any close deactivates the form
+		if(!is_self and form.is_pressed(pmbtn)) { do_pm = true; break; }
+		if(form.is_pressed(infoclose)) break;
+	}
+	// Persist any change to the mute checkbox (server stores it on the account) before we leave the card.
+	if(!is_self and now_ignored != already_ignored) send(0, (now_ignored ? "ignore " : "unignore ") + uname, 0, true);
+	// The Private message button: ask for the message, then send it as a normal /pm to this player's username.
+	if(do_pm)
+	{
+		string pm = vd.input_box("Private message to " + uname, "Type your private message.", "");
+		if(pm != "") comparse("/pm " + uname + " " + pm);
+		else speak("canceled");
 	}
 }
 // A server-driven flow needs a typed value. Format: askinput\n<prompt>\n<command prefix>\n<mask>. We show a

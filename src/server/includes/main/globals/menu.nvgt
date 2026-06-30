@@ -591,7 +591,12 @@ body += "\r\nMute status: " + player_mute_phrase(ti);
 body += "\r\nBan status: " + banline;
 body += "\r\nWarnings: " + warning_count(players[ti].name);
 }
-send(peer, "playerinfo\n" + title + "\n" + body, 0, true);
+// Header lines for the client's interactive controls: the target's canonical username (for the mute/PM
+// actions), whether the viewer already ignores them (the checkbox's starting state), and whether this is the
+// viewer's own card (so the client hides the mute/PM controls -- you can't mute or PM yourself).
+int ign = player_ignores(viewer_index, players[ti].name) ? 1 : 0;
+int self = (viewer_index == ti) ? 1 : 0;
+send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + title + "\n" + body, 0, true);
 }
 void on_menu_result(int player_index, string id, int choice)
 {
