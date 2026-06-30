@@ -133,7 +133,7 @@ buffercheck();
 			else if(current_room != 0) announce_members("scopemembers", "in this room");
 			else announce_rooms();
 		}
-		if (key_pressed(KEY_L) and !in_game) announce_members("scopemembers 0", "in the lobby");
+		if (key_pressed(KEY_L)) announce_members("scopemembers 0", "in the lobby"); // works from anywhere, including inside a game, since it asks for the lobby scope (0) explicitly
 		if (key_pressed(KEY_G))
 		{
 			if(in_game) announce_members("scopemembers", "in this game");
