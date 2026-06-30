@@ -116,7 +116,7 @@ This game does **not** support swappable sound packs (see memory) — paths poin
 
 The client docks live under **`cf/client/docks/`**: `changelog.txt`, `credits.txt`, `readme.txt`, `todo list.txt`. There is no longer an in-game documentation viewer (the menu was removed), but **`changelog.txt` is still the source of truth for what shipped** and is maintained on every release.
 
-There is **also a server-side `cf/server/docks/`** (`player help.txt`, `staff help.txt`), copied into the server build by `build/tools.py` (no pragma). Help is **server-authoritative**: `/help player` / `/help staff` (client) → server reads `docks/<which> help.txt` (cwd-relative under `cf/server`) and sends `helptext <which>\n<content>` → the client shows it with `dockread(title, text)` (the text overload added so received content needs no temp file). Keep these two files updated when commands change, since they document every command and its rank.
+There is **also a server-side `cf/server/docks/`**, organized into subfolders: `help/` (`player.txt`, `staff.txt` — the help pages) and `rules/` (`player.txt`, `staff.txt` — reserved, not wired to anything yet). The whole `docks/` tree is copied into the server build by `build/tools.py` (no pragma), so new subfolders ship automatically. Help is **server-authoritative**: `/help player` / `/help staff` (client) → server reads `docks/help/<which>.txt` (cwd-relative under `cf/server`) and sends `helptext <which>\n<content>` → the client shows it with `dockread(title, text)` (the text overload added so received content needs no temp file). Keep the two help files updated when commands change, since they document every command and its rank.
 
 ## Rules kept in memory (not inline, to keep this file lean)
 

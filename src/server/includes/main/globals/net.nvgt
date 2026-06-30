@@ -918,17 +918,39 @@ else if(which=="staff" and rank_level(players[index].rank)<1)
 {
 // Staff help is staff-only; a non-staff request is silently ignored.
 }
-else if(!file_exists("docks/"+which+" help.txt"))
+else if(!file_exists("docks/help/"+which+".txt"))
 {
 send(event.peer_id, "The "+which+" help page is missing on the server.", 0,true);
 }
 else
 {
 file hf;
-hf.open("docks/"+which+" help.txt", "rb");
+hf.open("docks/help/"+which+".txt", "rb");
 string content=hf.read();
 hf.close();
 send(event.peer_id, "helptext "+which+"\n"+content, 0,true);
+}
+}
+else if(parsed[0]=="rules" and index>-1 and parsed.length()>1)
+{
+string which=string_to_lower_case(parsed[1]);
+// Both rules pages are open to everyone (unlike the staff help): players can read the staff rules too, so they
+// can see the standards staff are held to and hold them accountable.
+if(which!="player" and which!="staff")
+{
+send(event.peer_id, "No rules page named "+parsed[1]+". Try player or staff.", 0,true);
+}
+else if(!file_exists("docks/rules/"+which+".txt"))
+{
+send(event.peer_id, "The "+which+" rules page is missing on the server.", 0,true);
+}
+else
+{
+file rf;
+rf.open("docks/rules/"+which+".txt", "rb");
+string content=rf.read();
+rf.close();
+send(event.peer_id, "rulestext "+which+"\n"+content, 0,true);
 }
 }
 else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
