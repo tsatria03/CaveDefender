@@ -140,7 +140,7 @@ buffercheck();
 			else if(current_room != 0) announce_games("roomgamemembers", "in this room");
 			else announce_games("allgamemembers", "on the server");
 		}
-		if (in_game and !watching and !game_outside and key_pressed(KEY_I)) speak("you have " + my_wood + (my_wood == 1 ? " piece" : " pieces") + " of wood."); // spectators carry no wood; EVP players carry none either (bots use the wood)
+		if (in_game and !watching and !game_outside and key_pressed(KEY_I)) speak(wood_readout()); // spectators carry no wood; EVP players carry none either (bots use the wood)
 		if (in_game and key_pressed(KEY_N)) speak(wall_phrase_full("north", wall_north));
 		if (in_game and key_pressed(KEY_E)) speak(wall_phrase_full("east", wall_east));
 		if (in_game and key_pressed(KEY_S)) speak(wall_phrase_full("south", wall_south));

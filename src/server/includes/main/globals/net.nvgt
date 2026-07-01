@@ -464,7 +464,7 @@ if(players[i].room_id==players[pindex].room_id) send(players[i].peer_id, pos_msg
 // Send a player their current wood count so their client's I key can report it.
 void send_wood_count(int pindex)
 {
-send(players[pindex].peer_id, "wood "+players[pindex].inv.count("wood"), 0, true);
+send(players[pindex].peer_id, "wood "+players[pindex].inv.count("small_wood")+" "+players[pindex].inv.count("medium_wood")+" "+players[pindex].inv.count("large_wood"), 0, true);
 }
 // The four cavern wall strengths (as percents) for a game, for the client's N/E/S/W/D keys.
 string wall_strength_msg(int gameid)
@@ -506,7 +506,7 @@ if(dx <= radius and dy <= radius)
 int iid = items[i].id;
 picked_type = items[i].type;
 items.remove_at(i);
-players[pindex].inv.give("wood", 1);
+players[pindex].inv.give(picked_type, 1); // store the actual size so the I readout can break it down
 got++;
 for(uint m=0; m<players.length(); m++)
 if(players[m].room_id == rid) send(players[m].peer_id, "removeitem "+iid, 0, true);
@@ -736,7 +736,7 @@ int gi = get_game_index(players[index].room_id);
 if(gi < 0) {} // not in a game
 else if(games[gi].phase != "build" and games[gi].phase != "wave") send(event.peer_id, "You can only reinforce during a round.", 0,true);
 else if(games[gi].phase == "wave" and games[gi].wave_attacking) send(event.peer_id, "You can't reinforce while the enemies are attacking.", 0,true);
-else if(players[index].inv.count("wood") < 1) send(event.peer_id, "You don't have any wood.", 0,true);
+else if(wood_total(players[index].inv) < 1) send(event.peer_id, "You don't have any wood.", 0,true);
 else
 {
 string dir = wall_in_reach(players[index].x, players[index].y, games[gi].size);
@@ -748,7 +748,7 @@ if(wi > -1 and walls[wi].health <= 0) send(event.peer_id, "That wall is destroye
 else if(wi > -1 and walls[wi].health >= walls[wi].maxhealth * wall_overbuild_cap) send(event.peer_id, "This wall can't be reinforced any further.", 0,true);
 else if(wi > -1)
 {
-players[index].inv.take("wood", 1);
+spend_wood(players[index].inv, 1); // one piece of any size (all sizes reinforce the same)
 int gain = random(10, 20);
 repair_wall(wi, gain);
 send_wood_count(index);

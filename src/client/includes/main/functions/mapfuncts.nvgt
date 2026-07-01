@@ -132,3 +132,18 @@ string spoken;
 for(uint i=0; i<lines.length(); i++) spoken += (i>0 ? " " : "") + lines[i];
 speak(spoken);
 }
+// The I-key inventory readout: your wood broken down by size, e.g. "You have 14 small pieces of wood, 5 medium
+// pieces of wood, and 22 large pieces of wood." Sizes you have none of are left out; no wood at all reads plainly.
+string wood_readout()
+{
+string[] parts;
+if(my_wood_small > 0) parts.insert_last(my_wood_small + (my_wood_small==1 ? " small piece of wood" : " small pieces of wood"));
+if(my_wood_medium > 0) parts.insert_last(my_wood_medium + (my_wood_medium==1 ? " medium piece of wood" : " medium pieces of wood"));
+if(my_wood_large > 0) parts.insert_last(my_wood_large + (my_wood_large==1 ? " large piece of wood" : " large pieces of wood"));
+if(parts.length() == 0) return "You have no wood.";
+string joined;
+if(parts.length() == 1) joined = parts[0];
+else if(parts.length() == 2) joined = parts[0] + " and " + parts[1];
+else joined = parts[0] + ", " + parts[1] + ", and " + parts[2];
+return "You have " + joined + ".";
+}
