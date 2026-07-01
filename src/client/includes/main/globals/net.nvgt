@@ -376,7 +376,8 @@ void handle_helptext(string message)
 	int nl = string_contains(message, "\n", 1);
 	if(nl > 0)
 	{
-		string which = message.substr(9, nl - 9);
+		int sp = string_contains(message, " ", 1); // derive the prefix length from the actual space, not a hand-counted offset
+		string which = message.substr(sp + 1, nl - sp - 1);
 		string content = message.substr(nl + 1);
 		dockread(which + " help", content); // title only; the received text is shown directly (no file read)
 	}
@@ -387,7 +388,8 @@ void handle_rulestext(string message)
 	int nl = string_contains(message, "\n", 1);
 	if(nl > 0)
 	{
-		string which = message.substr(10, nl - 10); // skip "rulestext "
+		int sp = string_contains(message, " ", 1); // derive the prefix length from the actual space, not a hand-counted offset
+		string which = message.substr(sp + 1, nl - sp - 1);
 		string content = message.substr(nl + 1);
 		dockread(which + " rules", content);
 	}
@@ -581,6 +583,7 @@ void netloop_impl()
 		// space after the command word, so splitting the whole message on spaces would glue the
 		// command to the next line's first field ("scopememberlist\nAlice" instead of "scopememberlist").
 		string[] firstline = string_split(message, "\n", true);
+		if (firstline.length() == 0) return; // empty/malformed packet: bail before firstline[0]/parsed[0] index past the end
 		string[] parsed = string_split(firstline[0], " ", true);
 		if (message == "ping_response")
 		{
@@ -602,18 +605,18 @@ void netloop_impl()
 			p.play_stationary("sounds/ui/misc/newchar.ogg", false);
 			add_buffer_item("alerts", parsed[1] + " just created a new account");
 		}
-		else if (parsed[0] == "playerjoinedgame" and message.length() > 17)
+		else if (parsed[0] == "playerjoinedgame" and message.length() > parsed[0].length()+1)
 		{
 			// Someone else joined the game you're in: play the join cue and note who (rank-aware) in the player
 			// events buffer. The name may contain a space (rank prefix), so take everything after the command.
 			p.play_stationary("sounds/ui/misc/joingame.ogg", false);
-			add_buffer_item("player events", message.substr(17) + " joined the game.");
+			add_buffer_item("player events", message.substr(parsed[0].length()+1) + " joined the game.");
 		}
-		else if (parsed[0] == "event")
+		else if (parsed[0] == "event" and message.length() > parsed[0].length()+1)
 		{
 			// A third-person lifecycle notice about another player (room/game created, left, stopped, kicked,
 			// etc.), pre-built by the server with the rank-aware name. Lands in the player events buffer.
-			add_buffer_item("player events", message.substr(6));
+			add_buffer_item("player events", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "offline" and parsed.length() > 1)
 		{
@@ -659,10 +662,10 @@ void netloop_impl()
 		{
 			add_buffer_item("misc", message);
 		}
-		else if (parsed[0] == "misc" and message.length() > 5)
+		else if (parsed[0] == "misc" and message.length() > parsed[0].length()+1)
 		{
 			// Server feedback routed to the misc buffer (and spoken), e.g. command confirmations.
-			add_buffer_item("misc", message.substr(5));
+			add_buffer_item("misc", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "roominvite")
 		{
@@ -677,18 +680,18 @@ void netloop_impl()
 			p.play_stationary("sounds/ui/misc/alert.ogg", false);
 			add_buffer_item("misc", "Your invitation has expired.");
 		}
-		else if (parsed[0] == "alert" and message.length() > 6)
+		else if (parsed[0] == "alert" and message.length() > parsed[0].length()+1)
 		{
 			// Generic server announcement → alerts buffer, with the standard alert cue (used by alerts that
 			// don't carry their own dedicated sound, e.g. mute notices and nickname changes).
 			p.play_stationary("sounds/ui/misc/alert.ogg", false);
-			add_buffer_item("alerts", message.substr(6));
+			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
-		else if (parsed[0] == "alertsilent" and message.length() > 12)
+		else if (parsed[0] == "alertsilent" and message.length() > parsed[0].length()+1)
 		{
 			// Like "alert" but with no cue of its own: a notice into the alerts buffer when a shared sound has
 			// already been played for everyone (e.g. the MOTD change, where newmotd.ogg is the common cue).
-			add_buffer_item("alerts", message.substr(12));
+			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "flagswitch" and parsed.length() > 1)
 		{
@@ -889,9 +892,9 @@ void netloop_impl()
 			else if(parsed[1] == "demoted") p.play_stationary("sounds/ui/misc/demote.ogg", false);
 			add_buffer_item("misc", "You have been " + parsed[1] + " from " + parsed[2] + " to " + parsed[3] + ".");
 		}
-		else if (parsed[0] == "stafflist")
+		else if (parsed[0] == "stafflist" and message.length() > parsed[0].length()+1)
 		{
-			add_buffer_item("misc", message.substr(10));
+			add_buffer_item("misc", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "helptext")
 		{
@@ -925,17 +928,17 @@ void netloop_impl()
 		{
 			// The server relays one of its own commands back through us to run (a menu choice that needs no
 			// typed input). Keeps the decision server-side while reusing the existing command handlers.
-			if (message.length() > 11) send(0, message.substr(11), 0, true);
+			if (message.length() > parsed[0].length()+1) send(0, message.substr(parsed[0].length()+1), 0, true);
 		}
-		else if (parsed[0] == "restartnotice")
+		else if (parsed[0] == "restartnotice" and message.length() > parsed[0].length()+1)
 		{
 			p.play_stationary("sounds/ui/misc/alert.ogg", false);
-			add_buffer_item("alerts", message.substr(14));
+			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "notify" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/notify.ogg", false);
-			add_buffer_item("alerts", message.substr(7));
+			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "muted" and parsed.length() > 2)
 		{
@@ -1185,15 +1188,15 @@ void netloop_impl()
 			have_public_room = (parsed[1] == "1");
 			have_private_room = (parsed[2] == "1");
 		}
-		else if (parsed[0] == "staffmsg")
+		else if (parsed[0] == "staffmsg" and message.length() > parsed[0].length()+1)
 		{
 			p.play_stationary("sounds/ui/misc/staffchat.ogg", false);
-			add_buffer_item("staff chats", message.substr(9));
+			add_buffer_item("staff chats", message.substr(parsed[0].length()+1));
 		}
-		else if (parsed[0] == "localmsg")
+		else if (parsed[0] == "localmsg" and message.length() > parsed[0].length()+1)
 		{
 			p.play_stationary("sounds/ui/misc/localchat.ogg", false);
-			add_buffer_item("local chats", message.substr(9));
+			add_buffer_item("local chats", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "roomkicked" and parsed.length() > 2)
 		{

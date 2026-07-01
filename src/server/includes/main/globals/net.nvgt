@@ -28,6 +28,26 @@ string get_event_message()
 if(encryption) return string_decrypt(event.message, "rscs123");
 else return event.message;
 }
+// The standard "target not found" reply for a player-targeting command that requires an ONLINE target: a
+// registered-but-offline account gets "not online", an unknown name gets "does not exist". (/unban is the one
+// exception -- it's offline-capable, so it sends only the "does not exist" half directly.)
+void reply_target_not_found(int peer_id, string name)
+{
+if(account_exists(name)) send(peer_id, "misc This player is not online.", 0, true);
+else send(peer_id, "misc This player does not exist.", 0, true);
+}
+// Shared validation for /mute and /unmute (their only difference is the action body). Resolves the online
+// target, validates the channel, and applies the at-or-below-rank gate, replying with the right error (verb =
+// "mute"/"unmute") on any failure. Returns the target's roster index on success, or -1 if it already sent an
+// error and the caller should stop.
+int resolve_mute_target(int actor, string tname, string channel, string verb)
+{
+int ti = get_player_index_from(tname); // online-only, by username or nickname
+if(ti < 0) { reply_target_not_found(event.peer_id, tname); return -1; }
+if(channel != "all" && !valid_mute_channel(channel)) { send(event.peer_id, "Unknown channel. Use global, local, voice, or all.", 0, true); return -1; }
+if(rank_level(players[ti].rank) > rank_level(players[actor].rank)) { send(event.peer_id, "You can't "+verb+" someone above your own rank.", 0, true); return -1; }
+return ti;
+}
 string format_uptime(int uptime_seconds)
 {
     int days = uptime_seconds / 86400;
@@ -259,12 +279,12 @@ for(uint i=0; i<files.length(); i++)
 {
 string acct=files[i];
 if(acct=="" or acct=="." or acct=="..") continue;
-dictionary@ d=load_account(acct);
-string dispname="", rank="";
-d.get("name", dispname);
-d.get("rank", rank);
-if(dispname=="") dispname=acct;
+// Read just the rank first and skip non-staff before touching the rest of the account -- most accounts aren't
+// staff, so this avoids a full 5-field load_account on every folder each time /staff runs.
+string rank=read_field(acct, "rank", "player");
 if(!is_staff(rank)) continue;
+string dispname=read_field(acct, "username");
+if(dispname=="") dispname=acct;
 int oi=get_online_index(dispname);
 string status=(oi>-1)? "Online" : "Offline";
 string afkp=(oi>-1 and players[oi].afk)? "AFK " : "";
@@ -586,7 +606,12 @@ if(event.type==event_receive and event.channel==0)
 string message=get_event_message();
 string[] parsed=string_split(message, " ", true);
 int index=get_player_index(event.peer_id);
-if(message=="ping_request")
+if(parsed.length()==0)
+{
+// empty or malformed packet: an empty decrypted message splits to a zero-length array, so bail before any
+// parsed[0] branch below can index past the end and crash the whole server loop.
+}
+else if(message=="ping_request")
 {
 send(event.peer_id, "ping_response", 0, true);
 }
@@ -1045,7 +1070,7 @@ int gid=create_game(players[index].room_id, players[index].name, event.peer_id, 
 players[index].pregame_room = players[index].room_id; // the host started from their room; leaving the game returns them there
 send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+mode+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
 set_room_scope(index, gid);
-send(event.peer_id, "gamephase idle 0", 0,true);
+send(event.peer_id, "gamephase idle 0 0", 0,true); // uniform 3-field gamephase (no active round, so wave 0)
 // Only open games are joinable, so only those announce the "you can join" notice (mode-aware: "an EVP game" / "a PVE game").
 if(!solo) broadcast_event(display_name_flagged(index)+" started "+(mode=="evp"?"an":"a")+" "+mode_tag(mode)+" game. You can join it from the room menu.", event.peer_id);
 }
@@ -1527,8 +1552,7 @@ if(!player_ignores(target_index, players[index].name)) send(players[target_index
                     }
 else
 {
-                        if(account_exists(target_user)) send(event.peer_id, "misc This player is not online.", 0, true);
-                        else send(event.peer_id, "misc This player does not exist.", 0, true);
+                        reply_target_not_found(event.peer_id, target_user);
                     }
                 }
                 else if(parsed[0] == "/me" && parsed.length() >= 2)
@@ -1566,8 +1590,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         int ti = get_player_index_from(parsed[1]);
                         if(ti < 0)
                         {
-                            if(account_exists(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
-                            else send(event.peer_id, "misc This player does not exist.", 0, true);
+                            reply_target_not_found(event.peer_id, parsed[1]);
                         }
                         else apply_nickname(ti, parsed[2], event.peer_id, false);
                     }
@@ -1597,8 +1620,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                 broadcast_pos(ti);
                             }
                         }
-                        else if(account_exists(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
-else send(event.peer_id, "misc This player does not exist.", 0, true);
+                        else reply_target_not_found(event.peer_id, parsed[1]);
                     }
                     else send(event.peer_id, "Usage: /afk username", 0, true);
                 }
@@ -1622,8 +1644,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else
                         {
-                            if(account_exists(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
-else send(event.peer_id, "misc This player does not exist.", 0, true);
+                            reply_target_not_found(event.peer_id, parsed[1]);
                         }
                     }
                     else
@@ -1648,8 +1669,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(ti < 0)
                         {
-                            if(account_exists(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
-                            else send(event.peer_id, "misc This player does not exist.", 0, true);
+                            reply_target_not_found(event.peer_id, tname);
                         }
                         else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
                         {
@@ -1687,8 +1707,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(ti < 0)
                         {
-                            if(account_exists(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
-                            else send(event.peer_id, "misc This player does not exist.", 0, true);
+                            reply_target_not_found(event.peer_id, tname);
                         }
                         else if(is_owner(players[ti].name))
                         {
@@ -1731,8 +1750,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else
                         {
-                            if(account_exists(parsed[1])) send(event.peer_id, "misc This player is not online.", 0, true);
-else send(event.peer_id, "misc This player does not exist.", 0, true);
+                            reply_target_not_found(event.peer_id, parsed[1]);
                         }
                     }
                     else
@@ -1754,8 +1772,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
                         else if(ti < 0)
                         {
-                            if(account_exists(wname)) send(event.peer_id, "misc This player is not online.", 0, true);
-                            else send(event.peer_id, "misc This player does not exist.", 0, true);
+                            reply_target_not_found(event.peer_id, wname);
                         }
                         else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
                         {
@@ -1794,23 +1811,9 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                 {
                     if(parsed.length() >= 3)
                     {
-                        string tname = parsed[1];
                         string channel = string_to_lower_case(parsed[2]);
-                        int ti = get_player_index_from(tname); // online-only, by username or nickname
-                        if(ti < 0)
-                        {
-                            if(account_exists(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
-                            else send(event.peer_id, "misc This player does not exist.", 0, true);
-                        }
-                        else if(channel != "all" && !valid_mute_channel(channel))
-                        {
-                            send(event.peer_id, "Unknown channel. Use global, local, voice, or all.", 0, true);
-                        }
-                        else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
-                        {
-                            send(event.peer_id, "You can't mute someone above your own rank.", 0, true);
-                        }
-                        else
+                        int ti = resolve_mute_target(index, parsed[1], channel, "mute");
+                        if(ti > -1)
                         {
                             array<string> chans = mute_channels_for(channel);
                             bool allmuted = true;
@@ -1839,23 +1842,9 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                 {
                     if(parsed.length() >= 3)
                     {
-                        string tname = parsed[1];
                         string channel = string_to_lower_case(parsed[2]);
-                        int ti = get_player_index_from(tname); // online-only, by username or nickname
-                        if(ti < 0)
-                        {
-                            if(account_exists(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
-                            else send(event.peer_id, "misc This player does not exist.", 0, true);
-                        }
-                        else if(channel != "all" && !valid_mute_channel(channel))
-                        {
-                            send(event.peer_id, "Unknown channel. Use global, local, voice, or all.", 0, true);
-                        }
-                        else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
-                        {
-                            send(event.peer_id, "You can't unmute someone above your own rank.", 0, true);
-                        }
-                        else
+                        int ti = resolve_mute_target(index, parsed[1], channel, "unmute");
+                        if(ti > -1)
                         {
                             array<string> chans = mute_channels_for(channel);
                             bool anymuted = false;
@@ -1885,8 +1874,7 @@ else send(event.peer_id, "misc This player does not exist.", 0, true);
                         int ti = get_player_index_from(tname); // online-only, by username or nickname
                         if(ti < 0)
                         {
-                            if(account_exists(tname)) send(event.peer_id, "misc This player is not online.", 0, true);
-                            else send(event.peer_id, "misc This player does not exist.", 0, true);
+                            reply_target_not_found(event.peer_id, tname);
                         }
                         else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
                         {

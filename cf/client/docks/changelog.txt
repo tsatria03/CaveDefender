@@ -3,6 +3,7 @@ You can now read the server's rules in game with the /rules command: type /rules
 For server hosts, the help pages have moved into a docks/help subfolder, named player.txt and staff.txt, with a new docks/rules subfolder reserved for later; players see no change beyond a cleaner help window title.
 The readme now includes a full keyboard reference that lists every key the game uses, grouped by purpose.
 The game now comes with a readme that explains how everything works, moving around, chatting, the players menu, rooms, and both game modes. The in-game help, opened with /help, is now just the list of chat commands.
+Updated the todo list file with the latest bug fix and feature improvements made to the game.
 New in 2.9.
 The F6 players menu now shows each player's current language channel beside their name, so you can tell who is on which channel at a glance.
 Staff now have action buttons on a player's information card, opened from the F6 players menu: kick, ban, promote, demote, notify, and warn, each shown only when your rank allows it on that player. Choosing one walks you through any details it needs, such as a ban length, a new rank, a notification, or a warning level and reason, then carries out the same action as the matching command, with the same rules.

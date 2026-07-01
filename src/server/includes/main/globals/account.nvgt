@@ -149,16 +149,27 @@ bool create_account(string name, string password)
 {
 if(account_exists(name)) return false;
 string salt = make_salt();
-write_field(name, "username", name);
-write_field(name, "nickname", name); // display name starts equal to the username
-write_field(name, "language", "English"); // everyone starts on the English channel
-write_field(name, "pronoun", default_pronoun()); // default: the configured they/them option, until the player picks with /pronoun
-write_field(name, "password", password_blob(salt, password));
-write_field(name, "rank", is_owner(name) ? "developer" : "player");
-write_field(name, "pubroom", "");
-write_field(name, "privroom", "");
-write_field(name, "muted", "");
-write_field(name, "banned", "");
+// Write every field, ANDing the results. write_field can fail (disk full, permissions, a locked handle), and
+// the first write already created the folder -- so a partial failure would leave a directory that
+// account_exists() reports as existing (blocking re-registration) but verify_password() rejects (no valid
+// password file), permanently locking the name. So if ANY write fails, delete the half-made folder and return
+// false: the account then simply doesn't exist and the player can try again.
+bool ok = true;
+ok = write_field(name, "username", name) and ok;
+ok = write_field(name, "nickname", name) and ok; // display name starts equal to the username
+ok = write_field(name, "language", "English") and ok; // everyone starts on the English channel
+ok = write_field(name, "pronoun", default_pronoun()) and ok; // default: the configured they/them option, until the player picks with /pronoun
+ok = write_field(name, "password", password_blob(salt, password)) and ok;
+ok = write_field(name, "rank", is_owner(name) ? "developer" : "player") and ok;
+ok = write_field(name, "pubroom", "") and ok;
+ok = write_field(name, "privroom", "") and ok;
+ok = write_field(name, "muted", "") and ok;
+ok = write_field(name, "banned", "") and ok;
+if(!ok)
+{
+if(directory_exists(account_dir(name))) directory_delete(account_dir(name)); // roll back the partial account so the name stays free
+return false;
+}
 return true;
 }
 

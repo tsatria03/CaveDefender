@@ -229,7 +229,7 @@ send(peer, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"so
 set_room_scope(index, games[gi].id);
 int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
 if(rem<0) rem=0;
-send(peer, "gamephase "+games[gi].phase+" "+rem, 0,true);
+send(peer, "gamephase "+games[gi].phase+" "+rem+" "+games[gi].wave_number, 0,true); // 3-field like do_spectate/set_game_phase so a mid-wave joiner sees the real round number, not a defaulted 1
 send_builders_to(peer, games[gi].id); // EVP: give the new arrival the current builder positions for their B locator
 for(uint mj=0; mj<games[gi].members.length(); mj++)
 {
@@ -635,7 +635,7 @@ if(pi > -1) { players[pi].inv.clear(); send_wood_count(pi); } // a fresh round s
 // Redraw the fresh idle cavern for members AND spectators (so watchers see the reset walls too).
 send_to_game(gameid, "gamereset "+int(size));
 recenter_game_members(gi); // server position must match the client's re-centred `me`, or reach checks misfire
-send_to_game(gameid, "gamephase idle 0");
+send_to_game(gameid, "gamephase idle 0 0"); // uniform 3-field gamephase (no active round, so wave 0)
 broadcast_wall_strength(gameid);
 }
 // EVP: the attackers brought all four walls down -- the round is CLEARED. Bump the score, announce it, then
