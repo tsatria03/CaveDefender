@@ -190,7 +190,14 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() < 4) { syntax_error("/warn username level reason"); return; }
 		send(0, text, 1, true);
 	}
-	else if(base == "/afk")
+	else if(base == "/warnings")
+		{
+			// Staff (moderator+) open a read-only view of a player's warning history in the doc reader.
+			if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
+			if(parsed.length() != 2) { syntax_error("/warnings username"); return; }
+			send(0, "getwarnings "+parsed[1], 0, true);
+		}
+		else if(base == "/afk")
 	{
 		// No argument: go AFK yourself via the local countdown (any key cancels it). With a name, it's the
 		// admin+ command to put another player AFK, forwarded to the server like the other staff commands.

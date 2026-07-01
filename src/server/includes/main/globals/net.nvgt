@@ -981,6 +981,18 @@ rf.close();
 send(event.peer_id, "rulestext "+which+"\n"+content, 0,true);
 }
 }
+else if(parsed[0]=="getwarnings" and index>-1 and parsed.length()>1)
+{
+// Staff (moderator+) view a player's saved warning history, read-only, in the client's doc viewer. Works by
+// username for any account online or offline (warnings live on disk, like /unban); non-staff is silently ignored.
+if(rank_level(players[index].rank) < 1) { }
+else if(!account_exists(parsed[1])) send(event.peer_id, "misc This player does not exist.", 0, true);
+else
+{
+string uname = read_field(parsed[1], "username", parsed[1]); // canonical-case username for the viewer title
+send(event.peer_id, "warnstext "+uname+"\n"+format_warnings(parsed[1]), 0, true);
+}
+}
 else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
 {
 on_menu_result(index, parsed[1], int(string_to_number(parsed[2])));

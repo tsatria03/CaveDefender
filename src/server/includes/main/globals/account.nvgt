@@ -103,6 +103,28 @@ string w = read_field(name, "warnings", "");
 if(w == "") return 0;
 return int(string_split(w, "\n", true).length());
 }
+// A human-readable list of a player's warnings for the staff /warnings viewer, one per line:
+// "1. Level 2 by adminname: reason". Reasons may contain the "|" separator, so everything after the second "|"
+// is rejoined as the reason. Returns a friendly line when there are none.
+string format_warnings(string name)
+{
+string w = read_field(name, "warnings", "");
+if(w == "") return "This player has no warnings on record.";
+string[] lines = string_split(w, "\n", true);
+string out = "";
+int shown = 0;
+for(uint i=0; i<lines.length(); i++)
+{
+string[] parts = string_split(lines[i], "|", true);
+if(parts.length() < 3) continue;
+string reason = parts[2];
+for(uint j=3; j<parts.length(); j++) reason += "|" + parts[j]; // a "|" that was part of the reason
+shown++;
+out += (shown>1 ? "\r\n" : "") + shown + ". Level " + parts[0] + " by " + parts[1] + ": " + reason;
+}
+if(out == "") return "This player has no warnings on record.";
+return out;
+}
 // A player's personal ignore list (ignored.usr), one username per line: the people whose chat and voice this
 // player has chosen not to receive. Loaded into the roster at spawn and matched case-insensitively; this is a
 // personal preference, unrelated to staff mutes.
