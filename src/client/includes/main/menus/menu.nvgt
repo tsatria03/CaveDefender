@@ -569,9 +569,9 @@ void settingsmenu()
 		form.add_list_item(tabs, "General");
 		form.add_list_item(tabs, "Game");
 		form.add_list_item(tabs, "Menu");
-		form.add_list_item(tabs, "Speech");
 		form.add_list_item(tabs, "Sound");
-		int tab_general=0, tab_game=1, tab_menu=2, tab_speech=3, tab_sound=4;
+		form.add_list_item(tabs, "Speech");
+		int tab_general=0, tab_game=1, tab_menu=2, tab_sound=3, tab_speech=4;
 		int hvc = form.create_checkbox("Hear your voice when streaming voice messages", hearvoice);
 		form.assign_to_tab(hvc, tabs, tab_game);
 		int hldk = form.create_checkbox("Require holding of voicechat key", int_to_bool(holdkey));
