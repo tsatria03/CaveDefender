@@ -362,10 +362,10 @@ for(uint i=0; i<games[gindex].members.length(); i++)
 int pi=get_player_index(games[gindex].members[i]);
 if(pi<0) continue;
 players[pi].wood_collected=0; // start a fresh ground-pickup tally for this game run
-players[pi].inv.give("wood", random(10, 20));
+give_wood_mix(players[pi].inv, random(10, 20));
 if(players[pi].pending_bonus_wood>0) // milestone reward earned at the last game over: add it to the starting stockpile
 {
-players[pi].inv.give("wood", players[pi].pending_bonus_wood);
+give_wood_mix(players[pi].inv, players[pi].pending_bonus_wood);
 players[pi].pending_bonus_wood=0;
 }
 send_wood_count(pi);
@@ -481,8 +481,9 @@ for(int d=0; d<drops; d++)
 if(wood_count_in(games[i].id) >= wood_cap(games[i].size)) break;
 int wx = random(1, games[i].size-1); // interior only; the 0 and size edges are walls
 int wy = random(1, games[i].size-1);
-int iid = spawn_item(games[i].id, wx, wy, random_wood_type()); // a random size (small/medium/large), each with its own sounds
-send_to_game(games[i].id, "spawnitem "+iid+" wood "+wx+" "+wy); // members + spectators hear the drop
+string wt = random_wood_type(); // a random size (small/medium/large), each with its own sounds
+int iid = spawn_item(games[i].id, wx, wy, wt);
+send_to_game(games[i].id, "spawnitem "+iid+" "+wt+" "+wx+" "+wy); // send the SAME size to the client so its sounds and the D readout match
 }
 }
 // Flip between attacking and resting every half-build-phase. In PVE the bots hammer, then back off so players

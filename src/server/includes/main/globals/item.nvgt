@@ -78,6 +78,21 @@ if(r==1) return "small_wood";
 if(r==2) return "medium_wood";
 return "large_wood";
 }
+// A player's wood is stored per size in their inventory (small_wood/medium_wood/large_wood). The sizes are
+// purely cosmetic -- any piece reinforces the same -- so these helpers treat them as one interchangeable pool.
+int wood_total(inventory@ inv) { return inv.count("small_wood")+inv.count("medium_wood")+inv.count("large_wood"); }
+// Spend `amount` pieces of any size(s) the player has (order doesn't matter, size is cosmetic). False if short.
+bool spend_wood(inventory@ inv, int amount)
+{
+if(wood_total(inv) < amount) return false;
+int left = amount;
+if(left>0 and inv.count("small_wood")>0) { int u=inv.count("small_wood"); if(u>left) u=left; inv.take("small_wood", u); left-=u; }
+if(left>0 and inv.count("medium_wood")>0) { int u=inv.count("medium_wood"); if(u>left) u=left; inv.take("medium_wood", u); left-=u; }
+if(left>0 and inv.count("large_wood")>0) { int u=inv.count("large_wood"); if(u>left) u=left; inv.take("large_wood", u); left-=u; }
+return true;
+}
+// Give `amount` pieces of wood as a random mix of sizes (starting stockpile, milestone bonus).
+void give_wood_mix(inventory@ inv, int amount) { for(int i=0; i<amount; i++) inv.give(random_wood_type(), 1); }
 // Count the wood currently on the ground in a space.
 int wood_count_in(int room_id)
 {
