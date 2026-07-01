@@ -147,8 +147,10 @@ buffers[bufferpos].toggle_mute();
 }
 void next_buffer()
 {
-if(bufferpos>=int(buffers.length())-1) return; // int() before -1 so an empty array gives -1, not a uint wrap
-bufferpos++;
+if(buffers.length()==0) return;
+bool moved=false;
+if(bufferpos<int(buffers.length())-1) { bufferpos++; moved=true; }
+if(!moved and buffers.length()>1) return; // at the last of several categories: hard stop; a lone category re-announces
 spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
 string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
 if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
@@ -156,8 +158,10 @@ speak(binfo, true);
 }
 void previous_buffer()
 {
-if(bufferpos<=0) return;
-bufferpos--;
+if(buffers.length()==0) return;
+bool moved=false;
+if(bufferpos>0) { bufferpos--; moved=true; }
+if(!moved and buffers.length()>1) return; // at the first of several categories: hard stop; a lone category re-announces
 spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
 string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
 if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
@@ -165,8 +169,10 @@ speak(binfo, true);
 }
 void top_buffer()
 {
-if(bufferpos==0) return;
+if(buffers.length()==0) return;
+bool moved=(bufferpos!=0);
 bufferpos=0;
+if(!moved and buffers.length()>1) return; // already at the top of several: hard stop; a lone category re-announces
 spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
 string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
 if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
@@ -174,8 +180,10 @@ speak(binfo, true);
 }
 void bottom_buffer()
 {
-if(buffers.length()==0 or bufferpos==int(buffers.length())-1) return; // empty guard + cast before -1 (no uint underflow)
+if(buffers.length()==0) return;
+bool moved=(bufferpos!=int(buffers.length())-1);
 bufferpos=int(buffers.length())-1;
+if(!moved and buffers.length()>1) return; // already at the bottom of several: hard stop; a lone category re-announces
 spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
 string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
 if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
@@ -189,9 +197,11 @@ if(buffers[bufferpos].items.length()<=0)
 speak("Empty.");
 return;
 }
-// Advance if we can; at the last item, stay put. Either way re-announce the current item so a single-item
-// buffer and edge presses still read out instead of going silent.
-if(buffers[bufferpos].bpos < int(buffers[bufferpos].items.length()-1)) buffers[bufferpos].bpos++;
+// Hard stop at the last item -- no sound, no re-speak -- EXCEPT a single-item buffer, where the key just
+// re-announces it (there's no other item to be blocked from). Same "hard stop" feel as the category keys.
+bool moved=false;
+if(buffers[bufferpos].bpos < int(buffers[bufferpos].items.length()-1)) { buffers[bufferpos].bpos++; moved=true; }
+if(!moved and buffers[bufferpos].items.length()>1) return;
 spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
@@ -203,8 +213,10 @@ if(buffers[bufferpos].items.length()<=0)
 speak("Empty.");
 return;
 }
-// Step back if we can; at the first item, stay put and still re-announce it.
-if(buffers[bufferpos].bpos > 0) buffers[bufferpos].bpos--;
+// Hard stop at the first item -- except a single-item buffer, which just re-announces it.
+bool moved=false;
+if(buffers[bufferpos].bpos > 0) { buffers[bufferpos].bpos--; moved=true; }
+if(!moved and buffers[bufferpos].items.length()>1) return;
 spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
@@ -216,7 +228,9 @@ if(buffers[bufferpos].items.length()==0)
 speak("Empty.");
 return;
 }
+bool moved=(buffers[bufferpos].bpos!=0);
 buffers[bufferpos].bpos=0;
+if(!moved and buffers[bufferpos].items.length()>1) return; // already at the top of several: hard stop; a lone item re-announces
 spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
@@ -228,7 +242,9 @@ if(buffers[bufferpos].items.length()==0)
 speak("Empty.");
 return;
 }
+bool moved=(buffers[bufferpos].bpos!=int(buffers[bufferpos].items.length()-1));
 buffers[bufferpos].bpos=int(buffers[bufferpos].items.length()-1);
+if(!moved and buffers[bufferpos].items.length()>1) return; // already at the bottom of several: hard stop; a lone item re-announces
 spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
