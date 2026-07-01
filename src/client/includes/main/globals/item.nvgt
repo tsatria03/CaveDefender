@@ -8,12 +8,15 @@ class clientitem
 {
 int id;
 int x, y;
-string type; // e.g. "wood" -> sounds/objects/items/wood/
+string type; // the wood size, e.g. "small_wood" -> sounds/objects/items/small_wood/
 int loophandle = -1;
 clientitem(int iid, int ix, int iy, string ty)
 {
 id = iid; x = ix; y = iy; type = ty;
 objpool.play_3d("sounds/objects/items/" + type + "/drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
+// Not every size has an ambient ground loop (small_wood has none); only start one when the file exists,
+// leaving loophandle at -1 otherwise so cleanup is a no-op.
+if(file_exists("sounds/objects/items/" + type + "/loop.ogg"))
 loophandle = objpool.play_3d("sounds/objects/items/" + type + "/loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), true);
 }
 }
@@ -34,13 +37,13 @@ void remove_clientitem(int id)
 {
 int i = get_clientitem_index(id);
 if(i < 0) return;
-objpool.destroy_sound(clientitems[i].loophandle);
+if(clientitems[i].loophandle != -1) objpool.destroy_sound(clientitems[i].loophandle);
 clientitems.remove_at(i);
 }
 // Drop all item sounds (leaving a game / switching maps).
 void clear_clientitems()
 {
-for(uint i = 0; i < clientitems.length(); i++) objpool.destroy_sound(clientitems[i].loophandle);
+for(uint i = 0; i < clientitems.length(); i++) if(clientitems[i].loophandle != -1) objpool.destroy_sound(clientitems[i].loophandle);
 clientitems.resize(0);
 }
 // Pause / resume only the object pool (the ground-item sounds, e.g. the looping wood). Used to silence the

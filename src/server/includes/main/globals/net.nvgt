@@ -494,15 +494,17 @@ if(games[gi].phase != "build" and games[gi].phase != "wave") return;
 int px = players[pindex].x;
 int py = players[pindex].y;
 int got = 0;
+string picked_type = "medium_wood"; // the size of a picked piece, so the take sound matches (fallback never used when got>0)
 for(int i=int(items.length())-1; i>=0; i--)
 {
 if(@items[i]==null) continue;
-if(items[i].room_id != rid or items[i].type != "wood") continue;
+if(items[i].room_id != rid or !is_wood(items[i].type)) continue;
 int dx = items[i].x - px; if(dx < 0) dx = -dx;
 int dy = items[i].y - py; if(dy < 0) dy = -dy;
 if(dx <= radius and dy <= radius)
 {
 int iid = items[i].id;
+picked_type = items[i].type;
 items.remove_at(i);
 players[pindex].inv.give("wood", 1);
 got++;
@@ -513,11 +515,11 @@ if(players[m].room_id == rid) send(players[m].peer_id, "removeitem "+iid, 0, tru
 if(got > 0)
 {
 players[pindex].wood_collected += got; // running tally of ground pickups this game run, reported at game over
-send(players[pindex].peer_id, "play_item wood take", 0, true);
+send(players[pindex].peer_id, "play_item "+picked_type+" take", 0, true);
 // Let others in the game hear the pickup in 3D at the gatherer's spot (reuses the positional footstep relay).
 for(uint wm=0; wm<players.length(); wm++)
 if(players[wm].room_id == rid and players[wm].peer_id != players[pindex].peer_id)
-send(players[wm].peer_id, "footstep objects/items/wood/take "+px+" "+py, 0, true);
+send(players[wm].peer_id, "footstep objects/items/"+picked_type+"/take "+px+" "+py, 0, true);
 send_wood_count(pindex);
 }
 }
@@ -750,11 +752,12 @@ players[index].inv.take("wood", 1);
 int gain = random(10, 20);
 repair_wall(wi, gain);
 send_wood_count(index);
-send(event.peer_id, "play_item wood place", 0,true);
+string place_type = random_wood_type(); // carried wood is generic; pick one size so you and everyone else hear the same place sound
+send(event.peer_id, "play_item "+place_type+" place", 0,true);
 // Others in the game hear the wood being placed in 3D at the builder's spot (reuses the footstep relay).
 for(uint pm=0; pm<players.length(); pm++)
 if(players[pm].room_id == players[index].room_id and players[pm].peer_id != event.peer_id)
-send(players[pm].peer_id, "footstep objects/items/wood/place "+players[index].x+" "+players[index].y, 0, true);
+send(players[pm].peer_id, "footstep objects/items/"+place_type+"/place "+players[index].x+" "+players[index].y, 0, true);
 send(event.peer_id, "reinforced "+dir+" "+gain, 0,true);
 broadcast_wall_strength(games[gi].id);
 }

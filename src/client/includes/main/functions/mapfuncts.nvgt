@@ -116,7 +116,7 @@ double d = get_2d_distance(me.x, me.y, clientitems[i].x, clientitems[i].y);
 double ang = calculate_x_y_angle(me.x, me.y, clientitems[i].x, clientitems[i].y, facing_degrees(facing));
 int td = int(d + 0.5);
 dists.insert_last(d);
-lines.insert_last(clientitems[i].type + " is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
+lines.insert_last(string_replace(clientitems[i].type, "_", " ", true) + " is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
 }
 for(uint i=0; i<dists.length(); i++)
 {
