@@ -1,6 +1,7 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Add a player versus player game mode where players are on both sides of the wall fight: one side attacks and destroys the four walls while the other side builds and repairs them, so players do both the building and the destroying instead of the bots.
+**Unfinished. Make the three wood sizes actually matter in play instead of being only cosmetic, for example by having larger pieces reinforce a wall more than smaller ones, so which sizes you gather and spend becomes a real choice.
+**Unfinished. Add a player versus player game mode where players are on both sides of the wall fight: one side attacks and destroys the four walls while the other side builds and repairs them, so players do both the building and the destroying instead of the bots.
 
 ##These are the things that are already finished from earlier versions of the game.
 

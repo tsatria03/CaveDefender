@@ -28,6 +28,7 @@ Where a command takes a player, you can give either their username or their curr
 /demote player rank: Lowers a player to a lower rank, for example /demote bob player. The same two limits apply, so: a moderator can demote a moderator down to player; an administrator can demote administrators or moderators, but can't touch a developer; a developer can demote anyone. The new rank must be lower than the player's current one. You can also promote or demote yourself within these limits, which means you can step yourself down a rank but never raise yourself. The one exception is the owner account named in the server config, which is always a developer; you can't demote yourself as a developer, so the owner can never lose the rank.
 /notify message: Sends a notification, with a sound, to everyone on the server.
 /notifyplayer player message, or /notplayer player message: Sends a notification, with a sound, to a single player.
+/warnings player: Opens a read-only list of every warning a player has on record, each showing its level, who gave it, and the reason. It works by username for any account, online or offline, since warnings are saved to the account. All staff can view this, though only administrators and up can give warnings with /warn.
 
 Administrator and up.
 

@@ -312,6 +312,7 @@ void dispatch_modal(string message)
 	else if(parsed[0]=="roundover") handle_roundover(message);
 	else if(parsed[0]=="helptext") handle_helptext(message);
 	else if(parsed[0]=="rulestext") handle_rulestext(message);
+	else if(parsed[0]=="warnstext") handle_warnstext(message);
 	else if(parsed[0]=="playerinfo") handle_playerinfo(message);
 	else if(parsed[0]=="askinput") handle_askinput(message);
 }
@@ -380,6 +381,18 @@ void handle_helptext(string message)
 		string which = message.substr(sp + 1, nl - sp - 1);
 		string content = message.substr(nl + 1);
 		dockread(which + " help", content); // title only; the received text is shown directly (no file read)
+	}
+}
+// Server-sent warning history (staff only): "warnstext <name>\n<content>" -> open it in the doc reader.
+void handle_warnstext(string message)
+{
+	int nl = string_contains(message, "\n", 1);
+	if(nl > 0)
+	{
+		int sp = string_contains(message, " ", 1); // prefix length from the actual space, not a hand-counted offset
+		string who = message.substr(sp + 1, nl - sp - 1);
+		string content = message.substr(nl + 1);
+		dockread("Warnings for " + who, content);
 	}
 }
 // Server-sent rules: "rulestext\n<which>\n<content>" -> open it in the doc reader, the same as help.
@@ -915,6 +928,12 @@ void netloop_impl()
 			// Blocking UI (the rules reader): defer if another modal is already open.
 			if(netloop_depth>1) net_deferred.insert_last(message);
 			else handle_rulestext(message);
+		}
+		else if (parsed[0] == "warnstext")
+		{
+			// Blocking UI (the warnings reader): defer if another modal is already open.
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_warnstext(message);
 		}
 		else if (parsed[0] == "showmenu")
 		{
