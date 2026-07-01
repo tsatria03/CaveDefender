@@ -1,4 +1,5 @@
 New in 3.0.
+Wood now drops in three sizes, small, medium, and large, each with its own sounds and chosen at random as it falls; pressing D to find nearby wood now tells you each piece's size as well as where it is.
 Reviewing your message buffers now stops firmly at the ends: moving past the first or last buffer, or the first or last message within one, no longer does anything, so you can feel the edges. The exception is a buffer or message list with only one entry, which still reads out each time you press, so it is never left silent.
 In a player versus environment game, the enemies now add to their numbers every second round instead of every round, so the difficulty climbs more gently and a run lasts longer.
 The main menu now has a documentation menu, listed abuv the connection menu, where you can read the changelog, credits, readme, and todo list without connecting to a server.

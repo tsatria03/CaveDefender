@@ -481,7 +481,7 @@ for(int d=0; d<drops; d++)
 if(wood_count_in(games[i].id) >= wood_cap(games[i].size)) break;
 int wx = random(1, games[i].size-1); // interior only; the 0 and size edges are walls
 int wy = random(1, games[i].size-1);
-int iid = spawn_item(games[i].id, wx, wy, "wood");
+int iid = spawn_item(games[i].id, wx, wy, random_wood_type()); // a random size (small/medium/large), each with its own sounds
 send_to_game(games[i].id, "spawnitem "+iid+" wood "+wx+" "+wy); // members + spectators hear the drop
 }
 }

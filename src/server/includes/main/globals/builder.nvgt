@@ -1,7 +1,7 @@
 // Wall-builder bots — the "enemies" of an EVP game, the mirror of the wall-smasher enemies. Each is tied to
 // a game (by its game id / room_id) and PHYSICALLY MOVES around the cavern floor: it walks to a piece of
 // ground wood, picks it up, carries it to the weakest standing wall, and (within wall_reach tiles) places it
-// to repair the wall, then goes for more. Players hear the bots by their footsteps (caveground steps, which
+// to repair the wall, then goes for more. Players hear the bots by their footsteps (concrete steps, which
 // sound distinct from players' gravel steps) plus the wood take/place sounds, all played positionally at the
 // bot's spot. Builders are PURELY builders -- they never attack players. Server-authoritative; clients just
 // play the relayed sounds. (Syncing bot POSITIONS to clients for the B-key locator is a separate pass; this
@@ -95,7 +95,7 @@ int nearest_wood_index(int gameid, int x, int y)
 int best=-1; int bestd=0;
 for(uint i=0; i<items.length(); i++)
 {
-if(@items[i]==null or items[i].room_id!=gameid or items[i].type!="wood") continue;
+if(@items[i]==null or items[i].room_id!=gameid or !is_wood(items[i].type)) continue;
 int dx=items[i].x-x; if(dx<0) dx=-dx;
 int dy=items[i].y-y; if(dy<0) dy=-dy;
 int d=dx+dy;
@@ -148,7 +148,7 @@ repair_wall(wi, random(8, 16));
 if(games[gi].phase=="build") { if(walls[wi].health > walls[wi].floor) walls[wi].floor = walls[wi].health; }
 else if(walls[wi].health > walls[wi].floor) walls[wi].health = walls[wi].floor;
 broadcast_wall_strength(gid);
-send_to_game(gid, "footstep objects/items/wood/place "+builders[i].x+" "+builders[i].y);
+send_to_game(gid, "footstep objects/items/"+random_wood_type()+"/place "+builders[i].x+" "+builders[i].y);
 }
 builders[i].target_wall="";
 continue;
@@ -194,9 +194,10 @@ if(builders[i].x==items[wfound].x and builders[i].y==items[wfound].y)
 {
 // On the wood: take it (remove + sound) and pick the weakest standing wall to carry it to.
 int wx=items[wfound].x, wy=items[wfound].y, wid=items[wfound].id;
+string wtype=items[wfound].type;
 items.remove_at(wfound);
 send_to_game(gid, "removeitem "+wid);
-send_to_game(gid, "footstep objects/items/wood/take "+wx+" "+wy);
+send_to_game(gid, "footstep objects/items/"+wtype+"/take "+wx+" "+wy);
 builders[i].carrying=true;
 builders[i].target_wall=weakest_standing_wall(gid, s);
 }

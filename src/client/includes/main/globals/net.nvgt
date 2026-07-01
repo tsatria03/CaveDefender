@@ -786,11 +786,11 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "botstep" and parsed.length() > 3)
 		{
-			// A builder took a step: "botstep <id> <x> <y>". Update its roster spot AND play its caveground footstep in 3D.
+			// A builder took a step: "botstep <id> <x> <y>". Update its roster spot AND play its concrete footstep in 3D.
 			int bx = string_to_number(parsed[2]);
 			int by = string_to_number(parsed[3]);
 			set_clientbot(string_to_number(parsed[1]), bx, by);
-			p.play_3d("sounds/objects/platforms/caveground/step" + random(1, 5) + ".ogg", me.x, me.y, me.z, bx, by, 0, calculate_theta(me_rotation), false);
+			p.play_3d("sounds/objects/platforms/concrete/step" + random(1, 5) + ".ogg", me.x, me.y, me.z, bx, by, 0, calculate_theta(me_rotation), false);
 		}
 		else if (parsed[0] == "botclear")
 		{
@@ -809,7 +809,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "play_item" and parsed.length() > 2)
 		{
-			// A personal item sound for you, e.g. "play_item wood take" -> objects/items/wood/take.ogg.
+			// A personal item sound for you, e.g. "play_item small_wood take" -> objects/items/small_wood/take.ogg.
 			p.play_stationary("sounds/objects/items/" + parsed[1] + "/" + parsed[2] + ".ogg", false);
 		}
 		else if (parsed[0] == "wood" and parsed.length() > 1)

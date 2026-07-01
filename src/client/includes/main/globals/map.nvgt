@@ -16,7 +16,7 @@ vector me;
 // Draws one of the named maps at any size. The bounds (minx..maxx, miny..maxy) set the overall
 // grid: the outer ring is the wall border, and the floor is laid one tile inside it. The player
 // spawns at the center, so the same call works for a 25x25, 50x50, or 100x100 map.
-// `outside` switches the cavern from its inside look (caveground floor, cavern_int ambience) to the EVP
+// `outside` switches the cavern from its inside look (concrete floor, cavern_int ambience) to the EVP
 // outdoor look (gravel floor, cavern_ext ambience); the wallwood border and cavern music are unchanged.
 // Ignored by the non-cavern maps.
 void draw_map(string mapname, double minx=0, double maxx=50, double miny=0, double maxy=50, bool outside=false)
@@ -49,7 +49,7 @@ spawn_music(minx, maxx, miny, maxy, "office", musvolume); // sounds/music/office
 if(mapname=="cavern")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallwood");
-spawn_platform(minx+1, maxx-1, miny+1, maxy-1, outside ? "gravel" : "caveground"); // EVP plays on gravel outside; PVE on the rocky cave floor inside.
+spawn_platform(minx+1, maxx-1, miny+1, maxy-1, outside ? "gravel" : "concrete"); // EVP plays on gravel outside; PVE on the rocky cave floor inside.
 spawn_ambience(minx, maxx, miny, maxy, outside ? "cavern_ext" : "cavern_int", ambvolume); // outdoor vs interior ambience bed.
 spawn_music(minx, maxx, miny, maxy, "cavern", musvolume); // sounds/music/cavern.ogg across the whole cavern (shared by both modes).
 }
@@ -60,7 +60,7 @@ if(mapname=="cavern2")
 // destructible walls and the fight play out below on the cavern plane. EVP (outside) uses the gravel floor,
 // outdoor ambience, and a wallwoodpile border to match the outdoor arena; PVE (inside) the cave look.
 spawn_platform(minx, maxx, miny, maxy, outside ? "wallwoodpile" : "wallcrate"); // indestructible deck border
-spawn_platform(minx+1, maxx-1, miny+1, maxy-1, outside ? "gravel" : "caveground"); // deck floor matches the mode's arena
+spawn_platform(minx+1, maxx-1, miny+1, maxy-1, outside ? "gravel" : "concrete"); // deck floor matches the mode's arena
 spawn_ambience(minx, maxx, miny, maxy, outside ? "cavern_ext" : "cavern_int", ambvolume);
 spawn_music(minx, maxx, miny, maxy, "cavern", musvolume);
 }

@@ -53,10 +53,10 @@ walls.resize(0);
 void setup_cavern_walls(double size)
 {
 clear_walls();
-spawn_wall(0, 0, 0, size, 100, 100, "wallwood", "caveground");       // west  (x = 0)
-spawn_wall(size, size, 0, size, 100, 100, "wallwood", "caveground"); // east  (x = size)
-spawn_wall(0, size, size, size, 100, 100, "wallwood", "caveground"); // north (y = size)
-spawn_wall(0, size, 0, 0, 100, 100, "wallwood", "caveground");       // south (y = 0)
+spawn_wall(0, 0, 0, size, 100, 100, "wallwood", "concrete");       // west  (x = 0)
+spawn_wall(size, size, 0, size, 100, 100, "wallwood", "concrete"); // east  (x = size)
+spawn_wall(0, size, size, size, 100, 100, "wallwood", "concrete"); // north (y = size)
+spawn_wall(0, size, 0, 0, 100, 100, "wallwood", "concrete");       // south (y = 0)
 }
 // Play a hurt clip over a wall that just took damage, emanating across the whole wall span in 3D.
 // (Volume/pitch could later scale to walls[index].health/maxhealth for a "weakening" feel — left
