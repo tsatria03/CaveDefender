@@ -1,5 +1,6 @@
 New in 3.0.
-The main menu now has a documentation menu, listed above the connection menu, where you can read the changelog, credits, readme, and todo list without connecting to a server.
+In a player versus environment game, the enemies now add to their numbers every second round instead of every round, so the difficulty climbs more gently and a run lasts longer.
+The main menu now has a documentation menu, listed abuv the connection menu, where you can read the changelog, credits, readme, and todo list without connecting to a server.
 You can now read the server's rules in game with the /rules command: type /rules for the player rules, or /rules player or /rules staff to read either page. Anyone can read both, including the rules staff are held to, so you can always see the standards staff must follow.
 For server hosts, the help pages have moved into a docks/help subfolder, named player.txt and staff.txt, with a new docks/rules subfolder reserved for later; players see no change beyond a cleaner help window title.
 The readme now includes a full keyboard reference that lists every key the game uses, grouped by purpose.

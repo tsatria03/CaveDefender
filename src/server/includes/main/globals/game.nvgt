@@ -503,11 +503,12 @@ else games[i].wavetimer.pause();
 }
 else
 {
-// PVE: each time a fresh attack burst begins, every wall grows by one bot (no ceiling).
+// PVE: the round number climbs every attack burst, but the per-wall bot count only grows every 2 rounds
+// (ceil(round/2), no ceiling) -- a gentler ramp so a run doesn't hit a brick wall as early.
 if(games[i].wave_attacking)
 {
-games[i].wave_bot_target++;
-games[i].wave_number++; // round number and per-wall bot count now climb together every burst
+games[i].wave_number++;
+games[i].wave_bot_target = (games[i].wave_number + 1) / 2; // 1,1,2,2,3,3... bots per wall by round
 fill_walls_to(games[i].id, games[i].size, games[i].wave_bot_target);
 }
 else games[i].warned=false; // a rest segment just opened; arm the heads-up for the next wave
