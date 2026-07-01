@@ -3,6 +3,7 @@ void mainmenu()
 	while(true)
 	{
 		setupmenu(true);
+		m.add_item("documentation menu", "docs");
 		m.add_item("connection menu", "connect");
 		m.add_item("preferences menu", "settings");
 		m.add_item("test speakers", "st");
@@ -11,7 +12,11 @@ void mainmenu()
 		m.intro_text="Main menu. Use your arrow keys to choose an option, then press enter to activate it.";
 		int mres=m.run();
 		string sel=mres<0?"ex":m.selected_item_id;
-		if(sel=="connect")
+		if(sel=="docs")
+		{
+			docsmenu();
+		}
+		else if(sel=="connect")
 		{
 			connectionmenu();
 		}
@@ -37,6 +42,28 @@ m.fade_music();
 			m.fade_music();
 			exit();
 		}
+	}
+}
+// Pre-connection documentation reader (offline, so no network keepalive needed): opens each dock in dockread().
+void docsmenu()
+{
+	while(true)
+	{
+		setupmenu(true);
+		m.add_item("changelog", "changelog");
+		m.add_item("credits", "credits");
+		m.add_item("readme", "readme");
+		m.add_item("todo list", "todo");
+		m.add_item("back", "back");
+		m.intro_text="Documentation menu.";
+		int mres=m.run();
+		string sel=mres<0?"back":m.selected_item_id;
+		if(sel=="back") { speak("canceled"); return; }
+		m.fade_music();
+		if(sel=="changelog") dockread("docks/changelog.txt");
+		else if(sel=="credits") dockread("docks/credits.txt");
+		else if(sel=="readme") dockread("docks/readme.txt");
+		else if(sel=="todo") dockread("docks/todo list.txt");
 	}
 }
 void connectionmenu()
