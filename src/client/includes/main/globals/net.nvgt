@@ -804,7 +804,12 @@ void netloop_impl()
 		{
 			int fx = string_to_number(parsed[2]);
 			int fy = string_to_number(parsed[3]);
-			p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
+			// Wood take/place is a cave-interior item sound: play it on objpool, which reverbs by the source side, so
+			// bot wood (and a defender's placements) echo from inside the cave. Everything else (footsteps, wall bumps) stays on p.
+			if(string_contains(parsed[1], "objects/items/", 1) > -1)
+				objpool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
+			else
+				p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 		}
 		else if (parsed[0] == "botspawn" and parsed.length() > 3)
 		{
@@ -817,7 +822,7 @@ void netloop_impl()
 			int bx = string_to_number(parsed[2]);
 			int by = string_to_number(parsed[3]);
 			set_clientbot(string_to_number(parsed[1]), bx, by);
-			p.play_3d("sounds/objects/platforms/concrete/step" + random(1, 5) + ".ogg", me.x, me.y, me.z, bx, by, 0, calculate_theta(me_rotation), false);
+			botpool.play_3d("sounds/objects/platforms/concrete/step" + random(1, 5) + ".ogg", me.x, me.y, me.z, bx, by, 0, calculate_theta(me_rotation), false); // botpool carries the cave reverb (source-side), so you hear the bots echoey from outside.
 		}
 		else if (parsed[0] == "botclear")
 		{

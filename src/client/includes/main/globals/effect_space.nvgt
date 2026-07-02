@@ -68,10 +68,29 @@ void spawn_cave_reverb(double minx, double maxx, double miny, double maxy)
 {
 spawn_effect_space(minx, maxx, miny, maxy, "cave_reverb", cave_reverb_fx, "$reverb");
 }
-// Apply the effect zones to every gameplay sound pool for the listener's current position, each frame. Each
-// pool gets its own guard key so their effect states track independently. This routes ALL the diegetic cave
-// audio -- movement/hits (p), beacons, voice, ambience, music, and item loops -- through the reverb inside the
-// cave, and leaves them dry outside.
+// True while the local player is in a cavern game space (the arena or a watcher deck). The cave-interior sound
+// SOURCES -- the EVP builder bots and the ground wood -- are always inside the cave, so they carry the cave
+// reverb whenever this is set, even when you're listening from the outside (EVP exterior or the outdoor deck).
+// Set by draw_map.
+bool in_cavern = false;
+// Turn the cave reverb on or off for one pool, guarded (via pool_fx_signatures) so we only touch the mixer on a
+// change. Only manages the $reverb slot; other effects (the lowpass muffle, later) would be added separately.
+void set_cave_reverb(sound_pool@ pool, string poolkey, bool on)
+{
+if(@pool == null or @pool.mixer == null) return;
+string desired = on ? cave_reverb_fx : "$reverb"; // the bare "$reverb" tag clears the reverb slot
+string prev = "";
+if(pool_fx_signatures.exists(poolkey)) pool_fx_signatures.get(poolkey, prev);
+if(prev == desired) return;
+pool_fx_signatures.set(poolkey, desired);
+pool.mixer.set_fx(desired);
+}
+// Apply the effect zones each frame. Two kinds of pools:
+// - The local player's OWN listening pools follow the LISTENER via the effect zones (spawned only for the inside
+//   cavern/deck), so they're wet when you're inside the cave and dry on the exterior.
+// - The cave-interior SOURCES (bots on botpool; ground wood plus wood take/place on objpool) reverb by their own
+//   location: they're always inside the cave, so they stay wet whenever we're in a cavern. That's what lets you
+//   hear the bots and the wood echoey from the EVP exterior while your own sounds stay dry.
 void apply_effect_pools()
 {
 apply_all_effects(me.x, me.y, p, me.z, "p");
@@ -79,7 +98,8 @@ apply_all_effects(me.x, me.y, beaconpool, me.z, "beaconpool");
 apply_all_effects(me.x, me.y, vpool, me.z, "vpool");
 apply_all_effects(me.x, me.y, ambpool, me.z, "ambpool");
 apply_all_effects(me.x, me.y, musicpool, me.z, "musicpool");
-apply_all_effects(me.x, me.y, objpool, me.z, "objpool");
+set_cave_reverb(botpool, "botpool", in_cavern);
+set_cave_reverb(objpool, "objpool", in_cavern);
 }
 void spawn_effect_space(double x1, double x2, double y1, double y2, string id, string fx, string ctag, double mnz=0, double mxz=0)
 {
