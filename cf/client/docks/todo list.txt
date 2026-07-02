@@ -4,7 +4,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
-**Finished. Make the three wood sizes matter when you reinforce a wall in a player versus environment game, so a larger piece adds more strength than a smaller one, scaled to echo the enemies' weapon tiers: small adds five to ten, medium ten to twenty, and large fifteen to thirty. Reinforcing spends your biggest piece first, so which sizes you gather and hold on to is now a real choice.
+**Finished. Make the three wood sizes matter when a wall is reinforced, so a larger piece adds more strength than a smaller one, scaled to echo the enemies' weapon tiers: small adds five to ten, medium ten to twenty, and large fifteen to thirty. In a player versus environment game reinforcing spends your biggest piece first, so which sizes you gather and hold on to is a real choice; in an environment versus player game the builder bots repair by the size of the piece they carry.
 **Finished. Add a server rules system with /rules: read the player rules or the staff rules in a readable window, and require everyone to agree before they can play.
 **Finished. Add an F6 players menu that lists everyone on the server, each shown with their away status, rank, and name, so you can browse who is online instead of hearing the whole list at once.
 **Finished. Add account storage on the connection menu: save several accounts on this computer with add, edit, remove, and select which one you sign in as; the sign in option shows the active account, set up an existing account replaces sign in as, and new account also offers to save the account.
