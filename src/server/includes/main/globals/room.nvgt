@@ -109,6 +109,7 @@ if(ri < 0) { send(peer, "You are not in a room.", 0, true); return; } // stepped
 int ti = get_online_index(target_name);
 if(ti < 0) { send(peer, "misc That player is no longer online.", 0, true); return; }
 if(players[ti].room_id != 0) { send(peer, "misc That player is no longer in the lobby.", 0, true); return; }
+if(!players[ti].agreed) { send(peer, "misc That player hasn't agreed to the server rules yet.", 0, true); return; } // can't pull an unagreed player past the rules gate
 players[ti].invite_room = rooms[ri].id;
 players[ti].invite_game = 0; // a newer invite replaces any older one of either kind
 players[ti].invite_from = players[inviter_index].name;

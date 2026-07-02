@@ -1,6 +1,7 @@
 int port=25562;
 int userlimit=200;
 string owner="tsatria03"; // the owner account name (from conf.svr); always forced to developer rank.
+int rulesver=1; // current server-rules version (from conf.svr). A player must have agreed at this version or higher to play; bump it to force everyone to re-agree to updated rules. Takes effect on restart.
 string motd = "Welcome to the server!";
 timer svruptimer;
 file f;
