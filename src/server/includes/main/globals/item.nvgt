@@ -109,8 +109,15 @@ if(inv.count("medium_wood")>0) { inv.take("medium_wood", 1); return "medium_wood
 if(inv.count("small_wood")>0) { inv.take("small_wood", 1); return "small_wood"; }
 return "";
 }
-// Give `amount` pieces of wood as a random mix of sizes (starting stockpile, milestone bonus).
-void give_wood_mix(inventory@ inv, int amount) { for(int i=0; i<amount; i++) inv.give(random_wood_type(), 1); }
+// Give `amount` pieces of wood, all of ONE randomly-chosen size (starting stockpile, milestone bonus), and
+// return the size chosen so a caller can name it. The count range is the same whatever the size, so the size
+// only varies the total strength (small<medium<large) around the same average the old even mix gave.
+string give_wood_single(inventory@ inv, int amount)
+{
+string t = random_wood_type();
+inv.give(t, amount);
+return t;
+}
 // Count the wood currently on the ground in a space.
 int wood_count_in(int room_id)
 {
