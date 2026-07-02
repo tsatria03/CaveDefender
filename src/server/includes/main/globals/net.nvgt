@@ -680,8 +680,7 @@ players[index].language = is_valid_language(lang) ? lang : "English";
 string pron = get_pronoun(players[index].name); // pronoun set (pronoun.usr); fall back to the they/them option if it's not a configured one
 players[index].pronoun = is_valid_pronoun(pron) ? pron : default_pronoun();
 players[index].ignored = get_ignored(players[index].name); // personal ignore list (ignored.usr): whose chat/voice this player drops
-players[index].agreed = has_agreed_rules(players[index].name); // rules agreement (rules.usr vs rulesver); gates play until agreed
-if(!players[index].agreed) send(event.peer_id, "mustagree", 0, true); // prompt them to read the rules and /rules agree before playing
+players[index].agreed = has_agreed_rules(players[index].name); // rules agreement (rules.usr vs rulesver); gates play until agreed. The reminder to read/agree is shown when they try to open the lobby, not at spawn.
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 // New accounts are announced at creation time (see register_account), so logging in for the first time
 // is just a normal "online" notice like anyone else.
@@ -966,12 +965,14 @@ send(event.peer_id, "helptext "+which+"\n"+content, 0,true);
 else if(parsed[0]=="rules" and index>-1 and parsed.length()>1)
 {
 string which=string_to_lower_case(parsed[1]);
-// "agree"/"disagree" are the rules-gate answers, not pages. Agreeing requires having read a page first (rules_read);
-// disagreeing drops the player back to the connection menu. Both are open to everyone.
+// "agree"/"disagree" are the rules-gate answers, not pages. Agreeing requires having read the required
+// pages first: everyone must read the PLAYER rules, and staff must also read the STAFF rules.
+// Disagreeing drops the player back to the connection menu. Both are open to everyone.
 if(which=="agree")
 {
-if(players[index].agreed) send(event.peer_id, "misc You have already agreed to the server rules.", 0,true);
-else if(!players[index].rules_read) send(event.peer_id, "misc Please read the rules first with /rules, then type /rules agree.", 0,true);
+if(players[index].agreed) send(event.peer_id, "misc You already agreed to the server rules.", 0,true);
+else if(!players[index].read_player_rules) send(event.peer_id, "misc Please read the player rules first with /rules, then type /rules agree.", 0,true);
+else if(is_staff(players[index].rank) and !players[index].read_staff_rules) send(event.peer_id, "misc As a staff member you must also read the staff rules with /rules staff before you can agree.", 0,true);
 else
 {
 players[index].agreed=true;
@@ -981,11 +982,16 @@ send(event.peer_id, "agreedrules", 0,true); // client clears the prompt and conf
 }
 else if(which=="disagree")
 {
+// Already agreed players can't un-agree by disagreeing: treat it like the agree case and just remind them.
+if(players[index].agreed) { send(event.peer_id, "misc You already agreed to the server rules.", 0,true); }
+else
+{
 // They declined: tell the client (which returns to the connection menu) and drop them, like a normal disconnect.
 send(event.peer_id, "declinedrules", 0,true);
 send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
 players.remove_at(index);
 verified_logins.delete(""+event.peer_id);
+}
 }
 // Both rules pages are open to everyone (unlike the staff help): players can read the staff rules too, so they
 // can see the standards staff are held to and hold them accountable.
@@ -997,9 +1003,16 @@ else if(!file_exists("docks/rules/"+which+".txt"))
 {
 send(event.peer_id, "The "+which+" rules page is missing on the server.", 0,true);
 }
+// A regular player must read their own (player) rules before they're allowed to peek at the staff rules;
+// staff can read either page in any order.
+else if(which=="staff" and !is_staff(players[index].rank) and !players[index].read_player_rules)
+{
+send(event.peer_id, "misc Please read the player rules first with /rules, then you can read the staff rules.", 0,true);
+}
 else
 {
-players[index].rules_read=true; // opening either page satisfies the "must read the rules before agreeing" requirement
+if(which=="player") players[index].read_player_rules=true; // remember which page they've read, for the agree gate
+else players[index].read_staff_rules=true;
 file rf;
 rf.open("docks/rules/"+which+".txt", "rb");
 string content=rf.read();
@@ -1036,8 +1049,9 @@ else if(parsed[0]=="openmenu" and index>-1)
 if(!players[index].agreed)
 {
 // Rules gate: the lobby menu is the only way into rooms/games, so blocking it (plus /accept, /reject, and
-// invites) keeps an unagreed player out of all gameplay until they agree.
-send(event.peer_id, "misc You must agree to the server rules before you can play; type /rules to read them, then /rules agree.", 0,true);
+// invites) keeps an unagreed player out of all gameplay until they agree. This is where the read/agree
+// reminder is shown, since there's no longer a login-time alert.
+send(event.peer_id, "misc You must read the server rules before you can play. Type /rules to read them, then /rules agree to continue, or /rules disagree to leave.", 0,true);
 }
 else if(players[index].room_id==0)
 {
