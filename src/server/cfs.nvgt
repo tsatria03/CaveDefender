@@ -34,6 +34,10 @@ if(prefs.find("owner")!=-1)
 {
 owner=values[prefs.find("owner")];
 }
+if(prefs.find("rulesver")!=-1)
+{
+rulesver=string_to_number(values[prefs.find("rulesver")]);
+}
 f.close();
 }
     if(file_exists("data/preffs/motd.svr"))
@@ -66,7 +70,7 @@ void writeprefs()
 file f;
 f.open("data/preffs/conf.svr", "wb");
 string what;
-what="port="+port+"\r\n"+"userlimit="+userlimit+"\r\n"+"owner="+owner+"\r\n";
+what="port="+port+"\r\n"+"userlimit="+userlimit+"\r\n"+"owner="+owner+"\r\n"+"rulesver="+rulesver+"\r\n";
 f.write(what);
 f.close();
 }

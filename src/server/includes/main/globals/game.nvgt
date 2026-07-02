@@ -252,6 +252,7 @@ if(games[gi].members.length() >= 4) { send(peer, "misc You cannot invite any mor
 int ti = get_online_index(target_name);
 if(ti < 0) { send(peer, "misc That player is no longer online.", 0, true); return; }
 if(players[ti].room_id != games[gi].parent_room and players[ti].room_id != 0) { send(peer, "misc That player is no longer available to invite.", 0, true); return; } // must still be in this game's room or the lobby
+if(!players[ti].agreed) { send(peer, "misc That player hasn't agreed to the server rules yet.", 0, true); return; } // can't pull an unagreed player past the rules gate
 players[ti].invite_game = games[gi].id;
 players[ti].invite_room = 0;
 players[ti].invite_from = players[inviter_index].name;

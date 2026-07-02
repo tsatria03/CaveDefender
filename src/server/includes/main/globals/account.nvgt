@@ -43,6 +43,10 @@ return string_to_lower_case(name) == string_to_lower_case(owner);
 // The staff-attention flag (flag.usr): "1" = rank is shown to regular players, empty = incognito. Default off.
 bool get_flag(string name) { return read_field(name, "flag", "") == "1"; }
 void set_flag(string name, bool on) { write_field(name, "flag", on ? "1" : ""); }
+// The rules-agreement version (rules.usr): the rulesver the player last agreed to (blank/0/missing = never). They
+// count as agreed while it's >= the current rulesver, so bumping rulesver in conf.svr re-prompts everyone once.
+bool has_agreed_rules(string name) { return int(string_to_number(read_field(name, "rules", "0"))) >= rulesver; }
+void set_agreed_rules(string name) { write_field(name, "rules", "" + rulesver); }
 // The display nickname (nickname.usr): shown in place of the username everywhere a name is spoken. Defaults
 // to the account's own username (the "default" state). Hand-editable; auto-created at registration.
 string get_nickname(string name) { return read_field(name, "nickname", read_field(name, "username", name)); }
@@ -111,7 +115,7 @@ string format_warnings(string name)
 string w = read_field(name, "warnings", "");
 if(w == "") return "This player has no warnings on record.";
 string[] lines = string_split(w, "\n", true);
-string out = "";
+string listing = "";
 int shown = 0;
 for(uint i=0; i<lines.length(); i++)
 {
@@ -120,10 +124,10 @@ if(parts.length() < 3) continue;
 string reason = parts[2];
 for(uint j=3; j<parts.length(); j++) reason += "|" + parts[j]; // a "|" that was part of the reason
 shown++;
-out += (shown>1 ? "\r\n" : "") + shown + ". Level " + parts[0] + " by " + parts[1] + ": " + reason;
+listing += (shown>1 ? "\r\n" : "") + shown + ". Level " + parts[0] + " by " + parts[1] + ": " + reason;
 }
-if(out == "") return "This player has no warnings on record.";
-return out;
+if(listing == "") return "This player has no warnings on record.";
+return listing;
 }
 // A player's personal ignore list (ignored.usr), one username per line: the people whose chat and voice this
 // player has chosen not to receive. Loaded into the roster at spawn and matched case-insensitively; this is a

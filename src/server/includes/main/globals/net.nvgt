@@ -680,6 +680,8 @@ players[index].language = is_valid_language(lang) ? lang : "English";
 string pron = get_pronoun(players[index].name); // pronoun set (pronoun.usr); fall back to the they/them option if it's not a configured one
 players[index].pronoun = is_valid_pronoun(pron) ? pron : default_pronoun();
 players[index].ignored = get_ignored(players[index].name); // personal ignore list (ignored.usr): whose chat/voice this player drops
+players[index].agreed = has_agreed_rules(players[index].name); // rules agreement (rules.usr vs rulesver); gates play until agreed
+if(!players[index].agreed) send(event.peer_id, "mustagree", 0, true); // prompt them to read the rules and /rules agree before playing
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 // New accounts are announced at creation time (see register_account), so logging in for the first time
 // is just a normal "online" notice like anyone else.
@@ -879,11 +881,13 @@ push_pronoun_menu(index); // the /pronoun chooser, available to everyone
 }
 else if(parsed[0]=="acceptinvite" and index>-1)
 {
-accept_invite(index); // /accept: join the room you were invited to
+if(!players[index].agreed) send(event.peer_id, "misc You must agree to the server rules before you can play; type /rules to read them, then /rules agree.", 0,true);
+else accept_invite(index); // /accept: join the room you were invited to
 }
 else if(parsed[0]=="rejectinvite" and index>-1)
 {
-reject_invite(index); // /reject: refuse the pending room invite
+if(!players[index].agreed) send(event.peer_id, "misc You must agree to the server rules before you can play; type /rules to read them, then /rules agree.", 0,true);
+else reject_invite(index); // /reject: refuse the pending room invite
 }
 else if(parsed[0]=="afk" and index>-1)
 {
@@ -962,9 +966,30 @@ send(event.peer_id, "helptext "+which+"\n"+content, 0,true);
 else if(parsed[0]=="rules" and index>-1 and parsed.length()>1)
 {
 string which=string_to_lower_case(parsed[1]);
+// "agree"/"disagree" are the rules-gate answers, not pages. Agreeing requires having read a page first (rules_read);
+// disagreeing drops the player back to the connection menu. Both are open to everyone.
+if(which=="agree")
+{
+if(players[index].agreed) send(event.peer_id, "misc You have already agreed to the server rules.", 0,true);
+else if(!players[index].rules_read) send(event.peer_id, "misc Please read the rules first with /rules, then type /rules agree.", 0,true);
+else
+{
+players[index].agreed=true;
+set_agreed_rules(players[index].name); // persist the current rulesver to rules.usr
+send(event.peer_id, "agreedrules", 0,true); // client clears the prompt and confirms
+}
+}
+else if(which=="disagree")
+{
+// They declined: tell the client (which returns to the connection menu) and drop them, like a normal disconnect.
+send(event.peer_id, "declinedrules", 0,true);
+send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
+players.remove_at(index);
+verified_logins.delete(""+event.peer_id);
+}
 // Both rules pages are open to everyone (unlike the staff help): players can read the staff rules too, so they
 // can see the standards staff are held to and hold them accountable.
-if(which!="player" and which!="staff")
+else if(which!="player" and which!="staff")
 {
 send(event.peer_id, "No rules page named "+parsed[1]+". Try player or staff.", 0,true);
 }
@@ -974,6 +999,7 @@ send(event.peer_id, "The "+which+" rules page is missing on the server.", 0,true
 }
 else
 {
+players[index].rules_read=true; // opening either page satisfies the "must read the rules before agreeing" requirement
 file rf;
 rf.open("docks/rules/"+which+".txt", "rb");
 string content=rf.read();
@@ -983,14 +1009,20 @@ send(event.peer_id, "rulestext "+which+"\n"+content, 0,true);
 }
 else if(parsed[0]=="getwarnings" and index>-1 and parsed.length()>1)
 {
-// Staff (moderator+) view a player's saved warning history, read-only, in the client's doc viewer. Works by
-// username for any account online or offline (warnings live on disk, like /unban); non-staff is silently ignored.
+// Staff (moderator+) view a player's saved warning history, read-only, in the client's doc viewer. Accepts a
+// username OR (for an online player) a nickname: resolve an online player first, else treat it as a username for
+// an offline account (warnings live on disk, like /unban). Non-staff is silently ignored.
 if(rank_level(players[index].rank) < 1) { }
-else if(!account_exists(parsed[1])) send(event.peer_id, "misc This player does not exist.", 0, true);
 else
 {
-string uname = read_field(parsed[1], "username", parsed[1]); // canonical-case username for the viewer title
-send(event.peer_id, "warnstext "+uname+"\n"+format_warnings(parsed[1]), 0, true);
+int ti = get_player_index_from(parsed[1]); // online player by username or nickname
+string target = (ti > -1) ? players[ti].name : parsed[1]; // resolve to the account username (the warnings key)
+if(!account_exists(target)) send(event.peer_id, "misc This player does not exist.", 0, true);
+else
+{
+string uname = read_field(target, "username", target); // canonical-case username for the viewer title
+send(event.peer_id, "warnstext "+uname+"\n"+format_warnings(target), 0, true);
+}
 }
 }
 else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
@@ -1001,7 +1033,13 @@ else if(parsed[0]=="openmenu" and index>-1)
 {
 // The client asks the server to open the menu for wherever they are; the server is the authority on
 // the options. Lobby and rooms are server-driven now; the in-game menu is still client-rendered.
-if(players[index].room_id==0)
+if(!players[index].agreed)
+{
+// Rules gate: the lobby menu is the only way into rooms/games, so blocking it (plus /accept, /reject, and
+// invites) keeps an unagreed player out of all gameplay until they agree.
+send(event.peer_id, "misc You must agree to the server rules before you can play; type /rules to read them, then /rules agree.", 0,true);
+}
+else if(players[index].room_id==0)
 {
 string[] opts;
 opts.insert_last("Create a public room");

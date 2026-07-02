@@ -1,4 +1,5 @@
 New in 3.0.
+When you first sign in you must now read the server rules and agree to them before you can play: type /rules to read them, then /rules agree to enter the lobby, or /rules disagree to leave. You only agree once, and are asked again only if the server's rules are updated.
 Staff can now review a player's warning history with the new /warnings command, which opens a read-only list of every warning that player has received, each showing its level, who gave it, and the reason.
 Wood now drops in three sizes, small, medium, and large, each with its own sounds and chosen at random as it falls. Pressing D to find nearby wood now tells you each piece's size, and pressing I to check your wood now breaks your total down by size, such as fourteen small, five medium, and twenty-two large pieces.
 Reviewing your message buffers now stops firmly at the ends: moving past the first or last buffer, or the first or last message within one, no longer does anything, so you can feel the edges. The exception is a buffer or message list with only one entry, which still reads out each time you press, so it is never left silent.
