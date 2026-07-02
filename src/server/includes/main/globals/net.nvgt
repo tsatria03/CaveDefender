@@ -749,11 +749,10 @@ if(wi > -1 and walls[wi].health <= 0) send(event.peer_id, "That wall is destroye
 else if(wi > -1 and walls[wi].health >= walls[wi].maxhealth * wall_overbuild_cap) send(event.peer_id, "This wall can't be reinforced any further.", 0,true);
 else if(wi > -1)
 {
-spend_wood(players[index].inv, 1); // one piece of any size (all sizes reinforce the same)
-int gain = random(10, 20);
+string place_type = spend_one_wood(players[index].inv); // spend your biggest piece first (large -> medium -> small)
+int gain = wood_reinforce_value(place_type); // repair scales with the size spent (small<medium<large)
 repair_wall(wi, gain);
 send_wood_count(index);
-string place_type = random_wood_type(); // carried wood is generic; pick one size so you and everyone else hear the same place sound
 send(event.peer_id, "play_item "+place_type+" place", 0,true);
 // Others in the game hear the wood being placed in 3D at the builder's spot (reuses the footstep relay).
 for(uint pm=0; pm<players.length(); pm++)
