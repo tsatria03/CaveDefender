@@ -363,11 +363,12 @@ for(uint i=0; i<games[gindex].members.length(); i++)
 int pi=get_player_index(games[gindex].members[i]);
 if(pi<0) continue;
 players[pi].wood_collected=0; // start a fresh ground-pickup tally for this game run
-give_wood_mix(players[pi].inv, random(10, 20));
-if(players[pi].pending_bonus_wood>0) // milestone reward earned at the last game over: add it to the starting stockpile
+give_wood_single(players[pi].inv, random(10, 20)); // 10-20 pieces, all one random size (small/medium/large)
+if(players[pi].pending_bonus_wood>0) // milestone reward earned at the last game over: add it to the starting stockpile, as the size rolled then
 {
-give_wood_mix(players[pi].inv, players[pi].pending_bonus_wood);
+players[pi].inv.give(players[pi].pending_bonus_size, players[pi].pending_bonus_wood);
 players[pi].pending_bonus_wood=0;
+players[pi].pending_bonus_size="";
 }
 send_wood_count(pi);
 }
@@ -575,15 +576,18 @@ int collected = players[pi].wood_collected;
 // Milestone: beating your personal-best round grants a one-time 20-40 wood bonus (added to next round's
 // starting stockpile) and updates the record. Matching or falling short of your best grants nothing.
 int bonus = 0, milestone = 0;
+string bonussize = "none"; // the single random size the bonus will be granted as; rolled now so the results message can name it
 if(rounds > get_best_round(players[pi].name))
 {
 bonus = random(20, 40);
+bonussize = random_wood_type();
 milestone = rounds;
 set_best_round(players[pi].name, rounds);
 players[pi].pending_bonus_wood = bonus;
+players[pi].pending_bonus_size = bonussize;
 }
-// roundover <survival-seconds> <wood-collected> <rounds-reached> <bonus-wood> <milestone-round> (last two 0 = no milestone).
-send(games[gi].members[m], "roundover "+secs+" "+collected+" "+rounds+" "+bonus+" "+milestone, 0, true);
+// roundover <survival-seconds> <wood-collected> <rounds-reached> <bonus-wood> <milestone-round> <bonus-size> (bonus/milestone 0 and size "none" = no milestone).
+send(games[gi].members[m], "roundover "+secs+" "+collected+" "+rounds+" "+bonus+" "+milestone+" "+bonussize, 0, true);
 }
 // Spectators don't get the play-again prompt; just tell them the round ended (they keep watching if it resets).
 for(uint s=0; s<players.length(); s++)
