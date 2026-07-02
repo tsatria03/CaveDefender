@@ -1,15 +1,3 @@
-// Format a whole number of seconds as a spoken duration: 92 -> "1 minute and 32 seconds",
-// 45 -> "45 seconds", 60 -> "1 minute". Singular/plural handled; under a minute reads as seconds only.
-string format_duration(int seconds)
-{
-if(seconds < 0) seconds = 0;
-int mins = seconds / 60;
-int secs = seconds % 60;
-if(mins == 0) return secs + (secs == 1 ? " second" : " seconds");
-string m = mins + (mins == 1 ? " minute" : " minutes");
-if(secs == 0) return m;
-return m + " and " + secs + (secs == 1 ? " second" : " seconds");
-}
 bool alt_is_down()
 {
 if(key_down(KEY_LALT) or key_down(KEY_RALT))
@@ -121,6 +109,38 @@ return 100;
 int bool_to_int(bool b)
 {
 return b? 1:0;
+}
+
+string[] split_lines(string content)
+{
+string normalized = string_replace(content, "\r\n", "\n", true);
+normalized = string_replace(normalized, "\r", "\n", true);
+return string_split(normalized, "\n", true);
+}
+// Format a whole number of seconds as a spoken duration: 92 -> "1 minute and 32 seconds",
+// 45 -> "45 seconds", 60 -> "1 minute". Singular/plural handled; under a minute reads as seconds only.
+string format_duration(int seconds)
+{
+if(seconds < 0) seconds = 0;
+int mins = seconds / 60;
+int secs = seconds % 60;
+if(mins == 0) return secs + (secs == 1 ? " second" : " seconds");
+string m = mins + (mins == 1 ? " minute" : " minutes");
+if(secs == 0) return m;
+return m + " and " + secs + (secs == 1 ? " second" : " seconds");
+}
+string string_trim_sides(const string& in str)
+{
+string result=str;
+while (result.length()>0 && (result[0]==" "||result[0]=="\t"||result[0]=="\r"||result[0]=="\n"))
+{
+result=string_trim_left(result,1);
+}
+while (result.length()>0 && (result[result.length()-1]==" "||result[result.length()-1]=="\t"||result[result.length()-1]=="\r"||result[result.length()-1]=="\n"))
+{
+result=string_trim_right(result,1);
+}
+return result;
 }
 
 string oxford_join(string[]@ parts)
