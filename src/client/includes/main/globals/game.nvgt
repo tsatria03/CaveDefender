@@ -41,6 +41,7 @@ buffercheck();
 			continue;
 		}
 		update_sound_pools();
+			apply_effect_pools(); // after the listener is positioned: reverb on in the cave interior, dry elsewhere.
 		beaconloop();
 		voiceloop();
 		update_ambiences(me.x, me.y);

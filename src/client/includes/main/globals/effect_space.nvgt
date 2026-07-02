@@ -1,0 +1,92 @@
+// Audio effect zones: rectangular areas that apply an NVGT mixer effect (reverb, lowpass, ...) to a sound pool
+// while the listener stands inside them. Ported from SimpleFighter's effect_space and trimmed to what
+// CaveDefender uses (the map-builder preset UI was dropped). Currently drives the cave-interior reverb.
+class effect_zone
+{
+double minx, maxx, miny, maxy;
+double minz, maxz;
+string zone_id;
+string fx_string;
+string clear_tag;
+effect_zone() {}
+effect_zone(double x1, double x2, double y1, double y2, string id, string fx, string ctag, double mnz=0, double mxz=0)
+{
+minx = x1;
+maxx = x2;
+miny = y1;
+maxy = y2;
+minz = mnz;
+maxz = mxz;
+zone_id = id;
+fx_string = fx;
+clear_tag = ctag;
+}
+}
+
+effect_zone@[] effect_spaces(0);
+
+// Guard: remember the last effect signature we pushed to each pool (keyed by a caller-supplied pool key) so we
+// only call set_fx when the set of effects for the listener's position actually CHANGES, not every frame.
+// Re-sending the same fx each frame can retrigger the effect (cutting a reverb tail) and is wasted work. An
+// empty poolkey disables the guard (always apply).
+dictionary pool_fx_signatures;
+void apply_all_effects(double x, double y, sound_pool@ pool, double z=0, string poolkey="")
+{
+if(@pool == null or @pool.mixer == null) return; // no mixer to configure
+string[] tags = {"$reverb", "$echo", "$lowpass", "$highpass", "$chorus", "$distortion", "$phaser", "$flanger"};
+string[] desired(tags.length());
+for (uint t = 0; t < tags.length(); t++)
+{
+desired[t] = tags[t]; // default: the bare tag, which clears that effect slot
+for (uint i = 0; i < effect_spaces.length(); i++)
+{
+if (effect_spaces[i].clear_tag != tags[t]) continue;
+if (!(effect_spaces[i].minx <= x && effect_spaces[i].maxx >= x && effect_spaces[i].miny <= y && effect_spaces[i].maxy >= y)) continue;
+if(mapmode == "3d" && (z < effect_spaces[i].minz || z > effect_spaces[i].maxz)) continue;
+desired[t] = effect_spaces[i].fx_string; // inside a matching zone: use its effect
+break;
+}
+}
+string sig = "";
+for (uint t = 0; t < desired.length(); t++) sig += desired[t] + "\n";
+if(poolkey != "")
+{
+string prev = "";
+if(pool_fx_signatures.exists(poolkey)) pool_fx_signatures.get(poolkey, prev);
+if(prev == sig) return; // nothing changed for this pool since last frame
+pool_fx_signatures.set(poolkey, sig);
+}
+for (uint t = 0; t < tags.length(); t++) pool.mixer.set_fx(desired[t]);
+}
+
+// Cave-interior reverb preset (freeverb: dry, wet, room size, damping, width). Tuned by ear for an enclosed
+// stone cavern; adjust these to taste. Applied to the cavern/inside-deck interior in every game mode.
+const string cave_reverb_fx = "$reverb:freeverb:1.0:1.0:0.5:0.5:1.0";
+// Register a reverb zone over a rectangular interior (the cave floor or the inside watcher deck). Cleared on
+// the next map draw via destroy_all_effect_spaces().
+void spawn_cave_reverb(double minx, double maxx, double miny, double maxy)
+{
+spawn_effect_space(minx, maxx, miny, maxy, "cave_reverb", cave_reverb_fx, "$reverb");
+}
+// Apply the effect zones to every gameplay sound pool for the listener's current position, each frame. Each
+// pool gets its own guard key so their effect states track independently. This routes ALL the diegetic cave
+// audio -- movement/hits (p), beacons, voice, ambience, music, and item loops -- through the reverb inside the
+// cave, and leaves them dry outside.
+void apply_effect_pools()
+{
+apply_all_effects(me.x, me.y, p, me.z, "p");
+apply_all_effects(me.x, me.y, beaconpool, me.z, "beaconpool");
+apply_all_effects(me.x, me.y, vpool, me.z, "vpool");
+apply_all_effects(me.x, me.y, ambpool, me.z, "ambpool");
+apply_all_effects(me.x, me.y, musicpool, me.z, "musicpool");
+apply_all_effects(me.x, me.y, objpool, me.z, "objpool");
+}
+void spawn_effect_space(double x1, double x2, double y1, double y2, string id, string fx, string ctag, double mnz=0, double mxz=0)
+{
+effect_spaces.insert_last(effect_zone(x1, x2, y1, y2, id, fx, ctag, mnz, mxz));
+}
+
+void destroy_all_effect_spaces()
+{
+effect_spaces.resize(0);
+}

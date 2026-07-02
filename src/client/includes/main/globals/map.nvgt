@@ -26,6 +26,7 @@ clear_ambiences(); // drop the previous space's ambient bed before laying the ne
 clear_musics(); // and its music track, same as the ambience.
 clear_clientitems(); // and any ground items (wood) from the previous space.
 clear_clientbots(); // and the EVP builder-bot roster from the previous space.
+destroy_all_effect_spaces(); // drop the previous space's audio-effect zones (e.g. cave reverb) before laying the new one.
 // Stop a footstep or wall-bump still ringing from the space we're leaving. These overlap during normal
 // play (each step/bump is a fresh untracked-by-replay sound); only a space change cuts the last one.
 p.destroy_sound(wallslot);
@@ -52,6 +53,7 @@ spawn_platform(minx, maxx, miny, maxy, "wallwood");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, outside ? "gravel" : "concrete"); // EVP plays on gravel outside; PVE on the rocky cave floor inside.
 spawn_ambience(minx, maxx, miny, maxy, outside ? "cavern_ext" : "cavern_int", ambvolume); // outdoor vs interior ambience bed.
 spawn_music(minx, maxx, miny, maxy, "cavern", musvolume); // sounds/music/cavern.ogg across the whole cavern (shared by both modes).
+if(!outside) spawn_cave_reverb(minx, maxx, miny, maxy); // the enclosed interior reverberates; the open-air exterior (gravel) stays dry.
 }
 if(mapname=="cavern2")
 {
@@ -63,6 +65,7 @@ spawn_platform(minx, maxx, miny, maxy, outside ? "wallwoodpile" : "wallcrate"); 
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, outside ? "gravel" : "concrete"); // deck floor matches the mode's arena
 spawn_ambience(minx, maxx, miny, maxy, outside ? "cavern_ext" : "cavern_int", ambvolume);
 spawn_music(minx, maxx, miny, maxy, "cavern", musvolume);
+if(!outside) spawn_cave_reverb(minx, maxx, miny, maxy); // the inside (concrete) deck reverberates; the outdoor (gravel) deck stays dry.
 }
 }
 void playstep()
