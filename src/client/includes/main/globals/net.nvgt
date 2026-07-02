@@ -646,13 +646,7 @@ void netloop_impl()
 			kicked = true;
 			connected = false;
 		}
-		else if (parsed[0] == "mustagree")
-			{
-				// Rules gate on login: you can't open the lobby menu, accept, or reject an invite until you agree.
-				p.play_stationary("sounds/ui/misc/alert.ogg", false);
-				add_buffer_item("alerts", "You must read the server rules and agree before you can play. Type /rules to read them, then /rules agree to continue, or /rules disagree to leave.");
-			}
-			else if (parsed[0] == "agreedrules")
+		else if (parsed[0] == "agreedrules")
 			{
 				p.play_stationary("sounds/ui/misc/welcome.ogg", false);
 				add_buffer_item("misc", "You have agreed to the server rules. You can now play.");
