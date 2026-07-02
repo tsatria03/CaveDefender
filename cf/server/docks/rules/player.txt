@@ -2,6 +2,8 @@ Player rules.
 
 Welcome to CaveDefender. These rules keep the server a safe and welcoming place for everyone, and by playing here you agree to follow them. They apply wherever you reach other players: global and local chat, voice, and private messages.
 
+Before you can play, you must read these player rules and agree to them: type /rules agree to accept and enter the lobby, or /rules disagree to leave and return to the connection menu. You only agree once, and are asked again only if the rules are updated. You are also welcome to read the staff rules, so you can see the standards staff are held to, but you don't have to agree to those; agreeing to these player rules is all it takes to play.
+
 1. Be respectful. Treat everyone with kindness. Harassment, hate speech, racism, threats, insults, and disrespect toward anyone's beliefs or identity are not allowed. This holds everywhere, and moving it into private messages or off the server does not make it okay.
 
 2. Do not spam or disrupt. Don't flood chat with repeated, meaningless, or gibberish messages, and don't try to send screen reader crash strings; the game blocks the ones it knows, but attempting it is still a violation. Spam also covers disruptive actions, such as rapidly creating and deleting rooms, or joining and leaving a game as a spectator to interfere with a round in progress.

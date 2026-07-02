@@ -2,6 +2,8 @@ Staff rules.
 
 These are the expectations for staff: moderators, administrators, and developers. They are in addition to the player rules, which apply to you as well. Being staff is a responsibility, and players judge the server by how you act.
 
+As staff, you must read and agree to both the player rules and these staff rules before you can play: read each page with /rules player and /rules staff, then type /rules agree to accept both and enter the lobby, or /rules disagree to leave. You only agree once, and are asked again only if the rules are updated.
+
 1. Lead by example. Everything expected of players is expected of you, and more. Hold yourself to a higher standard in chat and in how you treat people.
 
 2. Be fair and proportionate. Match your response to the violation, and use the lightest tool that fits. A private notification or message to the player is often enough for a small or first slip; a formal warning carries a level from 1 to 4, so save the higher levels for serious or repeated breaks. Use the server-wide notification for announcements to everyone, not for correcting one player. From there, escalate as needed: a mute, in one channel or all and either timed or indefinite, then a kick, and finally a ban, timed or permanent. Don't jump straight to the harshest option over something minor, but serious violations such as cheating or sharing harmful content can skip the ladder and go straight to a ban.

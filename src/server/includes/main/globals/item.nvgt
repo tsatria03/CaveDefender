@@ -78,10 +78,10 @@ if(r==1) return "small_wood";
 if(r==2) return "medium_wood";
 return "large_wood";
 }
-// A player's wood is stored per size in their inventory (small_wood/medium_wood/large_wood). The sizes are
-// purely cosmetic -- any piece reinforces the same -- so these helpers treat them as one interchangeable pool.
+// A player's wood is stored per size in their inventory (small_wood/medium_wood/large_wood). wood_total treats
+// them as one pool for the "do you have any wood" checks; the size matters at reinforce time (see below).
 int wood_total(inventory@ inv) { return inv.count("small_wood")+inv.count("medium_wood")+inv.count("large_wood"); }
-// Spend `amount` pieces of any size(s) the player has (order doesn't matter, size is cosmetic). False if short.
+// Spend `amount` pieces of any size(s) the player has (order doesn't matter here). False if short.
 bool spend_wood(inventory@ inv, int amount)
 {
 if(wood_total(inv) < amount) return false;
@@ -90,6 +90,24 @@ if(left>0 and inv.count("small_wood")>0) { int u=inv.count("small_wood"); if(u>l
 if(left>0 and inv.count("medium_wood")>0) { int u=inv.count("medium_wood"); if(u>left) u=left; inv.take("medium_wood", u); left-=u; }
 if(left>0 and inv.count("large_wood")>0) { int u=inv.count("large_wood"); if(u>left) u=left; inv.take("large_wood", u); left-=u; }
 return true;
+}
+// How much one piece reinforces a wall, by size. Mirrors enemy_damage's tiered random() model, scaled x5 to fit
+// the 400-health walls: small maps to the axe range, medium to the bat range, large to the crowbar range, so
+// repair and damage share the same shape. Medium (10-20) matches the old flat reinforce value.
+int wood_reinforce_value(string size)
+{
+if(size=="large_wood") return random(15, 30);  // crowbar 3-6 x5
+if(size=="small_wood") return random(5, 10);    // smallest tier
+return random(10, 20);                           // medium_wood: bat 2-4 x5 (also the fallback)
+}
+// Spend exactly ONE piece of wood, taking the BIGGEST first (large -> medium -> small) so a reinforce uses your
+// best wood, and return the size spent (or "" if the player has none) so the caller can score and sound it.
+string spend_one_wood(inventory@ inv)
+{
+if(inv.count("large_wood")>0) { inv.take("large_wood", 1); return "large_wood"; }
+if(inv.count("medium_wood")>0) { inv.take("medium_wood", 1); return "medium_wood"; }
+if(inv.count("small_wood")>0) { inv.take("small_wood", 1); return "small_wood"; }
+return "";
 }
 // Give `amount` pieces of wood as a random mix of sizes (starting stockpile, milestone bonus).
 void give_wood_mix(inventory@ inv, int amount) { for(int i=0; i<amount; i++) inv.give(random_wood_type(), 1); }
