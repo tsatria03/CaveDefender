@@ -1178,7 +1178,7 @@ else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+displa
 else if(parsed[0]=="teamchat" and index>-1 and parsed.length()>1)
 {
 string msg=string_join(parsed, " ", 1, parsed.length());
-if(get_game_index(players[index].room_id) < 0) send(event.peer_id, "Team chat is only available in a game.", 0,true);
+if(get_game_index(players[index].room_id) < 0 or games[get_game_index(players[index].room_id)].mode != "pvp") send(event.peer_id, "Team chat is only available in player versus player games.", 0,true);
 else if(is_muted_now(index, "team")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
 else if(filter_crash(msg) or filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // team chat is filtered like local (crash strings + word filter)
 else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg);
@@ -1186,7 +1186,7 @@ else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(inde
 else if(parsed[0]=="teamme" and index>-1 and parsed.length()>1)
 {
 string action=string_join(parsed, " ", 1, parsed.length());
-if(get_game_index(players[index].room_id) < 0) send(event.peer_id, "Team chat is only available in a game.", 0,true);
+if(get_game_index(players[index].room_id) < 0 or games[get_game_index(players[index].room_id)].mode != "pvp") send(event.peer_id, "Team chat is only available in player versus player games.", 0,true);
 else if(is_muted_now(index, "team")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
 else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true);
 else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(index)+" "+action);

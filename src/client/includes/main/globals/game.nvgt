@@ -82,7 +82,7 @@ buffercheck();
 				else speak("canceled");
 				continue;
 			}
-			if(in_game and key_pressed(KEY_SEMICOLON))
+			if(in_game and !watching and game_mode == "pvp" and key_pressed(KEY_SEMICOLON))
 			{
 				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "");
 				if(msg!="") comparse(msg, "team");
@@ -266,7 +266,7 @@ buffercheck();
 			if(msg!="") comparse(msg, "staff");
 			else speak("canceled");
 		}
-		if(in_game and key_pressed(KEY_SEMICOLON))
+		if(in_game and !watching and game_mode == "pvp" and key_pressed(KEY_SEMICOLON))
 			{
 				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "");
 				if(msg!="") comparse(msg, "team");

@@ -14,7 +14,7 @@ Chat channels.
 Slash opens global chat, which everyone on the server hears.
 Backslash opens local chat, which only the people sharing your current space hear, whether that is the lobby or your room.
 Apostrophe opens staff chat, which only staff can send to or hear; as a regular player you can't use it.
-Semicolon opens team chat while you are in a game, which everyone on your team hears. For now every player in a game is on one team, so it reaches the whole game, but in the player versus player mode it will reach only your own side.
+Semicolon opens team chat, which reaches only your own side and works only in a player versus player game: attackers hear other attackers, defenders hear other defenders. In the other modes everyone in a game is on one team, so team chat would just repeat local chat, and the semicolon key does nothing there.
 
 Global chat is also divided into language channels. You only hear global messages from people on the same language channel as you, so each language has its own conversation. Local chat, private messages, and staff chat all reach across channels, so local chat reaches everyone sharing your space whatever channel they are on. Choose your language with /channel, everyone starts on English, and your choice is saved for next time.
 
@@ -135,7 +135,7 @@ Chat.
 Slash. Open global chat to type a message or a slash command.
 Backslash. Open local chat, heard by everyone in your current space.
 Apostrophe. Open staff chat. Staff only.
-Semicolon. Open team chat. Only while you are in a game.
+Semicolon. Open team chat, heard only by your own side. Only in a player versus player game; does nothing in the other modes.
 
 Glancing around.
 
