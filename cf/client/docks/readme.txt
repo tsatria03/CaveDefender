@@ -1,5 +1,5 @@
 Welcome to CaveDefender!
-CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help.
+CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in the player versus player mode, take one side of the walls and fight other players across them. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help.
 
 The server rules.
 
@@ -56,7 +56,7 @@ Anyone in a room can invite someone to it. Choose Invite to room from the room m
 
 Games.
 
-Inside a room you can start a game, choosing a game mode, then who can play, then a map size, and others can join your open games while a game still has room. There are two modes. This section describes the original, player versus environment, or PVE, where you defend four walls that each start at a random strength; the reverse mode, environment versus player, has its own section below. If you host the game, press enter for the round menu, where you begin the round.
+Inside a room you can start a game, choosing a game mode, then who can play, then a map size, and others can join your open games while a game still has room. There are three modes. This section describes the original, player versus environment, or PVE, where you defend four walls that each start at a random strength; the other two, environment versus player and player versus player, each have their own section below. If you host the game, press enter for the round menu, where you begin the round.
 
 If your game is open, that menu also has Invite to game and Kick from game, which are the same idea as the room's Invite to room and Kick from room but one step further in.
 
@@ -102,13 +102,31 @@ Each switch is announced, and tab tells you which window you are in. You also ha
 
 Bring every wall down and you clear the round; the cavern is rebuilt and the next round sends more bots to defend it, so it gets harder each time. The game ends when the bots hold you off, that is, when the wave's time runs out with a wall still standing. You are then shown how many rounds you cleared and asked whether to play again or leave. The pause menu works just as it does in the other mode.
 
+Player versus player.
+
+Player versus player, or PVP, is the wall fight with people on both sides instead of bots. One team attacks the four walls from outside, the other defends them from inside, and nobody ever crosses the walls. Choose PVP when you pick your game mode at the start; it is always an open game.
+
+The map is laid out as a bullseye, not two halves side by side. The defenders hold a square of open floor in the very center. Around that center sits the ring of four walls, one on each side, north, east, south, and west, and those walls are the front line. Around the walls, filling the rest of the arena out to an indestructible outer boundary, is the attackers' area. So the defenders are penned inside the ring while the attackers roam the band outside it; the walls stand between them, and neither side can pass through to the other. On a bigger map the whole arena grows, the center square and the outer band along with it.
+
+Teams are always even: one on one with two players, or two on two with four. You cannot start a lopsided match. When an odd number is waiting, someone can step aside to watch so the rest play even, or you can wait for one more to fill the second pair. Before the round starts each player picks a side from the round menu, attack or defend, and the host can assign anyone's side as well. The host cannot begin until every player is assigned and the two sides are even; if they are not, the game tells you what is missing.
+
+When the host begins, a build phase opens. Each side is taken to its place: the defenders to the center, handed ten to twenty starter wood, and the attackers out to the exterior with a weapon in hand. You are told which side you are on. The defenders gather and shore up the walls while the attackers get into position, but no wall can be hurt yet.
+
+Then the attack phase begins, and like the reverse mode it alternates between attack windows and build windows, game wide, with the two sides never acting on the walls at the same time. During an attack window the attackers smash the walls with their weapons, exactly as in environment versus player, the same five tile reach, heavier weapons hitting harder but swinging slower, while the defenders can only gather wood, not place it. During a build window the roles flip: the defenders reinforce the walls from the inside, spending their biggest piece first for a size scaled repair, while the attackers' swings only ricochet and do no damage. Gathering wood off the ground is allowed at any time; only placing it is held to the build windows. Tab tells you which window you are in and reads out the clock, which, as in the reverse mode, counts down only while the attackers can act.
+
+A wall you have battered but not destroyed can still be repaired, up to the same four times over-build cap as the other modes. A wall smashed all the way to nothing, though, is gone for good: it cannot be rebuilt, and it leaves impassable rubble in its place. That rubble is not a walkable gap, so even with a wall down the attackers still cannot step through into the center; they simply hear the wall they broke as a pile of debris when they bump it. Keeping every wall above zero is the defenders' whole job.
+
+The attackers win by bringing all four walls down. The defenders win by keeping at least one wall standing until the clock runs out. When the match ends, a results screen names the winning side and, for you, how many walls fell or held, along with your own contribution, the damage you dealt as an attacker or the wood you placed as a defender. Every player is then asked whether to play again. Playing again returns everyone to the center to pick sides fresh, and the match waits there until the teams can be filled evenly again; choosing no leaves to your room. Each match you finish also adds to a win and loss record kept on your account, with the whole winning side gaining a win and the whole losing side a loss.
+
+Team chat, on the semicolon key, lets you talk privately to your own side; see the chat channels section above.
+
 Watching games.
 
 You can also watch a game instead of playing it. Choose watch game from the room menu to see every game in the room, including single-player games and games already in progress, and pick one; up to four people can watch a game at once.
 
 You float on a deck above the cavern and roam it freely while the whole battle plays out below you, and the players are told you are watching. You are only an observer, so you carry no wood, cannot reinforce, and the enemies ignore you, but you hear everything and can still chat and use voice with the players.
 
-Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. When you watch an environment versus player game, the deck sits out on the gravel to match, and the b key locates the builder bots as well. Press escape to stop watching and return to the room.
+Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. When you watch an environment versus player game, the deck sits out on the gravel to match, and the b key locates the builder bots as well. When you watch a player versus player game, you choose whether to observe from the indoor deck above the defenders or the outdoor deck above the attackers. Press escape to stop watching and return to the room.
 
 Connection problems.
 
@@ -194,9 +212,9 @@ These work while you are in a game.
 Tab. Hear the current round status.
 Letter, N, E, S, or W. Hear the strength of the north, east, south, or west wall.
 Letter, T. Hear a summary of all four walls.
-Letter, I. Hear how much wood you are carrying, broken down by size. PVE only, and not while watching.
-Letter, D. Locate the wood lying around you, nearest first, with each piece's size. PVE only, and not while watching.
-Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. PVE only.
+Letter, I. Hear how much wood you are carrying, broken down by size. For defenders, that is PVE and PVP; not while watching.
+Letter, D. Locate the wood lying around you, nearest first, with each piece's size. For defenders, that is PVE and PVP; not while watching.
+Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. Defenders only, in PVE and PVP.
 Letter, B. Locate the builder bots, nearest first. EVP only.
-Number row, 1, 2, 3, or 4. Draw the axe, bat, crowbar, or hammer. EVP only.
-Spacebar. Held, swings your drawn weapon at the nearest wall in reach. EVP only.
+Number row, 1, 2, 3, or 4. Draw the axe, bat, crowbar, or hammer. For attackers, that is EVP and PVP.
+Spacebar. Held, swings your drawn weapon at the nearest wall in reach. For attackers, that is EVP and PVP.
