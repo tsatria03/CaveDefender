@@ -256,6 +256,11 @@ send(games[gindex].members[i], "gameleft", 0, true);
 set_room_scope(pi, players[pi].pregame_room);
 }
 eject_spectators(gid); // send any watchers back to their room before the game disappears
+// Safety net: return anyone STILL scoped to this game (room_id == gid) that the members loop and eject_spectators
+// above didn't catch -- so Stop game can never leave a player stranded inside a game that no longer exists. (Both
+// passes above move the players they handle out of the game's scope, so this only ever picks up stragglers.)
+for(int i=int(players.length())-1; i>=0; i--)
+if(players[i].room_id==gid) { send(players[i].peer_id, "gameleft", 0, true); set_room_scope(int(i), players[i].pregame_room); }
 clear_walls(gid);
 clear_items(gid);
 clear_enemies(gid);

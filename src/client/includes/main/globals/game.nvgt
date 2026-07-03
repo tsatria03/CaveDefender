@@ -290,7 +290,7 @@ buffercheck();
 					string dir = (facing==Left) ? "west" : (facing==Right) ? "east" : (facing==Forward) ? "north" : "south";
 					send(0, "reinforce "+dir, 0, true);
 				}
-				else if(!watching and current_game_host == name) send(0, "openmenu", 0, true); // plain Enter opens the game menu, host only; a non-host's (or spectator's) Enter does nothing
+				else if(!watching and (current_game_host == name or game_mode == "pvp")) send(0, "openmenu", 0, true); // plain Enter opens the round menu: the host in any mode, and every PVP player (for Choose your side / Watch instead). The server shows nothing if there's nothing to do, so a non-host in PVE/EVP still gets no menu.
 			}
 			else send(0, "openmenu", 0, true); // lobby/room: open the menu
 		}
