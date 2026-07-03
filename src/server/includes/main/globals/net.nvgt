@@ -878,20 +878,15 @@ if(players[i].name==vname){ existing=int(i); break; }
 if(existing>-1 and players[existing].restoring and players[existing].peer_id==event.peer_id)
 {
 // Reconnect restore: login() already adopted the held session (peer rebound, hold cleared). Don't create a
-// new player or reset any state -- announce them back online, replay any still-active channel mutes, and put
-// them back into their room/game/watch scope with inventory and host status intact.
+// new player or reset any state -- announce them back online and put them back into their room/game/watch
+// scope with inventory and host status intact. The in-memory channel mutes are preserved on the held session
+// and stay enforced; we deliberately DON'T re-announce them (no message or sound) on reconnect.
 players[existing].restoring=false;
 index=existing;
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 if(players[index].restore_reannounce) send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true); // only if they were held (announced offline); a live takeover was never offline
 players[index].restore_reannounce=false;
-array<string> rmch = mute_channels_for("all");
-for(uint sc=0; sc<rmch.length(); sc++)
-{
-int64 mu = get_player_mute(index, rmch[sc]);
-if(mu == 0) notify_target_mute(index, rmch[sc], true, 0);
-else if(mu > 0) { int64 nowsec = now_epoch(); if(nowsec < mu) notify_target_mute(index, rmch[sc], true, int(mu - nowsec)); }
-}
+send(event.peer_id, "voicemutestate "+(is_muted_now(index, "voice") ? "1" : "0"), 0, true); // silent voice-mute state so the client can warn on O without opening the mic; no message or sound
 send_yourrooms(event.peer_id, players[index].name);
 restore_scope(index);
 }
@@ -918,27 +913,22 @@ send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 // New accounts are announced at creation time (see register_account), so logging in for the first time
 // is just a normal "online" notice like anyone else.
 send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
-// Load each channel mute from disk; notify the player of any that are still active.
+// Load each channel mute from disk so it's enforced, but DON'T notify the player: a mute set while they
+// were offline shouldn't greet them with a message and sound every time they sign in (staff can still see
+// it on the F6 card, and any attempt to chat in that channel is quietly refused as always).
 array<string> spchans = mute_channels_for("all");
 for(uint sc=0; sc<spchans.length(); sc++)
 {
 int64 mu = get_channel_mute(players[index].name, spchans[sc]);
-if(mu == 0)
-{
-set_player_mute(index, spchans[sc], 0);
-notify_target_mute(index, spchans[sc], true, 0);
-}
+if(mu == 0) set_player_mute(index, spchans[sc], 0);
 else if(mu > 0)
 {
 int64 nowsec = now_epoch();
 if(nowsec >= mu) clear_channel_mute(players[index].name, spchans[sc]);
-else
-{
-set_player_mute(index, spchans[sc], mu);
-notify_target_mute(index, spchans[sc], true, int(mu - nowsec));
+else set_player_mute(index, spchans[sc], mu);
 }
 }
-}
+send(event.peer_id, "voicemutestate "+(is_muted_now(index, "voice") ? "1" : "0"), 0, true); // silent voice-mute state so the client can warn on O without opening the mic; no message or sound
 // Recreate this host's saved rooms (recreate-on-login). They sit ready in the lobby's room list;
 // the player themselves stays in the lobby until they Join one.
 if(get_saved_public(players[index].name)) create_room(players[index].name, event.peer_id, false, "");
@@ -1862,7 +1852,9 @@ if(index>-1)
 {
 if(is_muted_now(index, "voice"))
 {
-send(event.peer_id, "You cannot send voice messages.", 0,true);
+// Voice-muted: silently drop the stream. The client already knows its voice-mute state (voicemutestate at
+// spawn/restore plus the live muted/unmuted notices) and warns the player on O before opening the mic, so
+// a muted client shouldn't even reach here; this is just the authoritative backstop, no reply needed.
 }
 else
 {

@@ -654,10 +654,10 @@ string[] ch;
 if(is_muted_now(ti, "global")) ch.insert_last("global");
 if(is_muted_now(ti, "local")) ch.insert_last("local");
 if(is_muted_now(ti, "voice")) ch.insert_last("voice");
+if(is_muted_now(ti, "team")) ch.insert_last("team");
 if(ch.length() == 0) return "Not muted.";
-string s;
-for(uint i = 0; i < ch.length(); i++) s += (i > 0 ? ", " : "") + ch[i];
-return "Muted in " + s + ".";
+if(ch.length() == 4) return "Muted in all channels.";
+return "Muted in " + oxford_join(ch) + ".";
 }
 // Build and send the F6 read-only info card for one player to the viewer. viewer_index decides whether the
 // staff-only moderation lines (mute/ban/warnings) are included. The client renders it in an inline read-only
