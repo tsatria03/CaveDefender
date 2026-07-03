@@ -838,7 +838,15 @@ void netloop_impl()
 			int fy = string_to_number(parsed[3]);
 			// Wood take/place is a cave-interior item sound: play it on objpool, which reverbs by the source side, so
 			// bot wood (and a defender's placements) echo from inside the cave. Everything else (footsteps, wall bumps) stays on p.
-			if(string_contains(parsed[1], "objects/items/", 1) > -1)
+			// PVP routes instead by which SIDE of the wall ring the source sits on, relative to you: a sound from the far
+			// side plays on crosspool (muffled through the wall, and reverberant too when the far side is the interior);
+			// a same-side sound plays on p, which the interior reverb zone makes wet inside and dry out on the exterior.
+			if(game_mode == "pvp")
+			{
+				if(pvp_crosswall(fx, fy)) crosspool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
+				else p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
+			}
+			else if(string_contains(parsed[1], "objects/items/", 1) > -1)
 				objpool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 			else
 				p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);

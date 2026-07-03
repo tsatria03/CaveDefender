@@ -93,6 +93,19 @@ pool_fx_signatures.set(poolkey, sig);
 pool.mixer.set_fx(rv);
 pool.mixer.set_fx(lp);
 }
+// PVP cross-wall audio geometry. The wall ring is inset by cavern_size/4; a point is INSIDE (the defenders'
+// interior) when it's within that ring, else OUTSIDE (the attackers' band). A sound is "cross-wall" -- and so
+// muffled through the ring -- when its source sits on the opposite side of the walls from the local listener.
+bool pvp_inside_ring(double x, double y)
+{
+int wmin = cavern_size/4, wmax = cavern_size - wmin;
+return x > wmin and x < wmax and y > wmin and y < wmax;
+}
+bool pvp_crosswall(double sx, double sy)
+{
+if(game_mode != "pvp") return false;
+return pvp_inside_ring(sx, sy) != pvp_inside_ring(me.x, me.y);
+}
 // Apply the effect zones each frame.
 // - The local player's OWN listening pools follow the LISTENER via the effect zones (spawned only for the inside
 //   cavern/deck): wet inside, dry on the exterior. No lowpass on your own sounds -- you're right there.
@@ -110,6 +123,9 @@ apply_all_effects(me.x, me.y, musicpool, me.z, "musicpool");
 bool muffle = in_cavern and listener_outside;
 set_cave_source_fx(botpool, "botpool", in_cavern, muffle);
 set_cave_source_fx(objpool, "objpool", in_cavern, muffle);
+// PVP cross-wall pool: relayed sounds whose source is on the far side of the ring play here. Lowpass always on
+// (through the wall); reverb on only when the far side is the cave interior -- i.e. when the listener is OUTSIDE.
+if(game_mode == "pvp") set_cave_source_fx(crosspool, "crosspool", !pvp_inside_ring(me.x, me.y), true);
 }
 void spawn_effect_space(double x1, double x2, double y1, double y2, string id, string fx, string ctag, double mnz=0, double mxz=0)
 {
