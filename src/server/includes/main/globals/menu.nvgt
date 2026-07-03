@@ -96,7 +96,9 @@ return "There " + (n == 1 ? "is " : "are ") + n + (n == 1 ? " player " : " playe
 // The short gameplay-mode tag shown in game-list labels: "EVP" or "PVE".
 string mode_tag(string mode)
 {
-return mode == "evp" ? "EVP" : "PVE";
+if(mode == "evp") return "EVP";
+if(mode == "pvp") return "PVP";
+return "PVE";
 }
 // The list of players the host can kick (everyone else actually in the office, not off in a game).
 void push_kick_list(int index)
@@ -342,6 +344,7 @@ void push_start_gamemode(int index)
 string[] opts;
 opts.insert_last("EVP (Environment versus player)"); // option 0
 opts.insert_last("PVE (Player versus environment)"); // option 1
+opts.insert_last("PVP (Player versus player)"); // option 2
 send_menu(players[index].peer_id, "startgamemode", "Choose a game mode to play.", opts);
 }
 // Start-game cascade, step 2: pick who can play (solo/open), then a size; the choice rides in menu_pending across the two.
@@ -783,8 +786,9 @@ else if(act == "stop") confirm_menu(peer, "stopgame", "Are you sure you want to 
 else if(id == "startgamemode")
 {
 if(choice < 0) return; // cancelled the mode picker
-players[player_index].pending_mode = (choice == 0) ? "evp" : "pve"; // option 0 = EVP, option 1 = PVE
-push_start_mode(player_index); // on to who-can-play
+players[player_index].pending_mode = (choice == 0) ? "evp" : (choice == 1) ? "pve" : "pvp"; // option 0 = EVP, 1 = PVE, 2 = PVP
+if(players[player_index].pending_mode == "pvp") { players[player_index].menu_pending = "open"; push_start_size(player_index); } // PVP is always multiplayer (1v1 or 2v2) -- skip the solo/open step and force Open
+else push_start_mode(player_index); // on to who-can-play
 }
 else if(id == "startmode")
 {

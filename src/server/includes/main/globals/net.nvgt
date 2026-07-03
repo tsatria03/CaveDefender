@@ -1384,7 +1384,9 @@ else
 int size=int(string_to_number(parsed[1]));
 if(size!=25 and size!=50 and size!=100) size=50;
 bool solo=(parsed[2]=="solo");
-string mode=(parsed.length()>3 and parsed[3]=="evp") ? "evp" : "pve"; // gameplay mode; anything but "evp" (incl. a missing arg) defaults to the original pve
+string mode="pve"; // gameplay mode; defaults to the original pve for a missing or unrecognized arg
+if(parsed.length()>3 and parsed[3]=="evp") mode="evp";
+else if(parsed.length()>3 and parsed[3]=="pvp") mode="pvp";
 int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo, mode);
 players[index].pregame_room = players[index].room_id; // the host started from their room; leaving the game returns them there
 send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+mode+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
@@ -1417,6 +1419,11 @@ send(event.peer_id, "The round has already started.", 0,true);
 else if(!games[gi].solo and games[gi].members.length() < 2)
 {
 send(event.peer_id, "You can't begin a round with yourself.", 0,true);
+}
+else if(games[gi].mode=="pvp")
+{
+// PVP's staging (side assignment) and round flow aren't built yet -- for now a PVP game is just a walkable arena.
+send(event.peer_id, "PVP rounds are still being built; you can walk the arena for now.", 0,true);
 }
 else
 {

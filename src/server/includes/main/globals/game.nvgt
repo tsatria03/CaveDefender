@@ -119,7 +119,8 @@ int gid=next_room_id;
 next_room_id++;
 game g(gid, parent_room, hostname, hostpeer, size, solo, mode);
 games.insert_last(g);
-spawn_border_walls(gid, size, 400, 400, true); // the four destroyable cavern walls (max health 400).
+if(mode=="pvp") spawn_ring_walls(gid, size, 400, 400); // PVP: the four destructible walls form a MIDDLE ring (interior defenders, exterior attackers)
+else spawn_border_walls(gid, size, 400, 400, true); // PVE/EVP: the four destroyable walls are the cavern border (max health 400)
 return gid;
 }
 // Start watching a game from the overhead deck. Validates (in a room, game exists in that room, watch

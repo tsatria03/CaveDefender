@@ -57,6 +57,21 @@ spawn_ambience(minx, maxx, miny, maxy, outside ? "cavern_ext" : "cavern_int", am
 spawn_music(minx, maxx, miny, maxy, "cavern", musvolume); // sounds/music/cavern.ogg across the whole cavern (shared by both modes).
 if(!outside) spawn_cave_reverb(minx, maxx, miny, maxy); // the enclosed interior reverberates; the open-air exterior (gravel) stays dry.
 }
+if(mapname=="pvparena")
+{
+// PVP concentric arena, all in ONE space: an indestructible outer boundary (reusing the outdoor wallwoodpile
+// border tile and its bump sound), a walkable EXTERIOR gravel band (attackers), the four destructible wallwood
+// walls as a MIDDLE ring, and a walkable INTERIOR concrete floor (defenders). Painted outer-to-inner; a later
+// platform overwrites earlier cells, so each pass carves out the next region. wmin/wmax match spawn_ring_walls.
+int wmin = int(maxx)/4;
+int wmax = int(maxx) - wmin;
+spawn_platform(minx, maxx, miny, maxy, "wallwoodpile");         // indestructible outer boundary
+spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "gravel");       // exterior band floor
+spawn_platform(wmin, wmax, wmin, wmax, "wallwood");             // the four destructible walls (a solid square...)
+spawn_platform(wmin+1, wmax-1, wmin+1, wmax-1, "concrete");     // ...carved to a 1-tile ring around the interior floor
+spawn_ambience(minx, maxx, miny, maxy, "cavern_ext", ambvolume); // one bed across the arena for now; the interior reverb/ambience split lands with the PVP audio piece
+spawn_music(minx, maxx, miny, maxy, "cavern", musvolume);
+}
 if(mapname=="cavern2")
 {
 // The spectator deck: the same floor and ambience as the cavern it watches, but its four border walls are
