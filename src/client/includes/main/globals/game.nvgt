@@ -10,6 +10,7 @@ void game()
 	have_public_room=false;
 	have_private_room=false;
 	in_game=false;            // clear any stale in-game state (e.g. after a mid-game drop + reconnect)
+	watching=false;           // likewise clear a stale spectator flag; a restore into a watch re-sets it via spectatejoined
 	game_outside=false;
 	current_game=0;
 	current_game_host="";
