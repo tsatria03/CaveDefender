@@ -69,8 +69,8 @@ void comparse(string text, string channel = "global")
 	}
 	else if(base == "/help")
 	{
-		// Normal players just type /help and go straight to the player help. Staff get a choice and
-		// must say which page they want.
+		// Everyone types /help to go straight to the player help. Staff can additionally open the staff
+		// page with /help staff, and /help player still works too.
 		if(my_rank_level() < 1)
 		{
 			if(parsed.length() != 1) { syntax_error("/help"); return; }
@@ -78,7 +78,8 @@ void comparse(string text, string channel = "global")
 		}
 		else
 		{
-			if(parsed.length() != 2) { syntax_error("/help player, or /help staff"); return; }
+			if(parsed.length() == 1) { send(0, "help player", 0, true); return; } // staff bare /help goes to the player help, like everyone else
+			if(parsed.length() != 2) { syntax_error("/help, /help player, or /help staff"); return; }
 			send(0, "help "+parsed[1], 0, true);
 		}
 	}
