@@ -72,25 +72,34 @@ spawn_effect_space(minx, maxx, miny, maxy, "cave_reverb", cave_reverb_fx, "$reve
 // SOURCES -- the EVP builder bots and the ground wood -- are always inside the cave, so they carry the cave
 // reverb whenever this is set, even when you're listening from the outside (EVP exterior or the outdoor deck).
 // Set by draw_map.
-bool in_cavern = false;
-// Turn the cave reverb on or off for one pool, guarded (via pool_fx_signatures) so we only touch the mixer on a
-// change. Only manages the $reverb slot; other effects (the lowpass muffle, later) would be added separately.
-void set_cave_reverb(sound_pool@ pool, string poolkey, bool on)
+bool in_cavern = false;      // in a cavern arena or watcher deck (set by draw_map): the cave SOURCES carry reverb.
+bool listener_outside = false; // the local player is on the exterior (EVP gravel arena, or the outdoor deck): the cave sources are ALSO lowpass-muffled, as if heard through the wall.
+// Lowpass "through stone" muffle for cave sounds heard from outside the wall (frequency cutoff / bandwidth /
+// quality). Tune the cutoff (first number) by ear -- lower = more muffled. First brought in for EVP; PVP reuses it.
+const string cave_lowpass_fx = "$lowpass:lowpass:1000:5:0.5";
+// Set the cave effects on a cave-SOURCE pool (bots, ground wood), guarded on the combined state so we only touch
+// the mixer on a change. reverb_on = the source sits inside the cave; lowpass_on = the listener is on the OTHER
+// side of the wall (outside), so the source is muffled. The mixer runs both named slots ($reverb, $lowpass) at once.
+void set_cave_source_fx(sound_pool@ pool, string poolkey, bool reverb_on, bool lowpass_on)
 {
 if(@pool == null or @pool.mixer == null) return;
-string desired = on ? cave_reverb_fx : "$reverb"; // the bare "$reverb" tag clears the reverb slot
+string rv = reverb_on ? cave_reverb_fx : "$reverb";   // the bare tag clears that slot
+string lp = lowpass_on ? cave_lowpass_fx : "$lowpass";
+string sig = rv + "|" + lp;
 string prev = "";
 if(pool_fx_signatures.exists(poolkey)) pool_fx_signatures.get(poolkey, prev);
-if(prev == desired) return;
-pool_fx_signatures.set(poolkey, desired);
-pool.mixer.set_fx(desired);
+if(prev == sig) return;
+pool_fx_signatures.set(poolkey, sig);
+pool.mixer.set_fx(rv);
+pool.mixer.set_fx(lp);
 }
-// Apply the effect zones each frame. Two kinds of pools:
+// Apply the effect zones each frame.
 // - The local player's OWN listening pools follow the LISTENER via the effect zones (spawned only for the inside
-//   cavern/deck), so they're wet when you're inside the cave and dry on the exterior.
-// - The cave-interior SOURCES (bots on botpool; ground wood plus wood take/place on objpool) reverb by their own
-//   location: they're always inside the cave, so they stay wet whenever we're in a cavern. That's what lets you
-//   hear the bots and the wood echoey from the EVP exterior while your own sounds stay dry.
+//   cavern/deck): wet inside, dry on the exterior. No lowpass on your own sounds -- you're right there.
+// - The cave-interior SOURCES (bots on botpool; ground wood + wood take/place on objpool) reverb by their own
+//   location (always inside the cave), AND are lowpass-muffled when YOU are outside the wall -- so from the EVP
+//   exterior you hear the bots and wood echoey AND muffled, while your own sounds stay clear. (This is the same
+//   source-side muffle PVP will use across the walls.)
 void apply_effect_pools()
 {
 apply_all_effects(me.x, me.y, p, me.z, "p");
@@ -98,8 +107,9 @@ apply_all_effects(me.x, me.y, beaconpool, me.z, "beaconpool");
 apply_all_effects(me.x, me.y, vpool, me.z, "vpool");
 apply_all_effects(me.x, me.y, ambpool, me.z, "ambpool");
 apply_all_effects(me.x, me.y, musicpool, me.z, "musicpool");
-set_cave_reverb(botpool, "botpool", in_cavern);
-set_cave_reverb(objpool, "objpool", in_cavern);
+bool muffle = in_cavern and listener_outside;
+set_cave_source_fx(botpool, "botpool", in_cavern, muffle);
+set_cave_source_fx(objpool, "objpool", in_cavern, muffle);
 }
 void spawn_effect_space(double x1, double x2, double y1, double y2, string id, string fx, string ctag, double mnz=0, double mxz=0)
 {
