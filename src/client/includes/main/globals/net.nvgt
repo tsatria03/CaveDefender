@@ -361,6 +361,7 @@ void handle_pvp_result(string message)
 	int down = string_to_number(parsed[2]);
 	string myteam = (parsed.length() > 3) ? parsed[3] : "";
 	int stood = 4 - down;
+	game_paused = false; // clear any lingering desertion freeze so the loop runs normally once the results close
 	current_weapon = ""; // the match is over -- drop any weapon before the results prompt
 	pause_objects(); // silence lingering loops behind the results dialog and play-again prompt
 	string winside = (winner == "attack") ? "The attackers" : "The defenders";
@@ -1290,7 +1291,24 @@ void netloop_impl()
 			p.play_stationary("sounds/ui/misc/resume.ogg", false);
 			speak("Game resumed.");
 		}
-		else if (parsed[0] == "scopememberlist")
+		else if (parsed[0] == "pvpdesert" and parsed.length() > 2)
+			{
+				// A PVP side emptied: the match freezes (a gamepaused arrives alongside this) and a forfeit grace opens.
+				// "pvpdesert <empty-side> <seconds>". If nobody on that side returns before the countdown ends, it forfeits.
+				string es = (parsed[1] == "attack") ? "attackers" : "defenders";
+				add_buffer_item("alerts", "The " + es + " have no players; they forfeit in " + parsed[2] + " seconds unless someone returns.");
+			}
+			else if (parsed[0] == "pvpcount" and parsed.length() > 1)
+			{
+				// The last few seconds of the forfeit grace, spoken as a countdown so the finish isn't abrupt.
+				speak(parsed[1]);
+			}
+			else if (parsed[0] == "pvprefill")
+			{
+				// The empty side got a player back before the grace ran out: the match resumes (a gameresumed arrives too).
+				add_buffer_item("alerts", "A player returned; the match continues.");
+			}
+			else if (parsed[0] == "scopememberlist")
 		{
 			pending_scopemembers = message;
 			scopemembers_received = true;

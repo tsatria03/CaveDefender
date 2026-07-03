@@ -32,6 +32,9 @@ timer wave_cycletimer;    // times the current attack or rest segment of the wav
 int wave_cycle=0;         // ms per attack/rest segment (half the build phase); set when the wave begins
 int evp_rounds_cleared=0; // EVP: how many rounds the attackers have cleared this game -- the score.
 int evp_round_secs=0;     // EVP: the current wave's time limit in seconds (the round timer; wavetimer counts against it).
+bool pvp_deserted=false;  // PVP: a whole side has no live player and the forfeit grace is running (the match is paused meanwhile).
+timer pvp_desert_timer;   // PVP: times that grace; the empty side forfeits once this reaches pvp_forfeit_seconds.
+int pvp_desert_count=0;   // PVP: the last forfeit-countdown number already spoken, so each of 5..1 is sent just once.
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl, string md)
 {
 id=gid;
@@ -61,6 +64,22 @@ for(uint k=0; k<games[gi].members.length(); k++)
 {
 int p=get_player_index(games[gi].members[k]);
 if(p>-1 and !players[p].held) n++;
+}
+return n;
+}
+// The PVP forfeit grace, in seconds: if a whole side has no live player for this long during a match, that side
+// forfeits and the other wins. Matches the reconnect hold, so a dropped player's own grace and this align.
+const int pvp_forfeit_seconds=45;
+// How many of a PVP game's members are LIVE (online, not held) on a given side ("attack"/"defend"). A side with
+// zero live players is deserted: the match pauses and, if it stays empty through the grace, that side forfeits.
+int pvp_side_active_count(int gi, string side)
+{
+if(gi<0 or gi>=int(games.length())) return 0;
+int n=0;
+for(uint k=0; k<games[gi].members.length(); k++)
+{
+int p=get_player_index(games[gi].members[k]);
+if(p>-1 and !players[p].held and players[p].team==side) n++;
 }
 return n;
 }
@@ -455,6 +474,7 @@ int pvp_round_seconds(int size) { if(size<=25) return 90; if(size<=50) return 15
 // yourside message with this same geometry, since the server never moves a player's own view via pos.
 void pvp_build_setup(int gi)
 {
+games[gi].pvp_deserted = false; // clear any leftover desertion state from a previous round
 int size = games[gi].size;
 int wmin = size / 4;               // the wall ring's inset (matches spawn_ring_walls and the client's pvparena draw)
 int ax = wmin / 2, ay = size / 2;  // shared attacker entry: middle of the west exterior band, at mid-height
@@ -640,15 +660,59 @@ string wname = (winner=="attack") ? "attackers" : "defenders";
 for(uint s=0; s<players.length(); s++)
 if(players[s].room_id==gameid and players[s].spectating) send(players[s].peer_id, "misc The "+wname+" won the match.", 0, true);
 }
+// A PVP desertion grace ran out: the empty side forfeits. Unfreeze first (the match was paused while a side was
+// empty), then hand the win to whichever side still has live players -- or, if BOTH sides emptied in the
+// meantime, just close the game with no winner.
+void resolve_pvp_forfeit(int gi)
+{
+if(gi<0 or gi>=int(games.length())) return;
+games[gi].pvp_deserted = false;
+if(games[gi].paused) resume_game(gi); // unfreeze timers and clients before we resolve
+int atk = pvp_side_active_count(gi, "attack");
+int def = pvp_side_active_count(gi, "defend");
+if(atk==0 and def==0) { end_game(gi); return; } // everyone's gone -> no winner
+end_pvp_match(gi, (atk>0) ? "attack" : "defend"); // the side still standing wins by forfeit
+}
 // Called every server tick: advance any finished build phase to the wave, and drop wood in active games.
 void gametick()
 {
 for(uint i=0; i<games.length(); i++)
 {
+// PVP desertion watch (runs even while paused, so a deserted-and-frozen match can still refill, count down, or
+// forfeit): during a live match, if one whole side has no live player, pause and open the forfeit grace; if it
+// refills, resume; if the grace expires still empty, the empty side forfeits (both empty -> the game just ends).
+if(games[i].mode=="pvp" and (games[i].phase=="build" or games[i].phase=="wave"))
+{
+int atk = pvp_side_active_count(int(i), "attack");
+int def = pvp_side_active_count(int(i), "defend");
+if(atk==0 and def==0) { end_game(int(i)); continue; } // both sides emptied -> close the game, no winner
+bool empty = (atk==0 or def==0);
+if(empty and !games[i].pvp_deserted)
+{
+games[i].pvp_deserted = true;
+games[i].pvp_desert_timer.restart();
+games[i].pvp_desert_count = pvp_forfeit_seconds; // no countdown ticks spoken yet
+if(!games[i].paused) pause_game(int(i)); // freeze the match (and its clock) while a side is empty
+send_to_game(games[i].id, "pvpdesert "+((atk==0)?"attack":"defend")+" "+pvp_forfeit_seconds);
+}
+else if(!empty and games[i].pvp_deserted)
+{
+games[i].pvp_deserted = false;
+if(games[i].paused) resume_game(int(i)); // the side refilled -> unfreeze and play on
+send_to_game(games[i].id, "pvprefill");
+}
+else if(empty and games[i].pvp_deserted)
+{
+int remaining = pvp_forfeit_seconds - int(games[i].pvp_desert_timer.elapsed/1000);
+if(remaining <= 0) { resolve_pvp_forfeit(int(i)); continue; } // grace ran out -> forfeit
+if(remaining <= 5 and remaining < games[i].pvp_desert_count) { games[i].pvp_desert_count = remaining; send_to_game(games[i].id, "pvpcount "+remaining); } // spoken 5..1 countdown
+}
+}
 if(games[i].paused)
 {
-// Frozen by the host: nothing advances. Open games auto-resume after 90s; Solo waits for the host.
-if(!games[i].solo and games[i].pausetimer.elapsed >= 90000) resume_game(int(i));
+// Frozen by the host (or by a PVP desertion): nothing advances. Open games auto-resume after 90s; Solo waits
+// for the host; a desertion pause is never auto-resumed here -- its forfeit grace above decides it instead.
+if(!games[i].solo and !games[i].pvp_deserted and games[i].pausetimer.elapsed >= 90000) resume_game(int(i));
 continue;
 }
 if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
@@ -841,6 +905,7 @@ if(games[gi].mode=="pvp") spawn_ring_walls(gameid, size, 400, 400); // PVP walls
 else spawn_border_walls(gameid, size, 400, 400, true); // PVE/EVP: fresh border walls (max health 400, new random starting strengths)
 games[gi].phase = "idle";
 games[gi].evp_rounds_cleared = 0; // a fresh game (after play-again) starts the EVP score over (no-op for PVE)
+games[gi].pvp_deserted = false; // and clears any leftover PVP desertion state (no-op for the co-op modes)
 for(uint m=0; m<games[gi].members.length(); m++)
 {
 int pi = get_player_index(games[gi].members[m]);

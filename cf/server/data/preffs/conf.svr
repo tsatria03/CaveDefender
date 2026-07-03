@@ -1,4 +1,4 @@
 port=25562
-userlimit=50
+userlimit=500
 owner=DevilGuardian
 rulesver=1

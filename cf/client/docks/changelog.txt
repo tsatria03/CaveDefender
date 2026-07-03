@@ -1,4 +1,5 @@
 New in 3.2.
+In a player versus player match, if a whole side is left with no players, whether someone left or dropped out, the match now freezes and a forty-five second forfeit countdown begins, spoken aloud in its final seconds. If that side gets a player back in time the match simply carries on; if not, they forfeit and the other side wins the same as any other victory. If both sides empty at once the game just ends with no winner.
 The readme now has a full player versus player section, laying out the bullseye arena, the defenders in the center, the ring of four walls, and the attackers in the band outside, and walking through how sides are chosen, how the attack and build windows play out, and how each side wins.
 Your player versus player wins and losses are now kept on your account: at the end of each match the winning side each gain a win and the losing side a loss, saved so they carry across sessions, while watchers earn neither.
 The player versus player results screen now shows a personal stat for the match as well: attackers see the total damage they dealt to the walls, and defenders see how many pieces of wood they placed to reinforce.

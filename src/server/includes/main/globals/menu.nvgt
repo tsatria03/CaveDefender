@@ -300,8 +300,8 @@ else if(host and phase == "build" and staff) { opts.insert_last("Skip build phas
 if(games[gi].mode == "pvp" and phase == "idle")
 {
 opts.insert_last("Choose your side"); players[index].menu_actions.insert_last("pvpside");
-if(games[gi].members.length() > 1) { opts.insert_last("Watch instead"); players[index].menu_actions.insert_last("pvpwatch"); } // step aside to a deck so an odd count can go even; pointless when you're the only one
 if(host) { opts.insert_last("Assign players to sides"); players[index].menu_actions.insert_last("pvpassign"); }
+if(games[gi].members.length() > 1) { opts.insert_last("Watch instead"); players[index].menu_actions.insert_last("pvpwatch"); } // step aside to a deck so an odd count can go even; pointless when you're the only one
 }
 // Invite/kick are open-game host options (a solo game has only the host). Invite shows while the game is still
 // joinable and has a free slot; kick shows whenever there's someone other than the host to remove.
