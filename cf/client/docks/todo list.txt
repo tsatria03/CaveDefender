@@ -1,93 +1,92 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Add a player versus player game mode where players are on both sides of the wall fight: one side attacks and destroys the four walls while the other side builds and repairs them, so players do both the building and the destroying instead of the bots.
-
 ##These are the things that are already finished from earlier versions of the game.
 
-**Finished. Hold your place in a room, game, or spectator deck for 45 seconds when your connection drops, instead of dropping you out of it: the game keeps trying to reconnect on its own, and getting back in time drops you right where you were, the same room or game, with your wood, score, and host duties intact, rather than in the lobby. If the game or room ends while you are away you return to wherever you would have been sent, your room or the lobby; if you do not make it back in time, or the server restarts, you come back to the lobby, and while you are away everyone is simply told you went offline and then came back.
-**Finished. In an environment versus player game, make the builder bots and the cave's wood sound muffled and reverberant when you hear them from outside the walls, as if the inside of the cave is leaking out through the stone, while your own sounds on the exterior stay clear. The muffle is a low pass filter, and this is the first use of the through the wall audio the player versus player mode will later use on both sides.
-**Finished. Give the inside of the cave a natural reverb so sounds down in the cavern reverberate like a real enclosed space, with a soft tail of reflections rather than distinct echoes, while the open-air outdoor areas and the outdoor watcher deck stay dry. It turns on whenever you are inside the cave and off everywhere else, and applies across every game mode.
-**Finished. Make the three wood sizes matter when a wall is reinforced, so a larger piece adds more strength than a smaller one, scaled to echo the enemies' weapon tiers: small adds five to ten, medium ten to twenty, and large fifteen to thirty. In a player versus environment game reinforcing spends your biggest piece first, so which sizes you gather and hold on to is a real choice; in an environment versus player game the builder bots repair by the size of the piece they carry.
-**Finished. Add a server rules system with /rules: read the player rules or the staff rules in a readable window, and require everyone to agree before they can play.
-**Finished. Add an F6 players menu that lists everyone on the server, each shown with their away status, rank, and name, so you can browse who is online instead of hearing the whole list at once.
-**Finished. Add account storage on the connection menu: save several accounts on this computer with add, edit, remove, and select which one you sign in as; the sign in option shows the active account, set up an existing account replaces sign in as, and new account also offers to save the account.
-**Finished. Show how many players are on each language channel in the channel menu, for example English (English) 26 players in this channel, so you can see which channels are active before switching.
-**Finished. Store private room passwords encrypted on the server instead of in plain text, each kept beside its own random key, while still letting the host retrieve the password.
-**Finished. Add a reversed game mode, environment versus player, where you attack the four walls from outside with weapons while builder bots gather wood and repair them; clear a round by bringing all four down, the defense grows each round, and a round timer plus a stall check end the game, scored by rounds cleared.
-**Finished. Add the ability to watch a game from an overhead deck, chosen with watch game from the room menu, up to four watchers per game, who roam above the action but take no part.
-**Finished. Add the ability to invite a lobby player to your room, accepted with /accept or refused with /reject, with the invitation expiring after two minutes.
-**Finished. Add a full game over results screen showing wood collected, rounds completed, and survival time, with a milestone bonus of starter wood for beating your best round ever.
-**Finished. Add in-game controls to change the ambience and music volumes, with the levels saved between sessions.
-**Finished. Add live voice chatting, a continuous real-time voice instead of only recorded push-to-talk clips.
-**Finished. Lower and even out enemy weapon damage so a cluster of bots can no longer strip a well built wall as quickly.
-**Finished. Add saved server presets, added, edited, and removed in preferences and chosen from the connection menu, with a custom option for a manually entered address.
-**Finished. Warn players about ten seconds before each enemy wave, during the build phase and the rest periods, with a heads-up sound and an alert.
-**Finished. Announce the round number with each enemy wave, for example "Round 1, the enemies are coming!", and read it with the round status on tab.
-**Finished. Add auto-running, toggled with Alt plus R, so you run by default and holding a movement modifier walks instead, saved between sessions.
-**Finished. Make the host open the round menu with enter and let anyone hear the round status with tab.
-**Finished. Add more bots as the round goes on, raising the per-wall bot ceiling from four to eight so the pressure keeps building.
-**Finished. Allow reinforcing walls only during the rest periods, not while the enemies are actively attacking.
-**Finished. Limit how far over 100% a wall can be reinforced, capping a wall at twice its full strength.
-**Finished. Prevent beginning an open game's round while you are its only player, so an open game now needs a second player to have joined first; solo play uses a single-player game instead.
+**Finished. Add a player versus player game mode where players fight on both sides of the walls, attacking from outside and defending from inside.
+**Finished. Hold your place in a room, game, or watch for 45 seconds when your connection drops and restore you where you were if you get back in time.
+**Finished. Make the bots and cave wood sound muffled and reverberant when heard from outside the walls in environment versus player.
+**Finished. Give the inside of the cave a natural reverb while the open-air areas stay dry.
+**Finished. Make the three wood sizes matter when reinforcing a wall, with larger pieces adding more strength.
+**Finished. Add a server rules system with /rules that everyone must agree to before playing.
+**Finished. Add an F6 players menu listing everyone on the server by away status, rank, and name.
+**Finished. Add account storage on the connection menu to save and pick between several accounts on this computer.
+**Finished. Show how many players are on each language channel in the channel menu.
+**Finished. Store private room passwords encrypted on the server instead of in plain text.
+**Finished. Add a reversed environment versus player mode where you attack the walls from outside while bots defend them.
+**Finished. Add the ability to watch a game from an overhead deck, up to four watchers per game.
+**Finished. Add the ability to invite a lobby player to your room, accepted with /accept or refused with /reject.
+**Finished. Add a game over results screen with a milestone starter-wood bonus for beating your best round.
+**Finished. Add in-game controls to change the ambience and music volumes, saved between sessions.
+**Finished. Add live real-time voice chat instead of only recorded push-to-talk clips.
+**Finished. Lower and even out enemy weapon damage so a cluster of bots can't strip a wall as quickly.
+**Finished. Add saved server presets chosen from the connection menu, with a custom manual-address option.
+**Finished. Warn players about ten seconds before each enemy wave with a sound and an alert.
+**Finished. Announce the round number with each enemy wave and read it with the round status on tab.
+**Finished. Add auto-running toggled with Alt plus R, saved between sessions.
+**Finished. Let the host open the round menu with enter and anyone hear the round status with tab.
+**Finished. Add more bots as the round goes on, raising the per-wall ceiling from four to eight.
+**Finished. Allow reinforcing walls only during the rest periods, not while the enemies are attacking.
+**Finished. Cap how far a wall can be reinforced at twice its full strength.
+**Finished. Prevent beginning an open game's round while you are its only player.
 **Finished. Add chat language channels.
 **Finished. Limit how many bots can attack the walls.
-**Finished. Make more wood spawn in larger maps so it's easier to collect.
-**Finished. Make each wall have at least 50% strength or higher at the beginning of the game.
+**Finished. Make more wood spawn on larger maps so it's easier to collect.
+**Finished. Make each wall start at 50% strength or higher.
 **Finished. Give each player starting wood.
 **Finished. Fix voice chat not moving with the players.
 **Finished. Add the ability to set your nickname.
 **Finished. Add a staff flag system.
-**Finished. Add an AFK system on /afk: a ten second beeping countdown that any key cancels, any key wakes you, everyone is told when you go away and come back, and your name shows as AFK in the player lists; administrators and up can put another player AFK with /afk and a name.
-**Finished. Add a player warning system on /warn for administrators and up: pick a level from 1 to 4 and a reason, the warned player hears the level's sound and is told who warned them, and warnings are saved to the account.
-**Finished. Make player beacons off by default, toggled on with F5, and give each player a steady beacon pitch instead of one that jumps around.
-**Finished. Refine cave defender rounds: sturdier walls, longer build phases with faster wood, enemies that attack in bursts with rest periods so you can rebuild, and an end-of-round results screen that lets you play again or leave.
-**Finished. Play wood pickups, placements, and wall bumps in 3D so you can hear where they happen, and add join-game and staff-online sounds.
-**Finished. Make the configured owner account always a developer, and make the server refuse a second instance of itself, like the client already does.
-**Finished. Fix hosting over a VPN or local network by using plain IPv4, and fix voice chat only ever sending your first recording.
-**Finished. Build the cave defender gameplay that runs inside a room: a build phase where you gather wood and reinforce four walls that each start at a random strength, then waves of bots that attack the walls with axes, bats, crowbars, and hammers, hits you hear in 3D growing louder as a wall weakens, until a wall breaks into rubble and its attackers spread to the rest; the round is lost when all four fall and your survival time is announced before the cavern resets, with a host-only pause that freezes the whole game, on small, medium, or large maps.
-**Finished. Expand the map system beyond the single starter lobby into distinct spaces, the lobby, the rooms' offices, and the game caverns, each drawn at its own size with its own floor and wall surfaces, ambience, and music.
-**Finished. Add the R, L, and G glance keys that tell you who is in the rooms, the lobby, and the games, working from the lobby, a room, or a game, with correct grammar for empty spaces and single players.
-**Finished. Keep a game that has not started yet open after everyone leaves so it can be rejoined, including your own single-player game, and list started games in the join menu while telling you that you can't join one once it has begun.
-**Finished. Ask for confirmation before leaving or stopping a game, and let staff stop a game from inside it as well as from the room menu.
-**Finished. Rewrite the player and staff help pages to spell out what each rank can and can't do, covering commands, rooms, games, and chat channels.
-**Finished. Add the start a game, join a game, and stop a game options inside a room, where you pick a game mode and map size to start a game, join an open game with a free slot, or stop a game you host (staff can stop any).
-**Finished. Play other players' footsteps and wall bumps from their spot on the map as they move, on the surface they are walking on, so you can hear people moving around you.
-**Finished. Make each room its own space, drawing the room's own map and keeping its players, positions, footstep beacons, and voice chat separate from the lobby and from other rooms.
-**Finished. Add local chat on the backslash key, so you can talk to everyone in your current space, the lobby or your room, separate from global chat.
-**Finished. Add staff chat on the apostrophe key, a private channel only other staff can see and send to, collected in its own buffer hidden from regular players.
-**Finished. Make every chat input accept slash commands and /me, scoped to that channel, and rename the chat buffers to global chats and private chats.
+**Finished. Add an AFK system on /afk with a ten-second beeping countdown, and let staff put another player AFK.
+**Finished. Add a /warn player warning system for administrators and up, saved to the account.
+**Finished. Make player beacons off by default, toggled with F5, each with a steady pitch.
+**Finished. Refine cave defender rounds with sturdier walls, burst attacks with rest periods, and a play-again results screen.
+**Finished. Play wood pickups, placements, and wall bumps in 3D, and add join-game and staff-online sounds.
+**Finished. Make the configured owner account always a developer and refuse a second server instance.
+**Finished. Fix hosting over a VPN or LAN by using plain IPv4, and fix voice only sending your first recording.
+**Finished. Build the core cave defender gameplay of a build phase then waves of bots attacking four walls until all fall.
+**Finished. Expand the map system into distinct spaces, the lobby, offices, and game caverns, each with its own surfaces and ambience.
+**Finished. Add the R, L, and G glance keys telling you who is in the rooms, the lobby, and the games.
+**Finished. Keep a not-yet-started game open after everyone leaves so it can be rejoined.
+**Finished. Ask for confirmation before leaving or stopping a game, and let staff stop a game from inside it.
+**Finished. Rewrite the player and staff help pages to spell out what each rank can and can't do.
+**Finished. Add start, join, and stop game options inside a room, picking a mode and map size.
+**Finished. Play other players' footsteps and wall bumps from their spot on the map as they move.
+**Finished. Make each room its own space with separate players, positions, beacons, and voice.
+**Finished. Add local chat on the backslash key for everyone in your current space.
+**Finished. Add staff chat on the apostrophe key, a private channel only staff can see.
+**Finished. Make every chat input accept slash commands and /me, scoped to that channel.
 **Finished. Play a sound when a room is created.
-**Finished. Save each host's public and private rooms to their account and recreate them automatically on the next sign in, remembering the private room's password.
-**Finished. Let a private room host change its password with Set password and recall it with Retrieve password.
-**Finished. Store each player account as a folder of small files, one per setting, so a server host can read or change a single value by hand.
-**Finished. Fix being unable to reconnect with an already logged in error, so signing in now takes over the old session.
-**Finished. Add a rooms system reached from a lobby menu, where you can create or join public and private rooms, with private rooms protected by a password, and up to one public and one private room per person.
-**Finished. Add a room menu to leave a room, kick a player as the host, and delete a room, with staff able to delete any room and a host able to delete their own when no one else is inside.
-**Finished. Require account usernames and passwords to be between 6 and 24 characters, return the cursor to the field that needs fixing on the connection menu, and report staff commands you can't use as unknown.
-**Finished. Add the /me action command and the /reply command for answering the last private message.
-**Finished. Add staff commands to ban and unban players, for a set time or permanently, saved so the ban blocks them from signing back in.
-**Finished. Add staff commands to mute and unmute a player's chat and voice, for a set time or indefinitely, saved so the mute survives reconnects and restarts.
-**Finished. Add staff commands to kick a player, and to promote or demote players between the moderator, administrator, and developer ranks.
-**Finished. Add the staff command to list every moderator, administrator, and developer, online or offline.
-**Finished. Add staff notification commands to alert everyone, or a single player, with a sound.
-**Finished. Add staff commands to restart or shut down the server, and send players back to the connection menu whenever the server goes offline.
+**Finished. Save each host's public and private rooms and recreate them on next sign in.
+**Finished. Let a private room host change its password and recall it.
+**Finished. Store each player account as a folder of small files, one per setting.
+**Finished. Fix the already-logged-in error so signing in takes over the old session.
+**Finished. Add a rooms system with public and private rooms, one of each per person.
+**Finished. Add a room menu to leave, kick, and delete rooms, with staff able to delete any.
+**Finished. Require usernames and passwords of 6 to 24 characters and refocus the field that needs fixing.
+**Finished. Add the /me action command and the /reply command.
+**Finished. Add staff commands to ban and unban players, timed or permanent, saved across sign-ins.
+**Finished. Add staff commands to mute and unmute a player's chat and voice, timed or indefinite.
+**Finished. Add staff commands to kick, promote, and demote players.
+**Finished. Add the staff command to list every staff member, online or offline.
+**Finished. Add staff notification commands to alert everyone or a single player with a sound.
+**Finished. Add staff commands to restart or shut down the server.
 **Finished. Add a help command that opens the player or staff help pages.
 **Finished. Announce when a player creates a new account and joins for the first time.
-**Finished. Add persistent player ranks of player, moderator, administrator, and developer, with staff names shown in chat, private messages, and the staff and who lists.
+**Finished. Add persistent ranks of player, moderator, administrator, and developer, shown in chat and lists.
 **Finished. Reject signing in when your game version does not match the server's.
-**Finished. Add networked voice chat that plays for other players from your spot on the map.
-**Finished. Add voice chat options for hearing your own voice and for holding the voice key to record.
-**Finished. Add player beacons so you can hear where other players are, toggled with F5.
-**Finished. Add networked player positions so players can hear each other move around the map.
+**Finished. Add networked voice chat that plays from your spot on the map.
+**Finished. Add voice chat options for hearing your own voice and holding the key to record.
+**Finished. Add player beacons toggled with F5 so you can hear where other players are.
+**Finished. Add networked player positions so players can hear each other move.
 **Finished. Add a basic walkable map.
-**Finished. Add a client side slash command parser.
+**Finished. Add a client-side slash command parser.
 **Finished. Press slash to type a chat message or run a command.
 **Finished. Add private messages between players.
-**Finished. Add a ping system with sent and received sounds and a lost ping timeout.
+**Finished. Add a ping system with sent and received sounds and a lost-ping timeout.
 **Finished. Add server uptime requests.
 **Finished. Add a message of the day that staff can change.
 **Finished. Add a chat word filter.
-**Finished. Add a multi category buffer system for reviewing messages by type.
+**Finished. Add a multi-category buffer system for reviewing messages by type.
 **Finished. Add an account system with secure hashed passwords and a connection menu.
 **Finished. Add a preferences menu with sound device selection.
 **Finished. Add networked public chat.
