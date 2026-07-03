@@ -385,7 +385,7 @@ players[index].y=center;
 if(players[index].spectating and gi>-1)
 {
 // Back onto the overhead deck of the game they were watching.
-send(peer, "spectatejoined "+games[gi].id+" "+games[gi].size+" "+games[gi].mode+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0, true);
+send(peer, "spectatejoined "+games[gi].id+" "+games[gi].size+" "+games[gi].mode+" "+(players[index].spectate_outside?"out":"in")+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0, true);
 for(uint i=0; i<players.length(); i++)
 if(i!=uint(index) and players[i].room_id==rid and !players[i].spectating and !players[i].held) send(peer, pos_msg(int(i)), 0, true);
 for(uint i=0; i<items.length(); i++)
@@ -1537,7 +1537,8 @@ join_game_now(index, gi);
 }
 else if(parsed[0]=="spectategame" and index>-1 and parsed.length()>1)
 {
-do_spectate(index, int(string_to_number(parsed[1]))); // start watching a game from the overhead deck
+bool wo = (parsed.length() > 2 and parsed[2] == "out"); // optional deck arg for PVP: "out" = outdoor deck, anything else indoor
+do_spectate(index, int(string_to_number(parsed[1])), wo); // start watching a game from the overhead deck
 }
 else if(parsed[0]=="leavewatch" and index>-1)
 {

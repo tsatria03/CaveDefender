@@ -143,11 +143,30 @@ if(mode=="pvp") spawn_ring_walls(gid, size, 400, 400); // PVP: the four destruct
 else spawn_border_walls(gid, size, 400, 400, true); // PVE/EVP: the four destroyable walls are the cavern border (max health 400)
 return gid;
 }
+// Send a player already set up as a spectator (spectating=true, room_id=the game) the full watch scope: the deck
+// (via the outside flag, remembered on spectate_outside so a reconnect restores it), the other players' positions,
+// the ground wood, the builders, the walls, and the current phase. Shared by do_spectate (watch from the room)
+// and become_watcher (a PVP member steps aside).
+void send_watch_scope(int index, int gi, bool outside)
+{
+int peer = players[index].peer_id;
+int gameid = games[gi].id;
+players[index].spectate_outside = outside;
+send(peer, "spectatejoined "+gameid+" "+games[gi].size+" "+games[gi].mode+" "+(outside?"out":"in")+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0, true);
+for(uint i=0; i<players.length(); i++) // the players' positions (for P / beacons) -- not other spectators
+if(i!=uint(index) and players[i].room_id==gameid and !players[i].spectating) send(peer, pos_msg(int(i)), 0, true);
+for(uint i=0; i<items.length(); i++) // the ground wood already lying in the cavern
+if(@items[i]!=null and items[i].room_id==gameid) send(peer, "spawnitem "+items[i].id+" "+items[i].type+" "+items[i].x+" "+items[i].y, 0, true);
+send_builders_to(peer, gameid); // EVP: the current builder positions, for the watcher's B locator
+send(peer, wall_strength_msg(gameid), 0, true);
+send_game_phase_to(peer, gi); // remaining round time + rest-window sync for a mid-round watcher
+if(games[gi].paused) send(peer, "gamepaused", 0, true);
+}
 // Start watching a game from the overhead deck. Validates (in a room, game exists in that room, watch
 // slots free), then moves the player into the game's scope as a SPECTATOR (room_id = game id, spectating
 // true) without adding them to members -- so they hear everything but take no part. Sends them the cavern,
 // the players' positions, ground wood, walls, and current phase, and quietly tells the game someone joined.
-void do_spectate(int index, int gameid)
+void do_spectate(int index, int gameid, bool pvp_outside=false)
 {
 int peer = players[index].peer_id;
 int ri = get_room_index(players[index].room_id);
@@ -167,15 +186,8 @@ players[index].room_id = gameid;
 int center = games[gi].size / 2;
 players[index].x = center;
 players[index].y = center;
-send(peer, "spectatejoined "+gameid+" "+games[gi].size+" "+games[gi].mode+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0, true);
-for(uint i=0; i<players.length(); i++) // give the watcher the players' positions (for P / beacons) -- not other spectators
-if(i!=uint(index) and players[i].room_id==gameid and !players[i].spectating) send(peer, pos_msg(int(i)), 0, true);
-for(uint i=0; i<items.length(); i++) // the ground wood already lying in the cavern
-if(@items[i]!=null and items[i].room_id==gameid) send(peer, "spawnitem "+items[i].id+" "+items[i].type+" "+items[i].x+" "+items[i].y, 0, true);
-send_builders_to(peer, gameid); // EVP: the current builder positions, for the watcher's B locator
-send(peer, wall_strength_msg(gameid), 0, true);
-send_game_phase_to(peer, gi); // remaining round time + rest-window sync for a mid-round watcher
-if(games[gi].paused) send(peer, "gamepaused", 0, true);
+bool outside = (games[gi].mode == "evp") ? true : (games[gi].mode == "pvp") ? pvp_outside : false; // deck: EVP outdoor gravel, PVE indoor concrete, PVP the watcher's choice
+send_watch_scope(index, gi, outside);
 string wn = display_name_flagged(index)+" is now watching.";
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==gameid and i!=uint(index)) send(players[i].peer_id, "misc "+wn, 0, true);
@@ -196,6 +208,38 @@ players[index].spectating=false;
 players[index].spectate_room=0;
 send(players[index].peer_id, "watchleft\n"+hostdisp, 0, true);
 set_room_scope(index, back);
+}
+// A PVP game member steps aside to become a WATCHER (the odd-count staging tool): remove them from the players,
+// migrate the host if they hosted, and set them up as a spectator on their chosen deck. Only before a PVP round
+// starts, and only if at least one other LIVE player remains (you can't watch a game with no players -- leave it
+// instead). Frees their team slot so an odd count (e.g. 3) can go even (2 players plus a watcher).
+void become_watcher(int index, bool outside)
+{
+int peer = players[index].peer_id;
+int gi = get_game_index(players[index].room_id);
+if(gi < 0 or games[gi].mode != "pvp" or games[gi].phase != "idle") { send(peer, "misc You can only start watching before a PVP round begins.", 0, true); return; }
+int mi = -1;
+for(uint m=0; m<games[gi].members.length(); m++) if(games[gi].members[m]==peer){ mi=int(m); break; }
+if(mi < 0) { send(peer, "misc You aren't a player in this game.", 0, true); return; }
+if(online_member_count(gi) < 2) { send(peer, "misc You can't watch a game with no other players; leave it instead.", 0, true); return; }
+if(spectator_count(games[gi].id) >= spectator_cap) { send(peer, "misc This game's watch slots are full.", 0, true); return; }
+string wname = display_name_flagged(index);
+games[gi].members.remove_at(mi);
+if(games[gi].host_peer == peer) // hand the host off to a live player if the leaver hosted
+{
+int nh = first_live_member(gi);
+if(nh != -1) { games[gi].host_peer = nh; int npi = get_player_index(nh); if(npi>-1) games[gi].host = players[npi].name; }
+}
+players[index].team = ""; // no longer a player, so no side
+players[index].spectating = true;
+players[index].spectate_room = players[index].pregame_room; // stop watching returns them to where they joined the game from
+int center = games[gi].size / 2;
+players[index].x = center;
+players[index].y = center;
+send_watch_scope(index, gi, outside);
+string wn = wname + " stepped aside to watch.";
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id==games[gi].id and i!=uint(index)) send(players[i].peer_id, "misc "+wn, 0, true);
 }
 // End a game for everyone: return each member to where they came from (a room member to the office, a
 // lobby invitee to the lobby), drop the cavern walls, and remove the game. Used by Stop game and when the
