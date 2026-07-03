@@ -1,6 +1,9 @@
-CaveDefender.
-
+Welcome to CaveDefender!
 CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help.
+
+The server rules.
+
+The first time you sign in you must read the server's rules and agree to them before you can play. Type /rules to read the player rules, then /rules agree to enter the lobby, or /rules disagree to leave. Everyone must read the player rules to agree; staff must read both the player and staff rules, and may open the staff rules only after reading their own. You only agree once, and are asked again just if the server's rules are later updated. You can reread the rules at any time with /rules, or /rules player and /rules staff to read either page.
 
 Moving around.
 
@@ -63,17 +66,17 @@ A player you invited from the lobby returns to the lobby when they leave the gam
 
 Anyone can press tab to hear the current round status, such as the build countdown or, once the wave is on, which round it is and whether the enemies are attacking or resting. Each fresh wave is also announced with its round number, for example round one, the enemies are coming, and that number climbs as the round wears on. About ten seconds before each wave, whether the first one at the end of the build phase or a later one after a rest, you get a heads-up sound and an alert telling you how long until the enemies attack.
 
-The round opens with a build phase to prepare, and you begin each round already carrying ten to twenty starter wood so you can shore up a weak wall right away. More wood drops around the cavern, and simply walking near a piece picks up everything within five tiles of you.
+The round opens with a build phase to prepare, and you begin each round already carrying ten to twenty starter wood so you can shore up a weak wall right away. Wood comes in three sizes, small, medium, and large, and your starter wood always arrives as a single random size, so one round you might open with all small pieces and another with all large. More wood drops around the cavern as the round runs, in any of the three sizes, and simply walking near a piece picks up everything within five tiles of you.
 
-Stand within five tiles of any wall and press shift plus enter to spend one piece reinforcing the nearest wall, no matter which way you face; the strength gained is random, and you can over-build a wall up to four times its full strength as a buffer, but no higher. You can reinforce during the build phase and during the rest periods between attacks, but not while the enemies are actively striking. Hold shift plus enter to keep placing wood without pressing it for every piece.
+Stand within five tiles of any wall and press shift plus enter to spend one piece reinforcing the nearest wall, no matter which way you face. Larger pieces add more strength, with small giving five to ten, medium ten to twenty, and large fifteen to thirty, and reinforcing always spends your biggest piece first, so seeking out the large wood with the d key is worth the trip. You can over-build a wall up to four times its full strength as a buffer, but no higher. You can reinforce during the build phase and during the rest periods between attacks, but not while the enemies are actively striking. Hold shift plus enter to keep placing wood without pressing it for every piece.
 
-Press i to hear how much wood you are carrying, press n, e, s, or w to hear a single wall's strength, press t for a quick summary of all four walls, and press d to locate the wood lying around you, nearest first. The P key locates the other players the same way.
+Press i to hear how much wood you are carrying, broken down by size, press n, e, s, or w to hear a single wall's strength, press t for a quick summary of all four walls, and press d to locate the wood lying around you, nearest first, each piece's size included. The P key locates the other players the same way.
 
-When the wave begins, enemies attack your walls with axes, bats, crowbars, and hammers, and you hear each strike at the wall it lands on, louder as that wall weakens. A wall whose strength runs out breaks into rubble you can walk over, and its attackers move to the walls still standing.
+When the wave begins, enemies attack your walls with axes, bats, crowbars, and hammers, and you hear each strike at the wall it lands on, louder as that wall weakens. A wall whose strength runs out breaks into rubble you can walk over, and its attackers move to the walls still standing. Down in the cavern every sound, footsteps, wall hits, wood, and the rest, carries a natural reverb, a soft tail of reflections as in a real enclosed cave; only the open-air areas outside stay dry.
 
 The round is lost when all four walls fall; you are then shown your results, the wood you gathered, the rounds you completed, and how long you survived, and asked whether to play again or leave.
 
-Whenever you finish a game having reached a higher round than your best ever, you earn a bonus of twenty to forty starter wood, which is the second way to gain starter wood; it is added on top of your normal starting wood when the next round begins.
+Whenever you finish a game having reached a higher round than your best ever, you earn a bonus of twenty to forty starter wood, which is the second way to gain starter wood; like your ordinary starter wood it arrives as a single random size, and the game over message names the size you earned, for example thirty two large. It is added on top of your normal starting wood when the next round begins.
 
 Choose play again to stay in the cavern, or leave to return to your room. In an open game with others, the cavern resets for a new round once everyone has answered, and the host begins it from the game menu as before.
 
@@ -87,7 +90,7 @@ You fight with weapons, not wood. When a round starts you are handed all four on
 
 Walk up to a wall and hold space to swing the weapon in your hand at the nearest wall, the same five tile reach as reinforcing. Each weapon takes a moment to wind up before the blow lands, and heavier weapons hit harder but swing slower, so the hammer does the most damage while the axe lands the fastest. You can keep moving and switch weapons freely while you swing.
 
-The walls are defended by builder bots. They wander the cavern, pick up the wood that drops, carry it to whichever wall is weakest, and repair it, so you hear their footsteps moving around and the wood going onto the walls. You do not gather wood yourself in this mode; the bots do. Press b to hear where the bots are, nearest first, the same way p locates players, and the wall keys n, e, s, w, and t still tell you how the walls are holding up.
+The walls are defended by builder bots. They wander the cavern, pick up the wood that drops, carry it to whichever wall is weakest, and repair it, so you hear their footsteps moving around and the wood going onto the walls. Just as your own pieces do, a larger piece of wood mends a wall more than a small one when a bot places it. Out on the gravel you hear all of this from outside the walls, so the bots and the cave's wood reach you both muffled and reverberant, as if the inside of the cave is leaking out to you through the stone, while your own sounds on the exterior stay clear. You do not gather wood yourself in this mode; the bots do. Press b to hear where the bots are, nearest first, the same way p locates players, and the wall keys n, e, s, w, and t still tell you how the walls are holding up.
 
 Each round has two parts. First a build phase, where the bots reinforce the walls and you cannot hurt them yet; if you swing during this time your weapon only ricochets off the wall, so you know you are lined up, but no damage is done.
 
@@ -187,8 +190,8 @@ These work while you are in a game.
 Tab. Hear the current round status.
 Letter, N, E, S, or W. Hear the strength of the north, east, south, or west wall.
 Letter, T. Hear a summary of all four walls.
-Letter, I. Hear how much wood you are carrying. PVE only, and not while watching.
-Letter, D. Locate the wood lying around you, nearest first. PVE only, and not while watching.
+Letter, I. Hear how much wood you are carrying, broken down by size. PVE only, and not while watching.
+Letter, D. Locate the wood lying around you, nearest first, with each piece's size. PVE only, and not while watching.
 Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. PVE only.
 Letter, B. Locate the builder bots, nearest first. EVP only.
 Number row, 1, 2, 3, or 4. Draw the axe, bat, crowbar, or hammer. EVP only.
