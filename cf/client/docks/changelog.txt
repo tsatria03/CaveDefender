@@ -1,3 +1,5 @@
+New in 3.3.
+Updated the todo list file with the latest bug fix and feature improvements made to the game.
 New in 3.2.
 The player versus player arena's background ambience is now split to match its reverb: the enclosed cave bed plays inside the walls and the open-air bed outside them, so each side sounds like the place it is rather than sharing one outdoor bed. The readme's player versus player section now also describes the muffled through-the-wall audio between the sides.
 In a player versus player game the two sides now hear each other through the walls: footsteps, weapon swings, wood work, and even voice coming from the far side of the wall ring arrive muffled, as if heard through stone, while everything on your own side stays clear. The defenders' interior also carries the cave's natural reverb now, so it rings like the enclosed space it is, while the attackers' exterior outside stays open and dry.
