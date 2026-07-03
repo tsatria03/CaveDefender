@@ -17,6 +17,8 @@ int64 mute_global=-1, mute_local=-1, mute_voice=-1, mute_team=-1; // per channel
 int x=1, y=1; // map position; defaults to the client's spawn at (1,1) until a position update arrives.
 int room_id=0; // 0 = main lobby; otherwise the id of the room this player is currently in.
 string team=""; // which side this player is on within their game (PVP: attack/defend); routes team chat. Empty in co-op games, so team chat reaches everyone in the game until PVP splits the sides.
+int pvp_damage=0; // PVP: total wall damage this attacker dealt this match (reset each round start); shown on the results screen.
+int pvp_wood_placed=0; // PVP: pieces of wood this defender placed to reinforce this match (reset each round start); shown on the results screen.
 string[] menu_targets; // the argument behind each option of the last server-pushed LIST menu (a room id, game id, or player name), so a returned choice index maps back to the right thing.
 string[] menu_actions; // for a HETEROGENEOUS menu (e.g. the room menu), the action key behind each option.
 string menu_pending;   // a value carried across a cascading menu (e.g. the chosen access solo/open while picking the size).

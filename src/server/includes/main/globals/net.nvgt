@@ -985,6 +985,7 @@ else if(wi > -1)
 string place_type = spend_one_wood(players[index].inv); // spend your biggest piece first (large -> medium -> small)
 int gain = wood_reinforce_value(place_type); // repair scales with the size spent (small<medium<large)
 repair_wall(wi, gain);
+if(games[gi].mode=="pvp") players[index].pvp_wood_placed++; // tally this defender's placements for the results screen
 send_wood_count(index);
 // Play the placement in 3D AT THE WALL being reinforced -- the placer's spot projected onto that border --
 // so everyone, the placer included, hears which wall and side the wood went to. Reuses the footstep relay.
@@ -1038,6 +1039,7 @@ if(games[gi].phase == "wave" and games[gi].wave_attacking)
 // wall is fully repairable; only a wall demolished to 0 is permanent (it leaves impassable debris client-side).
 int dmg = enemy_damage(wid);
 damage_wall(wi, dmg);
+players[index].pvp_damage += dmg; // tally this attacker's total damage for the results screen
 broadcast_wall_strength(games[gi].id);
 send_to_game(games[gi].id, "wallhit "+dir+" "+wid);
 if(walls[wi].health <= 0) send_to_game(games[gi].id, "walldestroyed "+dir); // downed -> the client re-tiles it to impassable debris (no bots to redistribute in PVP)

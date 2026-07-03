@@ -464,6 +464,7 @@ for(uint m=0; m<games[gi].members.length(); m++)
 int pi = get_player_index(games[gi].members[m]);
 if(pi < 0) continue;
 players[pi].wood_collected = 0; // fresh ground-pickup tally for this run
+players[pi].pvp_damage = 0; players[pi].pvp_wood_placed = 0; // fresh per-side stat tallies for this match
 if(players[pi].team == "defend")
 {
 players[pi].x = center; players[pi].y = center;
@@ -626,9 +627,14 @@ for(uint m=0; m<games[gi].members.length(); m++)
 int pi = get_player_index(games[gi].members[m]);
 if(pi < 0) continue;
 players[pi].playagain_answered = false; // start everyone "awaiting an answer"
-// pvpresult <winner> <walls-destroyed> <your-side>; kept so a reconnect during the results screen can re-show it
-players[pi].pending_results = "pvpresult "+winner+" "+down+" "+players[pi].team;
+int stat = (players[pi].team=="attack") ? players[pi].pvp_damage : players[pi].pvp_wood_placed; // attackers show damage dealt; defenders show wood placed
+// pvpresult <winner> <walls-destroyed> <your-side> <your-stat>; kept so a reconnect during the results screen can re-show it
+players[pi].pending_results = "pvpresult "+winner+" "+down+" "+players[pi].team+" "+stat;
 send(games[gi].members[m], players[pi].pending_results, 0, true);
+// Persistent per-account tally: the winning side each gain a win, the losing side a loss (watchers, who
+// aren't members, get nothing). Counted once here, at the decisive end of the match.
+if(players[pi].team == winner) set_wins(players[pi].name, get_wins(players[pi].name) + 1);
+else set_losses(players[pi].name, get_losses(players[pi].name) + 1);
 }
 string wname = (winner=="attack") ? "attackers" : "defenders";
 for(uint s=0; s<players.length(); s++)

@@ -365,8 +365,9 @@ void handle_pvp_result(string message)
 	pause_objects(); // silence lingering loops behind the results dialog and play-again prompt
 	string winside = (winner == "attack") ? "The attackers" : "The defenders";
 	string results = (myteam == winner ? "Victory! " : "Defeat. ") + winside + " won the match.\r\n";
-	if(myteam == "attack") results += "Walls destroyed: " + down + " of 4.\r\n";
-	else if(myteam == "defend") results += "Walls left standing: " + stood + " of 4.\r\n";
+	int mystat = (parsed.length() > 4) ? string_to_number(parsed[4]) : 0; // attackers: damage dealt; defenders: wood placed
+	if(myteam == "attack") results += "Walls destroyed: " + down + " of 4.\r\nDamage you dealt: " + mystat + ".\r\n";
+	else if(myteam == "defend") results += "Walls left standing: " + stood + " of 4.\r\nWood you placed: " + mystat + ".\r\n";
 	else results += stood + " of 4 walls were left standing.\r\n";
 	results += "Press enter to continue.";
 	dlgmessage(results);
