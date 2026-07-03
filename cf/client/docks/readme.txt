@@ -118,6 +118,8 @@ A wall you have battered but not destroyed can still be repaired, up to the same
 
 The attackers win by bringing all four walls down. The defenders win by keeping at least one wall standing until the clock runs out. When the match ends, a results screen names the winning side and, for you, how many walls fell or held, along with your own contribution, the damage you dealt as an attacker or the wood you placed as a defender. Every player is then asked whether to play again. Playing again returns everyone to the center to pick sides fresh, and the match waits there until the teams can be filled evenly again; choosing no leaves to your room. Each match you finish also adds to a win and loss record kept on your account, with the whole winning side gaining a win and the whole losing side a loss.
 
+Because the two sides are genuinely separated by the walls, you hear across them as if through stone. Sounds from the far side of the ring, the other team's footsteps and weapon swings, the wood being placed, even their voices, all reach you muffled, while everything on your own side stays clear. The defenders' interior also carries the cave's reverb, so it rings like the enclosed space it is, while the attackers' exterior stays open and dry.
+
 Team chat, on the semicolon key, lets you talk privately to your own side; see the chat channels section above.
 
 Watching games.

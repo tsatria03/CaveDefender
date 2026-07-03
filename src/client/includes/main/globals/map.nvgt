@@ -70,7 +70,15 @@ spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "gravel");       // exterior band
 spawn_platform(wmin, wmax, wmin, wmax, "wallwood");             // the four destructible walls (a solid square...)
 spawn_platform(wmin+1, wmax-1, wmin+1, wmax-1, "concrete");     // ...carved to a 1-tile ring around the interior floor
 spawn_cave_reverb(wmin, wmax, wmin, wmax);                       // the interior concrete carries cave reverb; the exterior band stays dry (a listener zone, so it follows whichever side you're on)
-spawn_ambience(minx, maxx, miny, maxy, "cavern_ext", ambvolume); // one bed across the arena for now; the interior/exterior ambience split can follow later
+// Ambience split by region to match the reverb: the enclosed cave bed inside the ring (each bed pauses itself
+// when you leave its rectangle), and the open-air bed out in the exterior band -- laid as four strips that tile
+// the frame around the ring WITHOUT ever covering the interior, so you hear the cave inside and open air outside,
+// never both at once.
+spawn_ambience(wmin, wmax, wmin, wmax, "cavern_int", ambvolume);   // interior: the enclosed cave
+spawn_ambience(minx, maxx, wmax, maxy, "cavern_ext", ambvolume);   // exterior north strip (above the ring)
+spawn_ambience(minx, maxx, miny, wmin, "cavern_ext", ambvolume);   // exterior south strip (below the ring)
+spawn_ambience(minx, wmin, wmin, wmax, "cavern_ext", ambvolume);   // exterior west strip (left of the ring, between the strips above/below)
+spawn_ambience(wmax, maxx, wmin, wmax, "cavern_ext", ambvolume);   // exterior east strip (right of the ring)
 spawn_music(minx, maxx, miny, maxy, "cavern", musvolume);
 }
 if(mapname=="cavern2")
