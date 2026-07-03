@@ -310,6 +310,7 @@ void dispatch_modal(string message)
 	string[] parsed = string_split(message, " ", true);
 	if(parsed[0]=="showmenu") show_server_menu(message);
 	else if(parsed[0]=="roundover") handle_roundover(message);
+	else if(parsed[0]=="pvpresult") handle_pvp_result(message);
 	else if(parsed[0]=="helptext") handle_helptext(message);
 	else if(parsed[0]=="rulestext") handle_rulestext(message);
 	else if(parsed[0]=="warnstext") handle_warnstext(message);
@@ -347,6 +348,35 @@ void handle_roundover(string message)
 	int again = m.run();
 	resume_objects();
 	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next round to begin."); }
+	else send(0, "playagain no", 0, true);
+}
+// PVP match over: "pvpresult <winner> <walls-destroyed> <your-side>". Show the results (winning side plus the
+// per-role headline -- attackers see walls destroyed, defenders see walls left standing), then the play-again
+// prompt. Play again -> back to staging with the sides cleared (the host re-picks and begins); no -> leave.
+void handle_pvp_result(string message)
+{
+	string[] parsed = string_split(message, " ", true);
+	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
+	string winner = parsed[1]; // "attack" or "defend"
+	int down = string_to_number(parsed[2]);
+	string myteam = (parsed.length() > 3) ? parsed[3] : "";
+	int stood = 4 - down;
+	current_weapon = ""; // the match is over -- drop any weapon before the results prompt
+	pause_objects(); // silence lingering loops behind the results dialog and play-again prompt
+	string winside = (winner == "attack") ? "The attackers" : "The defenders";
+	string results = (myteam == winner ? "Victory! " : "Defeat. ") + winside + " won the match.\r\n";
+	if(myteam == "attack") results += "Walls destroyed: " + down + " of 4.\r\n";
+	else if(myteam == "defend") results += "Walls left standing: " + stood + " of 4.\r\n";
+	else results += stood + " of 4 walls were left standing.\r\n";
+	results += "Press enter to continue.";
+	dlgmessage(results);
+	setupmenu();
+	m.add_item("Yes");
+	m.add_item("No");
+	m.intro_text = "Play again?";
+	int again = m.run();
+	resume_objects();
+	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting to pick sides again."); }
 	else send(0, "playagain no", 0, true);
 }
 // EVP game over (a loss): "evpover <rounds-cleared>". The only loss is the round timer running out. Show the
@@ -907,13 +937,20 @@ void netloop_impl()
 			if(netloop_depth>1) net_deferred.insert_last(message);
 			else handle_evp_over(message);
 		}
-		else if (parsed[0] == "gamereset" and parsed.length() > 1)
+		else if (parsed[0] == "pvpresult" and parsed.length() > 1)
+			{
+				// PVP match over: "pvpresult <winner> <walls-destroyed> <your-side>". Results + play-again, like roundover.
+				if(netloop_depth>1) net_deferred.insert_last(message);
+				else handle_pvp_result(message);
+			}
+			else if (parsed[0] == "gamereset" and parsed.length() > 1)
 		{
 			// The round reset to a fresh idle cavern: "gamereset <size>". Redraw the cavern; the server
 			// re-sends the fresh wall strengths and wood count right after.
 			int gs = string_to_number(parsed[1]);
 			cavern_size = gs;
-			draw_map("cavern", 0, gs, 0, gs, game_outside);
+			if (game_mode == "pvp") { my_side = ""; current_weapon = ""; draw_map("pvparena", 0, gs, 0, gs); } // PVP resets to staging: sides re-picked, unarmed, the concentric arena redrawn intact
+				else draw_map("cavern", 0, gs, 0, gs, game_outside);
 			setup_cavern_walls(gs);
 			lastx = int(me.x);
 			lasty = int(me.y);
@@ -1163,16 +1200,6 @@ void netloop_impl()
 			draw_map("office");
 			lastx = int(me.x);
 			lasty = int(me.y);
-		}
-		else if (parsed[0] == "pvpover")
-		{
-			// A PVP round ended (section 2: the attacking-seconds clock ran out). Drop back to staging: attackers
-			// disarm and both sides return to the round menu. The win/loss result, the per-side stats and the
-			// play-again prompt arrive in a later piece.
-			game_phase = "idle";
-			current_weapon = ""; // back to staging -- unarmed until the next round begins
-			p.play_stationary("sounds/ui/misc/wavestop.ogg", false);
-			add_buffer_item("alerts", "The round has ended.");
 		}
 		else if (parsed[0] == "gamephase" and parsed.length() > 2)
 		{

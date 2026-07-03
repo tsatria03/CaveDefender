@@ -606,16 +606,33 @@ for(uint i=0; i<builders.length(); i++)
 if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.resume();
 send_to_game(games[gi].id, "gameresumed"); // members + spectators unfreeze together
 }
-// PVP (section 2): end the current round back to the staging (idle) phase so the host can begin it again. The
-// sides are kept (players only re-pick if they choose to) and nothing was damaged, so the walls stand as they
-// are. A later piece replaces this with the win/loss decision, the results screen, the per-account win/loss
-// record and a play-again prompt. Tells everyone in the game so their clients announce the end and drop out of
-// combat (attackers disarm, both sides fall back to the round menu).
-void end_pvp_round(int gi)
+// PVP: the match is decided. winner is "attack" (all four ring walls were brought down) or "defend" (the clock
+// ran out with at least one wall still standing). Drop into the "over" phase, clear the ground wood, and give
+// every member the results + play-again prompt (pvpresult); watchers just get a notice. The cavern resets to a
+// fresh staging (idle) round -- with the sides cleared for re-picking -- once everyone has answered, via the
+// shared play-again flow (reset_for_new_round, which is PVP-aware).
+void end_pvp_match(int gi, string winner)
 {
 if(gi<0 or gi>=int(games.length())) return;
-games[gi].phase = "idle";
-send_to_game(games[gi].id, "pvpover");
+int gameid = games[gi].id;
+int standing = 0;
+string[]@ dirs = WALL_DIRS;
+for(uint i=0; i<dirs.length(); i++) { int wi = wall_in_dir(gameid, dirs[i], games[gi].size); if(wi>-1 and walls[wi].health>0) standing++; }
+int down = 4 - standing; // walls destroyed, for the results headline
+games[gi].phase = "over";
+clear_items(gameid);
+for(uint m=0; m<games[gi].members.length(); m++)
+{
+int pi = get_player_index(games[gi].members[m]);
+if(pi < 0) continue;
+players[pi].playagain_answered = false; // start everyone "awaiting an answer"
+// pvpresult <winner> <walls-destroyed> <your-side>; kept so a reconnect during the results screen can re-show it
+players[pi].pending_results = "pvpresult "+winner+" "+down+" "+players[pi].team;
+send(games[gi].members[m], players[pi].pending_results, 0, true);
+}
+string wname = (winner=="attack") ? "attackers" : "defenders";
+for(uint s=0; s<players.length(); s++)
+if(players[s].room_id==gameid and players[s].spectating) send(players[s].peer_id, "misc The "+wname+" won the match.", 0, true);
 }
 // Called every server tick: advance any finished build phase to the wave, and drop wood in active games.
 void gametick()
@@ -709,12 +726,15 @@ int gid = games[i].id; double size = games[i].size;
 if(all_walls_destroyed(gid, size)) { evp_clear_round(int(i)); continue; } // win -> next round
 if(games[i].wavetimer.elapsed >= games[i].evp_round_secs*1000) { end_evp_loss(int(i)); continue; } // round timer expired -> loss
 }
-// PVP round resolution (section 2): with no combat yet, the attackers can't bring the walls down, so the only
-// terminal is the attacking-seconds clock running out -- end the round back to staging. The real win/loss (all
-// walls down = attackers win; time up with a wall standing = defenders win), the results screen and the
-// per-account record land in a later piece.
+// PVP resolution: all four ring walls down = the ATTACKERS win; the attacking-seconds clock running out with at
+// least one wall still standing = the DEFENDERS win. (Damage only happens during attack windows, and the clock
+// only advances then, so both checks live in the wave phase.) The results + play-again then follow.
 for(uint i=0; i<games.length(); i++)
-if(games[i].mode=="pvp" and !games[i].paused and games[i].phase=="wave" and games[i].wavetimer.elapsed >= games[i].evp_round_secs*1000) end_pvp_round(int(i));
+{
+if(games[i].mode!="pvp" or games[i].paused or games[i].phase!="wave") continue;
+if(all_walls_destroyed(games[i].id, games[i].size)) { end_pvp_match(int(i), "attack"); continue; } // all four down -> attackers win
+if(games[i].wavetimer.elapsed >= games[i].evp_round_secs*1000) end_pvp_match(int(i), "defend"); // time up, a wall stood -> defenders win
+}
 }
 // True if all four cavern walls of a game are down (health 0).
 bool all_walls_destroyed(int gameid, double size)
@@ -722,7 +742,7 @@ bool all_walls_destroyed(int gameid, double size)
 string[]@ dirs = WALL_DIRS; // alias the shared constant; iterated read-only, not rebuilt per call
 for(uint i=0; i<dirs.length(); i++)
 {
-int wi = border_wall(gameid, dirs[i], size);
+int wi = wall_in_dir(gameid, dirs[i], size); // mode-aware: the inset ring in PVP, the outer border otherwise
 if(wi>-1 and walls[wi].health>0) return false;
 }
 return true;
@@ -811,13 +831,14 @@ clear_enemies(gameid);
 clear_builders(gameid);
 clear_items(gameid);
 clear_walls(gameid);
-spawn_border_walls(gameid, size, 400, 400, true); // fresh walls (max health 400, new random starting strengths)
+if(games[gi].mode=="pvp") spawn_ring_walls(gameid, size, 400, 400); // PVP walls are the inset ring
+else spawn_border_walls(gameid, size, 400, 400, true); // PVE/EVP: fresh border walls (max health 400, new random starting strengths)
 games[gi].phase = "idle";
 games[gi].evp_rounds_cleared = 0; // a fresh game (after play-again) starts the EVP score over (no-op for PVE)
 for(uint m=0; m<games[gi].members.length(); m++)
 {
 int pi = get_player_index(games[gi].members[m]);
-if(pi > -1) { players[pi].inv.clear(); send_wood_count(pi); } // a fresh round starts with no wood
+if(pi > -1) { players[pi].inv.clear(); send_wood_count(pi); if(games[gi].mode=="pvp") players[pi].team=""; } // a fresh round starts with no wood; PVP clears the sides so they're re-picked in staging
 }
 // Redraw the fresh idle cavern for members AND spectators (so watchers see the reset walls too).
 send_to_game(gameid, "gamereset "+int(size));
