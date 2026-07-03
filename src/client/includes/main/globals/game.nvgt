@@ -348,7 +348,14 @@ void speak_game_status()
 	}
 	else if(game_phase == "wave")
 	{
-		if(game_outside)
+		if(game_mode == "pvp")
+		{
+			int rem = int(game_build_seconds) - int(game_phasetimer.elapsed / 1000); // the attacking-seconds budget, frozen during build windows
+			if(rem < 0) rem = 0;
+			if(my_side == "attack") speak((wave_attacking ? "Attack window, smash the walls, " : "Hold your fire, the walls are being repaired, ") + rem + (rem == 1 ? " second" : " seconds") + " left.");
+			else speak((wave_attacking ? "The attackers are striking, gather wood, " : "Repair window, mend the walls, ") + rem + (rem == 1 ? " second" : " seconds") + " left.");
+		}
+		else if(game_outside)
 		{
 			int rem = int(game_build_seconds) - int(game_phasetimer.elapsed / 1000); // EVP wave carries the round timer in game_build_seconds
 			if(rem < 0) rem = 0;
