@@ -53,6 +53,19 @@ spawn_wall(room_id, size, size, 0, size, wall_start_health(health, maxhealth, de
 spawn_wall(room_id, 0, size, size, size, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable); // north (y = size)
 spawn_wall(room_id, 0, size, 0, 0, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable);       // south (y = 0)
 }
+// PVP: the four destructible walls form a MIDDLE ring -- a square inset by size/4 -- so the space has a walkable
+// INTERIOR inside them (defenders) and a walkable EXTERIOR band around them (attackers), all in one grid. Uses the
+// SAME wmin/wmax the client's draw_map("pvparena") uses, so the server's reach/audio positions line up with the
+// rendered ring. Always destroyable; each wall rolls its own 50-100% starting strength like the other modes.
+void spawn_ring_walls(int room_id, double size, double health, double maxhealth)
+{
+double wmin = int(size)/4;
+double wmax = size - wmin;
+spawn_wall(room_id, wmin, wmin, wmin, wmax, wall_start_health(health, maxhealth, true), maxhealth, true); // west  (x = wmin)
+spawn_wall(room_id, wmax, wmax, wmin, wmax, wall_start_health(health, maxhealth, true), maxhealth, true); // east  (x = wmax)
+spawn_wall(room_id, wmin, wmax, wmax, wmax, wall_start_health(health, maxhealth, true), maxhealth, true); // north (y = wmax)
+spawn_wall(room_id, wmin, wmax, wmin, wmin, wall_start_health(health, maxhealth, true), maxhealth, true); // south (y = wmin)
+}
 // The walls[] index of the wall covering this cell in the given space, or -1 if there isn't one.
 int wall_at(int room_id, double x, double y)
 {
