@@ -300,6 +300,7 @@ else if(host and phase == "build" and staff) { opts.insert_last("Skip build phas
 if(games[gi].mode == "pvp" and phase == "idle")
 {
 opts.insert_last("Choose your side"); players[index].menu_actions.insert_last("pvpside");
+if(games[gi].members.length() > 1) { opts.insert_last("Watch instead"); players[index].menu_actions.insert_last("pvpwatch"); } // step aside to a deck so an odd count can go even; pointless when you're the only one
 if(host) { opts.insert_last("Assign players to sides"); players[index].menu_actions.insert_last("pvpassign"); }
 }
 // Invite/kick are open-game host options (a solo game has only the host). Invite shows while the game is still
@@ -320,6 +321,14 @@ string[] opts;
 opts.insert_last("Attack the walls, from outside");
 opts.insert_last("Defend the walls, from inside");
 send_menu(players[index].peer_id, "pvpside", "Choose your side.", opts);
+}
+// PVP: the deck chooser a member opens with "Watch instead" -- become a watcher on the chosen overhead deck.
+void push_pvp_watch_deck(int index)
+{
+string[] opts;
+opts.insert_last("Indoor deck, above the defenders");
+opts.insert_last("Outdoor deck, above the attackers");
+send_menu(players[index].peer_id, "pvpwatchdeck", "Which deck do you want to watch from?", opts);
 }
 // PVP: the host's "Assign players to sides" -- pick a member (showing their current side), then pick their side.
 void push_pvp_assign_menu(int index)
@@ -783,7 +792,22 @@ send(peer, "runcommand joingame " + players[player_index].menu_targets[choice], 
 else if(id == "watchgame")
 {
 if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return;
-send(peer, "runcommand spectategame " + players[player_index].menu_targets[choice], 0, true);
+string wgid = players[player_index].menu_targets[choice];
+int wgi = get_game_index(int(string_to_number(wgid)));
+if(wgi > -1 and games[wgi].mode == "pvp") // PVP watchers pick a deck; remember the game, then ask which
+{
+players[player_index].menu_pending = wgid;
+string[] opts;
+opts.insert_last("Indoor deck, above the defenders");
+opts.insert_last("Outdoor deck, above the attackers");
+send_menu(peer, "watchdeck", "Which deck do you want to watch from?", opts);
+}
+else send(peer, "runcommand spectategame " + wgid, 0, true); // PVE/EVP: the deck is fixed by the mode, so no prompt
+}
+else if(id == "watchdeck")
+{
+if(choice < 0) return; // cancelled the deck picker
+send(peer, "runcommand spectategame " + players[player_index].menu_pending + " " + (choice == 1 ? "out" : "in"), 0, true);
 }
 else if(id == "stopgame")
 {
@@ -799,6 +823,7 @@ else if(act == "skipbuild") send(peer, "runcommand skipbuild", 0, true);
 else if(act == "gameinvite") push_game_invite_area(player_index); // pick an area (room/lobby) first
 else if(act == "gamekick") push_game_kick_list(player_index);
 else if(act == "pvpside") push_pvp_side_menu(player_index); // PVP: open the attack/defend chooser for yourself
+else if(act == "pvpwatch") push_pvp_watch_deck(player_index); // PVP: open the deck chooser to step aside as a watcher
 else if(act == "pvpassign") push_pvp_assign_menu(player_index); // PVP host: open the assign-a-player flow
 }
 else if(id == "gameinvitearea")
@@ -841,6 +866,11 @@ bool member = false;
 for(uint m=0; m<games[gi].members.length(); m++) if(games[gi].members[m] == players[ti].peer_id) member = true;
 if(!member) { send(peer, "misc That player is no longer in the game.", 0, true); return; }
 apply_pvp_side(player_index, ti, (choice == 0) ? "attack" : "defend");
+}
+else if(id == "pvpwatchdeck")
+{
+if(choice < 0) return; // cancelled the deck picker
+become_watcher(player_index, choice == 1); // 0 = indoor (above the defenders), 1 = outdoor (above the attackers)
 }
 else if(id == "pause")
 {

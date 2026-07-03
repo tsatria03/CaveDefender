@@ -39,6 +39,7 @@ bool restoring=false; // set by login() when a reconnect adopts this session; te
 bool restore_reannounce=false; // set with restoring: true if the session was HELD (already announced offline), so restore re-announces them online; false for a still-live takeover (never went offline), so no spurious online notice. Cleared once restored.
 bool spectating=false;   // true while this player is watching a game from the overhead deck (room_id points at the watched game). Spectators are NOT in games[].members, so they're excluded from all gameplay; they only observe.
 int spectate_room=0;     // the room (office) to return a spectator to when they stop watching, since they aren't a game member.
+bool spectate_outside=false; // which overhead deck this spectator chose: true = outdoor gravel deck, false = indoor concrete deck. PVE watchers are always indoor, EVP always outdoor; a PVP watcher picks. Remembered so a reconnect restores the same deck.
 int invite_room=0;       // a pending ROOM invitation: the room id this player was invited to (0 = none). Accepted with /accept, refused with /reject; a newer invite replaces it; expires after 2 minutes.
 int invite_game=0;       // a pending GAME invitation: the game id the host invited this player into (0 = none). Mutually exclusive with invite_room (the newer one clears the other); shares invite_from/invite_timer and /accept,/reject.
 string invite_from="";   // the username of whoever sent the pending invite (room or game), so accept/reject can tell them the outcome.
