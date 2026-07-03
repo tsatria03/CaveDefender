@@ -156,33 +156,24 @@ for(uint i=0; i<players.length(); i++)
 {
 if(players[i].name==name)
 {
-if(players[i].held)
-{
-// Reconnect within the grace window: ADOPT the held session rather than tearing it down. Rebind its
-// negative sentinel peer id onto this new connection (repointing every members[]/host_peer reference),
-// clear the hold, and mark it for restore; spawn_player then replays their game/room/watch scope with
-// their inventory and host status intact. verified_logins moves to the new peer, and we reply "done" and
-// return, skipping the takeover teardown and the normal done-send below.
-int sentinel=players[i].peer_id;
-rebind_peer(sentinel, event.peer_id);
+// This account already has a session in the roster: either a HELD one (dropped, holding its slot within the
+// grace window) or a still-LIVE one -- a ghost the server's enet hasn't timed out yet, or a genuine second
+// login. In every case this IS the same account (re)connecting, so ADOPT that session onto this new peer and
+// restore their scope, rather than tearing it down and dumping them in the lobby. This makes reconnect work
+// whether or not the grace hold has engaged yet (killing the detect-the-drop race), and a real second login
+// simply takes the session over into wherever it was. Rebind repoints members[]/host_peer + the roster entry;
+// spawn_player then replays their game/room/watch scope with inventory and host status intact.
+int oldpeer=players[i].peer_id;
+bool washeld=players[i].held;
+if(!washeld) net.disconnect_peer_forcefully(oldpeer); // a live old socket (real second client, or a not-yet-timed-out ghost): drop it so two clients don't both drive one session
+rebind_peer(oldpeer, event.peer_id);
 players[i].held=false;
 players[i].restoring=true;
+players[i].restore_reannounce=washeld; // held sessions were announced offline, so restore re-announces them online; a live takeover never went offline, so it stays quiet
+verified_logins.delete(""+oldpeer);
 verified_logins.set(""+event.peer_id, name);
 send(event.peer_id, "done", 0,true);
 return;
-}
-// Already in the roster and NOT held -- usually a ghost session whose disconnect wasn't detected yet, or a
-// genuine second login. Drop the old session and let this login take over, so a dropped or abruptly-closed
-// connection never locks you out with "already logged in".
-int oldpeer=players[i].peer_id;
-string oldrank=players[i].rank;
-string oldnick=players[i].nickname;
-handle_disconnect_games(oldpeer);
-handle_disconnect_rooms(oldpeer);
-players.remove_at(i);
-send(0, "offline "+name+" "+oldrank+" "+oldnick, 0,true);
-net.disconnect_peer_forcefully(oldpeer);
-break;
 }
 }
 if(players.length()>=userlimit)
@@ -847,7 +838,8 @@ if(existing>-1 and players[existing].restoring and players[existing].peer_id==ev
 players[existing].restoring=false;
 index=existing;
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
-send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
+if(players[index].restore_reannounce) send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true); // only if they were held (announced offline); a live takeover was never offline
+players[index].restore_reannounce=false;
 array<string> rmch = mute_channels_for("all");
 for(uint sc=0; sc<rmch.length(); sc++)
 {
