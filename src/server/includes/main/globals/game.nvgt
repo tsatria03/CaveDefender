@@ -64,6 +64,26 @@ if(p>-1 and !players[p].held) n++;
 }
 return n;
 }
+// PVP staging gate: "" if the game may begin (an even 2 or 4 members, everyone assigned a side, and the two sides
+// equal -- 1v1 or 2v2), otherwise a one-sentence message naming what's missing. Checked at Begin round.
+string pvp_start_problem(int gi)
+{
+if(gi < 0 or gi >= int(games.length())) return "This game no longer exists.";
+int n = int(games[gi].members.length());
+if(n != 2 and n != 4) return "PVP needs an even 2 or 4 players for 1v1 or 2v2, but this game has " + n + ".";
+int atk = 0, def = 0, un = 0;
+for(uint m=0; m<games[gi].members.length(); m++)
+{
+int pi = get_player_index(games[gi].members[m]);
+if(pi < 0) continue;
+if(players[pi].team == "attack") atk++;
+else if(players[pi].team == "defend") def++;
+else un++;
+}
+if(un > 0) return "Everyone must choose a side first, and " + un + (un == 1 ? " player hasn't" : " players haven't") + " yet.";
+if(atk != def) return "The sides aren't even yet, with " + atk + " attacking and " + def + " defending.";
+return "";
+}
 // The peer id of the first live (online, not held) member of a game, or -1 if none. Host migration uses this so
 // the host never migrates onto a held (offline) slot.
 int first_live_member(int gi)
