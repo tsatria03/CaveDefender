@@ -637,7 +637,7 @@ games[i].warned=true;
 send_to_game(games[i].id, "wavewarning "+wave_warning_seconds); // members + spectators
 }
 // Heads-up before each later wave: once per rest segment, wave_warning_seconds before it ends. (PVE only.)
-if(games[i].mode!="evp" and games[i].phase=="wave" and !games[i].wave_attacking and !games[i].warned and games[i].wave_cycletimer.elapsed >= games[i].wave_cycle - wave_warning_seconds*1000)
+if(games[i].mode=="pve" and games[i].phase=="wave" and !games[i].wave_attacking and !games[i].warned and games[i].wave_cycletimer.elapsed >= games[i].wave_cycle - wave_warning_seconds*1000)
 {
 games[i].warned=true;
 send_to_game(games[i].id, "wavewarning "+wave_warning_seconds); // members + spectators

@@ -170,7 +170,16 @@ void destroy_wall_client(string dir, bool silent=false)
 {
 double s = cavern_size;
 int minx, maxx, miny, maxy;
-if(dir=="west") { minx=0; maxx=0; miny=0; maxy=int(s); }
+int wmin = int(s)/4, wmax = int(s) - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
+if(game_mode == "pvp") // PVP walls are the inset ring, not the outer border
+{
+if(dir=="west") { minx=wmin; maxx=wmin; miny=wmin; maxy=wmax; }
+else if(dir=="east") { minx=wmax; maxx=wmax; miny=wmin; maxy=wmax; }
+else if(dir=="north") { minx=wmin; maxx=wmax; miny=wmax; maxy=wmax; }
+else if(dir=="south") { minx=wmin; maxx=wmax; miny=wmin; maxy=wmin; }
+else return;
+}
+else if(dir=="west") { minx=0; maxx=0; miny=0; maxy=int(s); }
 else if(dir=="east") { minx=int(s); maxx=int(s); miny=0; maxy=int(s); }
 else if(dir=="north") { minx=0; maxx=int(s); miny=int(s); maxy=int(s); }
 else if(dir=="south") { minx=0; maxx=int(s); miny=0; maxy=0; }
@@ -181,5 +190,13 @@ int h = p.play_extended_3d("sounds/objects/walls/wallwood/death.ogg", me.x, me.y
 p.update_sound_3d(h, minx, miny, 0);
 p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
 }
-if(!watching) spawn_platform(minx, maxx, miny, maxy, "woodpile"); // breach becomes a walkable woodpile platform -- but a spectator's wallcrate deck border never breaks
+if(!watching)
+{
+// PVP: a downed wall leaves IMPASSABLE debris -- attackers still can't cross into the interior. We reuse
+// wallwoodpile (a pile of wall wood -- the arena's outer boundary tile): its name contains "wall", so the
+// movement collision keeps blocking it, and its existing bump plays as you walk into the rubble. PVE/EVP
+// instead open a WALKABLE woodpile breach. (A spectator's deck border never breaks either way.)
+if(game_mode == "pvp") spawn_platform(minx, maxx, miny, maxy, "wallwoodpile");
+else spawn_platform(minx, maxx, miny, maxy, "woodpile");
+}
 }

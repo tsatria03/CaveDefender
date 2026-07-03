@@ -157,10 +157,19 @@ int ds = wmin - py; if(ds>=0 and ds<bd) { best="south"; bd=ds; }  // south ring 
 int dn = py - wmax; if(dn>=0 and dn<bd) { best="north"; bd=dn; }  // north ring wall (y=wmax)
 return best;
 }
+// The walls[] index of a game's wall in a compass direction, mode-aware: a PVP game's walls are the inset
+// ring, every other space uses the outer border. Use this anywhere that must work in ALL modes (the strength
+// readout, PVP attacks); the bot code stays on border_wall directly since bots are PVE/EVP-only.
+int wall_in_dir(int room_id, string dir, double size)
+{
+int gi = get_game_index(room_id);
+if(gi > -1 and games[gi].mode == "pvp") return ring_wall(room_id, dir, size);
+return border_wall(room_id, dir, size);
+}
 // A wall's strength as a percent of its max (can exceed 100 when over-reinforced).
 int wall_percent(int room_id, string dir, double size)
 {
-int wi = border_wall(room_id, dir, size);
+int wi = wall_in_dir(room_id, dir, size);
 if(wi<0 or walls[wi].maxhealth<=0) return 0;
 return int(walls[wi].health / walls[wi].maxhealth * 100);
 }
