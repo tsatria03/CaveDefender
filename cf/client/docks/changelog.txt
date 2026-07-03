@@ -1,4 +1,5 @@
 New in 3.1.
+Fixed a bug in the player versus player mode where a host stopping the game left the other players stuck inside it, having to leave by hand; stopping a game now clears it for everyone, in every mode.
 In a player versus player game that is waiting to start, a player can now step aside to watch instead, picking the indoor deck above the defenders or the outdoor deck above the attackers; this frees their team slot, so an odd group of three can become an even one versus one with a watcher. You also choose a deck when you watch a player versus player game from the room, since watchers pick where they observe from.
 Typing /help on its own as a staff member now opens the player help straight away, the same as it does for everyone else, instead of making you name a page; you still get the staff page with /help staff.
 Team chat, on the semicolon key, is now limited to player versus player games, where it reaches only your own side, attackers or defenders. In the other modes everyone in a game is on one team, so team chat only duplicated local chat, and the semicolon key now does nothing there.
