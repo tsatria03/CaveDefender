@@ -1008,6 +1008,26 @@ else if(parsed[0]=="attack" and index>-1 and parsed.length()>1)
 // swing with no wall in reach simply whiffs (no message, since the swing is a continuous held action).
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) {} // not in a game
+else if(games[gi].mode == "pvp")
+{
+// PVP (section 3): the attacking side swings at the ring walls for FEEDBACK only -- no damage yet (that's the
+// next section). Find the nearest ring wall in reach; during a wave's attack window the swing connects (wallhit),
+// otherwise (build/prep phase or a build window) it ricochets (wallrico). Defenders never attack walls.
+if(players[index].team == "attack" and (games[gi].phase == "build" or games[gi].phase == "wave"))
+{
+string dir = ring_wall_in_reach(players[index].x, players[index].y, games[gi].size);
+if(dir != "") // a ring wall is in reach; otherwise the swing whiffs (silent)
+{
+int wi = ring_wall(games[gi].id, dir, games[gi].size);
+if(wi > -1 and walls[wi].health > 0)
+{
+int wid = weapon_id_for_name(parsed[1]);
+if(games[gi].phase == "wave" and games[gi].wave_attacking) send_to_game(games[gi].id, "wallhit "+dir+" "+wid); // attack window: the swing connects (no damage yet)
+else send_to_game(games[gi].id, "wallrico "+dir+" "+wid); // build/prep or build window: it just ricochets
+}
+}
+}
+}
 else if(games[gi].mode != "evp") {} // PVE players defend; they don't attack walls
 else if(games[gi].phase != "build" and games[gi].phase != "wave") {} // only during a round
 else

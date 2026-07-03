@@ -57,7 +57,7 @@ int swing_recovery(string w) { if(w=="axe") return 200; if(w=="bat") return 250;
 // apply the hit. No-op for PVE, spectators, a paused game, or with no weapon in hand.
 void swingloop()
 {
-if(!game_outside or !in_game or watching or game_paused or current_weapon=="") { swinging=false; return; }
+if((!game_outside and !(game_mode=="pvp" and my_side=="attack")) or !in_game or watching or game_paused or current_weapon=="") { swinging=false; return; } // EVP, or a PVP attacker: the two sides that swing weapons
 if(swinging)
 {
 if(swingtimer.elapsed >= swing_windup(swing_weapon))
