@@ -160,10 +160,10 @@ buffercheck();
 		// Each is its own key, so the one-shot key_pressed reads don't collide. PVE players never draw a weapon.
 		swingloop(); // EVP: drive the held-Space swing and set the `swinging` lock used by the keys below
 		// Switching weapons only works while armed (current_weapon != "") -- i.e. during a round; before the round starts you have none. Allowed mid-swing (the in-flight swing keeps its own weapon).
-		if (in_game and !watching and game_outside and current_weapon != "" and key_pressed(KEY_1)) draw_weapon(1);
-		if (in_game and !watching and game_outside and current_weapon != "" and key_pressed(KEY_2)) draw_weapon(2);
-		if (in_game and !watching and game_outside and current_weapon != "" and key_pressed(KEY_3)) draw_weapon(3);
-		if (in_game and !watching and game_outside and current_weapon != "" and key_pressed(KEY_4)) draw_weapon(4);
+		if (in_game and !watching and (game_outside or (game_mode == "pvp" and my_side == "attack")) and current_weapon != "" and key_pressed(KEY_1)) draw_weapon(1);
+		if (in_game and !watching and (game_outside or (game_mode == "pvp" and my_side == "attack")) and current_weapon != "" and key_pressed(KEY_2)) draw_weapon(2);
+		if (in_game and !watching and (game_outside or (game_mode == "pvp" and my_side == "attack")) and current_weapon != "" and key_pressed(KEY_3)) draw_weapon(3);
+		if (in_game and !watching and (game_outside or (game_mode == "pvp" and my_side == "attack")) and current_weapon != "" and key_pressed(KEY_4)) draw_weapon(4);
 		if (key_down(KEY_LEFT) and movetimer.elapsed>=movetime)
 		{
 			facing=Left;

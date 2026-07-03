@@ -29,6 +29,7 @@ bool have_public_room=false, have_private_room=false; // whether we own a saved 
 bool in_game=false; // true while we're inside a game cavern (Escape/Enter open the game menu)
 bool game_outside=false; // true while the current game is EVP (the outdoor variant): drives the gravel/exterior map and the no-volume-scaling wall strikes; false for the original PVE (inside the cave). Set on entering a game, cleared on leaving.
 string game_mode=""; // the current game's mode ("pve"/"evp"/"pvp"), set on entering a game; gates PVP-only features like team chat. Stale when not in a game, but in_game guards those uses.
+string my_side=""; // in a PVP game, our assigned side for the round ("attack"/"defend"), set by the server's yourside message and reset on entering a game; drives our per-side spawn, weapon arming, and controls. Empty in PVE/EVP.
 bool watching=false; // true while we're spectating a game from the overhead deck (in_game is also true); gates out gameplay keys and makes Escape leave the watch
 const double spectate_height=5; // the height (z) of the spectator deck above the cavern floor; tune to taste (HRTF height is subtle; lower = closer to the action)
 string watch_host=""; // display name of the game we're watching, for the "stop watching X's game?" confirmation
