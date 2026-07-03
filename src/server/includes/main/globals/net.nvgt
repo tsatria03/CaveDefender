@@ -612,6 +612,7 @@ int oldroom = players[pindex].room_id;
 for(uint i=0; i<players.length(); i++)
 if(i!=uint(pindex) and players[i].room_id==oldroom) send(players[i].peer_id, "despawn "+nm, 0, true);
 players[pindex].room_id = newroom;
+players[pindex].team = ""; // clear any PVP side when moving between spaces, so it never leaks into another game's team chat; a PVP side is chosen fresh after entering an idle PVP game
 // Spawn at the center of the new space: the lobby and offices are 50x50 (center 25); a game cavern is
 // sized by its map, so its center is size/2 (matching the client's draw_map centering).
 int center = 25;
@@ -1422,8 +1423,12 @@ send(event.peer_id, "You can't begin a round with yourself.", 0,true);
 }
 else if(games[gi].mode=="pvp")
 {
-// PVP's staging (side assignment) and round flow aren't built yet -- for now a PVP game is just a walkable arena.
-send(event.peer_id, "PVP rounds are still being built; you can walk the arena for now.", 0,true);
+// PVP: enforce even, fully-assigned sides (1v1 or 2v2). Staging is this piece; the round flow (build phase,
+// attack/build windows, combat) is the NEXT piece, so a passing gate only confirms readiness for now -- it must
+// NOT call set_game_phase yet, or a PVP game would fall into the shared PVE engine (enemy bots + wood grants).
+string problem = pvp_start_problem(gi);
+if(problem != "") send(event.peer_id, problem, 0,true);
+else send(event.peer_id, "The sides are set; the PVP round itself arrives in the next update.", 0,true);
 }
 else
 {
