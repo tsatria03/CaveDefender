@@ -23,6 +23,7 @@ current_weapon = wname;
 p.destroy_sound(wepslot); // cut off the previous DRAW still ringing so switching weapons doesn't stack draws
 wepslot = p.play_3d("sounds/weapons/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step weapons/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
+send(0, "setweapon "+wname, 0, true); // tell the server which weapon we have drawn, so a reconnect restores the same one
 add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
 }
 // Force-equip a weapon and ALWAYS play its draw sound, even if it's already current. Used to arm the player
@@ -33,6 +34,7 @@ current_weapon = wname;
 p.destroy_sound(wepslot);
 wepslot = p.play_3d("sounds/weapons/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step weapons/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
+send(0, "setweapon "+wname, 0, true); // tell the server which weapon we have drawn, so a reconnect restores the same one
 add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
 }
 // --- EVP attack (the swing) ---

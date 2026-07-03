@@ -335,6 +335,38 @@ int sentinel=next_held_id; next_held_id--;
 verified_logins.delete(""+oldpeer); // the reconnect sets a fresh verified_logins entry for the new peer
 rebind_peer(oldpeer, sentinel);
 }
+// Send a peer the CURRENT phase of a game for a mid-round arrival (join, spectate, or reconnect restore): the
+// accurate remaining time -- the build countdown, or an EVP wave's remaining round-timer seconds that the
+// client counts down locally -- plus, if we're mid-wave in a REST window, the segment sync so the client shows
+// the right window and pauses its EVP countdown. Without this a mid-round arrival reads "0 seconds left" and
+// defaults to an attack window until the next natural segment flip.
+void send_game_phase_to(int peer, int gi)
+{
+if(gi<0 or gi>=int(games.length())) return;
+int rem;
+if(games[gi].phase=="build") rem = games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000);
+else if(games[gi].mode=="evp" and games[gi].phase=="wave") rem = games[gi].evp_round_secs - int(games[gi].wavetimer.elapsed/1000);
+else rem = 0;
+if(rem<0) rem=0;
+send(peer, "gamephase "+games[gi].phase+" "+rem+" "+games[gi].wave_number, 0, true);
+// The gamephase handler assumes a wave opens ATTACKING; if we're actually in a rest window, sync that (this
+// also pauses the client's EVP round-timer countdown so rem holds). An attack window needs nothing more.
+if(games[gi].phase=="wave" and !games[gi].wave_attacking) send(peer, "waveseg 0 "+games[gi].wave_number, 0, true);
+}
+// Re-open (silently, no death boom) any already-breached walls on a client that just drew a FRESH intact cavern
+// -- used by a mid-round join and a reconnect restore, so a player doesn't bump a gap that is actually open (the
+// client enforces wall collision by tile, and draw_map re-lays all four walls solid). Spectators don't need this:
+// they roam the deck behind their own indestructible border, and the client's re-tile is guarded by !watching.
+void send_wall_breaches(int peer, int gi)
+{
+if(gi<0 or gi>=int(games.length())) return;
+string[]@ bdirs = WALL_DIRS;
+for(uint bd=0; bd<bdirs.length(); bd++)
+{
+int bwi = border_wall(games[gi].id, bdirs[bd], games[gi].size);
+if(bwi>-1 and walls[bwi].health<=0) send(peer, "wallbreach "+bdirs[bd], 0, true);
+}
+}
 // Replay a reconnected (restored) player's current space to their fresh client, changing none of their held
 // state (membership, host status, inventory). Mirrors what join_game_now / do_spectate / do_join_room send on
 // entry, but mutates nothing except re-centring their position -- the client re-centres `me` on the redraw, so
@@ -360,9 +392,7 @@ for(uint i=0; i<items.length(); i++)
 if(@items[i]!=null and items[i].room_id==rid) send(peer, "spawnitem "+items[i].id+" "+items[i].type+" "+items[i].x+" "+items[i].y, 0, true);
 send_builders_to(peer, rid);
 send(peer, wall_strength_msg(rid), 0, true);
-int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
-if(rem<0) rem=0;
-send(peer, "gamephase "+games[gi].phase+" "+rem+" "+games[gi].wave_number, 0, true);
+send_game_phase_to(peer, gi);
 if(games[gi].paused) send(peer, "gamepaused", 0, true);
 return;
 }
@@ -370,14 +400,20 @@ if(gi>-1)
 {
 // Back into the cavern as a member, with their preserved inventory.
 send(peer, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].mode+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0, true);
-int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
-if(rem<0) rem=0;
-send(peer, "gamephase "+games[gi].phase+" "+rem+" "+games[gi].wave_number, 0, true);
+// EVP: restore the weapon they had drawn BEFORE the gamephase message, so its auto-axe (which only fires when
+// the client is unarmed) doesn't override it. PVE members never carry a weapon, so this is skipped there.
+if(games[gi].mode=="evp" and (games[gi].phase=="build" or games[gi].phase=="wave") and players[index].weapon!="") send(peer, "equipweapon "+players[index].weapon, 0, true);
+send_game_phase_to(peer, gi);
 send_builders_to(peer, rid);
 send(peer, wall_strength_msg(rid), 0, true);
+send_wall_breaches(peer, gi); // re-open (silently) any already-breached walls the fresh redraw re-laid solid
 for(uint i=0; i<items.length(); i++)
 if(@items[i]!=null and items[i].room_id==rid) send(peer, "spawnitem "+items[i].id+" "+items[i].type+" "+items[i].x+" "+items[i].y, 0, true);
 send_wood_count(index); // their PRESERVED inventory, not a cleared one
+// Reconnected during the end-of-round results screen: re-send their play-again prompt (the exact roundover/
+// evpover message), so they can still answer instead of being stuck in an "over" cavern with no prompt -- which
+// would also block the others' reset, since an unanswered member holds it up.
+if(games[gi].phase=="over" and !players[index].playagain_answered and players[index].pending_results!="") send(peer, players[index].pending_results, 0, true);
 if(games[gi].paused) send(peer, "gamepaused", 0, true);
 broadcast_pos(index); // re-add them to the other members' trackers (held is already cleared)
 for(uint i=0; i<players.length(); i++)
@@ -916,6 +952,13 @@ players[index].x=string_to_number(parsed[1]);
 players[index].y=string_to_number(parsed[2]);
 broadcast_pos(index); // no-op for spectators (guarded), so watchers aren't tracked as players
 if(!players[index].spectating) gather_wood(index, 5); // auto-grab nearby wood -- but a watcher never picks up the players' wood
+}
+else if(parsed[0]=="setweapon" and index>-1 and parsed.length()>1)
+{
+// EVP: the client tells us which weapon it just drew, so we can restore the same one on a reconnect. Validate
+// against the four weapons; ignore anything else.
+string w=parsed[1];
+if(w=="axe" or w=="bat" or w=="crowbar" or w=="hammer") players[index].weapon=w;
 }
 else if(parsed[0]=="reinforce" and index>-1)
 {

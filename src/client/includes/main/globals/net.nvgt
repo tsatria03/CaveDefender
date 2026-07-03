@@ -880,6 +880,13 @@ void netloop_impl()
 			// A wall fell: "walldestroyed <direction>". Death sound + re-tile the breach to a wood platform.
 			destroy_wall_client(parsed[1]);
 		}
+		else if (parsed[0] == "wallbreach" and parsed.length() > 1)
+		{
+			// A wall that was ALREADY broken before we (re)arrived: "wallbreach <direction>". Re-tile the breach to
+			// a walkable woodpile SILENTLY (no death boom -- nothing just broke), so on reconnect we don't bump into
+			// a gap the fresh cavern re-drew as solid.
+			destroy_wall_client(parsed[1], true);
+		}
 		else if (parsed[0] == "roundover" and parsed.length() > 1)
 		{
 			// Blocking UI: defer if another modal is already open (see the keepalive note above).
@@ -1157,7 +1164,13 @@ void netloop_impl()
 				else current_weapon = ""; // idle / over: unarmed
 			}
 		}
-		else if (parsed[0] == "waveseg" and parsed.length() > 1)
+		else if (parsed[0] == "equipweapon" and parsed.length() > 1)
+			{
+				// The server is restoring, on reconnect, the EVP weapon we had drawn before we dropped. Equip it
+				// directly; it's sent before the gamephase message so that handler's unarmed-only auto-axe leaves it be.
+				equip_weapon(parsed[1]);
+			}
+			else if (parsed[0] == "waveseg" and parsed.length() > 1)
 		{
 			// The wave swung between an attack window and a rest window. PVE: the bots resume hammering, then pull
 			// back so you can rebuild. EVP (reversed): an attack window is your turn to smash, a rest window locks

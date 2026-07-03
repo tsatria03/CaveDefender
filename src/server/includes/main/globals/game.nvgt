@@ -153,9 +153,7 @@ for(uint i=0; i<items.length(); i++) // the ground wood already lying in the cav
 if(@items[i]!=null and items[i].room_id==gameid) send(peer, "spawnitem "+items[i].id+" "+items[i].type+" "+items[i].x+" "+items[i].y, 0, true);
 send_builders_to(peer, gameid); // EVP: the current builder positions, for the watcher's B locator
 send(peer, wall_strength_msg(gameid), 0, true);
-int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
-if(rem<0) rem=0;
-send(peer, "gamephase "+games[gi].phase+" "+rem+" "+games[gi].wave_number, 0, true);
+send_game_phase_to(peer, gi); // remaining round time + rest-window sync for a mid-round watcher
 if(games[gi].paused) send(peer, "gamepaused", 0, true);
 string wn = display_name_flagged(index)+" is now watching.";
 for(uint i=0; i<players.length(); i++)
@@ -257,9 +255,8 @@ players[index].pregame_room = players[index].room_id; // remember where they cam
 games[gi].members.insert_last(peer);
 send(peer, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].mode+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0,true);
 set_room_scope(index, games[gi].id);
-int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
-if(rem<0) rem=0;
-send(peer, "gamephase "+games[gi].phase+" "+rem+" "+games[gi].wave_number, 0,true); // 3-field like do_spectate/set_game_phase so a mid-wave joiner sees the real round number, not a defaulted 1
+send_game_phase_to(peer, gi); // remaining round time + rest-window sync, so a mid-wave joiner sees the real timer/window, not a defaulted "0 seconds" attack
+send_wall_breaches(peer, gi); // re-open (silently) any already-breached walls, so a mid-wave joiner can walk through the gaps instead of bumping solid wall
 send_builders_to(peer, games[gi].id); // EVP: give the new arrival the current builder positions for their B locator
 for(uint mj=0; mj<games[gi].members.length(); mj++)
 {
@@ -625,7 +622,8 @@ players[pi].pending_bonus_wood = bonus;
 players[pi].pending_bonus_size = bonussize;
 }
 // roundover <survival-seconds> <wood-collected> <rounds-reached> <bonus-wood> <milestone-round> <bonus-size> (bonus/milestone 0 and size "none" = no milestone).
-send(games[gi].members[m], "roundover "+secs+" "+collected+" "+rounds+" "+bonus+" "+milestone+" "+bonussize, 0, true);
+players[pi].pending_results = "roundover "+secs+" "+collected+" "+rounds+" "+bonus+" "+milestone+" "+bonussize; // kept so a reconnect during the results screen can re-show this prompt
+send(games[gi].members[m], players[pi].pending_results, 0, true);
 }
 // Spectators don't get the play-again prompt; just tell them the round ended (they keep watching if it resets).
 for(uint s=0; s<players.length(); s++)
@@ -716,7 +714,8 @@ for(uint m=0; m<games[gi].members.length(); m++)
 int pi = get_player_index(games[gi].members[m]);
 if(pi < 0) continue;
 players[pi].playagain_answered = false; // awaiting the play-again answer
-send(games[gi].members[m], "evpover "+cleared, 0, true); // client: results dialog + play-again
+players[pi].pending_results = "evpover "+cleared; // kept so a reconnect during the results screen can re-show this prompt
+send(games[gi].members[m], players[pi].pending_results, 0, true); // client: results dialog + play-again
 }
 for(uint s=0; s<players.length(); s++)
 if(players[s].room_id==gameid and players[s].spectating) send(players[s].peer_id, "misc The attackers were held off after clearing "+cleared+(cleared==1?" round":" rounds")+".", 0, true);
