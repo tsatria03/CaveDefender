@@ -132,6 +132,31 @@ if(s-py < bd) { best="north"; bd=s-py; }// north wall (y=size)
 if(bd > wall_reach) return "";
 return best;
 }
+// The walls[] index of a PVP ring wall in a compass direction. Mirrors border_wall but for the inset ring
+// spawn_ring_walls builds (x=wmin/wmax, y=wmin/wmax, inset by size/4). Each wall spans its whole side, so the
+// midpoint cell finds it.
+int ring_wall(int room_id, string dir, double size)
+{
+double wmin = int(size)/4, wmax = size - wmin;
+if(dir=="west") return wall_at(room_id, wmin, size/2);
+if(dir=="east") return wall_at(room_id, wmax, size/2);
+if(dir=="north") return wall_at(room_id, size/2, wmax);
+if(dir=="south") return wall_at(room_id, size/2, wmin);
+return -1;
+}
+// The PVP ring wall an attacker at (px,py) out in the exterior band is closest to, or "" if none is within
+// wall_reach. The ring sits inset by size/4; an attacker is always OUTSIDE it, so the reach is the distance
+// past whichever side they are beyond, nearest side wins (the mirror of wall_in_reach for the ring geometry).
+string ring_wall_in_reach(int px, int py, double size)
+{
+int wmin = int(size)/4, wmax = int(size)-wmin;
+string best=""; int bd=wall_reach+1;
+int dw = wmin - px; if(dw>=0 and dw<bd) { best="west"; bd=dw; }  // west ring wall (x=wmin), attacker to its west
+int de = px - wmax; if(de>=0 and de<bd) { best="east"; bd=de; }  // east ring wall (x=wmax)
+int ds = wmin - py; if(ds>=0 and ds<bd) { best="south"; bd=ds; }  // south ring wall (y=wmin)
+int dn = py - wmax; if(dn>=0 and dn<bd) { best="north"; bd=dn; }  // north ring wall (y=wmax)
+return best;
+}
 // A wall's strength as a percent of its max (can exceed 100 when over-reinforced).
 int wall_percent(int room_id, string dir, double size)
 {
