@@ -76,7 +76,7 @@ bool in_cavern = false;      // in a cavern arena or watcher deck (set by draw_m
 bool listener_outside = false; // the local player is on the exterior (EVP gravel arena, or the outdoor deck): the cave sources are ALSO lowpass-muffled, as if heard through the wall.
 // Lowpass "through stone" muffle for cave sounds heard from outside the wall (frequency cutoff / bandwidth /
 // quality). Tune the cutoff (first number) by ear -- lower = more muffled. First brought in for EVP; PVP reuses it.
-const string cave_lowpass_fx = "$lowpass:lowpass:1000:5:0.5";
+const string cave_lowpass_fx = "$lowpass:lowpass:1500:5:0.5";
 // Set the cave effects on a cave-SOURCE pool (bots, ground wood), guarded on the combined state so we only touch
 // the mixer on a change. reverb_on = the source sits inside the cave; lowpass_on = the listener is on the OTHER
 // side of the wall (outside), so the source is muffled. The mixer runs both named slots ($reverb, $lowpass) at once.

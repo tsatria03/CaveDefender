@@ -44,7 +44,7 @@ int resolve_mute_target(int actor, string tname, string channel, string verb)
 {
 int ti = get_player_index_from(tname); // online-only, by username or nickname
 if(ti < 0) { reply_target_not_found(event.peer_id, tname); return -1; }
-if(channel != "all" && !valid_mute_channel(channel)) { send(event.peer_id, "Unknown channel. Use global, local, voice, or all.", 0, true); return -1; }
+if(channel != "all" && !valid_mute_channel(channel)) { send(event.peer_id, "Unknown channel. Use global, local, voice, team, or all.", 0, true); return -1; }
 if(rank_level(players[ti].rank) > rank_level(players[actor].rank)) { send(event.peer_id, "You can't "+verb+" someone above your own rank.", 0, true); return -1; }
 return ti;
 }
@@ -319,6 +319,23 @@ void relay_to_staff(string msg)
 for(uint i=0; i<players.length(); i++)
 {
 if(is_staff(players[i].rank)) send(players[i].peer_id, msg, 0, true);
+}
+}
+// Sends a message to everyone on the sender's team within their game (used by team chat). team splits a game's
+// players into sides (PVP); in co-op games everyone shares one team, so it reaches the whole game. Respects the
+// recipient's personal ignore list, like local chat.
+void relay_to_team(int sender_index, string msg)
+{
+if(sender_index<0 or sender_index>=int(players.length())) return;
+int room = players[sender_index].room_id;
+string team = players[sender_index].team;
+string sender_name = players[sender_index].name;
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].room_id != room) continue;      // same game space
+if(players[i].team != team) continue;         // same side
+if(player_ignores(int(i), sender_name)) continue; // recipient ignores the sender
+send(players[i].peer_id, msg, 0, true);
 }
 }
 // Sends a third-person staff audit line (a promote/demote/unban/notify) to every online staff member -- a
@@ -941,6 +958,22 @@ string action=string_join(parsed, " ", 1, parsed.length());
 if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
 else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
 else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+" "+action, "", index); // local chat reaches everyone in the space, regardless of language channel (minus anyone ignoring the sender)
+}
+else if(parsed[0]=="teamchat" and index>-1 and parsed.length()>1)
+{
+string msg=string_join(parsed, " ", 1, parsed.length());
+if(get_game_index(players[index].room_id) < 0) send(event.peer_id, "Team chat is only available in a game.", 0,true);
+else if(is_muted_now(index, "team")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
+else if(filter_crash(msg) or filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // team chat is filtered like local (crash strings + word filter)
+else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg);
+}
+else if(parsed[0]=="teamme" and index>-1 and parsed.length()>1)
+{
+string action=string_join(parsed, " ", 1, parsed.length());
+if(get_game_index(players[index].room_id) < 0) send(event.peer_id, "Team chat is only available in a game.", 0,true);
+else if(is_muted_now(index, "team")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
+else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true);
+else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(index)+" "+action);
 }
 else if(parsed[0]=="help" and index>-1 and parsed.length()>1)
 {

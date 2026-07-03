@@ -9,9 +9,10 @@ double version;
 string rank="player";
 string language="English"; // the player's current language chat channel (bare name); loaded from language.usr at spawn, defaults to English.
 string pronoun=""; // how third-person messages refer to this player; the bare key from pronouns.svr, set from pronoun.usr at spawn (default_pronoun() if unset or invalid).
-int64 mute_global=-1, mute_local=-1, mute_voice=-1; // per channel: -1 = not muted, 0 = indefinite, >0 = epoch it expires at. (Staff can't be muted, so there's no staff channel.)
+int64 mute_global=-1, mute_local=-1, mute_voice=-1, mute_team=-1; // per channel: -1 = not muted, 0 = indefinite, >0 = epoch it expires at. (Staff can't be muted, so there's no staff channel.)
 int x=1, y=1; // map position; defaults to the client's spawn at (1,1) until a position update arrives.
 int room_id=0; // 0 = main lobby; otherwise the id of the room this player is currently in.
+string team=""; // which side this player is on within their game (PVP: attack/defend); routes team chat. Empty in co-op games, so team chat reaches everyone in the game until PVP splits the sides.
 string[] menu_targets; // the argument behind each option of the last server-pushed LIST menu (a room id, game id, or player name), so a returned choice index maps back to the right thing.
 string[] menu_actions; // for a HETEROGENEOUS menu (e.g. the room menu), the action key behind each option.
 string menu_pending;   // a value carried across a cascading menu (e.g. the chosen access solo/open while picking the size).
@@ -61,13 +62,13 @@ return false;
 array<string> mute_channels_for(string ch)
 {
 array<string> r;
-if(ch=="all") { r.insert_last("global"); r.insert_last("local"); r.insert_last("voice"); }
+if(ch=="all") { r.insert_last("global"); r.insert_last("local"); r.insert_last("voice"); r.insert_last("team"); }
 else r.insert_last(ch);
 return r;
 }
 bool valid_mute_channel(string ch)
 {
-return ch=="global" or ch=="local" or ch=="voice";
+return ch=="global" or ch=="local" or ch=="voice" or ch=="team";
 }
 // Read/write a player's in-memory mute for a channel (-1 not muted, 0 indefinite, >0 epoch).
 int64 get_player_mute(int pi, string ch)
@@ -76,6 +77,7 @@ if(pi<0 or pi>=int(players.length())) return -1;
 if(ch=="global") return players[pi].mute_global;
 if(ch=="local") return players[pi].mute_local;
 if(ch=="voice") return players[pi].mute_voice;
+if(ch=="team") return players[pi].mute_team;
 return -1;
 }
 void set_player_mute(int pi, string ch, int64 v)
@@ -84,6 +86,7 @@ if(pi<0 or pi>=int(players.length())) return;
 if(ch=="global") players[pi].mute_global=v;
 else if(ch=="local") players[pi].mute_local=v;
 else if(ch=="voice") players[pi].mute_voice=v;
+else if(ch=="team") players[pi].mute_team=v;
 }
 // Is this player muted in this channel right now? (>0 epochs that have passed read as not muted; the
 // netloop poll clears and announces them shortly after.)
