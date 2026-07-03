@@ -110,6 +110,10 @@ You float on a deck above the cavern and roam it freely while the whole battle p
 
 Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. When you watch an environment versus player game, the deck sits out on the gravel to match, and the b key locates the builder bots as well. Press escape to stop watching and return to the room.
 
+Connection problems.
+
+If your connection drops while you are in a room, a game, or watching one, you are not dropped out of it straight away. The server holds your place for 45 seconds, and the game quietly keeps trying to reconnect the whole time. Get back within that window, which usually happens on its own, and you are put right back where you were, in the same room or game, with your wood, your score, and your host role intact, rather than being dumped in the lobby. To everyone else you simply went offline and then came back. If the game or room ends while you are away, you return to wherever you would have been sent, your room or the lobby; and if you do not make it back in time, or the server itself restarts, you come back to the lobby as usual.
+
 Keyboard commands.
 
 This is the full list of keys CaveDefender uses. Some keys only do something in the right place, for example the wall and weapon keys work only while you are in a game; where that matters it is noted. A few keys do one thing on their own and another with shift held, and both are listed.

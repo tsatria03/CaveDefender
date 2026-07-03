@@ -564,6 +564,7 @@ players[index].menu_targets.resize(0);
 string[] opts;
 for(uint i = 0; i < players.length(); i++)
 {
+if(players[i].held) continue; // held (offline) sessions read as offline everywhere, so keep them out of the F6 roster too
 players[index].menu_targets.insert_last(players[i].name);
 string label = afk_prefix(int(i)) + display_name(int(i));
 if(string_to_lower_case(players[i].nickname) != string_to_lower_case(players[i].name)) label += " (" + players[i].name + ")";

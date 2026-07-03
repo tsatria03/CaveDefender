@@ -10,6 +10,7 @@ network_event event;
 
 bool send(int peer_id,string packet,int channel,bool reliable)
 {
+if(peer_id<0) return false; // a held (disconnected-but-holding) session carries a negative sentinel peer id; never hand that to enet -- their outgoing traffic is simply dropped while held, so every broadcast loop stays inert toward them with no per-loop guard
 if(encryption)
 {
 packet=string_encrypt(packet,"rscs123");
@@ -155,9 +156,24 @@ for(uint i=0; i<players.length(); i++)
 {
 if(players[i].name==name)
 {
-// Already in the roster -- usually a ghost session whose disconnect wasn't detected yet, or the
-// same person reconnecting. Drop the old session and let this login take over, so a dropped or
-// abruptly-closed connection never locks you out with "already logged in".
+if(players[i].held)
+{
+// Reconnect within the grace window: ADOPT the held session rather than tearing it down. Rebind its
+// negative sentinel peer id onto this new connection (repointing every members[]/host_peer reference),
+// clear the hold, and mark it for restore; spawn_player then replays their game/room/watch scope with
+// their inventory and host status intact. verified_logins moves to the new peer, and we reply "done" and
+// return, skipping the takeover teardown and the normal done-send below.
+int sentinel=players[i].peer_id;
+rebind_peer(sentinel, event.peer_id);
+players[i].held=false;
+players[i].restoring=true;
+verified_logins.set(""+event.peer_id, name);
+send(event.peer_id, "done", 0,true);
+return;
+}
+// Already in the roster and NOT held -- usually a ghost session whose disconnect wasn't detected yet, or a
+// genuine second login. Drop the old session and let this login take over, so a dropped or abruptly-closed
+// connection never locks you out with "already logged in".
 int oldpeer=players[i].peer_id;
 string oldrank=players[i].rank;
 string oldnick=players[i].nickname;
@@ -251,6 +267,7 @@ int get_online_index(string name)
 string low=string_to_lower_case(name);
 for(uint i=0; i<players.length(); i++)
 {
+if(players[i].held) continue; // a held (disconnected, holding their slot) session reads as offline: not targetable, not counted "online"
 if(string_to_lower_case(players[i].name)==low) return i;
 }
 return -1;
@@ -259,6 +276,138 @@ return -1;
 bool is_online(string name)
 {
 return get_online_index(name)>-1;
+}
+// --- Reconnect grace (hold-and-restore) ---
+// How long a dropped session's game/room slot, host status, and inventory are held before the real teardown
+// runs, if they never reconnect. Matches the client's auto-retry window so the automatic reconnect covers the
+// entire hold.
+const int reconnect_grace_ms=45000;
+// Repoint every stored reference from oldpeer to newpeer across games and rooms (both member lists and
+// host_peer) and the roster entry itself. Used to swap a session onto a negative sentinel id when it goes on
+// hold, and back onto the real new peer id when it reconnects, so a held slot survives the peer-id change with
+// no dangling references anywhere.
+void rebind_peer(int oldpeer, int newpeer)
+{
+for(uint i=0; i<games.length(); i++)
+{
+if(games[i].host_peer==oldpeer) games[i].host_peer=newpeer;
+for(uint j=0; j<games[i].members.length(); j++)
+if(games[i].members[j]==oldpeer) games[i].members[j]=newpeer;
+}
+for(uint i=0; i<rooms.length(); i++)
+{
+if(rooms[i].host_peer==oldpeer) rooms[i].host_peer=newpeer;
+for(uint j=0; j<rooms[i].members.length(); j++)
+if(rooms[i].members[j]==oldpeer) rooms[i].members[j]=newpeer;
+}
+int pi=get_player_index(oldpeer);
+if(pi>-1) players[pi].peer_id=newpeer;
+}
+// Is this session worth holding on a drop? True if they're in a non-lobby space (a room, office, game, or
+// watching -- room_id != 0) or they host a live room or game. A bare lobby session with nothing hosted has
+// nothing to restore, so it's torn down immediately instead of held.
+bool has_restorable_state(int index)
+{
+if(index<0 or index>=int(players.length())) return false;
+if(players[index].room_id != 0) return true;
+int peer=players[index].peer_id;
+for(uint i=0; i<rooms.length(); i++) if(rooms[i].host_peer==peer) return true;
+for(uint i=0; i<games.length(); i++) if(games[i].host_peer==peer) return true;
+return false;
+}
+// Put a dropped session on hold for the grace window instead of tearing it down: announce them offline (the
+// same connections-buffer notice as a normal disconnect) and strip their presence from the space they're in,
+// but KEEP their roster entry, game/room membership, host status, and inventory. Their dead peer id is swapped
+// for a unique negative sentinel so a recycled enet peer can't collide with the held slot. The netloop poll
+// runs the real teardown once held_timer passes reconnect_grace_ms; a reconnect (login) restores them first.
+void begin_hold(int index)
+{
+players[index].held=true;
+players[index].held_timer.restart();
+players[index].afk=false; // they're simply gone now, not away-at-keyboard
+send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
+if(players[index].spectating)
+{
+// To the game they were watching, they simply stopped watching (they aren't in anyone's tracker anyway).
+string wn=display_name_flagged(index)+" stopped watching.";
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id==players[index].room_id and i!=uint(index)) send(players[i].peer_id, "misc "+wn, 0, true);
+}
+else
+{
+// Despawn them from their space-mates so their beacon/footsteps stop; broadcasts about them are otherwise suppressed while held.
+for(uint i=0; i<players.length(); i++)
+if(i!=uint(index) and players[i].room_id==players[index].room_id and !players[i].held) send(players[i].peer_id, "despawn "+players[index].name, 0, true);
+}
+int oldpeer=players[index].peer_id;
+int sentinel=next_held_id; next_held_id--;
+verified_logins.delete(""+oldpeer); // the reconnect sets a fresh verified_logins entry for the new peer
+rebind_peer(oldpeer, sentinel);
+}
+// Replay a reconnected (restored) player's current space to their fresh client, changing none of their held
+// state (membership, host status, inventory). Mirrors what join_game_now / do_spectate / do_join_room send on
+// entry, but mutates nothing except re-centring their position -- the client re-centres `me` on the redraw, so
+// the server must match (as after a round reset) or reach checks would misfire. broadcast_pos re-adds them to
+// everyone else's tracker. Their room_id already reflects wherever the hold left them (their game, a room, the
+// lobby, or a watch), including any space change forced while they were held (e.g. their game ended).
+void restore_scope(int index)
+{
+int peer=players[index].peer_id;
+int rid=players[index].room_id;
+int gi=get_game_index(rid);
+int center=25; // lobby/office are 50x50 (centre 25); a game cavern is size/2
+if(gi>-1) center=games[gi].size/2;
+players[index].x=center;
+players[index].y=center;
+if(players[index].spectating and gi>-1)
+{
+// Back onto the overhead deck of the game they were watching.
+send(peer, "spectatejoined "+games[gi].id+" "+games[gi].size+" "+games[gi].mode+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0, true);
+for(uint i=0; i<players.length(); i++)
+if(i!=uint(index) and players[i].room_id==rid and !players[i].spectating and !players[i].held) send(peer, pos_msg(int(i)), 0, true);
+for(uint i=0; i<items.length(); i++)
+if(@items[i]!=null and items[i].room_id==rid) send(peer, "spawnitem "+items[i].id+" "+items[i].type+" "+items[i].x+" "+items[i].y, 0, true);
+send_builders_to(peer, rid);
+send(peer, wall_strength_msg(rid), 0, true);
+int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
+if(rem<0) rem=0;
+send(peer, "gamephase "+games[gi].phase+" "+rem+" "+games[gi].wave_number, 0, true);
+if(games[gi].paused) send(peer, "gamepaused", 0, true);
+return;
+}
+if(gi>-1)
+{
+// Back into the cavern as a member, with their preserved inventory.
+send(peer, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].mode+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0, true);
+int rem = (games[gi].phase=="build") ? games[gi].buildduration - int(games[gi].phasetimer.elapsed/1000) : 0;
+if(rem<0) rem=0;
+send(peer, "gamephase "+games[gi].phase+" "+rem+" "+games[gi].wave_number, 0, true);
+send_builders_to(peer, rid);
+send(peer, wall_strength_msg(rid), 0, true);
+for(uint i=0; i<items.length(); i++)
+if(@items[i]!=null and items[i].room_id==rid) send(peer, "spawnitem "+items[i].id+" "+items[i].type+" "+items[i].x+" "+items[i].y, 0, true);
+send_wood_count(index); // their PRESERVED inventory, not a cleared one
+if(games[gi].paused) send(peer, "gamepaused", 0, true);
+broadcast_pos(index); // re-add them to the other members' trackers (held is already cleared)
+for(uint i=0; i<players.length(); i++)
+if(i!=uint(index) and players[i].room_id==rid and !players[i].held) send(peer, pos_msg(int(i)), 0, true);
+return;
+}
+int ri=get_room_index(rid);
+if(ri>-1)
+{
+// Back into the office of the room they were in.
+send(peer, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"private":"public")+" "+rooms[ri].host+"\n"+display_name_flagged_for(rooms[ri].host), 0, true);
+broadcast_pos(index);
+for(uint i=0; i<players.length(); i++)
+if(i!=uint(index) and players[i].room_id==rid and !players[i].held) send(peer, pos_msg(int(i)), 0, true);
+return;
+}
+// Lobby (room_id 0): they were held for hosting a room. The client already drew the lobby on spawn, so just
+// re-advertise them and hand them the other lobby occupants.
+broadcast_pos(index);
+for(uint i=0; i<players.length(); i++)
+if(i!=uint(index) and players[i].room_id==0 and !players[i].held) send(peer, pos_msg(int(i)), 0, true);
 }
 // The capitalized, expanded label shown for a rank in the /staff listing.
 string staff_label(string rank)
@@ -446,7 +595,7 @@ players[pindex].y = center;
 for(uint i=0; i<players.length(); i++)
 {
 if(i==uint(pindex) or players[i].room_id!=newroom) continue;
-send(players[i].peer_id, pos_msg(pindex), 0, true);
+if(!players[pindex].held) send(players[i].peer_id, pos_msg(pindex), 0, true); // a held player being shuffled between spaces during a teardown must not be advertised as present
 send(pr, pos_msg(int(i)), 0, true);
 }
 // Send any ground items already in the new space (e.g. wood down in a game you're joining mid-round).
@@ -474,7 +623,7 @@ return "pos "+players[pindex].name+" "+players[pindex].x+" "+players[pindex].y+"
 // beacons (no "pos" means they're never added to other clients' rosters).
 void broadcast_pos(int pindex)
 {
-if(players[pindex].spectating) return;
+if(players[pindex].spectating or players[pindex].held) return; // never advertise a spectator or a held (offline-pending) player's position
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==players[pindex].room_id) send(players[i].peer_id, pos_msg(pindex), 0, true);
 }
@@ -595,6 +744,19 @@ players[i].invite_from = "";
 send(players[i].peer_id, "invitexpired", 0, true);
 }
 }
+// Expire held (disconnected-but-holding) sessions: once the grace window passes with no reconnect, run the real
+// teardown now. Their peer_id is the negative sentinel, which is exactly what members[]/host_peer hold, so the
+// disconnect handlers find and remove them correctly. They were already announced offline at hold time, so no
+// second offline notice here.
+for(int i=int(players.length())-1; i>=0; i--)
+{
+if(!players[i].held or players[i].held_timer.elapsed < reconnect_grace_ms) continue;
+int sp=players[i].peer_id;
+handle_disconnect_games(sp);
+handle_disconnect_rooms(sp);
+int idx=get_player_index(sp); // re-find: the handlers close rooms/games but don't remove the roster entry
+if(idx>-1) players.remove_at(idx);
+}
 if(key_pressed(KEY_ESCAPE))
 {
 exit();
@@ -602,14 +764,16 @@ exit();
 if(event.type==event_disconnect)
 {
 int dindex=get_player_index(event.peer_id);
-// If a spectator drops, tell the game they stopped watching before everything else is torn down.
-if(dindex>-1 and players[dindex].spectating)
+if(dindex>-1 and has_restorable_state(dindex))
 {
-int wgame=players[dindex].room_id;
-string wn=display_name_flagged(dindex)+" stopped watching.";
-for(uint i=0; i<players.length(); i++)
-if(players[i].room_id==wgame and int(players[i].peer_id)!=event.peer_id) send(players[i].peer_id, "misc "+wn, 0, true);
+// They were in a room/game/watching or host something: hold the slot for the grace window instead of
+// tearing down now. begin_hold announces them offline, strips their presence, and swaps their peer id for
+// a sentinel. The netloop poll below tears it down for real if they don't reconnect in time.
+begin_hold(dindex);
 }
+else
+{
+// A bare lobby session (or a peer that never spawned): nothing to restore, so tear down immediately.
 handle_disconnect_games(event.peer_id);
 handle_disconnect_rooms(event.peer_id);
 int index=get_player_index(event.peer_id);
@@ -619,6 +783,7 @@ send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index
 players.remove_at(index);
 }
 verified_logins.delete(""+event.peer_id); // forget this peer's authenticated identity so a recycled peer id can't inherit it
+}
 }
 if(event.type==event_receive and event.channel==0)
 {
@@ -671,15 +836,29 @@ send(event.peer_id, "error: you must log in before spawning.", 0,true);
 }
 else
 {
-bool spawnable=true;
+int existing=-1;
 for(uint i=0; i<players.length(); i++)
+if(players[i].name==vname){ existing=int(i); break; }
+if(existing>-1 and players[existing].restoring and players[existing].peer_id==event.peer_id)
 {
-if(players[i].name==vname)
+// Reconnect restore: login() already adopted the held session (peer rebound, hold cleared). Don't create a
+// new player or reset any state -- announce them back online, replay any still-active channel mutes, and put
+// them back into their room/game/watch scope with inventory and host status intact.
+players[existing].restoring=false;
+index=existing;
+send(event.peer_id, "yourrank "+players[index].rank, 0,true);
+send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
+array<string> rmch = mute_channels_for("all");
+for(uint sc=0; sc<rmch.length(); sc++)
 {
-spawnable=false;
+int64 mu = get_player_mute(index, rmch[sc]);
+if(mu == 0) notify_target_mute(index, rmch[sc], true, 0);
+else if(mu > 0) { int64 nowsec = now_epoch(); if(nowsec < mu) notify_target_mute(index, rmch[sc], true, int(mu - nowsec)); }
 }
+send_yourrooms(event.peer_id, players[index].name);
+restore_scope(index);
 }
-if(spawnable==true)
+else if(existing<0)
 {
 spawn_player(event.peer_id, vname, string_to_number(parsed[2]));
 index=get_player_index(event.peer_id);
@@ -858,6 +1037,7 @@ else if(parsed[0]=="who" and index>-1)
 string[] names;
 for(uint i=0; i<players.length(); i++)
 {
+if(players[i].held) continue; // held sessions read as offline (already announced offline), so keep /who consistent
 string we = afk_prefix(i)+display_name(i);
 if(string_to_lower_case(players[i].nickname) != string_to_lower_case(players[i].name)) we += " ("+players[i].name+")"; // show the real username so staff can target it
 names.insert_last(we);
@@ -1328,7 +1508,7 @@ else if(parsed[0]=="scopemembers" and index>-1)
 int target = (parsed.length()>1) ? int(string_to_number(parsed[1])) : players[index].room_id;
 string payload="scopememberlist";
 for(uint i=0; i<players.length(); i++)
-if(players[i].room_id == target and !players[i].spectating) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // spectators aren't listed as participants
+if(players[i].room_id == target and !players[i].spectating and !players[i].held) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // spectators aren't listed as participants; held (offline) sessions aren't either
 send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="roomgamemembers" and index>-1)
@@ -1341,7 +1521,7 @@ string payload="roomgamelist "+gamecount;
 for(uint i=0; i<players.length(); i++)
 {
 int gi=get_game_index(players[i].room_id);
-if(gi>-1 and games[gi].parent_room == rid and !players[i].spectating) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // spectators aren't counted as game players
+if(gi>-1 and games[gi].parent_room == rid and !players[i].spectating and !players[i].held) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // spectators aren't counted as game players; held (offline) sessions aren't either
 }
 send(event.peer_id, payload, 0,true);
 }
@@ -1351,7 +1531,7 @@ else if(parsed[0]=="allgamemembers" and index>-1)
 // the roomgamelist reply format with roomgamemembers; the client just labels it "on the server".
 string payload="roomgamelist "+games.length();
 for(uint i=0; i<players.length(); i++)
-if(get_game_index(players[i].room_id)>-1 and !players[i].spectating) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // spectators aren't counted as game players
+if(get_game_index(players[i].room_id)>-1 and !players[i].spectating and !players[i].held) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // spectators aren't counted as game players; held (offline) sessions aren't either
 send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="roomsoverview" and index>-1)
@@ -1360,7 +1540,7 @@ else if(parsed[0]=="roomsoverview" and index>-1)
 // the lobby). Office occupants have room_id == that room's id; game players have room_id == a game id.
 string payload="roomsoverviewlist "+rooms.length();
 for(uint i=0; i<players.length(); i++)
-if(get_room_index(players[i].room_id)>-1) payload+="\n"+afk_prefix(i)+display_name_flagged(i);
+if(get_room_index(players[i].room_id)>-1 and !players[i].held) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // held (offline) sessions aren't listed as office occupants
 send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="kickfromroom" and index>-1 and parsed.length()>1)

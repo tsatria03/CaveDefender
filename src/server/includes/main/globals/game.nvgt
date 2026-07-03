@@ -51,6 +51,31 @@ for(uint i=0; i<games.length(); i++)
 if(games[i].id==id) return i;
 return -1;
 }
+// How many of a game's members are LIVE (online, not on a reconnect hold). A held member still occupies its
+// slot but can't act or answer, so emptiness and host migration are decided by this, not members.length().
+int online_member_count(int gi)
+{
+if(gi<0 or gi>=int(games.length())) return 0;
+int n=0;
+for(uint k=0; k<games[gi].members.length(); k++)
+{
+int p=get_player_index(games[gi].members[k]);
+if(p>-1 and !players[p].held) n++;
+}
+return n;
+}
+// The peer id of the first live (online, not held) member of a game, or -1 if none. Host migration uses this so
+// the host never migrates onto a held (offline) slot.
+int first_live_member(int gi)
+{
+if(gi<0 or gi>=int(games.length())) return -1;
+for(uint k=0; k<games[gi].members.length(); k++)
+{
+int p=get_player_index(games[gi].members[k]);
+if(p>-1 and !players[p].held) return games[gi].members[k];
+}
+return -1;
+}
 // Up to this many spectators may watch one game at once, mirroring the 4-player join cap.
 const int spectator_cap=4;
 // How many spectators are currently watching a game (players with room_id == the game id and spectating).
@@ -185,10 +210,14 @@ if(games[i].members[j]==peer){ gi=int(i); mi=int(j); break; }
 if(gi<0) return;
 int pi=get_player_index(peer);
 games[gi].members.remove_at(mi);
+if(online_member_count(gi)==0)
+{
+// No LIVE players remain (only held slots, if any). An idle game stays open in its room so it can be
+// rejoined later, like a room does; it closes only on Stop or when the room closes. A started game closes:
+// end_game routes any remaining HELD members back to their pregame_room, so a reconnect lands in the
+// room/lobby rather than a vanished game.
 if(games[gi].members.length()==0)
 {
-// An idle game (round not begun) stays open in its room so it can be rejoined later, like a room does;
-// it closes only on Stop or when the room closes. Once a round has started, an emptied game just ends.
 if(games[gi].phase != "idle")
 {
 eject_spectators(games[gi].id); // no players left and the game is closing; send watchers back to their room
@@ -199,13 +228,14 @@ clear_builders(games[gi].id);
 games.remove_at(gi);
 }
 }
+else if(games[gi].phase != "idle") end_game(gi); // only held members remain in a started game: end it and send them home
+}
 else
 {
 if(games[gi].host_peer==peer)
 {
-games[gi].host_peer=games[gi].members[0];
-int npi=get_player_index(games[gi].host_peer);
-if(npi>-1) games[gi].host=players[npi].name;
+int nh=first_live_member(gi); // migrate to a LIVE member, never a held slot
+if(nh!=-1){ games[gi].host_peer=nh; int npi=get_player_index(nh); if(npi>-1) games[gi].host=players[npi].name; }
 if(games[gi].paused) resume_game(gi); // the host who paused is gone; don't leave the rest frozen
 }
 // A "no" answer (or any leave) during the post-round wait can leave the rest all answered; start anew.
@@ -302,22 +332,30 @@ for(uint j=0; j<games[i].members.length(); j++)
 if(games[i].members[j]==peer){ mi=int(j); break; }
 if(mi<0) continue;
 games[i].members.remove_at(mi);
+if(online_member_count(int(i))==0)
+{
+// No live players left. Nobody at all: an idle game persists (rejoinable), a started game closes. Only held
+// members left in a started game: end it and route them home (end_game -> set_room_scope to pregame_room).
 if(games[i].members.length()==0)
 {
-eject_spectators(games[i].id); // last player disconnected; send any watchers back to their room
+if(games[i].phase != "idle")
+{
+eject_spectators(games[i].id); // last player gone; send any watchers back to their room
 clear_walls(games[i].id);
 clear_items(games[i].id);
 clear_enemies(games[i].id);
 clear_builders(games[i].id);
 games.remove_at(i);
 }
+}
+else if(games[i].phase != "idle") end_game(int(i));
+}
 else
 {
 if(games[i].host_peer==peer)
 {
-games[i].host_peer=games[i].members[0];
-int npi=get_player_index(games[i].host_peer);
-if(npi>-1) games[i].host=players[npi].name;
+int nh=first_live_member(int(i)); // migrate to a LIVE member, never a held slot
+if(nh!=-1){ games[i].host_peer=nh; int npi=get_player_index(nh); if(npi>-1) games[i].host=players[npi].name; }
 if(games[i].paused) resume_game(i); // host who paused disconnected; unfreeze the remaining players
 }
 // A member dropping during the post-round wait can leave the rest all answered; start the next round.
@@ -601,7 +639,7 @@ if(gi<0 or gi>=int(games.length()) or games[gi].members.length()==0) return fals
 for(uint m=0; m<games[gi].members.length(); m++)
 {
 int pi = get_player_index(games[gi].members[m]);
-if(pi>-1 and !players[pi].playagain_answered) return false;
+if(pi>-1 and !players[pi].held and !players[pi].playagain_answered) return false; // a held (offline) member can't answer; don't let their empty slot stall the reset
 }
 return true;
 }

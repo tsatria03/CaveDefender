@@ -28,7 +28,7 @@ bool encrypting=true, connected, registering, pinging, connection_dropped, kicke
 timer connectiontimer, pingtimer, reconnect_overall, reconnect_attempt;
 int connectingtime=10000;
 int pingtimeout=15000;
-int reconnecttime=30000; // how long to keep retrying after a mid-session drop before giving up
+int reconnecttime=45000; // how long to keep retrying after a mid-session drop before giving up; matches the server's reconnect grace so the auto-retry covers the whole window the server holds your slot
 int reconnect_phase=0;   // 0 = waiting for the connection, 1 = waiting for the re-login to complete
 uint64 serverpeer=0;
 network net;
