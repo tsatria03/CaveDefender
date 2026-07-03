@@ -7,6 +7,7 @@ int spamtime = 500;
 int voicechat = 1;
 int holdkey = 1;
 bool hearvoice=false; // "Hear your voice when streaming voice messages": live self-monitor while you talk, off by default
+bool voice_muted=false; // are we currently voice-muted by staff? Kept in sync silently (voicemutestate at spawn/restore, plus the live muted/unmuted voice/all notices) so pressing O can warn us and skip streaming instead of the server dropping every packet
 int gamxit=1;
 bool autorun=false; // when on you run by default and holding a movement modifier (alt/ctrl/shift) walks instead; toggled in-map with Alt+R, saved in prefs
 double ambvolume=0, musvolume=0; // in-world ambience/music volume (0 = full, down to -100); set on every map's spawned beds, adjusted in-map with Home/End (ambience) and PageUp/PageDown (music), saved in prefs

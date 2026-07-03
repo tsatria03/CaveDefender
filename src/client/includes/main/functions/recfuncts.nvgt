@@ -13,6 +13,7 @@ opus_encoder@ voice_enc = null; // our outgoing encoder
 microphone@ voice_mic = null;   // our capture device
 bool voice_ready = false;       // mic + encoder are up
 bool voice_toggle_on = false;   // toggle-mode latch (when "require holding" is off)
+bool voice_mute_warned = false; // set when we've told the user this press that they're voice-muted; cleared when they let go / toggle off, so the warning fires once per press, not every frame
 sound voice_monitor;            // local centered playback of our own voice ("hear your voice when streaming")
 
 // Bring up the mic and encoder for this session (idempotent). Honors the "enable voice chat" preference.
@@ -67,6 +68,24 @@ void recordcheck()
 	// Start/stop transitions, rate-limited to spamtime in BOTH modes so mashing the key can't spam the cue
 	// or the stream: a state change only lands once spamtime has passed since the last one. (Previously only
 	// toggle mode was throttled, on its intent flip; push-to-talk could be spammed freely.)
+	// Voice-muted by staff: never open the mic or stream a packet. Warn once the moment they try to talk
+	// (once per press, latched), then bail -- the server would just drop the stream anyway. A mid-talk mute
+	// (recording already on) is stopped here too; that case is already announced by the live muted-voice notice.
+	if(voice_muted)
+	{
+		if(want and !voice_mute_warned)
+		{
+			p.play_stationary("sounds/ui/misc/playermute.ogg", false);
+			add_buffer_item("misc", "You cannot send voice messages.");
+			voice_mute_warned = true;
+		}
+		if(!want) voice_mute_warned = false;
+		recording = false;
+		voice_mic.flush_capture();
+		return;
+	}
+	voice_mute_warned = false; // not muted: keep the latch clear so a future mute warns on its first press
+
 	if(want and !recording and spamtimer.elapsed >= spamtime)
 	{
 		recording = true;
