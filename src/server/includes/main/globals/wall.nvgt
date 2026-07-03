@@ -157,6 +157,19 @@ int ds = wmin - py; if(ds>=0 and ds<bd) { best="south"; bd=ds; }  // south ring 
 int dn = py - wmax; if(dn>=0 and dn<bd) { best="north"; bd=dn; }  // north ring wall (y=wmax)
 return best;
 }
+// The PVP ring wall a defender at (px,py) INSIDE the interior is closest to, or "" if none within wall_reach.
+// The mirror of ring_wall_in_reach: a defender is always INSIDE the ring, so the reach is the distance from
+// the wall inward (px-wmin for the west wall, etc.). Lets defenders reinforce the ring from the interior side.
+string ring_wall_in_reach_inside(int px, int py, double size)
+{
+int wmin = int(size)/4, wmax = int(size)-wmin;
+string best=""; int bd=wall_reach+1;
+int dw = px - wmin; if(dw>=0 and dw<bd) { best="west"; bd=dw; }  // west ring wall (x=wmin), defender to its east (inside)
+int de = wmax - px; if(de>=0 and de<bd) { best="east"; bd=de; }  // east ring wall (x=wmax)
+int ds = py - wmin; if(ds>=0 and ds<bd) { best="south"; bd=ds; }  // south ring wall (y=wmin)
+int dn = wmax - py; if(dn>=0 and dn<bd) { best="north"; bd=dn; }  // north ring wall (y=wmax)
+return best;
+}
 // The walls[] index of a game's wall in a compass direction, mode-aware: a PVP game's walls are the inset
 // ring, every other space uses the outer border. Use this anywhere that must work in ALL modes (the strength
 // readout, PVP attacks); the bot code stays on border_wall directly since bots are PVE/EVP-only.

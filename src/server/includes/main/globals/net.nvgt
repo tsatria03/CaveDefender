@@ -968,15 +968,16 @@ else if(parsed[0]=="reinforce" and index>-1)
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) {} // not in a game
 else if(games[gi].phase != "build" and games[gi].phase != "wave") send(event.peer_id, "You can only reinforce during a round.", 0,true);
-else if(games[gi].phase == "wave" and games[gi].wave_attacking) send(event.peer_id, "You can't reinforce while the enemies are attacking.", 0,true);
+else if(games[gi].phase == "wave" and games[gi].wave_attacking) send(event.peer_id, games[gi].mode=="pvp" ? "You can't reinforce while the attackers are striking." : "You can't reinforce while the enemies are attacking.", 0,true);
+else if(games[gi].mode=="pvp" and players[index].team != "defend") send(event.peer_id, "Only the defenders reinforce the walls.", 0,true);
 else if(wood_total(players[index].inv) < 1) send(event.peer_id, "You don't have any wood.", 0,true);
 else
 {
-string dir = wall_in_reach(players[index].x, players[index].y, games[gi].size);
+string dir = (games[gi].mode=="pvp") ? ring_wall_in_reach_inside(players[index].x, players[index].y, games[gi].size) : wall_in_reach(players[index].x, players[index].y, games[gi].size); // PVP defenders reach the ring from inside
 if(dir == "") send(event.peer_id, "You need to be near a wall.", 0,true);
 else
 {
-int wi = border_wall(games[gi].id, dir, games[gi].size);
+int wi = wall_in_dir(games[gi].id, dir, games[gi].size); // ring wall in PVP, outer border otherwise
 if(wi > -1 and walls[wi].health <= 0) send(event.peer_id, "That wall is destroyed.", 0,true);
 else if(wi > -1 and walls[wi].health >= walls[wi].maxhealth * wall_overbuild_cap) send(event.peer_id, "This wall can't be reinforced any further.", 0,true);
 else if(wi > -1)
@@ -988,7 +989,15 @@ send_wood_count(index);
 // Play the placement in 3D AT THE WALL being reinforced -- the placer's spot projected onto that border --
 // so everyone, the placer included, hears which wall and side the wood went to. Reuses the footstep relay.
 int placex = players[index].x, placey = players[index].y;
-if(dir=="west") placex = 0;
+if(games[gi].mode=="pvp") // project onto the inset ring, not the outer border
+{
+int wm = games[gi].size/4;
+if(dir=="west") placex = wm;
+else if(dir=="east") placex = games[gi].size - wm;
+else if(dir=="south") placey = wm;
+else if(dir=="north") placey = games[gi].size - wm;
+}
+else if(dir=="west") placex = 0;
 else if(dir=="east") placex = games[gi].size;
 else if(dir=="south") placey = 0;
 else if(dir=="north") placey = games[gi].size;

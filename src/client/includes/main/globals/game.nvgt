@@ -283,7 +283,7 @@ buffercheck();
 		{
 			if(in_game)
 			{
-				if(shift_is_down() and !watching and !game_outside) // spectators can't reinforce; EVP players don't reinforce at all (they attack, the bots build)
+				if(shift_is_down() and !watching and !game_outside and !(game_mode=="pvp" and my_side=="attack")) // spectators can't reinforce; EVP players and PVP attackers don't reinforce (they attack) -- only defenders build
 				{
 					// Shift+Enter reinforces the nearest wall in reach; the server picks it from your position, so the
 // direction sent here is just a legacy hint it ignores (facing no longer matters).
