@@ -798,6 +798,8 @@ if(act == "beginround") send(peer, "runcommand beginround", 0, true);
 else if(act == "skipbuild") send(peer, "runcommand skipbuild", 0, true);
 else if(act == "gameinvite") push_game_invite_area(player_index); // pick an area (room/lobby) first
 else if(act == "gamekick") push_game_kick_list(player_index);
+else if(act == "pvpside") push_pvp_side_menu(player_index); // PVP: open the attack/defend chooser for yourself
+else if(act == "pvpassign") push_pvp_assign_menu(player_index); // PVP host: open the assign-a-player flow
 }
 else if(id == "gameinvitearea")
 {

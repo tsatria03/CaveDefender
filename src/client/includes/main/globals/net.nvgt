@@ -1044,6 +1044,7 @@ void netloop_impl()
 			game_paused = false;
 			current_game = string_to_number(parsed[1]);
 			game_outside = (parsed[4] == "evp"); // EVP plays the outdoor cavern (gravel/exterior); PVE the inside
+				game_mode = parsed[4]; // pve/evp/pvp; gates PVP-only features like team chat
 			current_game_host = parsed[5]; // plain name, for host comparison (parsed[4] is the mode tag)
 			string[] gjl = string_split(message, "\n", true);
 			string ghost = (gjl.length() > 1) ? gjl[1] : parsed[5]; // rank-aware display name for the announcement
