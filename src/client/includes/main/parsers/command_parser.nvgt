@@ -28,6 +28,7 @@ void send_chat(string channel, string text)
 {
 	if(channel == "staff") send(0, "staffchat " + text, 0, true);
 	else if(channel == "local") send(0, "localchat " + text, 0, true);
+	else if(channel == "team") send(0, "teamchat " + text, 0, true);
 	else send(0, text, 1, true); // global
 }
 // Sends a /me emote to the right destination. text is the full "/me <action>" string.
@@ -35,6 +36,7 @@ void send_me(string channel, string text)
 {
 	if(channel == "staff") send(0, "staffme " + text.substr(4), 0, true);
 	else if(channel == "local") send(0, "localme " + text.substr(4), 0, true);
+	else if(channel == "team") send(0, "teamme " + text.substr(4), 0, true);
 	else send(0, text, 1, true); // global: the server parses /me out of the chat message
 }
 void comparse(string text, string channel = "global")

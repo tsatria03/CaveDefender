@@ -1238,6 +1238,11 @@ void netloop_impl()
 			p.play_stationary("sounds/ui/misc/localchat.ogg", false);
 			add_buffer_item("local chats", message.substr(parsed[0].length()+1));
 		}
+		else if (parsed[0] == "teammsg" and message.length() > parsed[0].length()+1)
+		{
+			p.play_stationary("sounds/ui/misc/teamchat.ogg", false);
+			add_buffer_item("team chats", message.substr(parsed[0].length()+1));
+		}
 		else if (parsed[0] == "roomkicked" and parsed.length() > 2)
 		{
 			clear_players();

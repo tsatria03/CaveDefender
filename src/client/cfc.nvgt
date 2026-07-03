@@ -36,6 +36,7 @@ else
 create_buffer("alerts");
 create_buffer("global chats");
 create_buffer("local chats");
+create_buffer("team chats");
 create_buffer("connections");
 create_buffer("private chats");
 create_buffer("staff chats");

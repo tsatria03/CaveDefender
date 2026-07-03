@@ -81,6 +81,13 @@ buffercheck();
 				else speak("canceled");
 				continue;
 			}
+			if(in_game and key_pressed(KEY_SEMICOLON))
+			{
+				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "");
+				if(msg!="") comparse(msg, "team");
+				else speak("canceled");
+				continue;
+			}
 			if(key_pressed(KEY_BACKSLASH) and !shift_is_down())
 			{
 				string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "");
@@ -258,7 +265,13 @@ buffercheck();
 			if(msg!="") comparse(msg, "staff");
 			else speak("canceled");
 		}
-		if(key_pressed(KEY_BACKSLASH))
+		if(in_game and key_pressed(KEY_SEMICOLON))
+			{
+				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "");
+				if(msg!="") comparse(msg, "team");
+				else speak("canceled");
+			}
+			if(key_pressed(KEY_BACKSLASH))
 		{
 			string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "");
 			if(msg!="") comparse(msg, "local");
