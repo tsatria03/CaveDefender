@@ -363,7 +363,7 @@ if(gi<0 or gi>=int(games.length())) return;
 string[]@ bdirs = WALL_DIRS;
 for(uint bd=0; bd<bdirs.length(); bd++)
 {
-int bwi = border_wall(games[gi].id, bdirs[bd], games[gi].size);
+int bwi = wall_in_dir(games[gi].id, bdirs[bd], games[gi].size); // mode-aware: PVP's inset ring, the outer border otherwise
 if(bwi>-1 and walls[bwi].health<=0) send(peer, "wallbreach "+bdirs[bd], 0, true);
 }
 }
@@ -400,9 +400,17 @@ if(gi>-1)
 {
 // Back into the cavern as a member, with their preserved inventory.
 send(peer, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].mode+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0, true);
-// EVP: restore the weapon they had drawn BEFORE the gamephase message, so its auto-axe (which only fires when
-// the client is unarmed) doesn't override it. PVE members never carry a weapon, so this is skipped there.
-if(games[gi].mode=="evp" and (games[gi].phase=="build" or games[gi].phase=="wave") and players[index].weapon!="") send(peer, "equipweapon "+players[index].weapon, 0, true);
+// PVP: re-send their side so the fresh client re-learns it (re-spawns to the right place and re-arms if attacking).
+// Attackers restore out at the exterior entry -- not the centre the redraw assumes -- so set that on the server
+// too; sent before the gamephase/equipweapon below so the client's PVP auto-arm sees the correct side.
+if(games[gi].mode=="pvp" and players[index].team!="")
+{
+if(players[index].team=="attack") { int wmin=games[gi].size/4; players[index].x=wmin/2; players[index].y=games[gi].size/2; }
+send(peer, "yourside "+players[index].team, 0, true);
+}
+// EVP (and a PVP attacker): restore the weapon they had drawn BEFORE the gamephase message, so its auto-axe
+// (which only fires when the client is unarmed) doesn't override it. PVE members and PVP defenders carry none.
+if((games[gi].mode=="evp" or (games[gi].mode=="pvp" and players[index].team=="attack")) and (games[gi].phase=="build" or games[gi].phase=="wave") and players[index].weapon!="") send(peer, "equipweapon "+players[index].weapon, 0, true);
 send_game_phase_to(peer, gi);
 send_builders_to(peer, rid);
 send(peer, wall_strength_msg(rid), 0, true);
