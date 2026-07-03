@@ -443,6 +443,10 @@ return 75;
 // size. Constant per size -- the escalation comes from the defenders (more builders each round), not a
 // shrinking clock. Tunable.
 int evp_round_seconds(int size) { if(size<=25) return 75; if(size<=50) return 120; return 180; }
+// PVP round timer: the budget of actual ATTACKING seconds the attackers have to bring all four walls down.
+// Like EVP's clock it FREEZES during build windows (so rest downtime never burns the limit), and it's a
+// single decisive round (no escalation -- fixed human headcount, no bots to ramp). Scaled by map size, tunable.
+int pvp_round_seconds(int size) { if(size<=25) return 90; if(size<=50) return 150; return 240; }
 // PVP: set up the build/prep phase for a starting round. Each member is placed by their chosen side --
 // defenders at the interior center (with a starting wood stockpile to shore up the walls) and attackers
 // together at a shared entry point out in the west exterior band -- and told their side (yourside) so the
@@ -534,6 +538,19 @@ games[gindex].wave_attacking = true;
 games[gindex].wave_cycletimer.restart();
 games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
 }
+else if(games[gindex].mode=="pvp")
+{
+// PVP: the attack phase alternates attack and build windows, game-wide and mutually exclusive -- during an
+// attack window the attackers damage walls (defenders can only gather); during a build window the defenders
+// place/repair (the attackers' swings only ricochet). It opens on an attack window. Single decisive round, so
+// the round number is fixed at 1 (no escalation). The clock is a budget of real attacking seconds that freezes
+// during build windows (mirrors EVP), carried in evp_round_secs; the window length is half the build phase.
+games[gindex].wave_number = 1;
+games[gindex].evp_round_secs = pvp_round_seconds(games[gindex].size);
+games[gindex].wave_attacking = true;
+games[gindex].wave_cycletimer.restart();
+games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
+}
 else
 {
 // PVE: the wave alternates attack and rest segments, each half the build phase (so bots hammer, then back
@@ -550,7 +567,7 @@ fill_walls_to(games[gindex].id, games[gindex].size, games[gindex].wave_bot_targe
 }
 }
 // secs = the build countdown when entering build; for an EVP wave it's the round timer (so the client can count down); 0 otherwise.
-int secs = (phase=="build") ? games[gindex].buildduration : ((games[gindex].mode=="evp" and phase=="wave") ? games[gindex].evp_round_secs : 0);
+int secs = (phase=="build") ? games[gindex].buildduration : (((games[gindex].mode=="evp" or games[gindex].mode=="pvp") and phase=="wave") ? games[gindex].evp_round_secs : 0);
 send_to_game(games[gindex].id, "gamephase "+phase+" "+secs+" "+games[gindex].wave_number); // members + spectators
 }
 // Host-only shared pause: freeze a game's entire simulation for everyone. The phase/wood/wave timers
@@ -589,6 +606,17 @@ for(uint i=0; i<builders.length(); i++)
 if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.resume();
 send_to_game(games[gi].id, "gameresumed"); // members + spectators unfreeze together
 }
+// PVP (section 2): end the current round back to the staging (idle) phase so the host can begin it again. The
+// sides are kept (players only re-pick if they choose to) and nothing was damaged, so the walls stand as they
+// are. A later piece replaces this with the win/loss decision, the results screen, the per-account win/loss
+// record and a play-again prompt. Tells everyone in the game so their clients announce the end and drop out of
+// combat (attackers disarm, both sides fall back to the round menu).
+void end_pvp_round(int gi)
+{
+if(gi<0 or gi>=int(games.length())) return;
+games[gi].phase = "idle";
+send_to_game(games[gi].id, "pvpover");
+}
 // Called every server tick: advance any finished build phase to the wave, and drop wood in active games.
 void gametick()
 {
@@ -600,9 +628,7 @@ if(games[i].paused)
 if(!games[i].solo and games[i].pausetimer.elapsed >= 90000) resume_game(int(i));
 continue;
 }
-// PVP stays in the build/prep phase for now -- its attack phase (the window rhythm + clock) lands in the next
-// section; blocking the advance here keeps a PVP round from falling into the shared PVE/EVP wave machinery.
-if(games[i].mode!="pvp" and games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
+if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
 set_game_phase(int(i), "wave");
 // Heads-up before the first wave: once, wave_warning_seconds before the build phase ends. (PVE only -- EVP has no incoming attacker wave to warn about.)
 if(games[i].mode=="pve" and games[i].phase=="build" and !games[i].warned and games[i].phasetimer.elapsed >= (games[i].buildduration - wave_warning_seconds)*1000)
@@ -641,13 +667,13 @@ if(games[i].phase=="wave" and games[i].wave_cycletimer.elapsed >= games[i].wave_
 {
 games[i].wave_cycletimer.restart();
 games[i].wave_attacking = !games[i].wave_attacking;
-if(games[i].mode=="evp")
+if(games[i].mode=="evp" or games[i].mode=="pvp")
 {
-// EVP: just flip the window. No bot escalation (that's per round cleared) and the round number is fixed for
-// the round, so neither climbs here. The attack handler and builders gate their actions on wave_attacking.
-// The round clock only runs while you can actually attack: freeze it during the rest window (you're locked
-// out -- swings only ricochet) and resume it when the attack window reopens, so rest downtime never burns
-// your time limit. evp_round_secs is therefore a budget of real attacking seconds, not wall-clock.
+// EVP and PVP: just flip the window. No bot escalation (that's an EVP-per-round thing) and the round number
+// is fixed, so neither climbs here. The attack handler / the two sides gate their actions on wave_attacking.
+// The round clock only runs while attacking is possible: freeze it during the build/rest window (the attacker
+// is locked out -- swings only ricochet) and resume it when the attack window reopens, so build downtime never
+// burns the limit. evp_round_secs is therefore a budget of real attacking seconds, not wall-clock, for both modes.
 if(games[i].wave_attacking) games[i].wavetimer.resume();
 else games[i].wavetimer.pause();
 }
@@ -673,7 +699,7 @@ builder_tick(); // process every EVP builder's repair timer (feeds ground wood i
 // loss. (EVP is the reverse -- all walls down is a WIN; that resolution, and EVP's own loss conditions, are
 // handled in the scoring pass, so EVP is skipped here.)
 for(uint i=0; i<games.length(); i++)
-if(games[i].mode!="evp" and !games[i].paused and games[i].phase=="wave" and all_walls_destroyed(games[i].id, games[i].size)) end_round_loss(int(i));
+if(games[i].mode=="pve" and !games[i].paused and games[i].phase=="wave" and all_walls_destroyed(games[i].id, games[i].size)) end_round_loss(int(i));
 // EVP round resolution (separate pass, same reason): during a wave, all walls down = round CLEARED (advance to
 // the next, tougher round); the round timer running out = a LOSS that ends the game with the results screen.
 for(uint i=0; i<games.length(); i++)
@@ -683,6 +709,12 @@ int gid = games[i].id; double size = games[i].size;
 if(all_walls_destroyed(gid, size)) { evp_clear_round(int(i)); continue; } // win -> next round
 if(games[i].wavetimer.elapsed >= games[i].evp_round_secs*1000) { end_evp_loss(int(i)); continue; } // round timer expired -> loss
 }
+// PVP round resolution (section 2): with no combat yet, the attackers can't bring the walls down, so the only
+// terminal is the attacking-seconds clock running out -- end the round back to staging. The real win/loss (all
+// walls down = attackers win; time up with a wall standing = defenders win), the results screen and the
+// per-account record land in a later piece.
+for(uint i=0; i<games.length(); i++)
+if(games[i].mode=="pvp" and !games[i].paused and games[i].phase=="wave" and games[i].wavetimer.elapsed >= games[i].evp_round_secs*1000) end_pvp_round(int(i));
 }
 // True if all four cavern walls of a game are down (health 0).
 bool all_walls_destroyed(int gameid, double size)
