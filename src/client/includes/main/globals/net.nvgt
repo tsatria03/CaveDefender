@@ -1045,6 +1045,7 @@ void netloop_impl()
 			current_game = string_to_number(parsed[1]);
 			game_outside = (parsed[4] == "evp"); // EVP plays the outdoor cavern (gravel/exterior); PVE the inside
 				game_mode = parsed[4]; // pve/evp/pvp; gates PVP-only features like team chat
+				my_side = ""; // no side yet; the server assigns it (yourside) when a PVP round begins
 			current_game_host = parsed[5]; // plain name, for host comparison (parsed[4] is the mode tag)
 			string[] gjl = string_split(message, "\n", true);
 			string ghost = (gjl.length() > 1) ? gjl[1] : parsed[5]; // rank-aware display name for the announcement
@@ -1053,6 +1054,30 @@ void netloop_impl()
 				else draw_map("cavern", 0, gsize, 0, gsize, game_outside);
 			setup_cavern_walls(gsize);
 			// No weapon on entry: EVP players are unarmed until a round starts (handled in the gamephase handler).
+			lastx = int(me.x);
+			lasty = int(me.y);
+		}
+		else if (parsed[0] == "yourside" and parsed.length() > 1)
+		{
+			// The server assigned our PVP side for this round. Attackers spawn out at the shared entry point in
+			// the exterior band and draw a weapon; defenders hold the interior center. We place our own `me` with
+			// the same geometry the server used for its roster (it never moves our own view via pos), then make
+			// the server authoritative for the spot with a move so later movement stays in step.
+			my_side = parsed[1];
+			if (my_side == "attack")
+			{
+				int wmin = cavern_size / 4;     // the wall ring's inset (matches pvparena and spawn_ring_walls)
+				me.x = wmin / 2;                 // shared attacker entry: middle of the west exterior band...
+				me.y = cavern_size / 2;          // ...at mid-height
+				send(0, "move " + int(me.x) + " " + int(me.y), 0, true);
+				add_buffer_item("alerts", "You are attacking; smash the walls from outside.");
+			}
+			else
+			{
+				me.x = cavern_size / 2;
+				me.y = cavern_size / 2;
+				add_buffer_item("alerts", "You are defending; keep the walls standing.");
+			}
 			lastx = int(me.x);
 			lasty = int(me.y);
 		}
@@ -1067,6 +1092,7 @@ void netloop_impl()
 			game_outside = false;
 			current_game = 0;
 			current_game_host = "";
+			my_side = "";
 			add_buffer_item("misc", "You left the game.");
 			draw_map("office");
 			lastx = int(me.x);
@@ -1147,6 +1173,7 @@ void netloop_impl()
 			{
 				p.play_stationary("sounds/ui/misc/buildprep.ogg", false);
 				if (game_outside) add_buffer_item("alerts", "Build phase. The bots are reinforcing for " + int(game_build_seconds) + " seconds.");
+				else if (game_mode == "pvp") add_buffer_item("alerts", "Build phase, " + int(game_build_seconds) + " seconds to prepare.");
 				else add_buffer_item("alerts", "Build phase. " + int(game_build_seconds) + " seconds to prepare.");
 			}
 			else if (game_phase == "wave")
@@ -1157,6 +1184,9 @@ void netloop_impl()
 				if (game_outside) add_buffer_item("alerts", "Round " + wave_number + ", tear down the walls!");
 				else add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
 			}
+			// PVP: the attacker draws a weapon at build start (and keeps it across build->wave); defenders reinforce
+			// with wood and never auto-arm. Unarmed-only so a re-sent phase during the round doesn't re-draw.
+			if (game_mode == "pvp" and my_side == "attack" and (game_phase == "build" or game_phase == "wave")) { if (current_weapon == "") equip_weapon("axe"); }
 			// EVP: you have no weapon until a round is underway. Arm with the axe when a round is active (build or
 			// wave -- covers both the round starting and a mid-round join), disarm between rounds (idle/over). The
 			// guard keeps a build->wave transition from re-drawing.

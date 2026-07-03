@@ -1423,12 +1423,16 @@ send(event.peer_id, "You can't begin a round with yourself.", 0,true);
 }
 else if(games[gi].mode=="pvp")
 {
-// PVP: enforce even, fully-assigned sides (1v1 or 2v2). Staging is this piece; the round flow (build phase,
-// attack/build windows, combat) is the NEXT piece, so a passing gate only confirms readiness for now -- it must
-// NOT call set_game_phase yet, or a PVP game would fall into the shared PVE engine (enemy bots + wood grants).
+// PVP: enforce even, fully-assigned sides (1v1 or 2v2) before starting. On a passing gate, open the
+// build/prep phase like the other modes -- set_game_phase's PVP branch (pvp_build_setup) places each side
+// and arms the attackers; it deliberately avoids the shared PVE engine (no enemy bots, no blanket wood grant).
 string problem = pvp_start_problem(gi);
 if(problem != "") send(event.peer_id, problem, 0,true);
-else send(event.peer_id, "The sides are set; the PVP round itself arrives in the next update.", 0,true);
+else
+{
+games[gi].buildduration = build_seconds(games[gi].size);
+set_game_phase(gi, "build");
+}
 }
 else
 {

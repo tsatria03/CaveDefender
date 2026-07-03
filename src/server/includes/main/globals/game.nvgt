@@ -443,6 +443,39 @@ return 75;
 // size. Constant per size -- the escalation comes from the defenders (more builders each round), not a
 // shrinking clock. Tunable.
 int evp_round_seconds(int size) { if(size<=25) return 75; if(size<=50) return 120; return 180; }
+// PVP: set up the build/prep phase for a starting round. Each member is placed by their chosen side --
+// defenders at the interior center (with a starting wood stockpile to shore up the walls) and attackers
+// together at a shared entry point out in the west exterior band -- and told their side (yourside) so the
+// client spawns and arms to match. Attackers hold a weapon from build start but can't damage yet (that
+// arrives with the attack window). No bots: humans defend. The client repositions its own `me` on the
+// yourside message with this same geometry, since the server never moves a player's own view via pos.
+void pvp_build_setup(int gi)
+{
+int size = games[gi].size;
+int wmin = size / 4;               // the wall ring's inset (matches spawn_ring_walls and the client's pvparena draw)
+int ax = wmin / 2, ay = size / 2;  // shared attacker entry: middle of the west exterior band, at mid-height
+int center = size / 2;
+for(uint m=0; m<games[gi].members.length(); m++)
+{
+int pi = get_player_index(games[gi].members[m]);
+if(pi < 0) continue;
+players[pi].wood_collected = 0; // fresh ground-pickup tally for this run
+if(players[pi].team == "defend")
+{
+players[pi].x = center; players[pi].y = center;
+players[pi].inv.clear();
+give_wood_single(players[pi].inv, random(10, 20)); // a starting stockpile to immediately shore up a weak wall
+send_wood_count(pi);
+send(players[pi].peer_id, "yourside defend", 0, true);
+}
+else // attack
+{
+players[pi].x = ax; players[pi].y = ay;
+send(players[pi].peer_id, "yourside attack", 0, true);
+}
+broadcast_pos(pi); // sync the new spawn to the others in the game (their tracker/beacons); the mover's own client repositions on yourside
+}
+}
 // Set a game's round phase and tell everyone in it, so their clients announce the change and run the
 // build countdown. The seconds value is the build duration when entering build, 0 otherwise.
 void set_game_phase(int gindex, string phase)
@@ -458,6 +491,11 @@ if(games[gindex].mode=="evp")
 // EVP: the bots defend. Spawn the wall-builders now (more each round cleared -- the escalation) -- they
 // reinforce through the build phase and keep repairing through the wave. Players carry no wood in EVP.
 spawn_builders(games[gindex].id, evp_builders_for_round(games[gindex].evp_rounds_cleared));
+}
+else if(games[gindex].mode=="pvp")
+{
+// PVP: place each side and arm the attackers; defenders get a starting wood stockpile. No bots -- humans defend.
+pvp_build_setup(gindex);
 }
 else
 {
@@ -562,10 +600,12 @@ if(games[i].paused)
 if(!games[i].solo and games[i].pausetimer.elapsed >= 90000) resume_game(int(i));
 continue;
 }
-if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
+// PVP stays in the build/prep phase for now -- its attack phase (the window rhythm + clock) lands in the next
+// section; blocking the advance here keeps a PVP round from falling into the shared PVE/EVP wave machinery.
+if(games[i].mode!="pvp" and games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
 set_game_phase(int(i), "wave");
 // Heads-up before the first wave: once, wave_warning_seconds before the build phase ends. (PVE only -- EVP has no incoming attacker wave to warn about.)
-if(games[i].mode!="evp" and games[i].phase=="build" and !games[i].warned and games[i].phasetimer.elapsed >= (games[i].buildduration - wave_warning_seconds)*1000)
+if(games[i].mode=="pve" and games[i].phase=="build" and !games[i].warned and games[i].phasetimer.elapsed >= (games[i].buildduration - wave_warning_seconds)*1000)
 {
 games[i].warned=true;
 send_to_game(games[i].id, "wavewarning "+wave_warning_seconds); // members + spectators
@@ -586,8 +626,10 @@ int drops = wood_drops_per_tick(games[i].size);
 for(int d=0; d<drops; d++)
 {
 if(wood_count_in(games[i].id) >= wood_cap(games[i].size)) break;
-int wx = random(1, games[i].size-1); // interior only; the 0 and size edges are walls
-int wy = random(1, games[i].size-1);
+int wlo = 1, whi = games[i].size-1; // interior only; the 0 and size edges are walls
+if(games[i].mode=="pvp") { int wm = games[i].size/4; wlo = wm+1; whi = games[i].size-wm-1; } // PVP: keep wood on the interior concrete, inside the wall ring (the defenders' ground supply)
+int wx = random(wlo, whi);
+int wy = random(wlo, whi);
 string wt = random_wood_type(); // a random size (small/medium/large), each with its own sounds
 int iid = spawn_item(games[i].id, wx, wy, wt);
 send_to_game(games[i].id, "spawnitem "+iid+" "+wt+" "+wx+" "+wy); // send the SAME size to the client so its sounds and the D readout match
