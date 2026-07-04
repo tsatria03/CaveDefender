@@ -1386,7 +1386,7 @@ players.remove_at(ti);
 else if(parsed[0]=="delcharself" and index>-1 and parsed.length()==2)
 {
 // Self /delchar: verify the player's OWN password, then delete their account, announce it, and log them out. The
-// owner may delete itself (delete_account clears conf.svr owner=). Departure is announced by the deletion notice,
+// owner may delete itself (delete_account drops that alias from conf.svr's owners list). Departure is announced by the deletion notice,
 // not a plain "offline" line, so remove from the roster before broadcasting so this player is naturally skipped.
 string pw = parsed[1];
 if(!verify_password(players[index].name, pw)) send(event.peer_id, "misc Incorrect password.", 0, true);
