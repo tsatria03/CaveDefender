@@ -271,32 +271,36 @@ void comparse(string text, string channel = "global")
 		}
 		else if(base == "/changepass")
 	{
-		// Passwords are NEVER typed on the chat line -- they're entered in masked dialogs, like account creation.
-		// Self: /changepass (no args) asks for current, new, and confirm. Admin (administrator+): /changepass <username>
-		// resets another player's, asking only for new and confirm. Both send a distinct control message the server acts on.
+		// Passwords are NEVER typed on the chat line -- they're entered in a masked FORM (more than one field, so a
+		// form and not a dialog). Self: /changepass (no args) collects current, new, and confirm. Admin (administrator+):
+		// /changepass <username> resets another player's, collecting new and confirm. Both send a distinct control message.
 		if(parsed.length() == 1)
 		{
-			string cur = vd.password_box("Change password", "Enter your current password.", "", " ", "Spaces are not allowed.");
-			if(cur == "") { speak("canceled"); return; }
-			string np = vd.password_box("Change password", "Enter your new password.", "", " ", "Spaces are not allowed.");
-			if(np == "") { speak("canceled"); return; }
-			if(np.length() < 6 or np.length() > 24) { dlgmessage("Passwords must be between 6 and 24 characters. Press enter to continue."); return; }
-			string np2 = vd.password_box("Change password", "Enter your new password again to confirm.", "", " ", "Spaces are not allowed.");
-			if(np2 == "") { speak("canceled"); return; }
-			if(np2 != np) { dlgmessage("The passwords do not match. Press enter to continue."); return; }
-			pendingpass = np; // remembered so we can update the saved account once the server confirms and logs us out
-			send(0, "changepassself " + cur + " " + np, 0, true);
+			string[] fields = {"*Current password", "*New password", "*Confirm new password"};
+			while(true)
+			{
+				string[] vals = vd.multi_input("Change password", fields);
+				if(vals.length() == 0) { speak("canceled"); return; }
+				if(vals[1].length() < 6 or vals[1].length() > 24) { dlgmessage("Passwords must be between 6 and 24 characters. Press enter to continue."); continue; }
+				if(vals[2] != vals[1]) { dlgmessage("The passwords do not match. Press enter to continue."); continue; }
+				pendingpass = vals[1]; // remembered so we can update the saved account once the server confirms and logs us out
+				send(0, "changepassself " + vals[0] + " " + vals[1], 0, true);
+				return;
+			}
 		}
 		else if(parsed.length() == 2)
 		{
 			if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
-			string np = vd.password_box("Reset password", "Enter " + parsed[1] + "'s new password.", "", " ", "Spaces are not allowed.");
-			if(np == "") { speak("canceled"); return; }
-			if(np.length() < 6 or np.length() > 24) { dlgmessage("Passwords must be between 6 and 24 characters. Press enter to continue."); return; }
-			string np2 = vd.password_box("Reset password", "Enter the new password again to confirm.", "", " ", "Spaces are not allowed.");
-			if(np2 == "") { speak("canceled"); return; }
-			if(np2 != np) { dlgmessage("The passwords do not match. Press enter to continue."); return; }
-			send(0, "changepassadmin " + parsed[1] + " " + np, 0, true);
+			string[] fields = {"*New password", "*Confirm new password"};
+			while(true)
+			{
+				string[] vals = vd.multi_input("Reset " + parsed[1] + "'s password", fields);
+				if(vals.length() == 0) { speak("canceled"); return; }
+				if(vals[0].length() < 6 or vals[0].length() > 24) { dlgmessage("Passwords must be between 6 and 24 characters. Press enter to continue."); continue; }
+				if(vals[1] != vals[0]) { dlgmessage("The passwords do not match. Press enter to continue."); continue; }
+				send(0, "changepassadmin " + parsed[1] + " " + vals[0], 0, true);
+				return;
+			}
 		}
 		else
 		{

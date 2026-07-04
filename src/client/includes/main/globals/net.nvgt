@@ -601,16 +601,25 @@ void handle_askinput(string message)
 	if (alines.length() >= 3)
 	{
 		string amaskval = (alines.length() > 3) ? alines[3] : "0"; // "0" plain, "1" masked, "2" masked + a confirm-again box (setting a private room password)
-			bool amask = (amaskval == "1" or amaskval == "2");
+		if (amaskval == "2")
+		{
+			// Two fields (password + confirm) -> a real form the player can tab through, per our multi-field input
+			// convention (a single field would be a virtual dialog). Re-prompt on a mismatch without sending.
+			string[] fields = {"*" + alines[1], "*Confirm password"};
+			while (true)
+			{
+				string[] vals = vd.multi_input("Private room", fields);
+				if (vals.length() == 0) { speak("canceled"); return; }
+				if (vals[1] != vals[0]) { dlgmessage("The passwords do not match. Press enter to continue."); continue; }
+				send(0, alines[2] + " " + vals[0], 0, true);
+				return;
+			}
+		}
+		// Single field: a virtual dialog (masked for a password prompt, plain text otherwise).
+		bool amask = (amaskval == "1");
 		string aval = amask ? vd.password_box("Private room", alines[1], "", " ", "Spaces are not allowed.") : vd.input_box("Input", alines[1], "");
 		if (aval == "") { speak("canceled"); return; }
-		if (amaskval == "2") // confirm: ask for the password again and require a match before sending
-			{
-				string aval2 = vd.password_box("Private room", "Enter the password again to confirm.", "", " ", "Spaces are not allowed.");
-				if (aval2 == "") { speak("canceled"); return; }
-				if (aval2 != aval) { dlgmessage("The passwords do not match. Press enter to continue."); return; }
-			}
-			send(0, alines[2] + " " + aval, 0, true);
+		send(0, alines[2] + " " + aval, 0, true);
 	}
 }
 void netloop_impl()
