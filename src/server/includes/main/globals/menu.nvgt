@@ -25,9 +25,10 @@ send(peer, payload, 0, true);
 // Ask a player to type a value to finish a server-driven flow. The client shows a local box with
 // `prompt` (masked when `masked`), then sends "<prefix> <text>" back, which an existing command
 // handler processes. This keeps text entry client-side while the decision/action stay on the server.
-void ask_input(int peer, string prompt, string prefix, bool masked)
+void ask_input(int peer, string prompt, string prefix, bool masked, bool confirm=false)
 {
-send(peer, "askinput\n" + prompt + "\n" + prefix + "\n" + (masked ? "1" : "0"), 0, true);
+string mask = confirm ? "2" : (masked ? "1" : "0"); // "2" = masked plus a confirm-again box on the client (used when SETTING a private room password, not when joining)
+send(peer, "askinput\n" + prompt + "\n" + prefix + "\n" + mask, 0, true);
 }
 
 // A Yes/No confirmation menu. The id is "confirm:<command>"; on Yes the client relays that command back.
@@ -716,7 +717,7 @@ int peer = players[player_index].peer_id;
 if(id == "lobby")
 {
 if(choice == 0) do_create_room(player_index, peer, false, ""); // Create a public room
-else if(choice == 1) ask_input(peer, "Enter a password for your room (at least 6 characters). Others will need it to join.", "createroom private", true);
+else if(choice == 1) ask_input(peer, "Enter a password for your room (at least 6 characters). Others will need it to join.", "createroom private", true, true);
 else if(choice == 2) push_join_list(player_index, false); // Join a public room
 else if(choice == 3) push_join_list(player_index, true);  // Join a private room
 }
@@ -753,7 +754,7 @@ else if(act == "setpw")
 {
 int ri = get_room_index(players[player_index].room_id);
 if(ri > -1 and rooms[ri].host_peer != peer) send(peer, "Only the host can change the room's password.", 0, true);
-else ask_input(peer, "Enter the new room password (at least 6 characters).", "setroompassword", true);
+else ask_input(peer, "Enter the new room password (at least 6 characters).", "setroompassword", true, true);
 }
 else if(act == "kick")
 {

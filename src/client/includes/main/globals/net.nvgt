@@ -598,10 +598,17 @@ void handle_askinput(string message)
 	string[] alines = string_split(message, "\n", true);
 	if (alines.length() >= 3)
 	{
-		bool amask = (alines.length() > 3 and alines[3] == "1");
+		string amaskval = (alines.length() > 3) ? alines[3] : "0"; // "0" plain, "1" masked, "2" masked + a confirm-again box (setting a private room password)
+			bool amask = (amaskval == "1" or amaskval == "2");
 		string aval = amask ? vd.password_box("Private room", alines[1], "", " ", "Spaces are not allowed.") : vd.input_box("Input", alines[1], "");
-		if (aval == "") speak("canceled");
-		else send(0, alines[2] + " " + aval, 0, true);
+		if (aval == "") { speak("canceled"); return; }
+		if (amaskval == "2") // confirm: ask for the password again and require a match before sending
+			{
+				string aval2 = vd.password_box("Private room", "Enter the password again to confirm.", "", " ", "Spaces are not allowed.");
+				if (aval2 == "") { speak("canceled"); return; }
+				if (aval2 != aval) { dlgmessage("The passwords do not match. Press enter to continue."); return; }
+			}
+			send(0, alines[2] + " " + aval, 0, true);
 	}
 }
 void netloop_impl()
