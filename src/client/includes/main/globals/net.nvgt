@@ -701,6 +701,32 @@ void netloop_impl()
 				kicked = true;
 				connected = false;
 			}
+			else if (parsed[0] == "passchanged")
+			{
+				// Self /changepass succeeded: the server changed our password and logged us out. We know the new
+				// password (pendingpass), so update the saved account, then return to the connection menu to sign in with it.
+				password = pendingpass;
+				pendingpass = "";
+				save_last_account();
+				for (uint ai = 0; ai < accounts.length(); ai++)
+				{
+					if (string_to_lower_case(accounts[ai].uname) == string_to_lower_case(name)) { accounts[ai].pword = password; break; } // keep the saved account preset in step with the new password
+				}
+				writepreffs();
+				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				speak("Your password has been changed, so you have been returned to the connection menu.", true);
+				kicked = true;
+				connected = false;
+			}
+			else if (parsed[0] == "passreset")
+			{
+				// An administrator reset our password: we don't know the new one, so we're logged out and the saved
+				// password is left as-is; staff tell us the new password to sign in with.
+				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				speak("Your password has been reset by staff, so you have been returned to the connection menu.", true);
+				kicked = true;
+				connected = false;
+			}
 			else if (parsed[0] == "kickannounce" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/kick.ogg", false);

@@ -1208,27 +1208,27 @@ broadcast_pos(index);
 else if(parsed[0]=="staffchat" and index>-1 and is_staff(players[index].rank) and parsed.length()>1)
 {
 string msg=string_join(parsed, " ", 1, parsed.length());
-if(filter_crash(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // crash-string protection applies to staff chat too
+if(filter_crash(msg)) send(event.peer_id, "misc Your message contains forbidden words, and therefore will not be sent.", 0,true); // crash-string protection applies to staff chat too
 else relay_to_staff("staffmsg "+afk_prefix(index)+display_name(index)+": "+msg);
 }
 else if(parsed[0]=="staffme" and index>-1 and is_staff(players[index].rank) and parsed.length()>1)
 {
 string action=string_join(parsed, " ", 1, parsed.length());
-if(filter_crash(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // crash-string protection applies to staff chat too
+if(filter_crash(action)) send(event.peer_id, "misc Your message contains forbidden words, and therefore will not be sent.", 0,true); // crash-string protection applies to staff chat too
 else relay_to_staff("staffmsg "+afk_prefix(index)+display_name(index)+" "+action);
 }
 else if(parsed[0]=="localchat" and index>-1 and parsed.length()>1)
 {
 string msg=string_join(parsed, " ", 1, parsed.length());
 if(is_muted_now(index, "local")) send(event.peer_id, muted_chat_message(index, "local"), 0,true);
-else if(filter_crash(msg) or filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
+else if(filter_crash(msg) or filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words, and therefore will not be sent.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
 else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg, "", index); // local chat reaches everyone in the space, regardless of language channel (minus anyone ignoring the sender)
 }
 else if(parsed[0]=="localme" and index>-1 and parsed.length()>1)
 {
 string action=string_join(parsed, " ", 1, parsed.length());
 if(is_muted_now(index, "local")) send(event.peer_id, muted_chat_message(index, "local"), 0,true);
-else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
+else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words, and therefore will not be sent.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
 else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+" "+action, "", index); // local chat reaches everyone in the space, regardless of language channel (minus anyone ignoring the sender)
 }
 else if(parsed[0]=="teamchat" and index>-1 and parsed.length()>1)
@@ -1236,7 +1236,7 @@ else if(parsed[0]=="teamchat" and index>-1 and parsed.length()>1)
 string msg=string_join(parsed, " ", 1, parsed.length());
 if(get_game_index(players[index].room_id) < 0 or games[get_game_index(players[index].room_id)].mode != "pvp") send(event.peer_id, "Team chat is only available in player versus player games.", 0,true);
 else if(is_muted_now(index, "team")) send(event.peer_id, muted_chat_message(index, "team"), 0,true);
-else if(filter_crash(msg) or filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // team chat is filtered like local (crash strings + word filter)
+else if(filter_crash(msg) or filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words, and therefore will not be sent.", 0,true); // team chat is filtered like local (crash strings + word filter)
 else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg);
 }
 else if(parsed[0]=="teamme" and index>-1 and parsed.length()>1)
@@ -1244,7 +1244,7 @@ else if(parsed[0]=="teamme" and index>-1 and parsed.length()>1)
 string action=string_join(parsed, " ", 1, parsed.length());
 if(get_game_index(players[index].room_id) < 0 or games[get_game_index(players[index].room_id)].mode != "pvp") send(event.peer_id, "Team chat is only available in player versus player games.", 0,true);
 else if(is_muted_now(index, "team")) send(event.peer_id, muted_chat_message(index, "team"), 0,true);
-else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true);
+else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words, and therefore will not be sent.", 0,true);
 else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(index)+" "+action);
 }
 else if(parsed[0]=="help" and index>-1 and parsed.length()>1)
@@ -1340,6 +1340,47 @@ else
 {
 string loc = player_location_phrase(ti); // "In the lobby." / "In X's room." / "Watching X's game."
 send(event.peer_id, "misc "+display_name(ti)+" is "+string_to_lower_case(loc.substr(0,1))+loc.substr(1), 0, true);
+}
+}
+else if(parsed[0]=="changepassself" and index>-1 and parsed.length()==3)
+{
+// Self /changepass: verify the CURRENT password, then store the new Argon2id hash and log the player out so they
+// re-sign-in with it (the client knows the new password and updates its saved account). Passwords never ride chat.
+string cur = parsed[1];
+string np = parsed[2];
+if(!verify_password(players[index].name, cur)) send(event.peer_id, "misc Your current password is incorrect.", 0, true);
+else if(np.length() < 6 or np.length() > 24) send(event.peer_id, "misc Your new password must be between 6 and 24 characters.", 0, true);
+else
+{
+write_field(players[index].name, "password", password_blob(make_salt(), np));
+int tpeer = players[index].peer_id;
+send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0, true); // announce them offline now
+send(tpeer, "passchanged", 0, true); // the client updates its saved password and returns to the connection menu
+players.remove_at(index); // free the slot now so the ensuing disconnect doesn't hold it; disconnect cleans up rooms/games/verified_logins
+}
+}
+else if(parsed[0]=="changepassadmin" and index>-1 and parsed.length()==3)
+{
+// Admin RESET: administrator+ sets another online player's password without their old one (at-or-below rank), then
+// logs them out. Their saved password is left stale (they don't know the new one), so staff tell them out of band.
+if(rank_level(players[index].rank) < 2) send(event.peer_id, "misc You can't reset another player's password.", 0, true);
+else
+{
+int ti = get_player_index_from(parsed[1]);
+string np = parsed[2];
+if(ti < 0) reply_target_not_found(event.peer_id, parsed[1]);
+else if(rank_level(players[ti].rank) > rank_level(players[index].rank)) send(event.peer_id, "misc You can't reset the password of someone above your rank.", 0, true);
+else if(np.length() < 6 or np.length() > 24) send(event.peer_id, "misc The new password must be between 6 and 24 characters.", 0, true);
+else
+{
+write_field(players[ti].name, "password", password_blob(make_salt(), np));
+int tpeer = players[ti].peer_id;
+send(event.peer_id, "misc You reset "+display_name_flagged(ti)+"'s password.", 0, true);
+notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" reset "+afk_prefix(ti)+display_name_flagged(ti)+"'s password.", -1);
+send(0, "offline "+players[ti].name+" "+players[ti].rank+" "+players[ti].nickname, 0, true);
+send(tpeer, "passreset", 0, true); // the target is logged out; their saved password stays as-is
+players.remove_at(ti);
+}
 }
 }
 else if(parsed[0]=="getwarnings" and index>-1 and parsed.length()>1)
@@ -1918,7 +1959,7 @@ if(event.type == event_receive && event.channel == 1)
             if(players[index].messagetimer.elapsed < 50) messend = false;            
             if(filter_crash(message) or (string_to_lower_case(players[index].language) != "unfiltered" and filter_chat(message)))
 {
-                send(event.peer_id, "misc Your message contains forbidden words.", 0, true); // misc buffer: spoken and logged
+                send(event.peer_id, "misc Your message contains forbidden words, and therefore will not be sent.", 0, true); // misc buffer: spoken and logged
                 messend = false;
                 return;
             }

@@ -21,6 +21,7 @@ string motd = "Welcome to the server.";
 string passc="rscs123";
 string name="";
 string password="";
+string pendingpass=""; // the new password typed for a self /changepass, held until the server confirms so we can update the saved account before being logged out
 string email=""; // cosmetic, unverified account email collected at registration and stored server-side in email.usr; not used for login
 string myrank="player";
 string last_pm_sender=""; // the most recent player to PM us, used by /reply (/r)

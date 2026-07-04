@@ -269,6 +269,42 @@ void comparse(string text, string channel = "global")
 				return;
 			}
 		}
+		else if(base == "/changepass")
+	{
+		// Passwords are NEVER typed on the chat line -- they're entered in masked dialogs, like account creation.
+		// Self: /changepass (no args) asks for current, new, and confirm. Admin (administrator+): /changepass <username>
+		// resets another player's, asking only for new and confirm. Both send a distinct control message the server acts on.
+		if(parsed.length() == 1)
+		{
+			string cur = vd.password_box("Change password", "Enter your current password.", "", " ", "Spaces are not allowed.");
+			if(cur == "") { speak("canceled"); return; }
+			string np = vd.password_box("Change password", "Enter your new password.", "", " ", "Spaces are not allowed.");
+			if(np == "") { speak("canceled"); return; }
+			if(np.length() < 6 or np.length() > 24) { dlgmessage("Passwords must be between 6 and 24 characters. Press enter to continue."); return; }
+			string np2 = vd.password_box("Change password", "Enter your new password again to confirm.", "", " ", "Spaces are not allowed.");
+			if(np2 == "") { speak("canceled"); return; }
+			if(np2 != np) { dlgmessage("The passwords do not match. Press enter to continue."); return; }
+			pendingpass = np; // remembered so we can update the saved account once the server confirms and logs us out
+			send(0, "changepassself " + cur + " " + np, 0, true);
+		}
+		else if(parsed.length() == 2)
+		{
+			if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+			string np = vd.password_box("Reset password", "Enter " + parsed[1] + "'s new password.", "", " ", "Spaces are not allowed.");
+			if(np == "") { speak("canceled"); return; }
+			if(np.length() < 6 or np.length() > 24) { dlgmessage("Passwords must be between 6 and 24 characters. Press enter to continue."); return; }
+			string np2 = vd.password_box("Reset password", "Enter the new password again to confirm.", "", " ", "Spaces are not allowed.");
+			if(np2 == "") { speak("canceled"); return; }
+			if(np2 != np) { dlgmessage("The passwords do not match. Press enter to continue."); return; }
+			send(0, "changepassadmin " + parsed[1] + " " + np, 0, true);
+		}
+		else
+		{
+			if(my_rank_level() >= 2) syntax_error("/changepass, or /changepass username");
+			else syntax_error("/changepass");
+			return;
+		}
+	}
 		else if(base == "/nickname" or base == "/nick")
 	{
 		// One argument: set your own nickname (or "default" to revert). Two: staff set another player's
