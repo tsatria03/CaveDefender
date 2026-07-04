@@ -1,4 +1,5 @@
 New in 3.3.
+When you try to chat in a channel you are muted in, the game now names that channel and, for a timed mute, how long is left, such as "You cannot send messages in this global chat channel for three more minutes," instead of the old vague line.
 The player information card now shows two more details to everyone: the account's email, listed just under the username, and a member-since date of when the account was created, listed under the pronouns; accounts made before this was added read their member-since as unknown.
 You can now turn the typing sounds off: press F3 while in any text box to toggle the keyboard clicks on or off, and your choice is remembered between sessions.
 The preferences menu's Game tab is gone, and its three checkboxes, hearing your own voice while streaming, requiring you to hold the voice key, and asking to exit on escape, now live on the General tab instead.
