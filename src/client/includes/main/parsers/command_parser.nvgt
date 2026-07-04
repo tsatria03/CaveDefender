@@ -317,6 +317,38 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 3) { syntax_error("/changename playername newname"); return; }
 		send(0, text, 1, true);
 	}
+		else if(base == "/delchar")
+	{
+		// Self: /delchar (no args) deletes YOUR account -- warn, then confirm with your password. Admin (administrator+):
+		// /delchar <username> deletes another online player's after a warning. The server does the deletion and logout.
+		if(parsed.length() == 1)
+		{
+			setupmenu();
+			m.add_item("yes");
+			m.add_item("no");
+			m.intro_text = "Warning: this permanently deletes your account and cannot be undone; are you sure?";
+			if(m.run() != 0) { speak("canceled"); return; }
+			string pw = vd.password_box("Delete account", "Enter your password to confirm.", "", " ", "Spaces are not allowed.");
+			if(pw == "") { speak("canceled"); return; }
+			send(0, "delcharself " + pw, 0, true);
+		}
+		else if(parsed.length() == 2)
+		{
+			if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+			setupmenu();
+			m.add_item("yes");
+			m.add_item("no");
+			m.intro_text = "Warning: this permanently deletes " + parsed[1] + "'s account and cannot be undone; are you sure?";
+			if(m.run() != 0) { speak("canceled"); return; }
+			send(0, "delcharadmin " + parsed[1], 0, true);
+		}
+		else
+		{
+			if(my_rank_level() >= 2) syntax_error("/delchar, or /delchar username");
+			else syntax_error("/delchar");
+			return;
+		}
+	}
 		else if(base == "/nickname" or base == "/nick")
 	{
 		// One argument: set your own nickname (or "default" to revert). Two: staff set another player's

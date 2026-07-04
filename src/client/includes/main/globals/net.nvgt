@@ -745,6 +745,32 @@ void netloop_impl()
 				kicked = true;
 				connected = false;
 			}
+			else if (parsed[0] == "delchardone")
+			{
+				// Our own /delchar succeeded: the account is gone. Forget it locally (so it can't be re-selected) and
+				// return to the connection menu.
+				clear_last_account();
+				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				speak("Your account has been deleted, so you have been returned to the connection menu.", true);
+				kicked = true;
+				connected = false;
+			}
+			else if (parsed[0] == "delcharkicked")
+			{
+				// An administrator deleted our account: forget it locally and return to the connection menu.
+				clear_last_account();
+				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				speak("Your account has been deleted by staff, so you have been returned to the connection menu.", true);
+				kicked = true;
+				connected = false;
+			}
+			else if (parsed[0] == "chardeleted" and message.length() > parsed[0].length()+1)
+			{
+				// Someone's account was deleted (their own or by staff): play the offline cue and note the pre-built,
+				// flag/AFK/nickname-aware sentence in the alerts buffer, mirroring the new-account notice.
+				p.play_stationary("sounds/ui/misc/offline.ogg", false);
+				add_buffer_item("alerts", message.substr(parsed[0].length()+1));
+			}
 			else if (parsed[0] == "kickannounce" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/kick.ogg", false);

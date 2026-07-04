@@ -201,6 +201,21 @@ st.add("name", name);
 st.add("password", password);
 st.save();
 }
+// After the player's account is deleted, forget the cached active account and drop it from saved account storage,
+// so the connection menu no longer offers a dead account. Called when the server confirms a /delchar.
+void clear_last_account()
+{
+for(uint i=0; i<accounts.length(); i++)
+{
+if(string_to_lower_case(accounts[i].uname) == string_to_lower_case(name)) { accounts.remove_at(i); break; }
+}
+st.d.delete("name");
+st.d.delete("password");
+st.add("accounts", serialize_accounts()); // persist the pruned account-storage list
+st.save();
+name = "";
+password = "";
+}
 bool load_last_account()
 {
 st.load();

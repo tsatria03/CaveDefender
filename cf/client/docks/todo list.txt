@@ -1,9 +1,8 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Add a /delchar command to delete your own account after a warning and password check, with an admin form to delete another player's.
-
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a /delchar command to delete your own account after a warning and password check, with an admin form to delete another player's.
 **Finished. Add an administrator /changename command to rename a player's account and reset their nickname to the new name.
 **Finished. Add a /changepass command anyone can use to change their own password, with an admin form to reset another player's.
 **Finished. Add a /changemail command anyone can use to change their own email, with an admin form to change another player's.

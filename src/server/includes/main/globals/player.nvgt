@@ -73,6 +73,15 @@ for(uint k=0; k<players[recipient_index].ignored.length(); k++)
 if(string_to_lower_case(players[recipient_index].ignored[k]) == s) return true;
 return false;
 }
+// Remove a (renamed-away or deleted) username from every ONLINE player's in-memory ignore list, so a stale personal
+// mute doesn't linger this session; the on-disk lists are fixed separately by delete_account / rename_account.
+void remove_from_online_ignores(string name)
+{
+string low = string_to_lower_case(name);
+for(uint i=0; i<players.length(); i++)
+for(int j=int(players[i].ignored.length())-1; j>=0; j--)
+if(string_to_lower_case(players[i].ignored[j]) == low) players[i].ignored.remove_at(j);
+}
 // The channels a mute can apply to. "all" expands to every channel; a specific channel stays itself.
 array<string> mute_channels_for(string ch)
 {
