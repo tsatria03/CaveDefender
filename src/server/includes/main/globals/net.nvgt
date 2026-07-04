@@ -132,6 +132,13 @@ if(!verify_password(name, password))
 send(event.peer_id, "error: incorrect password.", 0,true);
 return;
 }
+// Email is mandatory as of the email update: an older account created before it has no email.usr, so it's
+// refused here and the player must make a new account (which collects an email) to play.
+if(read_field(name, "email") == "")
+{
+send(event.peer_id, "error: this account predates the required email and can no longer be used; please create a new account.", 0,true);
+return;
+}
 int64 bu = get_ban_until(name);
 if(bu == 0)
 {
@@ -187,7 +194,7 @@ verified_logins.set(""+event.peer_id, name); // remember who this peer authentic
 send(event.peer_id, "done", 0,true);
 }
 }
-void register_account(string name, string password)
+void register_account(string name, string email, string password)
 {
 if(name.length()<6 or name.length()>24)
 {
@@ -204,12 +211,19 @@ if(account_exists(name))
 send(event.peer_id, "error: an account with that name already exists.", 0,true);
 return;
 }
+// The email is cosmetic and unverified; just require a plausible non-empty value (the client asks for a real
+// one). It's stored as-is in email.usr and never used for login.
+if(email == "" or string_contains(email, "@", 1) < 0)
+{
+send(event.peer_id, "error: a valid email address is required.", 0,true);
+return;
+}
 if(password.length()<6 or password.length()>24)
 {
 send(event.peer_id, "error: passwords must be between 6 and 24 characters.", 0,true);
 return;
 }
-if(create_account(name, password))
+if(create_account(name, email, password))
 {
 send(event.peer_id, "registered", 0,true);
 // Tell everyone already online that a new account was made, right now at creation time (before the new
@@ -853,12 +867,12 @@ else if(parsed[0]=="login" and parsed.length()>3)
 if(parsed.length()>4) send(event.peer_id, "error: usernames and passwords cannot contain spaces.", 0,true);
 else login(parsed[1], parsed[2], parsed[3]);
 }
-else if(parsed[0]=="register" and parsed.length()>2)
+else if(parsed[0]=="register" and parsed.length()>3)
 {
-// register is exactly "register <name> <password>"; extra tokens mean a space in the name or password,
-// which would silently truncate the stored password and make the account impossible to log into.
-if(parsed.length()>3) send(event.peer_id, "error: usernames and passwords cannot contain spaces.", 0,true);
-else register_account(parsed[1], parsed[2]);
+// register is exactly "register <name> <email> <password>"; extra tokens mean a space in one of them,
+// which would silently truncate the stored value and make the account impossible to log into.
+if(parsed.length()>4) send(event.peer_id, "error: usernames, emails, and passwords cannot contain spaces.", 0,true);
+else register_account(parsed[1], parsed[2], parsed[3]);
 }
 else if(parsed[0]=="spawn_player" and parsed.length()>2)
 {

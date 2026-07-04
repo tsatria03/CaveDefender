@@ -188,9 +188,13 @@ bool newaccountform()
 	form.reset();
 	form.create_window("New account", false);
 	int unamebox=form.create_input_box("Username", "", "");
+	int emailbox=form.create_input_box("Email", "", "");
 	int passbox=form.create_input_box("Password", "", "*");
+	int confirmbox=form.create_input_box("Confirm password", "", "*");
 	form.set_disallowed_chars(unamebox, " ", false, "Spaces are not allowed."); // names/passwords are space-delimited on the wire, so spaces would break login/register
+	form.set_disallowed_chars(emailbox, " ", false, "Spaces are not allowed."); // the email rides the same space-delimited register message, so no spaces
 	form.set_disallowed_chars(passbox, " ", false, "Spaces are not allowed.");
+	form.set_disallowed_chars(confirmbox, " ", false, "Spaces are not allowed.");
 	int createbtn=form.create_button("&Create account", true);
 	int cancelbtn=form.create_button("&Cancel", false, true);
 	form.focus(unamebox);
@@ -206,11 +210,19 @@ bool newaccountform()
 		if(form.is_pressed(createbtn))
 		{
 			string uname=form.get_text(unamebox).trim_whitespace();
+			string mail=form.get_text(emailbox).trim_whitespace();
 			string pass=form.get_text(passbox);
+			string confirm=form.get_text(confirmbox);
 			if(uname.length()<6 or uname.length()>24)
 			{
 				dlgmessage("Usernames must be between 6 and 24 characters. Press enter to continue.");
 				form.focus(unamebox);
+				continue;
+			}
+			if(mail=="" or string_contains(mail, "@", 1)<0)
+			{
+				dlgmessage("Please enter a valid email address. Press enter to continue.");
+				form.focus(emailbox);
 				continue;
 			}
 			if(pass.length()<6 or pass.length()>24)
@@ -219,7 +231,14 @@ bool newaccountform()
 				form.focus(passbox);
 				continue;
 			}
+			if(confirm!=pass)
+			{
+				dlgmessage("The passwords do not match. Press enter to continue.");
+				form.focus(confirmbox);
+				continue;
+			}
 			name=uname;
+			email=mail;
 			password=pass;
 			return true;
 		}

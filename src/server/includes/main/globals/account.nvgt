@@ -178,7 +178,7 @@ string password_blob(string salt, string password)
 return "argon2id$"+argon2_blocks+"$"+argon2_passes+"$"+salt+"$"+string_argon2id(password, salt, argon2_blocks, argon2_passes, argon2_hashlen);
 }
 
-bool create_account(string name, string password)
+bool create_account(string name, string email, string password)
 {
 if(account_exists(name)) return false;
 string salt = make_salt();
@@ -189,6 +189,7 @@ string salt = make_salt();
 // false: the account then simply doesn't exist and the player can try again.
 bool ok = true;
 ok = write_field(name, "username", name) and ok;
+ok = write_field(name, "email", email) and ok; // cosmetic, unverified; hand-editable, never used for login
 ok = write_field(name, "nickname", name) and ok; // display name starts equal to the username
 ok = write_field(name, "language", "English") and ok; // everyone starts on the English channel
 ok = write_field(name, "pronoun", default_pronoun()) and ok; // default: the configured they/them option, until the player picks with /pronoun

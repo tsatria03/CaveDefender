@@ -21,6 +21,7 @@ string motd = "Welcome to the server.";
 string passc="rscs123";
 string name="";
 string password="";
+string email=""; // cosmetic, unverified account email collected at registration and stored server-side in email.usr; not used for login
 string myrank="player";
 string last_pm_sender=""; // the most recent player to PM us, used by /reply (/r)
 int current_room=0; // 0 = main lobby; otherwise the id of the room we're in (Enter opens its menu)
