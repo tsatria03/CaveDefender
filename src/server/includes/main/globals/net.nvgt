@@ -1137,6 +1137,8 @@ else if(parsed[0]=="playerlist" and index>-1)
 {
 push_player_list(index); // F6: the server-wide roster as a navigable menu (same set as /who)
 }
+else if(parsed[0]=="ignoremenu" and index>-1) push_ignore_menu(index); // /ignore: pick an online player to personally mute
+else if(parsed[0]=="ignoredmenu" and index>-1) push_ignored_menu(index); // /ignored: review and unmute your personal ignore list
 else if(parsed[0]=="ignore" and index>-1 and parsed.length()>1)
 {
 // Personal mute from the F6 info card: add a username to this player's ignore list (their chat and voice

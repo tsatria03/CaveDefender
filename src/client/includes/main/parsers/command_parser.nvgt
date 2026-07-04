@@ -114,7 +114,17 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/pronoun"); return; }
 		send(0, "pronoun", 0, true); // everyone: the server pushes the pronoun chooser
 	}
-	else if(base == "/accept")
+	else if(base == "/ignore")
+		{
+			if(parsed.length() != 1) { syntax_error("/ignore"); return; }
+			send(0, "ignoremenu", 0, true); // everyone: the server pushes a menu of online players to personally mute
+		}
+		else if(base == "/ignored")
+		{
+			if(parsed.length() != 1) { syntax_error("/ignored"); return; }
+			send(0, "ignoredmenu", 0, true); // everyone: the server pushes your personal ignore list to review and unmute
+		}
+		else if(base == "/accept")
 	{
 		if(parsed.length() != 1) { syntax_error("/accept"); return; }
 		send(0, "acceptinvite", 0, true); // accept a pending room invitation

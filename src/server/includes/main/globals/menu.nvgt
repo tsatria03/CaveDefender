@@ -635,6 +635,52 @@ opts.insert_last(label);
 }
 send_menu(peer, "playerlist", "Players menu. " + players_count_phrase(opts.length(), "on the server"), opts);
 }
+// The display name for a personal-ignore entry: the nickname if that account is online, otherwise the bare
+// username (the ignore list stores usernames, and some may be offline).
+string personal_target_name(string username)
+{
+int oi = get_online_index(username);
+return (oi > -1) ? display_name(oi) : username;
+}
+// /ignore: pick an ONLINE player to personally mute (add to your ignore list). Lists everyone online except
+// yourself and anyone you already ignore. Usernames go in menu_targets; on_menu_result adds the choice.
+void push_ignore_menu(int index)
+{
+int peer = players[index].peer_id;
+players[index].menu_targets.resize(0);
+string[] opts;
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].held) continue; // held (offline) sessions read as offline
+if(int(i) == index) continue; // can't ignore yourself
+if(player_ignores(index, players[i].name)) continue; // already ignoring them
+players[index].menu_targets.insert_last(players[i].name);
+string label = display_name(int(i));
+if(string_to_lower_case(players[i].nickname) != string_to_lower_case(players[i].name)) label += " (" + players[i].name + ")";
+opts.insert_last(label);
+}
+if(opts.length() == 0) { send(peer, "misc There is no one for you to personally mute.", 0, true); return; }
+send_menu(peer, "ignoreadd", "Choose a player to personally mute. " + players_count_phrase(opts.length(), "you can mute"), opts);
+}
+// /ignored: review your personal ignore list. Lists every username on it (online or offline); on_menu_result
+// removes the chosen one and tells only you. Usernames go in menu_targets.
+void push_ignored_menu(int index)
+{
+int peer = players[index].peer_id;
+players[index].menu_targets.resize(0);
+string[] opts;
+for(uint i=0; i<players[index].ignored.length(); i++)
+{
+string u = players[index].ignored[i];
+players[index].menu_targets.insert_last(u);
+int oi = get_online_index(u);
+string label = (oi > -1) ? display_name(oi) : u;
+if(oi > -1 and string_to_lower_case(players[oi].nickname) != string_to_lower_case(u)) label += " (" + u + ")";
+opts.insert_last(label);
+}
+if(opts.length() == 0) { send(peer, "misc You haven't personally muted anyone.", 0, true); return; }
+send_menu(peer, "ignoredremove", "Choose a player to stop muting. " + players_count_phrase(opts.length(), "you are muting"), opts);
+}
 // Where a player currently is, for the F6 info viewer: the lobby, a room (named by its host), or a game
 // (named by its host and mode) -- and "Watching" instead of "In" for a spectator. room_id is 0 in the
 // lobby, a room id in a room office, or a game id in a game (the same field is reused for all three).
@@ -736,6 +782,28 @@ string pkey = pronoun_bare(players[player_index].menu_targets[choice]);
 players[player_index].pronoun = pkey;
 set_pronoun(players[player_index].name, pkey); // persist to pronoun.usr so it sticks across sessions
 send(peer, "misc Your pronouns are now set to "+pkey+".", 0, true);
+}
+else if(id == "ignoreadd")
+{
+// /ignore choice: personally mute the picked player (add to ignore list, persist). Silent to the target.
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+string tu = players[player_index].menu_targets[choice];
+if(string_to_lower_case(tu) != string_to_lower_case(players[player_index].name) and account_exists(tu) and !player_ignores(player_index, tu))
+{
+players[player_index].ignored.insert_last(tu);
+set_ignored(players[player_index].name, players[player_index].ignored);
+}
+send(peer, "misc " + personal_target_name(tu) + " is now muted.", 0, true);
+}
+else if(id == "ignoredremove")
+{
+// /ignored choice: stop personally muting the picked player (drop from ignore list, persist). Tells only you.
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+string tu = players[player_index].menu_targets[choice];
+for(int k=int(players[player_index].ignored.length())-1; k>=0; k--)
+if(string_to_lower_case(players[player_index].ignored[k]) == string_to_lower_case(tu)) players[player_index].ignored.remove_at(k);
+set_ignored(players[player_index].name, players[player_index].ignored);
+send(peer, "misc " + personal_target_name(tu) + " is now unmuted.", 0, true);
 }
 else if(id == "joinpublic" or id == "joinprivate")
 {
