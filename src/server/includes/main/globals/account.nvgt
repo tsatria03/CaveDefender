@@ -35,10 +35,29 @@ bool account_exists(string name)
 {
 return directory_exists(account_dir(name));
 }
-// True if this name is the configured owner account (case-insensitive); the owner is always developer.
+// True if this name is one of the configured owner aliases (case-insensitive); every owner alias is always developer.
 bool is_owner(string name)
 {
-return string_to_lower_case(name) == string_to_lower_case(owner);
+string low = string_to_lower_case(name);
+for(uint i=0; i<owners.length(); i++)
+if(string_to_lower_case(owners[i]) == low) return true;
+return false;
+}
+// Replace an owner alias (case-insensitive) with a new name and persist to conf.svr; used when an owner account is
+// renamed, so its alias in the owners list stays current. No-op if the old name isn't an owner alias.
+void replace_owner_alias(string oldname, string newname)
+{
+string low = string_to_lower_case(oldname);
+for(uint i=0; i<owners.length(); i++)
+if(string_to_lower_case(owners[i]) == low) { owners[i] = newname; writeprefs(); return; }
+}
+// Remove an owner alias (case-insensitive) from the owners list and persist to conf.svr; used when an owner account
+// is deleted, so that freed name is no longer auto-trusted as owner. The other aliases stay. No-op if not an alias.
+void remove_owner_alias(string name)
+{
+string low = string_to_lower_case(name);
+for(int i=int(owners.length())-1; i>=0; i--)
+if(string_to_lower_case(owners[i]) == low) { owners.remove_at(i); writeprefs(); }
 }
 // The staff-attention flag (flag.usr): "1" = rank is shown to regular players, empty = incognito. Default off.
 bool get_flag(string name) { return read_field(name, "flag", "") == "1"; }
@@ -156,9 +175,9 @@ return write_field(name, "ignored", joined);
 }
 // Rename an account on disk: move its whole folder (every .usr file -- password, email, rank, warnings, wins,
 // mutes, bans, saved rooms, its OWN ignore list, everything) to the new username in one move, fix username.usr,
-// and reset the nickname to the new username (clearing any old nickname). If the account being renamed is the
-// configured owner, carry that to conf.svr (owner=) and the in-memory owner so the primary dev keeps forced-
-// developer status under the new name. Finally rewrite old->new in EVERY account's on-disk ignore list, so other
+// and reset the nickname to the new username (clearing any old nickname). If the renamed account was one of the
+// owner aliases, that alias is updated to the new name in conf.svr's owners list so it keeps forced-developer
+// status under the new name. Finally rewrite old->new in EVERY account's on-disk ignore list, so other
 // players' personal mutes of this person survive the rename (otherwise a rename would silently drop their mutes).
 // The caller must have already validated newname (6-24, filterchar, not already existing). Returns false only if
 // the folder move itself fails, in which case nothing was changed.
@@ -169,7 +188,7 @@ string newdir = "data/players/" + newname;
 if(!directory_rename(olddir, newdir)) return false;
 write_field(newname, "username", newname);
 write_field(newname, "nickname", newname); // the display name reverts to the new username
-if(is_owner(oldname)) { owner = newname; writeprefs(); } // keep owner status pointed at the renamed primary dev
+replace_owner_alias(oldname, newname); // if the renamed account was an owner alias, keep the owners list pointed at its new name
 string[] dirs = find_directories("data/players/*");
 string lowold = string_to_lower_case(oldname);
 for(uint i=0; i<dirs.length(); i++)
@@ -184,13 +203,13 @@ return true;
 }
 // Delete an account: remove its whole folder and scrub the deleted name from EVERY other account's on-disk ignore
 // list, so no stale personal mute lingers (a re-registered name would otherwise silently inherit mutes aimed at the
-// old holder). If the account is the configured owner, also clear conf.svr owner= (and the in-memory owner) so the
-// freed username can't be re-registered straight into ownership -- the host must name a new owner in conf.svr.
+// old holder). If the account was one of the owner aliases, that name is dropped from conf.svr's owners list (the
+// other aliases stay owners) so the freed username isn't silently re-trusted as owner if someone re-registers it.
 // Returns false only if the folder delete fails, in which case nothing was changed. Case-insensitive name match.
 bool delete_account(string name)
 {
 if(!directory_delete(account_dir(name))) return false;
-if(is_owner(name)) { owner = ""; writeprefs(); } // no forced owner until the host sets a new one
+remove_owner_alias(name); // if a deleted account was an owner alias, drop just that name from the owners list (the other aliases stay)
 string lowdel = string_to_lower_case(name);
 string[] dirs = find_directories("data/players/*");
 for(uint i=0; i<dirs.length(); i++)
@@ -245,10 +264,8 @@ ok = write_field(name, "language", "English") and ok; // everyone starts on the 
 ok = write_field(name, "pronoun", default_pronoun()) and ok; // default: the configured they/them option, until the player picks with /pronoun
 ok = write_field(name, "password", password_blob(salt, password)) and ok;
 ok = write_field(name, "rank", is_owner(name) ? "developer" : "player") and ok;
-ok = write_field(name, "pubroom", "") and ok;
-ok = write_field(name, "privroom", "") and ok;
-ok = write_field(name, "muted", "") and ok;
-ok = write_field(name, "banned", "") and ok;
+// pubroom, privroom, muted, and banned are intentionally NOT written at creation: they'd only be blank, and
+// read_field returns "" for a missing file anyway (no room, not muted, not banned), so each is created on first use.
 if(!ok)
 {
 if(directory_exists(account_dir(name))) directory_delete(account_dir(name)); // roll back the partial account so the name stays free

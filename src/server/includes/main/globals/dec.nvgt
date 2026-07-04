@@ -1,6 +1,6 @@
 int port=25562;
 int userlimit=200;
-string owner="tsatria03"; // the owner account name (from conf.svr); always forced to developer rank.
+string[] owners = {"tsatria03"}; // the owner's account name(s), from conf.svr's "owners" field: up to 3 aliases for the one owner (e.g. different names the same person signs in with), each always forced to developer rank and matched case-insensitively.
 int rulesver=1; // current server-rules version (from conf.svr). A player must have agreed at this version or higher to play; bump it to force everyone to re-agree to updated rules. Takes effect on restart.
 string motd = "Welcome to the server!";
 timer svruptimer;
