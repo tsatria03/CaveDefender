@@ -110,6 +110,21 @@ if(u < 0) return false;
 if(u == 0) return true;
 return now_epoch() < u;
 }
+// The specific "you're muted here" reply shown when a muted player tries to send in a text channel (global/
+// local/team). Names the channel, and for a timed mute the remaining time (whole seconds under a minute, else
+// whole minutes). Assumes the caller already confirmed the player is muted in this channel.
+string muted_chat_message(int pi, string channel)
+{
+string base = "You cannot send messages in this " + channel + " chat channel";
+int64 mu = get_player_mute(pi, channel);
+if(mu <= 0) return base + "."; // 0 = indefinite (and <0 shouldn't happen here, but reads as no time)
+int64 rem = mu - now_epoch();
+if(rem < 1) rem = 1; // about to expire; never say "0 more seconds"
+string t;
+if(rem < 60) t = rem + (rem == 1 ? " more second" : " more seconds");
+else { int64 mins = rem / 60; t = mins + (mins == 1 ? " more minute" : " more minutes"); }
+return base + " for " + t + ".";
+}
 // Tell the target (sound + first-person alert) about a channel mute change. rem = remaining seconds for
 // a mute (0 = indefinite); ignored for an unmute.
 void notify_target_mute(int ti, string channel, bool muting, int rem)

@@ -1217,14 +1217,14 @@ else relay_to_staff("staffmsg "+afk_prefix(index)+display_name(index)+" "+action
 else if(parsed[0]=="localchat" and index>-1 and parsed.length()>1)
 {
 string msg=string_join(parsed, " ", 1, parsed.length());
-if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
+if(is_muted_now(index, "local")) send(event.peer_id, muted_chat_message(index, "local"), 0,true);
 else if(filter_crash(msg) or filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
 else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg, "", index); // local chat reaches everyone in the space, regardless of language channel (minus anyone ignoring the sender)
 }
 else if(parsed[0]=="localme" and index>-1 and parsed.length()>1)
 {
 string action=string_join(parsed, " ", 1, parsed.length());
-if(is_muted_now(index, "local")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
+if(is_muted_now(index, "local")) send(event.peer_id, muted_chat_message(index, "local"), 0,true);
 else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
 else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+" "+action, "", index); // local chat reaches everyone in the space, regardless of language channel (minus anyone ignoring the sender)
 }
@@ -1232,7 +1232,7 @@ else if(parsed[0]=="teamchat" and index>-1 and parsed.length()>1)
 {
 string msg=string_join(parsed, " ", 1, parsed.length());
 if(get_game_index(players[index].room_id) < 0 or games[get_game_index(players[index].room_id)].mode != "pvp") send(event.peer_id, "Team chat is only available in player versus player games.", 0,true);
-else if(is_muted_now(index, "team")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
+else if(is_muted_now(index, "team")) send(event.peer_id, muted_chat_message(index, "team"), 0,true);
 else if(filter_crash(msg) or filter_chat(msg)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true); // team chat is filtered like local (crash strings + word filter)
 else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(index)+": "+msg);
 }
@@ -1240,7 +1240,7 @@ else if(parsed[0]=="teamme" and index>-1 and parsed.length()>1)
 {
 string action=string_join(parsed, " ", 1, parsed.length());
 if(get_game_index(players[index].room_id) < 0 or games[get_game_index(players[index].room_id)].mode != "pvp") send(event.peer_id, "Team chat is only available in player versus player games.", 0,true);
-else if(is_muted_now(index, "team")) send(event.peer_id, "You cannot send messages in this chat channel.", 0,true);
+else if(is_muted_now(index, "team")) send(event.peer_id, muted_chat_message(index, "team"), 0,true);
 else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words.", 0,true);
 else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(index)+" "+action);
 }
@@ -1950,7 +1950,7 @@ else
                 {
                     if(is_muted_now(index, "global"))
                     {
-                        send(event.peer_id, "You cannot send messages in this chat channel.", 0, true);
+                        send(event.peer_id, muted_chat_message(index, "global"), 0, true);
                     }
                     else
                     {
@@ -2328,7 +2328,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
 {
             if(is_muted_now(index, "global"))
             {
-                send(event.peer_id, "You cannot send messages in this chat channel.", 0, true);
+                send(event.peer_id, muted_chat_message(index, "global"), 0, true);
             }
             else
             {
