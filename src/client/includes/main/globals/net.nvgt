@@ -502,6 +502,7 @@ void handle_playerinfo(string message)
 	bool is_banned = (fl.length() > 2 and fl[2] == "1");
 	bool can_warn = (fl.length() > 3 and fl[3] == "1");
 	bool can_notify = (fl.length() > 4 and fl[4] == "1");
+		bool can_mute = (fl.length() > 5 and fl[5] == "1"); // personal Mute checkbox: off for your own card and any staff member
 	bool can_promote = (prom != "");
 	bool can_demote = (demo != "");
 	form.reset();
@@ -510,7 +511,7 @@ void handle_playerinfo(string message)
 	int mutebox = -1, pmbtn = -1, kickbtn = -1, banbtn = -1, prombtn = -1, demobtn = -1, notifybtn = -1, warnbtn = -1;
 	if(!is_self)
 	{
-		mutebox = form.create_checkbox("&mute this player", already_ignored); // Alt+M: personal ignore of their chat and voice
+		if(can_mute) mutebox = form.create_checkbox("&mute this player", already_ignored); // Alt+M: personal ignore of their chat and voice (hidden for staff)
 		pmbtn = form.create_button("&private message this player"); // Alt+P
 		if(can_kick) kickbtn = form.create_button("&kick this player"); // Alt+K
 		if(can_ban) banbtn = form.create_button(is_banned ? "&unban this player" : "&ban this player"); // Alt+U / Alt+B

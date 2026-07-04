@@ -66,6 +66,8 @@ players.insert_last(p1);
 bool player_ignores(int recipient_index, string sender_name)
 {
 if(recipient_index<0 or recipient_index>=int(players.length())) return false;
+int si = get_online_index(sender_name);
+if(si > -1 and is_staff(players[si].rank)) return false; // staff are NEVER personally muted: their chat/voice/PM always reaches everyone, even a stale mute from before they were promoted
 string s = string_to_lower_case(sender_name);
 for(uint k=0; k<players[recipient_index].ignored.length(); k++)
 if(string_to_lower_case(players[recipient_index].ignored[k]) == s) return true;

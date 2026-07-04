@@ -20,7 +20,7 @@ Press slash to open the chat, type a command, and press enter to send it. Every 
 /afk: Marks you as away. It starts a ten second countdown of beeps; press any key during the countdown to cancel it. Once you are away, everyone is told and your name shows as AFK in the player lists wherever you are, and the next key you press brings you back.
 /channel: Opens a menu to choose your language chat channel; the readme explains what it affects.
 /pronoun: Opens a menu to choose the pronouns used to refer to you in messages, such as masculine or feminine. It defaults to singular they, and the none option uses your name in place of a pronoun.
-/ignore: Opens a menu of the players online to personally mute, hiding that person's chat and voice from you only; they are never told, and it lasts until you unmute them. This is the same personal mute as the checkbox on a player's information card.
+/ignore: Opens a menu of the players online to personally mute, hiding that person's chat and voice from you only; they are not told when you mute them, though if they try to message you they learn they have been muted, and it lasts until you unmute them. Staff cannot be muted. This is the same personal mute as the checkbox on a player's information card.
 /ignored: Opens a menu of everyone you are personally muting; choose one to stop muting them and you alone are told they are now unmuted.
 /accept: Accepts a pending room or game invitation and takes you in; see the readme for rooms and games.
 /reject: Refuses a pending room or game invitation; see the readme for rooms and games.
