@@ -119,6 +119,7 @@ funcdef bool kb_echo_update_callback(audio_form@ f, int echo);
 //can make this a member of the audio form class as soon as even one person suggests seriously wanting to change on a form by form basis I guess
 bool audioform_input_disable_ralt = true;
 int audioform_keyboard_echo = textflag_characters;
+int typingSounds = 1; // 1 = typing/keyboard sounds on, 0 = off; toggled with F3 in any input box, saved to settings.cvf. Gates every formpool keyboard sound below.
 form_background_callback@ audioform_default_background_callback = null;
 //main window class
 class audio_form {
@@ -722,7 +723,7 @@ class audio_form {
 				return 2;
 		}
 		if ((focused < 0 || c_form[focused].type != ct_keyboard_area) && (focused < 0 || ((!c_form[focused].multiline_enter || !c_form[focused].multiline) && c_form[focused].type == ct_input || c_form[focused].type == ct_button || c_form[focused].type == ct_list) && key_up(KEY_LCTRL) && key_up(KEY_RCTRL) && key_up(KEY_LSHIFT) && key_up(KEY_RSHIFT)) && (key_repeating(KEY_RETURN) || key_repeating(KEY_NUMPAD_ENTER) || (autotab == 3))) {
-			if (focused >= 0 && c_form[focused].type == ct_input) formpool.play_stationary("sounds/ui/keyboard/return.ogg",false);
+			if (focused >= 0 && c_form[focused].type == ct_input && typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/return.ogg",false);
 				if (focused >= 0 && c_form[focused].type == ct_input)
 			stop_speech();
 			if ((defaults == -1) && (focused > -1)) {
@@ -2433,7 +2434,13 @@ class audio_form {
 			}
 		}
 		if (c_form[tab_index].type == ct_input) {
-			if (key_repeating(KEY_F2)) {
+			if (key_pressed(KEY_F3)) {
+					typingSounds = typingSounds == 1 ? 0 : 1;
+					formpool.play_stationary(typingSounds == 1 ? "sounds/ui/misc/toggleon.ogg" : "sounds/ui/misc/toggleoff.ogg", false);
+					speak(typingSounds == 1 ? "keyboard clicks enabled" : "keyboard clicks disabled");
+					writepreffs();
+				}
+				if (key_repeating(KEY_F2)) {
 				int dir = 1;
 				if (keyboard_modifiers & KEYMOD_SHIFT != 0) dir = -1;
 				audioform_keyboard_echo = audioform_change_keyboard_echo(audioform_keyboard_echo, dir);
@@ -2845,9 +2852,9 @@ class control {
 						edit(char);
 					else
 						add(char);
-						if(char==" ") formpool.play_stationary("sounds/ui/keyboard/space.ogg",false);
-						if(char!=" ") formpool.play_stationary("sounds/ui/keyboard/type.ogg",false);
-						if(char!=" " && char.is_upper()) formpool.play_stationary("sounds/ui/keyboard/cap.ogg",false);
+						if(char==" " && typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/space.ogg",false);
+						if(char!=" " && typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/type.ogg",false);
+						if(char!=" " && char.is_upper() && typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/cap.ogg",false);
 				}
 				if ((clipboard_flags & clipboard_flag_cut > 0) && (keyboard_modifiers & KEYMOD_CTRL > 0) && (key_repeating(KEY_X)) && password_mask == "")
 					cut_highlighted();
@@ -3646,7 +3653,7 @@ class control {
 			sel_end = -1;
 			if (speak_deleted)
 				speak("selection deleted");
-			formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false);
+			if(typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false);
 			return;
 		} else if (from_start == 0 && cursor > 0) {
 			int old_cursor = cursor;
@@ -3655,7 +3662,7 @@ class control {
 				cursor = text.length() - 1;
 			if (speak_deleted)
 				speak(input_box_speak(find_appropriate_character(text.substr(cursor, 4)), true) + (delete_speech_text != "" ? " " + delete_speech_text : ""), true);
-			formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false);
+			if(typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false);
 			text = text.substr(0, cursor) + text.substr(old_cursor);
 		} else if (from_start == 1) {
 			string del_char = "Blank";
@@ -3664,7 +3671,7 @@ class control {
 			text = text.substr(0, cursor) + text.substr(cursor + utf8size(text.substr(cursor, 1)));
 			if (speak_deleted)
 				speak(input_box_speak(find_appropriate_character(del_char), true), true);
-			formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false);
+			if(typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false);
 		}
 	}
 	void move_left() {
@@ -3695,7 +3702,7 @@ class control {
 		add("\n");
 		if (echo_flag != textflag_none)
 			speak("New Line", true);
-		formpool.play_stationary("sounds/ui/keyboard/return.ogg",false);
+		if(typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/return.ogg",false);
 
 	}
 	int current_line_start_position(bool word = false) {

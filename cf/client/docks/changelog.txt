@@ -1,4 +1,5 @@
 New in 3.3.
+You can now turn the typing sounds off: press F3 while in any text box to toggle the keyboard clicks on or off, and your choice is remembered between sessions.
 The preferences menu's Game tab is gone, and its three checkboxes, hearing your own voice while streaming, requiring you to hold the voice key, and asking to exit on escape, now live on the General tab instead.
 Your saved account storage and server storage no longer let you add the same thing twice: trying to save an account whose username is already stored, or a server that reuses a saved server's name or address, now tells you it is already there instead of quietly making a duplicate, and editing one onto another's name or address is refused the same way.
 Creating an account now asks for an email as well, so the new account form has a username, an email, a password, and a confirm password that must match; the email is saved with your account but is never checked or used to log in. An email is now required, so older accounts made before this update can no longer sign in and must be created again.
