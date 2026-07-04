@@ -98,6 +98,12 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/staff"); return; }
 		send(0, "staff", 0, true);
 	}
+	else if(base == "/where")
+	{
+		// Everyone: ask the server where an online player is; it answers with a misc-buffer line like the F6 card.
+		if(parsed.length() != 2) { syntax_error("/where username"); return; }
+		send(0, "where "+parsed[1], 0, true);
+	}
 	else if(base == "/channel")
 	{
 		if(parsed.length() != 1) { syntax_error("/channel"); return; }

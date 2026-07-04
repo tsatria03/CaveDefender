@@ -242,10 +242,10 @@ string format_restart_time(int seconds)
 if(seconds>=60)
 {
 int mins=seconds/60;
-if(mins==1) return "The server will restart in 1 minute.";
-return "The server will restart in "+mins+" minutes.";
+if(mins==1) return "Attention! The server will restart in 1 minute.";
+return "Attention! The server will restart in "+mins+" minutes.";
 }
-return "The server will restart in "+seconds+" seconds.";
+return "Attention! The server will restart in "+seconds+" seconds.";
 }
 // Closes the server. Forcefully disconnects every client first so each one's enet sees the drop
 // immediately and bounces back to its connection menu, pumps the host briefly so those
@@ -1324,6 +1324,18 @@ rf.open("docks/rules/"+which+".txt", "rb");
 string content=rf.read();
 rf.close();
 send(event.peer_id, "rulestext "+which+"\n"+content, 0,true);
+}
+}
+else if(parsed[0]=="where" and index>-1 and parsed.length()>1)
+{
+// Everyone: report where an ONLINE player is, using the same phrase the F6 card shows, named for the target
+// (e.g. "Bob is in the lobby."). Resolves by username or nickname; offline/unknown gets the usual not-found line.
+int ti = get_player_index_from(parsed[1]);
+if(ti < 0) reply_target_not_found(event.peer_id, parsed[1]);
+else
+{
+string loc = player_location_phrase(ti); // "In the lobby." / "In X's room." / "Watching X's game."
+send(event.peer_id, "misc "+display_name(ti)+" is "+string_to_lower_case(loc.substr(0,1))+loc.substr(1), 0, true);
 }
 }
 else if(parsed[0]=="getwarnings" and index>-1 and parsed.length()>1)
