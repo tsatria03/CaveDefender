@@ -250,6 +250,25 @@ string server_list_text(uint i)
 {
 	return servers[i].sname + ". IP: " + servers[i].sip + ". Port: " + servers[i].sport;
 }
+// Index of a saved server at this address (IP + port), or -1 if none. The address is the identity of a server
+// (the name is just a label), so two presets pointing at the same IP and port are the same server and can't both
+// be saved. IP is compared case-insensitively (hostnames like localhost); the port must match exactly.
+int server_stored_index(string ipv, int pnum)
+{
+	string key=string_to_lower_case(ipv);
+	for(uint i=0; i<servers.length(); i++)
+		if(string_to_lower_case(servers[i].sip)==key and servers[i].sport==pnum) return int(i);
+	return -1;
+}
+// Index of a saved server with this name, or -1 if none. Names are compared case-insensitively so the list
+// stays unambiguous -- two presets can't share a name even if they point at different addresses.
+int server_name_index(string nm)
+{
+	string key=string_to_lower_case(nm);
+	for(uint i=0; i<servers.length(); i++)
+		if(string_to_lower_case(servers[i].sname)==key) return int(i);
+	return -1;
+}
 // The name of the saved server currently in use, or "Custom" if you're on a manually entered one. The
 // explicit custom flag wins, so picking Custom reads as Custom even when ip/port still match a preset.
 string current_server_label()
@@ -287,6 +306,8 @@ void addserver()
 			if(ipv=="") { dlgmessage("Please enter an IP. Press enter to continue."); form.focus(ipbox); continue; }
 			int pnum=string_to_number(ptv);
 			if(pnum<1 or pnum>65535) { dlgmessage("That is not a valid port. Please enter a number between 1 and 65535. Press enter to continue."); form.focus(portbox); continue; }
+			if(server_name_index(nm)>=0) { dlgmessage("A saved server already uses that name. Press enter to continue."); form.focus(namebox); continue; }
+			if(server_stored_index(ipv, pnum)>=0) { dlgmessage("That server is already in your server storage. Press enter to continue."); form.focus(ipbox); continue; }
 			servers.insert_last(serverpreset(nm, ipv, pnum));
 			writepreffs();
 			dlgmessage("Server added. Press enter to continue.");
@@ -389,6 +410,8 @@ void editserverdetails(int idx)
 			if(ipv=="") { dlgmessage("Please enter an IP. Press enter to continue."); form.focus(ipbox); continue; }
 			int pnum=string_to_number(ptv);
 			if(pnum<1 or pnum>65535) { dlgmessage("That is not a valid port. Please enter a number between 1 and 65535. Press enter to continue."); form.focus(portbox); continue; }
+			int sndup=server_name_index(nm); if(sndup>=0 and sndup!=idx) { dlgmessage("Another saved server already uses that name. Press enter to continue."); form.focus(namebox); continue; }
+			int sdup=server_stored_index(ipv, pnum); if(sdup>=0 and sdup!=idx) { dlgmessage("Another saved server already uses that address. Press enter to continue."); form.focus(ipbox); continue; }
 			servers[idx].sname=nm;
 			servers[idx].sip=ipv;
 			servers[idx].sport=pnum;
@@ -451,11 +474,22 @@ void loadaccountmenu()
 	save_last_account(); // the selected account becomes the active/last account
 	dlgmessage("Account changed to " + name + ". Press enter to continue.");
 }
-// Append an account to storage (no dedup, like server presets) and persist.
-void add_account_to_storage(string u, string p)
+// Index of a saved account with this username, or -1 if none. Case-insensitive, since a username is a
+// case-insensitive identity on the server, so "Bob" and "bob" are the same account and can't both be stored.
+int account_stored_index(string u)
 {
+	string key=string_to_lower_case(u);
+	for(uint i=0; i<accounts.length(); i++)
+		if(string_to_lower_case(accounts[i].uname)==key) return int(i);
+	return -1;
+}
+// Append an account to storage and persist, refusing a duplicate username. Returns false if it was already there.
+bool add_account_to_storage(string u, string p)
+{
+	if(account_stored_index(u)>=0) return false;
 	accounts.insert_last(accountpreset(u, p));
 	writepreffs();
+	return true;
 }
 // Ask whether to save the given account into account storage; on yes, store it. Used after Set up an existing
 // account and after New account. The account is already the active one either way; this only affects storage.
@@ -467,8 +501,8 @@ void offer_save_account(string u, string p)
 	m.intro_text="Would you like to add this account to your account storage? This is useful for managing several accounts at once.";
 	if(m.run()==0)
 	{
-		add_account_to_storage(u, p);
-		dlgmessage("Account added to your account storage. Press enter to continue.");
+		if(add_account_to_storage(u, p)) dlgmessage("Account added to your account storage. Press enter to continue.");
+		else dlgmessage("That account is already in your account storage. Press enter to continue.");
 	}
 	else speak("canceled");
 }
@@ -496,6 +530,7 @@ void addaccount()
 			string p=form.get_text(passbox);
 			if(u=="") { dlgmessage("Please enter a username. Press enter to continue."); form.focus(unamebox); continue; }
 			if(p=="") { dlgmessage("Please enter a password. Press enter to continue."); form.focus(passbox); continue; }
+			if(account_stored_index(u)>=0) { dlgmessage("That account is already in your account storage. Press enter to continue."); form.focus(unamebox); continue; }
 			accounts.insert_last(accountpreset(u, p));
 			writepreffs();
 			dlgmessage("Account added. Press enter to continue.");
@@ -527,6 +562,7 @@ void editaccountdetails(int idx)
 			string p=form.get_text(passbox);
 			if(u=="") { dlgmessage("Please enter a username. Press enter to continue."); form.focus(unamebox); continue; }
 			if(p=="") { dlgmessage("Please enter a password. Press enter to continue."); form.focus(passbox); continue; }
+			int dup=account_stored_index(u); if(dup>=0 and dup!=idx) { dlgmessage("Another saved account already uses that username. Press enter to continue."); form.focus(unamebox); continue; }
 			accounts[idx].uname=u;
 			accounts[idx].pword=p;
 			writepreffs();
