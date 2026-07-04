@@ -96,6 +96,10 @@ if(st.d.exists("autorun"))
 {
 autorun=st.read_bool("autorun");
 }
+if(st.d.exists("typingSounds"))
+{
+typingSounds=st.read_int("typingSounds");
+}
 if(st.d.exists("ip"))
 {
 ip=st.read_string("ip");
@@ -183,6 +187,7 @@ st.add("side_scrolling",side_scrolling);
 st.add("speak_menu_position",speak_menu_position);
 st.add("gamxit",gamxit);
 st.add("autorun",autorun);
+st.add("typingSounds",typingSounds);
 st.add("ip",ip);
 st.add("port",port);
 st.add("servers",serialize_servers());

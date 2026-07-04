@@ -76,6 +76,7 @@ first_letter=false;
 side_scrolling=false;
 speak_menu_position=false;
 gamxit=1;
+typingSounds=1;
 ip="localhost";
 port=25562;
 name="";
