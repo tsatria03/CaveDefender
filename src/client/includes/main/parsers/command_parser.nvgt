@@ -247,7 +247,29 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/flag"); return; }
 		send(0, text, 1, true);
 	}
-	else if(base == "/nickname" or base == "/nick")
+	else if(base == "/changemail")
+		{
+			// Self: /changemail <email> (anyone). Admin: /changemail <username> <email> (administrator+). Email is
+			// cosmetic and space-free, so it rides on the chat line; the server sets it and no logout happens.
+			if(parsed.length() == 2)
+			{
+				if(string_contains(parsed[1], "@", 1) < 0) { add_buffer_item("misc", "Please enter a valid email address."); return; }
+				send(0, text, 1, true);
+			}
+			else if(parsed.length() == 3)
+			{
+				if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+				if(string_contains(parsed[2], "@", 1) < 0) { add_buffer_item("misc", "Please enter a valid email address."); return; }
+				send(0, text, 1, true);
+			}
+			else
+			{
+				if(my_rank_level() >= 2) syntax_error("/changemail email, or /changemail username email");
+				else syntax_error("/changemail email");
+				return;
+			}
+		}
+		else if(base == "/nickname" or base == "/nick")
 	{
 		// One argument: set your own nickname (or "default" to revert). Two: staff set another player's
 		// nickname by username (all staff). Anything else is bad syntax.
