@@ -1,4 +1,5 @@
 New in 3.4.
+You can now type /where followed by a player's name to hear where they are on the server, such as in the lobby, a room, or a game, the same location shown on their information card.
 When you set a password for a private room, whether creating the room or changing its password later, the game now asks you to type it a second time to confirm and won't set it unless the two match; joining a private room still asks only once.
 New in 3.3.
 When you try to chat in a channel you are muted in, the game now names that channel and, for a timed mute, how long is left, such as "You cannot send messages in this global chat channel for three more minutes," instead of the old vague line.
