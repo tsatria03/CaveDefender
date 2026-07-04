@@ -503,6 +503,7 @@ void handle_playerinfo(string message)
 	bool can_warn = (fl.length() > 3 and fl[3] == "1");
 	bool can_notify = (fl.length() > 4 and fl[4] == "1");
 		bool can_mute = (fl.length() > 5 and fl[5] == "1"); // personal Mute checkbox: off for your own card and any staff member
+		bool can_pm = (fl.length() > 6 and fl[6] == "1"); // PM button: off when this player has personally muted you (your PM would bounce)
 	bool can_promote = (prom != "");
 	bool can_demote = (demo != "");
 	form.reset();
@@ -512,7 +513,7 @@ void handle_playerinfo(string message)
 	if(!is_self)
 	{
 		if(can_mute) mutebox = form.create_checkbox("&mute this player", already_ignored); // Alt+M: personal ignore of their chat and voice (hidden for staff)
-		pmbtn = form.create_button("&private message this player"); // Alt+P
+		if(can_pm) pmbtn = form.create_button("&private message this player"); // Alt+P (hidden if this player has muted you)
 		if(can_kick) kickbtn = form.create_button("&kick this player"); // Alt+K
 		if(can_ban) banbtn = form.create_button(is_banned ? "&unban this player" : "&ban this player"); // Alt+U / Alt+B
 		if(can_promote) prombtn = form.create_button("p&romote this player"); // Alt+R
@@ -530,7 +531,7 @@ void handle_playerinfo(string message)
 		form.monitor();
 		net_keepalive(); // keep the network serviced so enet doesn't time out while the card is open
 		if(!is_self and mutebox > -1) now_ignored = form.is_checked(mutebox); // read the checkbox each frame, before any close deactivates the form
-		if(!is_self and form.is_pressed(pmbtn)) { action = "pm"; break; }
+		if(can_pm and form.is_pressed(pmbtn)) { action = "pm"; break; }
 		if(can_kick and form.is_pressed(kickbtn)) { action = "kick"; break; }
 		if(can_ban and form.is_pressed(banbtn)) { action = is_banned ? "unban" : "ban"; break; }
 		if(can_promote and form.is_pressed(prombtn)) { action = "promote"; break; }
