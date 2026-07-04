@@ -40,7 +40,7 @@ Choose a player to open a read-only information card about them, showing their u
 
 The card also has a Mute this player checkbox, with the Alt plus M shortcut, and a Private message this player button, with Alt plus P.
 
-Muting a player is personal and affects only you: while it is on you no longer see their global chat, local chat, or private messages, and you no longer hear their voice, while everyone else still does and the player is never told. It stays in effect across sessions until you open their card again and uncheck it.
+Muting a player is personal and affects only you: while it is on you no longer see their global chat, local chat, or private messages, and you no longer hear their voice, while everyone else still does. The player is not told when you mute them, but if they try to send you a private message they are told they have been muted. Staff members cannot be muted, so the checkbox does not appear on their card. It stays in effect across sessions until you open their card again and uncheck it, and you can also manage your mutes with the /ignore and /ignored commands.
 
 The private message button asks you for a message and sends it straight to that player, the same as the /pm command. Your own card does not show either control, since you cannot mute or message yourself.
 

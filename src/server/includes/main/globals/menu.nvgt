@@ -653,6 +653,7 @@ for(uint i=0; i<players.length(); i++)
 {
 if(players[i].held) continue; // held (offline) sessions read as offline
 if(int(i) == index) continue; // can't ignore yourself
+if(is_staff(players[i].rank)) continue; // staff can never be personally muted
 if(player_ignores(index, players[i].name)) continue; // already ignoring them
 players[index].menu_targets.insert_last(players[i].name);
 string label = display_name(int(i));
@@ -747,6 +748,7 @@ int cban  = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;  // /ban: administ
 int cbanned = (get_ban_until(players[ti].name) != -1) ? 1 : 0; // drives the Ban vs Unban button label
 int cwarn = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;  // /warn: administrator+, not above your rank
 int cnotify = (other and vlevel>=1) ? 1 : 0;                   // /notifyplayer: moderator+, may target anyone
+int cmute = (other and !is_staff(players[ti].rank)) ? 1 : 0;    // personal Mute checkbox: hidden on your own card and on any staff member (staff can never be personally muted)
 string[] RANKS = {"player", "moderator", "administrator", "developer"};
 string prom = ""; // ranks the viewer may PROMOTE the target to: above the target's current, up to the viewer's own (the grant cap)
 if(other and vlevel>=1 and tlevel<=vlevel)
@@ -754,7 +756,7 @@ for(int L=tlevel+1; L<=vlevel; L++) prom += (prom=="" ? "" : ",") + RANKS[L];
 string demo = ""; // ranks the viewer may DEMOTE the target to: below the target's current (moderator+, owner protected)
 if(other and vlevel>=1 and tlevel<=vlevel and tlevel>=1 and !is_owner(players[ti].name))
 for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
-send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cbanned+" "+cwarn+" "+cnotify + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
+send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cbanned+" "+cwarn+" "+cnotify+" "+cmute + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
 }
 void on_menu_result(int player_index, string id, int choice)
 {
@@ -788,6 +790,7 @@ else if(id == "ignoreadd")
 // /ignore choice: personally mute the picked player (add to ignore list, persist). Silent to the target.
 if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
 string tu = players[player_index].menu_targets[choice];
+if(is_staff(get_rank(tu))) { send(peer, "misc You cannot mute a staff member.", 0, true); return; } // staff can never be personally muted (also excluded from the menu, but guard the result too)
 if(string_to_lower_case(tu) != string_to_lower_case(players[player_index].name) and account_exists(tu) and !player_ignores(player_index, tu))
 {
 players[player_index].ignored.insert_last(tu);
