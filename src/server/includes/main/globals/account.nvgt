@@ -182,6 +182,27 @@ if(changed) set_ignored(dirs[i], list);
 }
 return true;
 }
+// Delete an account: remove its whole folder and scrub the deleted name from EVERY other account's on-disk ignore
+// list, so no stale personal mute lingers (a re-registered name would otherwise silently inherit mutes aimed at the
+// old holder). If the account is the configured owner, also clear conf.svr owner= (and the in-memory owner) so the
+// freed username can't be re-registered straight into ownership -- the host must name a new owner in conf.svr.
+// Returns false only if the folder delete fails, in which case nothing was changed. Case-insensitive name match.
+bool delete_account(string name)
+{
+if(!directory_delete(account_dir(name))) return false;
+if(is_owner(name)) { owner = ""; writeprefs(); } // no forced owner until the host sets a new one
+string lowdel = string_to_lower_case(name);
+string[] dirs = find_directories("data/players/*");
+for(uint i=0; i<dirs.length(); i++)
+{
+string[] list = get_ignored(dirs[i]);
+bool changed = false;
+for(int j=int(list.length())-1; j>=0; j--)
+if(string_to_lower_case(list[j]) == lowdel) { list.remove_at(j); changed = true; }
+if(changed) set_ignored(dirs[i], list);
+}
+return true;
+}
 
 // Argon2id cost parameters for password hashing (see string_argon2id in the engine): 4 MiB of memory
 // (nb_blocks * 1024) and 3 passes -- memory-hard, so a stolen password.usr can't be brute-forced cheaply.

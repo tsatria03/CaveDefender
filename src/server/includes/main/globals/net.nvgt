@@ -1383,6 +1383,60 @@ players.remove_at(ti);
 }
 }
 }
+else if(parsed[0]=="delcharself" and index>-1 and parsed.length()==2)
+{
+// Self /delchar: verify the player's OWN password, then delete their account, announce it, and log them out. The
+// owner may delete itself (delete_account clears conf.svr owner=). Departure is announced by the deletion notice,
+// not a plain "offline" line, so remove from the roster before broadcasting so this player is naturally skipped.
+string pw = parsed[1];
+if(!verify_password(players[index].name, pw)) send(event.peer_id, "misc Incorrect password.", 0, true);
+else
+{
+string acct = players[index].name;
+int tpeer = players[index].peer_id;
+string dname = afk_prefix(index) + display_name_flagged(index); // flag/AFK/nickname-aware, captured before removal
+if(!delete_account(acct)) send(event.peer_id, "misc The deletion failed, so your account was not removed.", 0, true);
+else
+{
+remove_from_online_ignores(acct);
+players.remove_at(index);
+for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "chardeleted "+dname+" has deleted their account.", 0, true);
+send(tpeer, "delchardone", 0, true);
+}
+}
+}
+else if(parsed[0]=="delcharadmin" and index>-1 and parsed.length()==2)
+{
+// Admin /delchar <username>: administrator+ deletes another ONLINE player's account (at-or-below rank). The owner
+// can't be deleted by anyone else (use the self form); self-targeting is bounced to the password-checked self form.
+if(rank_level(players[index].rank) < 2) send(event.peer_id, "misc You can't delete other players' accounts.", 0, true);
+else
+{
+int ti = get_player_index_from(parsed[1]);
+if(ti < 0) reply_target_not_found(event.peer_id, parsed[1]);
+else if(ti == index) send(event.peer_id, "misc To delete your own account, use /delchar with no name.", 0, true);
+else if(is_owner(players[ti].name)) send(event.peer_id, "misc You can't delete the owner's account.", 0, true);
+else if(rank_level(players[ti].rank) > rank_level(players[index].rank)) send(event.peer_id, "misc You can't delete the account of someone above your rank.", 0, true);
+else
+{
+string acct = players[ti].name;
+int tpeer = players[ti].peer_id;
+string tflagged = display_name_flagged(ti);
+string dname = afk_prefix(ti) + tflagged; // the target, for the public + audit lines
+string aname = afk_prefix(index) + display_name_flagged(index); // the actor, captured before any removal shifts indices
+if(!delete_account(acct)) send(event.peer_id, "misc The deletion failed, so the account was not removed.", 0, true);
+else
+{
+remove_from_online_ignores(acct);
+players.remove_at(ti);
+send(event.peer_id, "misc You deleted "+tflagged+"'s account.", 0, true);
+notify_staff_audit(aname+" deleted "+dname+"'s account.", -1);
+for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "chardeleted "+dname+"'s account has been deleted.", 0, true);
+send(tpeer, "delcharkicked", 0, true);
+}
+}
+}
+}
 else if(parsed[0]=="getwarnings" and index>-1 and parsed.length()>1)
 {
 // Staff (moderator+) view a player's saved warning history, read-only, in the client's doc viewer. Accepts a
