@@ -2061,6 +2061,47 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                     }
                     else send(event.peer_id, "Usage: /changemail email.", 0, true);
                 }
+                else if(parsed[0] == "/changename" && parsed.length() == 3)
+                {
+                    // Administrator+ renames an account (the username, the identity), resetting its nickname to the new
+                    // name. Online-only target (username or nickname), at-or-below rank. Quiet: only the renamed player,
+                    // a staff audit line, and the actor are told. The rename carries the whole account folder and fixes
+                    // up owner status and everyone's personal ignore lists; the player is then logged out to sign back in.
+                    if(rank_level(players[index].rank) < 2) send(event.peer_id, "misc You can't rename players.", 0, true);
+                    else
+                    {
+                        int ti = get_player_index_from(parsed[1]);
+                        string newname = parsed[2];
+                        if(ti < 0) reply_target_not_found(event.peer_id, parsed[1]);
+                        else if(rank_level(players[ti].rank) > rank_level(players[index].rank)) send(event.peer_id, "misc You can't rename someone above your rank.", 0, true);
+                        else if(newname.length() < 6 or newname.length() > 24) send(event.peer_id, "misc The new name must be between 6 and 24 characters.", 0, true);
+                        else if(filterchar(newname, true)) send(event.peer_id, "misc The new name may only contain letters, numbers, hyphens and underscores.", 0, true);
+                        else if(account_exists(newname)) send(event.peer_id, "misc An account with that name already exists.", 0, true);
+                        else
+                        {
+                            string oldname = players[ti].name;
+                            string oldnick = players[ti].nickname;
+                            string oldrank = players[ti].rank;
+                            int tpeer = players[ti].peer_id;
+                            if(!rename_account(oldname, newname)) send(event.peer_id, "misc The rename failed, so the account was not changed.", 0, true);
+                            else
+                            {
+                                // Keep online players' in-memory ignore lists pointed at the renamed player this session too.
+                                for(uint pi=0; pi<players.length(); pi++)
+                                    for(uint k=0; k<players[pi].ignored.length(); k++)
+                                        if(string_to_lower_case(players[pi].ignored[k]) == string_to_lower_case(oldname)) players[pi].ignored[k] = newname;
+                                send(event.peer_id, "misc You renamed "+display_name_flagged(ti)+" to "+newname+".", 0, true);
+                                notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" renamed "+afk_prefix(ti)+display_name_flagged(ti)+" to "+newname+".", -1);
+                                // Log the renamed player out: announce them offline under the OLD name, tell their client to
+                                // return to the connection menu, then drop them from the roster. The ensuing disconnect handles
+                                // host migration and room/game cleanup if they were hosting.
+                                send(0, "offline "+oldname+" "+oldrank+" "+oldnick, 0, true);
+                                send(tpeer, "renamed "+newname, 0, true);
+                                players.remove_at(ti);
+                            }
+                        }
+                    }
+                }
                 else if((parsed[0] == "/nickname" or parsed[0] == "/nick") && parsed.length() >= 2)
                 {
                     if(parsed.length() == 2)

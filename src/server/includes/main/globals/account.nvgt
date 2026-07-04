@@ -154,6 +154,34 @@ string joined;
 for(uint i=0; i<list.length(); i++) joined += (i>0 ? "\n" : "") + list[i];
 return write_field(name, "ignored", joined);
 }
+// Rename an account on disk: move its whole folder (every .usr file -- password, email, rank, warnings, wins,
+// mutes, bans, saved rooms, its OWN ignore list, everything) to the new username in one move, fix username.usr,
+// and reset the nickname to the new username (clearing any old nickname). If the account being renamed is the
+// configured owner, carry that to conf.svr (owner=) and the in-memory owner so the primary dev keeps forced-
+// developer status under the new name. Finally rewrite old->new in EVERY account's on-disk ignore list, so other
+// players' personal mutes of this person survive the rename (otherwise a rename would silently drop their mutes).
+// The caller must have already validated newname (6-24, filterchar, not already existing). Returns false only if
+// the folder move itself fails, in which case nothing was changed.
+bool rename_account(string oldname, string newname)
+{
+string olddir = account_dir(oldname); // the real folder (resolved case-insensitively)
+string newdir = "data/players/" + newname;
+if(!directory_rename(olddir, newdir)) return false;
+write_field(newname, "username", newname);
+write_field(newname, "nickname", newname); // the display name reverts to the new username
+if(is_owner(oldname)) { owner = newname; writeprefs(); } // keep owner status pointed at the renamed primary dev
+string[] dirs = find_directories("data/players/*");
+string lowold = string_to_lower_case(oldname);
+for(uint i=0; i<dirs.length(); i++)
+{
+string[] list = get_ignored(dirs[i]);
+bool changed = false;
+for(uint j=0; j<list.length(); j++)
+if(string_to_lower_case(list[j]) == lowold) { list[j] = newname; changed = true; }
+if(changed) set_ignored(dirs[i], list);
+}
+return true;
+}
 
 // Argon2id cost parameters for password hashing (see string_argon2id in the engine): 4 MiB of memory
 // (nb_blocks * 1024) and 3 passes -- memory-hard, so a stolen password.usr can't be brute-forced cheaply.
