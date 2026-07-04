@@ -127,6 +127,7 @@ Detailed conventions live in memory files — follow them:
 - **no-crlf-normalization** — don't run post-edit CRLF passes; author new file content with CRLF and let git handle it.
 - **changelog-rules** — player-facing prose, sentence/entry caps, reverse-chronological, the two-file version bump above.
 - **no-sound-pack-support** — don't add sound-pack machinery.
+- **input-prompt-form-vs-dialog** — one input field → a virtual dialog (`vd.input_box`/`vd.password_box`); more than one field → a real tabbable `audio_form` (like the new-account form), never a chain of sequential dialogs.
 - **path-conventions** — the full path map (appdata, sounds, server data, the DLL).
 
 `New File.txt` in the repo root is the dev's personal scratch pad — don't read it as documentation or write to it.
