@@ -175,7 +175,7 @@ connected=true;
 if(registering)
 {
 speak("creating account");
-send(0, "register "+name+" "+password, 0,true);
+send(0, "register "+name+" "+email+" "+password, 0,true);
 }
 else
 {

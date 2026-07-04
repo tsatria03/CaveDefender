@@ -75,7 +75,6 @@ void recordcheck()
 	{
 		if(want and !voice_mute_warned)
 		{
-			p.play_stationary("sounds/ui/misc/playermute.ogg", false);
 			add_buffer_item("misc", "You cannot send voice messages.");
 			voice_mute_warned = true;
 		}
