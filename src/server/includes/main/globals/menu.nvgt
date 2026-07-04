@@ -723,7 +723,7 @@ body += "Channel: " + players[ti].language + "\r\n";
 body += "Rank: " + players[ti].rank + "\r\n";
 body += "AFK: " + (players[ti].afk ? "Yes" : "No") + "\r\n";
 body += "Agreed to rules: " + (players[ti].agreed ? "Yes" : "No") + "\r\n"; // rules-agreement status; shown to everyone since you can't invite an unagreed player anyway
-body += "Location: " + player_location_phrase(ti) + "\r\n";
+body += "Location: " + (player_ignores(ti, players[viewer_index].name) ? "Private." : player_location_phrase(ti)) + "\r\n"; // hidden when this player has personally muted the viewer, matching /where (staff viewers are exempt via player_ignores)
 body += "Client version: " + format_float(players[ti].version, "", 0, 1); // fixed one decimal so 3.0 reads "3.0" not "3", and the float->double precision tail (2.9000000954) is rounded off too
 if(is_staff(players[viewer_index].rank))
 {
@@ -749,6 +749,7 @@ int cbanned = (get_ban_until(players[ti].name) != -1) ? 1 : 0; // drives the Ban
 int cwarn = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;  // /warn: administrator+, not above your rank
 int cnotify = (other and vlevel>=1) ? 1 : 0;                   // /notifyplayer: moderator+, may target anyone
 int cmute = (other and !is_staff(players[ti].rank)) ? 1 : 0;    // personal Mute checkbox: hidden on your own card and on any staff member (staff can never be personally muted)
+int cpm = (other and !player_ignores(ti, players[viewer_index].name)) ? 1 : 0; // PM button: hidden when THIS target has personally muted YOU (your PM would just bounce); staff viewers are exempt via player_ignores
 string[] RANKS = {"player", "moderator", "administrator", "developer"};
 string prom = ""; // ranks the viewer may PROMOTE the target to: above the target's current, up to the viewer's own (the grant cap)
 if(other and vlevel>=1 and tlevel<=vlevel)
@@ -756,7 +757,7 @@ for(int L=tlevel+1; L<=vlevel; L++) prom += (prom=="" ? "" : ",") + RANKS[L];
 string demo = ""; // ranks the viewer may DEMOTE the target to: below the target's current (moderator+, owner protected)
 if(other and vlevel>=1 and tlevel<=vlevel and tlevel>=1 and !is_owner(players[ti].name))
 for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
-send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cbanned+" "+cwarn+" "+cnotify+" "+cmute + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
+send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cbanned+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
 }
 void on_menu_result(int player_index, string id, int choice)
 {

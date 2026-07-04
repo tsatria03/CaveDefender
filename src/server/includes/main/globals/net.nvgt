@@ -1335,6 +1335,7 @@ else if(parsed[0]=="where" and index>-1 and parsed.length()>1)
 // (e.g. "Bob is in the lobby."). Resolves by username or nickname; offline/unknown gets the usual not-found line.
 int ti = get_player_index_from(parsed[1]);
 if(ti < 0) reply_target_not_found(event.peer_id, parsed[1]);
+else if(player_ignores(ti, players[index].name)) send(event.peer_id, "misc This player's location is private.", 0, true); // they've personally muted you, so you can't look up their whereabouts (staff are exempt via player_ignores)
 else
 {
 string loc = player_location_phrase(ti); // "In the lobby." / "In X's room." / "Watching X's game."

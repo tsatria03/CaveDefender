@@ -10,7 +10,7 @@ Press slash to open the chat, type a command, and press enter to send it. Every 
 /uptime, or /serveruptime: Tells you how long the server has been running.
 /getmotd: Reads out the server's message of the day.
 /staff: Lists every staff member, online or offline, along with their rank.
-/where player: Tells you where an online player is, such as in the lobby, a room, or a game, by their username or their nickname.
+/where player: Tells you where an online player is, such as in the lobby, a room, or a game, by their username or their nickname. If that player has personally muted you, their location shows as private.
 /pm player message: Sends a private message to a single online player, by their username or their nickname.
 /reply message, or /r message: Sends a private message to the last person who sent you one, so you don't have to type their name.
 /me message: Sends an action to everyone, with your name in front, for example /me waves becomes a message reading your name then waves. If you are staff, your rank is shown too.
