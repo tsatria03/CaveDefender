@@ -37,6 +37,7 @@ Administrator and up.
 /ban player, or /ban player seconds: Bans a player so they can't sign in. Leave the time off for a permanent ban. You can't ban someone above your own rank, but you can ban yourself, so use it carefully: you'll be banned like anyone else. If you do it by accident as the host, clear it by editing your account.
 /unban player: Lifts a ban.
 /warn player level reason: Warns a player, for example /warn bob 2 stop spamming. The level is 1 to 4, where 4 is the most severe, and sets the warning sound the player hears along with your reason. You can warn anyone at or below your own rank. The player sees who warned them and why; you are told their running total, each warning is saved to their account, and other staff get a quiet note about it.
+/changemail player email: Changes another player's email, for example /changemail bob bob@example.com. It must contain an at sign and no spaces. Every account needs an email to sign in, but the email is not typed to sign in and changing it does not sign the player out; it shows on their information card. You can change the email of anyone at or below your own rank; the player is told their email was changed, and other staff get a quiet note. Anyone can change their own email with /changemail email; see the player help.
 /motd message: Changes the server's message of the day.
 /restart seconds, or /rt seconds: Warns everyone with a countdown, then shuts the server down. The time can be from 30 to 3600 seconds.
 /fastrestart, or /ft: Shuts the server down right away, with no warning.

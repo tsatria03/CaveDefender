@@ -1990,6 +1990,36 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                     for(uint ffi=0; ffi<players.length(); ffi++) send(players[ffi].peer_id, fann, 0, true);
                     broadcast_pos(index); // refresh the visible rank in everyone's player tracker
                 }
+                else if(parsed[0] == "/changemail" && parsed.length() >= 2)
+                {
+                    // Change an account's cosmetic email (email.usr). Self: /changemail <email> (anyone). Admin:
+                    // /changemail <username> <email> (administrator+, at-or-below rank, online target). No logout -- email is cosmetic.
+                    if(parsed.length() == 2)
+                    {
+                        string em = parsed[1];
+                        if(string_contains(em, "@", 1) < 0) send(event.peer_id, "That is not a valid email address.", 0, true);
+                        else { write_field(players[index].name, "email", em); send(event.peer_id, "misc Your email has been changed to "+em+".", 0, true); }
+                    }
+                    else if(rank_level(players[index].rank) >= 2)
+                    {
+                        int ti = get_player_index_from(parsed[1]);
+                        if(ti < 0) reply_target_not_found(event.peer_id, parsed[1]);
+                        else if(rank_level(players[ti].rank) > rank_level(players[index].rank)) send(event.peer_id, "You can't change the email of someone above your rank.", 0, true);
+                        else
+                        {
+                            string em = parsed[2];
+                            if(string_contains(em, "@", 1) < 0) send(event.peer_id, "That is not a valid email address.", 0, true);
+                            else
+                            {
+                                write_field(players[ti].name, "email", em);
+                                send(event.peer_id, "misc You changed "+display_name_flagged(ti)+"'s email.", 0, true);
+                                send(players[ti].peer_id, "misc Your email has been changed by staff.", 0, true);
+                                notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" changed "+afk_prefix(ti)+display_name_flagged(ti)+"'s email.", -1);
+                            }
+                        }
+                    }
+                    else send(event.peer_id, "Usage: /changemail email.", 0, true);
+                }
                 else if((parsed[0] == "/nickname" or parsed[0] == "/nick") && parsed.length() >= 2)
                 {
                     if(parsed.length() == 2)
