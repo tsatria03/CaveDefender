@@ -4,7 +4,7 @@ void mainmenu()
 	{
 		setupmenu(true);
 		m.add_item("documentation menu", "docs");
-		m.add_item("connection menu", "connect");
+		m.add_item("game menu", "connect");
 		m.add_item("preferences menu", "settings");
 		m.add_item("test speakers", "st");
 		m.add_item("restart game", "rx");
@@ -79,7 +79,7 @@ void connectionmenu()
 		m.add_item("change server port. Currently set to " + port, "changeport");
 		m.add_item("Server storage", "serverstorage");
 		m.add_item("back", "back");
-		m.intro_text="Connection menu.";
+		m.intro_text="Game menu.";
 		int mres=m.run();
 		string sel=mres<0?"back":m.selected_item_id;
 		if(sel=="back") return;
