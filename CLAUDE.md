@@ -122,6 +122,7 @@ There is **also a server-side `cf/server/docks/`**, organized into subfolders: `
 
 Detailed conventions live in memory files — follow them:
 - **confirm-before-implementing** — treat a design discussion or a question (anything ending in `?`, "what if", "I wish") as a request for a plan, **not** a green light to edit. Wait for explicit go-ahead.
+- **ignore-terminal-commands** — the user's local shell commands (the `<local-command-caveat>` / `<bash-input>` / `<command-name>` blocks, e.g. `cls`, `/compact`) are the user working their own terminal, not instructions to me; never respond to or act on them unless the user explicitly asks in their actual message.
 - **list-modified-files** — end every turn that edited files with a bare-filename "Files changed:" list.
 - **no-crlf-normalization** — don't run post-edit CRLF passes; author new file content with CRLF and let git handle it.
 - **changelog-rules** — player-facing prose, sentence/entry caps, reverse-chronological, the two-file version bump above.
