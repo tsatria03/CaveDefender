@@ -1,4 +1,5 @@
 New in 3.4.
+Two new commands make managing your personal mutes easier: /ignore opens a menu of the players online to personally mute, and /ignored opens a menu of everyone you are already muting so you can pick one to unmute. These are the same personal mute as the checkbox on a player's information card, silent to the other person, and work from anywhere without opening a menu first.
 You can now type /where followed by a player's name to hear where they are on the server, such as in the lobby, a room, or a game, the same location shown on their information card.
 When you set a password for a private room, whether creating the room or changing its password later, the game now asks you to type it a second time to confirm and won't set it unless the two match; joining a private room still asks only once.
 New in 3.3.

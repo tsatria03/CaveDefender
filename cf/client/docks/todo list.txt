@@ -4,11 +4,10 @@
 **Unfinished. Add a /changepass command anyone can use to change their own password, with an admin form to change another player's.
 **Unfinished. Add a staff /changename command to rename a player's account and clear their old nickname.
 **Unfinished. Add a /delchar command to delete your own account after a warning and password check, with an admin form to delete another player's.
-**Unfinished. Add /ignore and /ignored menu commands to personally mute a player and to review and unmute your ignore list.
-**Unfinished. Let /afk take an optional reason shown with your away status; staff can still put a player AFK but without a reason.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add /ignore and /ignored menu commands to personally mute a player and to review and unmute your ignore list.
 **Finished. Add a /where command telling you where an online player is, the same as the player card shows.
 **Finished. Ask for the password twice when setting a private room's password, to confirm it.
 **Finished. Make the muted-in-channel chat message name the channel and remaining time instead of a generic line.
