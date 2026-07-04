@@ -190,6 +190,7 @@ string salt = make_salt();
 bool ok = true;
 ok = write_field(name, "username", name) and ok;
 ok = write_field(name, "email", email) and ok; // cosmetic, unverified; hand-editable, never used for login
+ok = write_field(name, "created", DATE_MONTH_NAME + " " + DATE_DAY + ", " + DATE_YEAR) and ok; // account creation date (e.g. "July 3, 2026"), shown as "Member since" on the info card
 ok = write_field(name, "nickname", name) and ok; // display name starts equal to the username
 ok = write_field(name, "language", "English") and ok; // everyone starts on the English channel
 ok = write_field(name, "pronoun", default_pronoun()) and ok; // default: the configured they/them option, until the player picks with /pronoun

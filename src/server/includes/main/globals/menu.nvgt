@@ -667,8 +667,10 @@ void push_player_info(int viewer_index, int ti)
 int peer = players[viewer_index].peer_id;
 string title = "Viewing info for " + afk_prefix(ti) + display_name(ti);
 string body = "Username: " + players[ti].name + "\r\n";
+body += "Email: " + read_field(players[ti].name, "email") + "\r\n"; // cosmetic account email; shown to everyone, read fresh from email.usr
 body += "Nickname: " + players[ti].nickname + "\r\n";
 body += "Pronouns: " + players[ti].pronoun + "\r\n";
+body += "Member since: " + read_field(players[ti].name, "created", "Unknown") + "\r\n"; // account creation date (created.usr); "Unknown" for accounts made before this field existed
 body += "Channel: " + players[ti].language + "\r\n";
 body += "Rank: " + players[ti].rank + "\r\n";
 body += "AFK: " + (players[ti].afk ? "Yes" : "No") + "\r\n";
