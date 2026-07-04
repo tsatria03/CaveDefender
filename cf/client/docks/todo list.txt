@@ -1,7 +1,5 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Show each account's email on the player information card, after the username, visible to everyone.
-**Unfinished. Show a member-since date on the player information card, after the pronouns, visible to everyone.
 **Unfinished. Add a /changemail command anyone can use to change their own email, with an admin form to change another player's.
 **Unfinished. Add a /changepass command anyone can use to change their own password, with an admin form to change another player's.
 **Unfinished. Add a staff /changename command to rename a player's account and clear their old nickname.
@@ -14,6 +12,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Show each account's email and a member-since date on the player information card, visible to everyone.
 **Finished. Let F3 in a text input box toggle the typing sounds on and off, saved between sessions.
 **Finished. Add a player versus player game mode where players fight on both sides of the walls, attacking from outside and defending from inside.
 **Finished. Hold your place in a room, game, or watch for 45 seconds when your connection drops and restore you where you were if you get back in time.
