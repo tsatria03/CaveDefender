@@ -1,3 +1,5 @@
+New in 3.4.
+When you set a password for a private room, whether creating the room or changing its password later, the game now asks you to type it a second time to confirm and won't set it unless the two match; joining a private room still asks only once.
 New in 3.3.
 When you try to chat in a channel you are muted in, the game now names that channel and, for a timed mute, how long is left, such as "You cannot send messages in this global chat channel for three more minutes," instead of the old vague line.
 The player information card now shows two more details to everyone: the account's email, listed just under the username, and a member-since date of when the account was created, listed under the pronouns; accounts made before this was added read their member-since as unknown.
