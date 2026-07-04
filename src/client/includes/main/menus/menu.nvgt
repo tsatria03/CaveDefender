@@ -502,7 +502,7 @@ void offer_save_account(string u, string p)
 	if(m.run()==0)
 	{
 		if(add_account_to_storage(u, p)) dlgmessage("Account added to your account storage. Press enter to continue.");
-		else dlgmessage("That account is already in your account storage. Press enter to continue.");
+		else dlgmessage("This account is already in your account storage. Press enter to continue.");
 	}
 	else speak("canceled");
 }
@@ -530,7 +530,7 @@ void addaccount()
 			string p=form.get_text(passbox);
 			if(u=="") { dlgmessage("Please enter a username. Press enter to continue."); form.focus(unamebox); continue; }
 			if(p=="") { dlgmessage("Please enter a password. Press enter to continue."); form.focus(passbox); continue; }
-			if(account_stored_index(u)>=0) { dlgmessage("That account is already in your account storage. Press enter to continue."); form.focus(unamebox); continue; }
+			if(account_stored_index(u)>=0) { dlgmessage("This account is already in your account storage. Press enter to continue."); form.focus(unamebox); continue; }
 			accounts.insert_last(accountpreset(u, p));
 			writepreffs();
 			dlgmessage("Account added. Press enter to continue.");
@@ -649,17 +649,16 @@ void settingsmenu()
 		form.create_window("preferences", false);
 		int tabs = form.create_tab_panel("Category");
 		form.add_list_item(tabs, "General");
-		form.add_list_item(tabs, "Game");
 		form.add_list_item(tabs, "Menu");
 		form.add_list_item(tabs, "Sound");
 		form.add_list_item(tabs, "Speech");
-		int tab_general=0, tab_game=1, tab_menu=2, tab_sound=3, tab_speech=4;
+		int tab_general=0, tab_menu=1, tab_sound=2, tab_speech=3;
 		int hvc = form.create_checkbox("Hear your voice when streaming voice messages", hearvoice);
-		form.assign_to_tab(hvc, tabs, tab_game);
+		form.assign_to_tab(hvc, tabs, tab_general);
 		int hldk = form.create_checkbox("Require holding of voicechat key", int_to_bool(holdkey));
-		form.assign_to_tab(hldk, tabs, tab_game);
+		form.assign_to_tab(hldk, tabs, tab_general);
 		int esc = form.create_checkbox("Ask to exit when pressing escape", int_to_bool(gamxit));
-		form.assign_to_tab(esc, tabs, tab_game);
+		form.assign_to_tab(esc, tabs, tab_general);
 		int fdv = form.create_checkbox("Enable global volume fading", int_to_bool(fademode));
 		form.assign_to_tab(fdv, tabs, tab_sound);
 		int glh = form.create_checkbox("Enable global HRTF support", hrtf);
@@ -684,7 +683,7 @@ void settingsmenu()
 		form.assign_to_tab(rest, tabs, tab_general);
 		int preffsok = form.create_button("&save settings", true);
 		int preffscn = form.create_button("&cancel");
-		form.focus(rest); // the first control on the General tab (Reset settings) now that the server buttons moved out
+		form.focus(hvc); // the first control on the General tab now that the Game tab's checkboxes moved here
 		while(true)
 		{
 			wait(5);
