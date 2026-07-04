@@ -736,6 +736,15 @@ void netloop_impl()
 				kicked = true;
 				connected = false;
 			}
+			else if (parsed[0] == "renamed" and parsed.length() > 1)
+			{
+				// An administrator renamed our account. The password is unchanged; we sign back in under the new name,
+				// updating (or re-adding) our saved account with it. We're returned to the connection menu like a kick.
+				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				speak("You have been renamed to " + parsed[1] + ", so you have been returned to the connection menu to sign in again with your new name.", true);
+				kicked = true;
+				connected = false;
+			}
 			else if (parsed[0] == "kickannounce" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/kick.ogg", false);

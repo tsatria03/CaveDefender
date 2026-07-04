@@ -309,6 +309,14 @@ void comparse(string text, string channel = "global")
 			return;
 		}
 	}
+		else if(base == "/changename")
+	{
+		// Administrator+ renames a player's account: /changename <playername> <newname> (both space-free identifiers,
+		// so they ride the chat line). The server validates and renames; the target is logged out to sign in anew.
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+		if(parsed.length() != 3) { syntax_error("/changename playername newname"); return; }
+		send(0, text, 1, true);
+	}
 		else if(base == "/nickname" or base == "/nick")
 	{
 		// One argument: set your own nickname (or "default" to revert). Two: staff set another player's
