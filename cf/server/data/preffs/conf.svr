@@ -2,3 +2,4 @@ port=25562
 userlimit=200
 owners=DevilGuardian,tsatria03,tony
 rulesver=3
+ruleswitch=1

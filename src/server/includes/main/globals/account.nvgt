@@ -64,7 +64,7 @@ bool get_flag(string name) { return read_field(name, "flag", "") == "1"; }
 void set_flag(string name, bool on) { write_field(name, "flag", on ? "1" : ""); }
 // The rules-agreement version (rules.usr): the rulesver the player last agreed to (blank/0/missing = never). They
 // count as agreed while it's >= the current rulesver, so bumping rulesver in conf.svr re-prompts everyone once.
-bool has_agreed_rules(string name) { return int(string_to_number(read_field(name, "rules", "0"))) >= rulesver; }
+bool has_agreed_rules(string name) { if(ruleswitch == 0) return true; return int(string_to_number(read_field(name, "rules", "0"))) >= rulesver; }
 void set_agreed_rules(string name) { write_field(name, "rules", "" + rulesver); }
 // The display nickname (nickname.usr): shown in place of the username everywhere a name is spoken. Defaults
 // to the account's own username (the "default" state). Hand-editable; auto-created at registration.

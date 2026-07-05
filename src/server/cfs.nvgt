@@ -48,6 +48,11 @@ if(prefs.find("rulesver")!=-1)
 {
 rulesver=string_to_number(values[prefs.find("rulesver")]);
 }
+if(rulesver<1) rulesver=1; // the rules-agreement gate can't be disabled through rulesver; a host who really wants it off sets ruleswitch=0
+if(prefs.find("ruleswitch")!=-1)
+{
+ruleswitch=string_to_number(values[prefs.find("ruleswitch")]);
+}
 f.close();
 }
     if(file_exists("data/preffs/motd.svr"))
@@ -82,7 +87,7 @@ f.open("data/preffs/conf.svr", "wb");
 string what;
 string ownerlist="";
 for(uint i=0; i<owners.length(); i++) ownerlist+=(i>0 ? "," : "")+owners[i];
-what="port="+port+"\r\n"+"userlimit="+userlimit+"\r\n"+"owners="+ownerlist+"\r\n"+"rulesver="+rulesver+"\r\n";
+what="port="+port+"\r\n"+"userlimit="+userlimit+"\r\n"+"owners="+ownerlist+"\r\n"+"rulesver="+rulesver+"\r\n"+"ruleswitch="+ruleswitch+"\r\n";
 f.write(what);
 f.close();
 }
