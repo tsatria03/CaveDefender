@@ -750,7 +750,7 @@ int self = (viewer_index == ti) ? 1 : 0;
 int vlevel = rank_level(players[viewer_index].rank);
 int tlevel = rank_level(players[ti].rank);
 bool other = (viewer_index != ti);
-int ckick = (other and vlevel>=2) ? 1 : 0;                     // /kick: administrator+, may target anyone
+int ckick = (other and vlevel>=1 and tlevel<=vlevel) ? 1 : 0;  // /kick: moderator+, at-or-below rank
 int cban  = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;  // /ban: administrator+, at-or-below rank
 int cbanned = (get_ban_until(players[ti].name) != -1) ? 1 : 0; // drives the Ban vs Unban button label
 int cwarn = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;  // /warn: administrator+, not above your rank

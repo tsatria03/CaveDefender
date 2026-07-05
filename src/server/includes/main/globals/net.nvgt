@@ -2236,13 +2236,19 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                     }
                     else send(event.peer_id, "Usage: /afk username", 0, true);
                 }
-                else if(parsed[0] == "/kick" && rank_level(players[index].rank) >= 2)
+                else if(parsed[0] == "/kick" && rank_level(players[index].rank) >= 1)
                 {
                     if(parsed.length() >= 2)
                     {
                         int kick_index = get_player_index_from(parsed[1]);
                         if(kick_index > -1)
                         {
+                            if(rank_level(players[kick_index].rank) > rank_level(players[index].rank))
+                            {
+                                send(event.peer_id, "misc You can't kick someone above your rank.", 0, true); // at-or-below-rank protection, like /ban and /mute (you can still kick yourself and peers)
+                            }
+                            else
+                            {
                             string kname = players[kick_index].name;
                             string krank = players[kick_index].rank;
                             string knick = players[kick_index].nickname;
@@ -2252,6 +2258,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                             for(uint i=0; i<players.length(); i++)
                             {
                                 send(players[i].peer_id, "kickannounce "+kname+" "+krank+" "+knick, 0, true);
+                            }
                             }
                         }
                         else
