@@ -16,17 +16,17 @@ Before you can play, you must read these player rules and agree to them: type /r
 
 6. Respect staff. Staff are here to keep the server safe and running smoothly. Follow their instructions, and do not argue with or obstruct them. If you believe a staff member is acting unfairly, do not engage them; instead contact the server owner, for example by sending them a private message in game, or through whatever other contact the server provides. Staff may also act on anything that threatens the game or its players, even if it is not spelled out in these rules.
 
-7. Be fair in rooms and games. Don't abuse the control you have over a room or game you host. Don't kick someone only to free their slot for someone else, or kick and invite people just to keep others out. Keep a private room's password to the people you actually mean to let in: don't share it around, post it in chat, or pressure anyone into handing it over. And don't disrupt a room or game you have joined or are watching.
+7. Be fair in rooms and games. Don't abuse the control you have over a room or game you host. Don't kick someone only to free their slot for someone else, or kick and invite people just to keep others out. Keep a private room's password to the people you actually mean to let in: don't share it around, post it in chat, or pressure anyone into handing it over. And don't disrupt a room or game you have joined or are watching. In a team game, play your side honestly: don't deliberately throw a match, help the other side against your own, or abandon your team just to spoil it for the players counting on you.
 
 8. Do not impersonate anyone. Don't pretend to be another player or a staff member, and don't pick a name meant to trick people into thinking you are someone you are not. The game already stops you from taking another account's username as your nickname, but passing yourself off as someone else in any other way is not allowed either.
 
-9. Look after your account. You are responsible for everything done on your account, so keep it to yourself and don't share it. And don't use a second account to dodge a mute or a ban; evading a punishment that way only extends it, and can turn a temporary one into a permanent one.
+9. Look after your account. You are responsible for everything done on your account, so keep it to yourself and don't share it. You can manage it yourself in game, changing your email or your password whenever you like, and you may permanently delete it with the delete-account command, but that deletion is final and cannot be undone, so be certain before you confirm it. And don't use a second account to dodge a mute or a ban; evading a punishment that way only extends it, and can turn a temporary one into a permanent one.
 
 How rules are enforced.
 
 Staff choose their response based on how serious a rule break is and whether it keeps happening. For a minor or first slip they may privately notify or message you about your behavior, or give you a formal warning. Warnings carry a level from 1 to 4, where 4 is the most severe, and each one is saved to your account, so repeated or serious breaks climb the levels.
 
-Beyond a warning, staff may mute you, in one chat channel or all of them and either for a set time or indefinitely, so you can still play but not chat or use voice. They may kick you, which drops you from the server but lets you sign back in. And they may ban you, for a set length of time or permanently, which keeps you from signing in at all.
+Beyond a warning, staff may mute you, in one chat channel or all of them and either for a set time or indefinitely, so you can still play but not chat or use voice. They may kick you, which drops you from the server but lets you sign back in. And they may ban you, for a set length of time or permanently, which keeps you from signing in at all. In rare and serious cases, such as an account that exists only to break the rules, staff may go further still and rename or remove the account itself.
 
 Serious violations, such as cheating or sharing harmful content, can skip the gentler steps and go straight to a ban.
 
