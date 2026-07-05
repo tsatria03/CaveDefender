@@ -217,6 +217,20 @@ void comparse(string text, string channel = "global")
 			if(parsed.length() != 2) { syntax_error("/warnings username"); return; }
 			send(0, "getwarnings "+parsed[1], 0, true);
 		}
+		else if(base == "/bans")
+			{
+				// Staff (administrator+) view a player's ban status in the doc reader, like /warnings.
+				if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+				if(parsed.length() != 2) { syntax_error("/bans username"); return; }
+				send(0, "getbans "+parsed[1], 0, true);
+			}
+		else if(base == "/mutes")
+			{
+				// Staff (moderator+) view a player's per-channel mute status in the doc reader, like /warnings.
+				if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
+				if(parsed.length() != 2) { syntax_error("/mutes username"); return; }
+				send(0, "getmutes "+parsed[1], 0, true);
+			}
 		else if(base == "/afk")
 	{
 		// No argument: go AFK yourself via the local countdown (any key cancels it). With a name, it's the
