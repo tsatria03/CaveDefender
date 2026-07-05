@@ -1,7 +1,7 @@
 int port=25562;
 int userlimit=200;
 string[] owners = {"tsatria03"}; // the owner's account name(s), from conf.svr's "owners" field: up to 3 aliases for the one owner (e.g. different names the same person signs in with), each always forced to developer rank and matched case-insensitively.
-int rulesver=1; // current server-rules version (from conf.svr). A player must have agreed at this version or higher to play; bump it to force everyone to re-agree to updated rules. Takes effect on restart.
+int rulesver=0; // current server-rules version; the REAL value comes from conf.svr's rulesver= (purely server-side). The default 0 means "no version set", so the rules-agreement gate is effectively off (agreed >= 0 is always true) until a host configures a version in conf.svr. That value tracks the game's MAJOR version (3.x = rules version 3), not minor releases; a player must have agreed at that version or higher to play, so bumping it on a major rules change forces everyone to re-agree. Takes effect on restart.
 string motd = "Welcome to the server!";
 timer svruptimer;
 file f;
