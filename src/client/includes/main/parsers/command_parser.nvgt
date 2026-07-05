@@ -176,7 +176,7 @@ void comparse(string text, string channel = "global")
 	}
 	else if(base == "/kick")
 	{
-		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 2) { syntax_error("/kick username"); return; }
 		send(0, text, 1, true);
 	}
