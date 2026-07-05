@@ -80,17 +80,20 @@ bool set_language(string name, string lang) { return write_field(name, "language
 // must match a configured option in pronouns.svr to take effect -- an invalid value falls back at spawn.
 string get_pronoun(string name) { return read_field(name, "pronoun", default_pronoun()); }
 bool set_pronoun(string name, string p) { return write_field(name, "pronoun", p); }
-// The highest round (wave count) this player has ever reached in a game (bestround.usr): their personal
-// best. A game-over that beats it grants a one-time milestone wood bonus and updates the record. Defaults to 0.
-int get_best_round(string name) { return int(string_to_number(read_field(name, "bestround", "0"))); }
-bool set_best_round(string name, int round) { return write_field(name, "bestround", "" + round); }
-// PVP lifetime record (wins.usr / losses.usr): the running count of player-versus-player matches this account's
-// side won or lost. Incremented once at the end of each match (the winning side gains a win, the losing side a
-// loss; watchers get nothing). File-per-field like every other account value, so a host can read them by hand.
-int get_wins(string name) { return int(string_to_number(read_field(name, "wins", "0"))); }
-bool set_wins(string name, int n) { return write_field(name, "wins", "" + n); }
-int get_losses(string name) { return int(string_to_number(read_field(name, "losses", "0"))); }
-bool set_losses(string name, int n) { return write_field(name, "losses", "" + n); }
+// Personal-best rounds, per mode, each in its own file so it's obvious which is which: PVE = highest wave survived
+// (pvebestround.usr; a game-over that beats it also grants the one-time milestone wood bonus), EVP = most rounds
+// ever cleared as the attacker (evpbestround.usr). Both default to 0.
+int get_pve_best_round(string name) { return int(string_to_number(read_field(name, "pvebestround", "0"))); }
+bool set_pve_best_round(string name, int round) { return write_field(name, "pvebestround", "" + round); }
+int get_evp_best_round(string name) { return int(string_to_number(read_field(name, "evpbestround", "0"))); }
+bool set_evp_best_round(string name, int round) { return write_field(name, "evpbestround", "" + round); }
+// PVP lifetime record (pvpwins.usr / pvplosses.usr): the running count of player-versus-player matches this
+// account's side won or lost. Incremented once at the end of each match (the winning side gains a win, the losing
+// side a loss; watchers get nothing). File-per-field like every other account value, so a host can read them by hand.
+int get_wins(string name) { return int(string_to_number(read_field(name, "pvpwins", "0"))); }
+bool set_wins(string name, int n) { return write_field(name, "pvpwins", "" + n); }
+int get_losses(string name) { return int(string_to_number(read_field(name, "pvplosses", "0"))); }
+bool set_losses(string name, int n) { return write_field(name, "pvplosses", "" + n); }
 // Read a single field file, trimmed (so hand-added trailing newlines don't break things). Returns
 // def when the file is missing or empty.
 string read_field(string name, string field, string def="")

@@ -2,6 +2,10 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Show a player's PVP win-loss record, PVE and EVP best rounds, and warning count on the information card for everyone.
+**Finished. Add staff /bans and /mutes commands that look up a player's ban and mute status the same way /warnings shows warnings.
+**Finished. Stop writing blank account files at signup, creating the room, mute, and ban files only when they are first needed.
+**Finished. Let the configured server owner be recognized under up to three account-name aliases in the config file.
 **Finished. Add a /delchar command to delete your own account after a warning and password check, with an admin form to delete another player's.
 **Finished. Add an administrator /changename command to rename a player's account and reset their nickname to the new name.
 **Finished. Add a /changepass command anyone can use to change their own password, with an admin form to reset another player's.

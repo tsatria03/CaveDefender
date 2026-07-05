@@ -846,12 +846,12 @@ int collected = players[pi].wood_collected;
 // starting stockpile) and updates the record. Matching or falling short of your best grants nothing.
 int bonus = 0, milestone = 0;
 string bonussize = "none"; // the single random size the bonus will be granted as; rolled now so the results message can name it
-if(rounds > get_best_round(players[pi].name))
+if(rounds > get_pve_best_round(players[pi].name))
 {
 bonus = random(20, 40);
 bonussize = random_wood_type();
 milestone = rounds;
-set_best_round(players[pi].name, rounds);
+set_pve_best_round(players[pi].name, rounds);
 players[pi].pending_bonus_wood = bonus;
 players[pi].pending_bonus_size = bonussize;
 }
@@ -949,6 +949,7 @@ for(uint m=0; m<games[gi].members.length(); m++)
 {
 int pi = get_player_index(games[gi].members[m]);
 if(pi < 0) continue;
+if(cleared > get_evp_best_round(players[pi].name)) set_evp_best_round(players[pi].name, cleared); // update the EVP personal best (most rounds cleared)
 players[pi].playagain_answered = false; // awaiting the play-again answer
 players[pi].pending_results = "evpover "+cleared; // kept so a reconnect during the results screen can re-show this prompt
 send(games[gi].members[m], players[pi].pending_results, 0, true); // client: results dialog + play-again

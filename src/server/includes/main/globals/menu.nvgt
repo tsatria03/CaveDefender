@@ -725,13 +725,20 @@ body += "AFK: " + (players[ti].afk ? "Yes" : "No") + "\r\n";
 body += "Agreed to rules: " + (players[ti].agreed ? "Yes" : "No") + "\r\n"; // rules-agreement status; shown to everyone since you can't invite an unagreed player anyway
 body += "Location: " + (player_ignores(ti, players[viewer_index].name) ? "Private." : player_location_phrase(ti)) + "\r\n"; // hidden when this player has personally muted the viewer, matching /where (staff viewers are exempt via player_ignores)
 body += "Client version: " + format_float(players[ti].version, "", 0, 1); // fixed one decimal so 3.0 reads "3.0" not "3", and the float->double precision tail (2.9000000954) is rounded off too
+// Public records, shown to everyone (a little profile): the PVP lifetime tally, the PVE personal-best round, and
+// the warning count. Warnings used to be staff-only; they're now visible to all so a player can see their own too.
+int wins = get_wins(players[ti].name);
+int losses = get_losses(players[ti].name);
+body += "\r\nPVP record: " + wins + (wins==1 ? " win" : " wins") + ", " + losses + (losses==1 ? " loss" : " losses");
+body += "\r\nPVE best round: " + get_pve_best_round(players[ti].name);
+body += "\r\nEVP best round: " + get_evp_best_round(players[ti].name);
+body += "\r\nWarnings: " + warning_count(players[ti].name);
 if(is_staff(players[viewer_index].rank))
 {
 int64 bu = get_ban_until(players[ti].name);
 string banline = (bu == -1) ? "Not banned." : (bu == 0 ? "Banned permanently." : "Banned until a set time.");
 body += "\r\nMute status: " + player_mute_phrase(ti);
 body += "\r\nBan status: " + banline;
-body += "\r\nWarnings: " + warning_count(players[ti].name);
 }
 // Header lines for the client's interactive controls: the target's canonical username (for the mute/PM/staff
 // actions), whether the viewer already ignores them (the checkbox's starting state), whether this is the
