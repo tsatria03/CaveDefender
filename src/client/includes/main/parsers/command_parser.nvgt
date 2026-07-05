@@ -219,8 +219,8 @@ void comparse(string text, string channel = "global")
 		}
 		else if(base == "/bans")
 			{
-				// Staff (administrator+) view a player's ban status in the doc reader, like /warnings.
-				if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+				// Staff (moderator+) view a player's ban status in the doc reader, like /warnings.
+				if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
 				if(parsed.length() != 2) { syntax_error("/bans username"); return; }
 				send(0, "getbans "+parsed[1], 0, true);
 			}
@@ -382,13 +382,13 @@ void comparse(string text, string channel = "global")
 	}
 	else if(base == "/mute")
 	{
-		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
 		if(parsed.length() < 3) { syntax_error("/mute username channel, or /mute username channel seconds"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/unmute")
 	{
-		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 3) { syntax_error("/unmute username channel"); return; }
 		send(0, text, 1, true);
 	}
