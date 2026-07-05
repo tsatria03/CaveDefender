@@ -1457,9 +1457,9 @@ send(event.peer_id, "warnstext "+uname+"\n"+format_warnings(target), 0, true);
 }
 else if(parsed[0]=="getbans" and index>-1 and parsed.length()>1)
 {
-// Staff (administrator+) view a player's ban status, read-only, in the doc viewer. Same targeting as /warnings:
+// Staff (moderator+) view a player's ban status, read-only, in the doc viewer. Same targeting as /warnings:
 // an online player by username or nickname, else a username for an offline account (bans live on disk).
-if(rank_level(players[index].rank) < 2) { }
+if(rank_level(players[index].rank) < 1) { }
 else
 {
 int ti = get_player_index_from(parsed[1]);
@@ -2419,7 +2419,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         send(event.peer_id, "Usage: /notify message", 0, true);
                     }
                 }
-                else if(parsed[0] == "/mute" && rank_level(players[index].rank) >= 1)
+                else if(parsed[0] == "/mute" && rank_level(players[index].rank) >= 2)
                 {
                     if(parsed.length() >= 3)
                     {
@@ -2450,7 +2450,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         send(event.peer_id, "Usage: /mute username channel [seconds].", 0, true);
                     }
                 }
-                else if(parsed[0] == "/unmute" && rank_level(players[index].rank) >= 1)
+                else if(parsed[0] == "/unmute" && rank_level(players[index].rank) >= 2)
                 {
                     if(parsed.length() >= 3)
                     {
