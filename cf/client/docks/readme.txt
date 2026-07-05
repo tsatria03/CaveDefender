@@ -1,4 +1,5 @@
 Welcome to CaveDefender!
+
 CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in the player versus player mode, take one side of the walls and fight other players across them. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help.
 
 The server rules.
@@ -84,7 +85,7 @@ Press escape for the pause menu. If you host the game and a round is running, op
 
 Environment versus player.
 
-Environment versus player, or EVP, flips the game around: instead of defending the walls you attack them, and the bots defend. You play from the gravel outside the cave, and your job is to smash all four walls down while the bots build them back up. Choose EVP when you pick your game mode at the start.
+Environment versus player, or EVP, flips the game around: instead of defending the walls, you attack them, and the bots defend. You play from the gravel outside the cave, and your job is to smash all four walls down while the bots build them back up. Choose EVP when you pick your game mode at the start.
 
 You fight with weapons, not wood. When a round starts you are handed all four on the number row: press one for the axe, two for the bat, three for the crowbar, or four for the hammer, and you hear which one you have drawn. Before the round begins you carry nothing and cannot attack.
 
@@ -94,7 +95,7 @@ The walls are defended by builder bots. They wander the cavern, pick up the wood
 
 Each round has two parts. First a build phase, where the bots reinforce the walls and you cannot hurt them yet; if you swing during this time your weapon only ricochets off the wall, so you know you are lined up, but no damage is done.
 
-Then comes the wave, which alternates between attack windows and rest windows. During an attack window your hits finally count, so smash the walls while you can, and the bots roam the cavern gathering wood but hold off repairing. During a rest window your swings only ricochet again while the bots place that wood and repair the damage, so you cannot hurt the walls until the next attack window opens.
+The wave alternates between attack windows and rest windows. During an attack window your hits finally count, so smash the walls while you can, and the bots roam the cavern gathering wood but hold off repairing. During a rest window your swings only ricochet again while the bots place that wood and repair the damage, so you cannot hurt the walls until the next attack window opens.
 
 The bots can never rebuild a wall all the way back, though, because part of every hit you land is permanent, so you always gain ground over the round no matter how hard they work.
 
@@ -112,7 +113,7 @@ Teams are always even: one on one with two players, or two on two with four. You
 
 When the host begins, a build phase opens. Each side is taken to its place: the defenders to the center, handed ten to twenty starter wood, and the attackers out to the exterior with a weapon in hand. You are told which side you are on. The defenders gather and shore up the walls while the attackers get into position, but no wall can be hurt yet.
 
-Then the attack phase begins, and like the reverse mode it alternates between attack windows and build windows, game wide, with the two sides never acting on the walls at the same time. During an attack window the attackers smash the walls with their weapons, exactly as in environment versus player, the same five tile reach, heavier weapons hitting harder but swinging slower, while the defenders can only gather wood, not place it. During a build window the roles flip: the defenders reinforce the walls from the inside, spending their biggest piece first for a size scaled repair, while the attackers' swings only ricochet and do no damage. Gathering wood off the ground is allowed at any time; only placing it is held to the build windows. Tab tells you which window you are in and reads out the clock, which, as in the reverse mode, counts down only while the attackers can act.
+The attack phase begins, and like the reverse mode it alternates between attack windows and build windows, game wide, with the two sides never acting on the walls at the same time. During an attack window the attackers smash the walls with their weapons, exactly as in environment versus player, the same five tile reach, heavier weapons hitting harder but swinging slower, while the defenders can only gather wood, not place it. During a build window the roles flip: the defenders reinforce the walls from the inside, spending their biggest piece first for a size scaled repair, while the attackers' swings only ricochet and do no damage. Gathering wood off the ground is allowed at any time; only placing it is held to the build windows. Tab tells you which window you are in and reads out the clock, which, as in the reverse mode, counts down only while the attackers can act.
 
 A wall you have battered but not destroyed can still be repaired, up to the same four times over-build cap as the other modes. A wall smashed all the way to nothing, though, is gone for good: it cannot be rebuilt, and it leaves impassable rubble in its place. That rubble is not a walkable gap, so even with a wall down the attackers still cannot step through into the center; they simply hear the wall they broke as a pile of debris when they bump it. Keeping every wall above zero is the defenders' whole job.
 
@@ -212,11 +213,15 @@ In a game.
 These work while you are in a game.
 
 Tab. Hear the current round status.
+
 Letter, N, E, S, or W. Hear the strength of the north, east, south, or west wall.
 Letter, T. Hear a summary of all four walls.
 Letter, I. Hear how much wood you are carrying, broken down by size. For defenders, that is PVE and PVP; not while watching.
 Letter, D. Locate the wood lying around you, nearest first, with each piece's size. For defenders, that is PVE and PVP; not while watching.
+
 Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. Defenders only, in PVE and PVP.
+
 Letter, B. Locate the builder bots, nearest first. EVP only.
+
 Number row, 1, 2, 3, or 4. Draw the axe, bat, crowbar, or hammer. For attackers, that is EVP and PVP.
 Spacebar. Held, swings your drawn weapon at the nearest wall in reach. For attackers, that is EVP and PVP.
