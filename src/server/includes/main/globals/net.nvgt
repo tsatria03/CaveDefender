@@ -119,7 +119,13 @@ void login(string name, string password, string ver)
 {
 if(ver != version)
 {
-send(event.peer_id, "error: your client is incompatible. your version: "+ver+". latest version: "+version+". Please update the game to connect to the server.", 0,true);
+// Direction-aware: a client older than the server should update its game; a client NEWER than the server means
+// the SERVER is the one behind, so don't wrongly tell the player to update. version strings are "major.minor"
+// with minors that always roll over at .9, so a plain numeric compare orders them correctly.
+if(string_to_number(ver) < string_to_number(version))
+send(event.peer_id, "error: your game is out of date. your version: "+ver+", server version: "+version+". Please update your game to connect to this server.", 0,true);
+else
+send(event.peer_id, "error: this server is out of date. your version: "+ver+", server version: "+version+". The server needs to be updated before you can connect.", 0,true);
 return;
 }
 if(!account_exists(name))
