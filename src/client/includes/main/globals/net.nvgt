@@ -314,6 +314,8 @@ void dispatch_modal(string message)
 	else if(parsed[0]=="helptext") handle_helptext(message);
 	else if(parsed[0]=="rulestext") handle_rulestext(message);
 	else if(parsed[0]=="warnstext") handle_warnstext(message);
+	else if(parsed[0]=="banstext") handle_doctext(message, "Bans for ");
+	else if(parsed[0]=="mutestext") handle_doctext(message, "Mutes for ");
 	else if(parsed[0]=="playerinfo") handle_playerinfo(message);
 	else if(parsed[0]=="askinput") handle_askinput(message);
 }
@@ -426,6 +428,19 @@ void handle_warnstext(string message)
 		string who = message.substr(sp + 1, nl - sp - 1);
 		string content = message.substr(nl + 1);
 		dockread("Warnings for " + who, content);
+	}
+}
+// Server-sent read-only staff view keyed by a player name: "<verb> <name>\n<content>" -> open it in the doc reader
+// under the given title prefix. Shared by the /bans and /mutes viewers, which mirror /warnings.
+void handle_doctext(string message, string title_prefix)
+{
+	int nl = string_contains(message, "\n", 1);
+	if(nl > 0)
+	{
+		int sp = string_contains(message, " ", 1);
+		string who = message.substr(sp + 1, nl - sp - 1);
+		string content = message.substr(nl + 1);
+		dockread(title_prefix + who, content);
 	}
 }
 // Server-sent rules: "rulestext\n<which>\n<content>" -> open it in the doc reader, the same as help.
@@ -1086,6 +1101,16 @@ void netloop_impl()
 			// Blocking UI (the warnings reader): defer if another modal is already open.
 			if(netloop_depth>1) net_deferred.insert_last(message);
 			else handle_warnstext(message);
+		}
+		else if (parsed[0] == "banstext")
+		{
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_doctext(message, "Bans for ");
+		}
+		else if (parsed[0] == "mutestext")
+		{
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_doctext(message, "Mutes for ");
 		}
 		else if (parsed[0] == "showmenu")
 		{

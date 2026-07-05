@@ -1455,6 +1455,40 @@ send(event.peer_id, "warnstext "+uname+"\n"+format_warnings(target), 0, true);
 }
 }
 }
+else if(parsed[0]=="getbans" and index>-1 and parsed.length()>1)
+{
+// Staff (administrator+) view a player's ban status, read-only, in the doc viewer. Same targeting as /warnings:
+// an online player by username or nickname, else a username for an offline account (bans live on disk).
+if(rank_level(players[index].rank) < 2) { }
+else
+{
+int ti = get_player_index_from(parsed[1]);
+string target = (ti > -1) ? players[ti].name : parsed[1];
+if(!account_exists(target)) send(event.peer_id, "misc This player does not exist.", 0, true);
+else
+{
+string uname = read_field(target, "username", target);
+send(event.peer_id, "banstext "+uname+"\n"+format_ban(target), 0, true);
+}
+}
+}
+else if(parsed[0]=="getmutes" and index>-1 and parsed.length()>1)
+{
+// Staff (moderator+) view a player's per-channel mute status, read-only, in the doc viewer. Same targeting as
+// /warnings: an online player by username or nickname, else a username for an offline account (mutes live on disk).
+if(rank_level(players[index].rank) < 1) { }
+else
+{
+int ti = get_player_index_from(parsed[1]);
+string target = (ti > -1) ? players[ti].name : parsed[1];
+if(!account_exists(target)) send(event.peer_id, "misc This player does not exist.", 0, true);
+else
+{
+string uname = read_field(target, "username", target);
+send(event.peer_id, "mutestext "+uname+"\n"+format_mutes(target), 0, true);
+}
+}
+}
 else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
 {
 on_menu_result(index, parsed[1], int(string_to_number(parsed[2])));
