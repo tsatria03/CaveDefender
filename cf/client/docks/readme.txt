@@ -2,6 +2,16 @@ Welcome to CaveDefender!
 
 CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in the player versus player mode, take one side of the walls and fight other players across them. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help.
 
+Connecting and signing in.
+
+When you start the game you land on the main menu. Choose the game menu to open the connection menu, where you pick a server and sign in. The other main menu options are the documentation menu, which holds this readme, the changelog, and more, and the preferences menu for your sound and other settings.
+
+The connection menu shows the server address and port it will connect to, and you can change either directly with change server IP and change server port. If you play on more than one server, open Server storage to keep them as presets: add a server by giving it a name, an address, and a port, and edit or remove your saved ones from the same place. Select a server then picks which saved server to use, and it opens on a Custom entry that simply keeps whatever address you typed in by hand, so a server you did not save reads as Custom. You cannot save two servers with the same name or the same address.
+
+You reach a server with an account, and there are a few ways on. Sign in as, followed by a name, appears once you have an account set up or selected, and signs you straight in as that account. Set up an existing account remembers an account you already have, by its username and password, so you can sign in as it, without logging you in right away. New account creates a fresh one, asking for a username, an email, a password, and a second password to confirm it; once it is made the game asks whether to log in now.
+
+If you use more than one account on this computer, Account storage keeps them for you: add, edit, or remove your saved accounts there, and Select an account chooses which one is active, the one that Sign in as will use. After you set up or create an account, the game also offers to save it here. As with servers, you cannot save the same account twice.
+
 The server rules.
 
 The first time you sign in you must read the server's rules and agree to them before you can play. Type /rules to read the player rules, then /rules agree to enter the lobby, or /rules disagree to leave. Everyone must read the player rules to agree; staff must read both the player and staff rules, and may open the staff rules only after reading their own. You only agree once, and are asked again just if the server's rules are later updated. You can reread the rules at any time with /rules, or /rules player and /rules staff to read either page.
