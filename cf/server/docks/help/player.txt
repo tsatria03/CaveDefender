@@ -6,9 +6,6 @@ Commands.
 
 Press slash to open the chat, type a command, and press enter to send it. Every command here works for everyone, no matter your rank.
 
-/who: Lists everyone who is currently on the server.
-/uptime, or /serveruptime: Tells you how long the server has been running.
-/getmotd: Reads out the server's message of the day.
 /staff: Lists every staff member, online or offline, along with their rank.
 /where player: Tells you where an online player is, such as in the lobby, a room, or a game, by their username or their nickname. If that player has personally muted you, their location shows as private.
 /pm player message: Sends a private message to a single online player, by their username or their nickname.

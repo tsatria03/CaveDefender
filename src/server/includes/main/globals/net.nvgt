@@ -2055,7 +2055,7 @@ if(event.type == event_receive && event.channel == 1)
 {
                 messend = false;
                 string[] parsed = string_split(message, " ", true);
-                if(parsed[0] == "/motd" && rank_level(players[index].rank)>=2)
+                if(parsed[0] == "/motd" && rank_level(players[index].rank)>=1)
 {
     if(parsed.length() > 1)
     {

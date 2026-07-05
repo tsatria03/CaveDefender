@@ -51,23 +51,9 @@ void comparse(string text, string channel = "global")
 	}
 	string[] parsed = string_split(text, " ", true);
 	string base = string_to_lower_case(parsed[0]);
-	// Control-channel (0) requests the server answers from.
-	if(base == "/who")
-	{
-		if(parsed.length() != 1) { syntax_error("/who"); return; }
-		send(0, "who", 0, true);
-	}
-	else if(base == "/uptime" or base == "/serveruptime")
-	{
-		if(parsed.length() != 1) { syntax_error("/uptime"); return; }
-		send(0, "/serveruptime", 0, true);
-	}
-	else if(base == "/getmotd")
-	{
-		if(parsed.length() != 1) { syntax_error("/getmotd"); return; }
-		send(0, "/getmotd", 0, true);
-	}
-	else if(base == "/help")
+	// The who list, message of the day, and server uptime are no longer slash commands -- press F1 (or F6 for the
+	// menu), F2, and F4 respectively; the server still answers those same requests, just triggered by the keys.
+	if(base == "/help")
 	{
 		// Everyone types /help to go straight to the player help. Staff can additionally open the staff
 		// page with /help staff, and /help player still works too.
@@ -170,7 +156,7 @@ void comparse(string text, string channel = "global")
 	}
 	else if(base == "/motd")
 	{
-		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
 		if(parsed.length() < 2) { syntax_error("/motd message"); return; }
 		send(0, text, 1, true);
 	}
