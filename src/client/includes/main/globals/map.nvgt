@@ -33,6 +33,7 @@ listener_outside = outside; // on the EVP gravel exterior (or outdoor deck): the
 // play (each step/bump is a fresh untracked-by-replay sound); only a space change cuts the last one.
 p.destroy_sound(wallslot);
 p.destroy_sound(tileslot);
+voice_msgs_clear(); // stop any voice-message clips still playing from the space we're leaving
 me.x=int((minx+maxx)/2);
 me.y=int((miny+maxy)/2);
 if(mapname=="lobby")

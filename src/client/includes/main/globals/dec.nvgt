@@ -6,7 +6,8 @@ int rectime = 10000;
 int spamtime = 500;
 int voicechat = 1;
 int holdkey = 1;
-bool hearvoice=false; // "Hear your voice when streaming voice messages": live self-monitor while you talk, off by default
+int voicemode = 0; // "Voice chat mode": 0 = Live streaming (heard live as you talk), 1 = Voice messages (record, then send). UI-selectable now; the record-and-send pipeline is a later step.
+bool hearvoice=false; // self-monitor of your own voice; the checkbox label follows voicemode ("Hear your voice while speaking" when streaming, "...after recording" for messages). Off by default.
 bool voice_muted=false; // are we currently voice-muted by staff? Kept in sync silently (voicemutestate at spawn/restore, plus the live muted/unmuted voice/all notices) so pressing O can warn us and skip streaming instead of the server dropping every packet
 int gamxit=1;
 bool autorun=false; // when on you run by default and holding a movement modifier (alt/ctrl/shift) walks instead; toggled in-map with Alt+R, saved in prefs
