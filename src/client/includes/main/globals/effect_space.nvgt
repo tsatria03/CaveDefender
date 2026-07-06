@@ -106,6 +106,25 @@ bool pvp_crosswall(double sx, double sy)
 if(game_mode != "pvp") return false;
 return pvp_inside_ring(sx, sy) != pvp_inside_ring(me.x, me.y);
 }
+// Apply the cave reverb/lowpass to a bare voice sound. Voice streams bypass the pools (they play through standalone
+// push_memory sounds, not a sound_pool mixer), so the pool-based effect system can't reach them -- the effect is set on
+// the sound directly, here. Generalizes the old PVP-only path to every mode, reusing the same source-side model as the
+// bots/wood: reverb when the speaker sits in a cave interior, lowpass when they're across the PVP wall ring from you.
+// Dry outside any cavern (lobby, rooms, and the EVP gravel, where everyone is already outside). For your own voice pass
+// me's position, so it reverbs when YOU are inside and never lowpasses (you're right there). Set once per stream/talk,
+// not per frame: nobody crosses inside<->outside mid-burst (PVP sides are fixed, PVE all-interior, EVP all-exterior).
+void apply_voice_fx(sound@ snd, double sx, double sy)
+{
+if(@snd == null) return;
+bool rev = false, lp = false;
+if(in_cavern) // dry outside any cavern space (lobby, rooms)
+{
+if(game_mode == "pvp") { rev = pvp_inside_ring(sx, sy); lp = pvp_crosswall(sx, sy); }
+else rev = !listener_outside; // shared interior (PVE / inside deck) reverbs; EVP gravel stays dry
+}
+snd.set_fx(rev ? cave_reverb_fx : "$reverb"); // the bare tag clears that slot
+snd.set_fx(lp ? cave_lowpass_fx : "$lowpass");
+}
 // Apply the effect zones each frame.
 // - The local player's OWN listening pools follow the LISTENER via the effect zones (spawned only for the inside
 //   cavern/deck): wet inside, dry on the exterior. No lowpass on your own sounds -- you're right there.
