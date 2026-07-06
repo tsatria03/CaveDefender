@@ -90,6 +90,7 @@ void recordcheck()
 		recording = true;
 		p.play_stationary("sounds/ui/misc/von.ogg", false);
 		voice_mic.flush_capture();
+		if(hearvoice) apply_voice_fx(voice_monitor, me.x, me.y); // your own monitored voice reverbs when you're inside the cave (no lowpass -- you're right there)
 		spamtimer.restart();
 	}
 	else if(!want and recording and spamtimer.elapsed >= spamtime)
@@ -138,15 +139,11 @@ void play_remote_voice(string msg)
 	{
 		if(@players[vi].voice_snd != null) players[vi].voice_snd.close();
 		@players[vi].voice_snd = sound();
-		// PVP: muffle/reverb this voice by the speaker's side of the walls, matching the footstep routing -- an
-		// interior speaker carries the cave reverb, and a speaker on the far side of the ring from you is lowpassed
-		// "through the wall." Applied once per stream: neither of you can cross the walls, so the side relationship
-		// (and so these effects) stays fixed for the whole burst. Voice bypasses the pools, so it's set on the sound.
-		if(game_mode == "pvp")
-		{
-			players[vi].voice_snd.set_fx(pvp_inside_ring(vx, vy) ? cave_reverb_fx : "$reverb");
-			players[vi].voice_snd.set_fx(pvp_crosswall(vx, vy) ? cave_lowpass_fx : "$lowpass");
-		}
+		// Cave reverb/lowpass for this voice by the speaker's position: reverb when they're in a cave interior,
+		// lowpassed "through the wall" when they're across the PVP ring from you (see apply_voice_fx). Applied once
+		// per stream -- nobody crosses inside<->outside mid-burst, so the effect stays fixed for the whole burst.
+		// Voice bypasses the pools, so it's set on the sound directly.
+		apply_voice_fx(players[vi].voice_snd, vx, vy);
 		if(@players[vi].voice_dec == null) @players[vi].voice_dec = opus_decoder(VOICE_RATE, 1);
 		else players[vi].voice_dec.reset_state();
 		players[vi].voice_started = false;
