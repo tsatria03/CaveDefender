@@ -68,6 +68,7 @@ sound_output_device=1;
 recname="Default";
 recdev=-1;
 fademode=0;
+voicemode=0;
 hearvoice=true;
 holdkey=1;
 hrtf=false;

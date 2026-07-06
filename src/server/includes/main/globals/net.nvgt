@@ -2030,12 +2030,13 @@ send(event.peer_id, "Your voice message was too large to send.", 0,true);
 }
 else
 {
+bool vrel=(audio.length()>0 and audio.substr(0,1)=="m"); // "m" = voice message: relay reliably so it arrives intact; "l" = live frame: unreliable
 string relay=players[index].name+" "+players[index].x+" "+players[index].y+"\n"+audio;
 for(uint i=0; i<players.length(); i++)
 {
 if(players[i].peer_id==event.peer_id or players[i].room_id!=players[index].room_id) continue;
 if(player_ignores(int(i), players[index].name)) continue; // listener has the speaker on their personal ignore list
-send(players[i].peer_id, relay, 3, false); // unreliable: voice is a real-time stream; reliable retransmits at this packet rate inflate enet RTT and trip the peer timeout over a VPN
+send(players[i].peer_id, relay, 3, vrel); // live frame unreliable (real-time stream; reliable retransmits at this packet rate inflate enet RTT and trip the peer timeout over a VPN); a voice message goes reliable so it arrives whole
 }
 }
 }

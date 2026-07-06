@@ -67,6 +67,10 @@ if(st.d.exists("holdkey"))
 {
 holdkey=st.read_int("holdkey");
 }
+if(st.d.exists("voicemode"))
+{
+voicemode=st.read_int("voicemode");
+}
 if(st.d.exists("hrtf"))
 {
 hrtf=st.read_bool("hrtf");
@@ -180,6 +184,7 @@ st.add("recname",recname);
 st.add("fademode",fademode);
 st.add("hearvoice",hearvoice);
 st.add("holdkey",holdkey);
+st.add("voicemode",voicemode);
 st.add("hrtf",hrtf);
 st.add("menuwrap",menuwrap);
 st.add("first_letter",first_letter);

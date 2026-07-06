@@ -653,7 +653,13 @@ void settingsmenu()
 		form.add_list_item(tabs, "Sound");
 		form.add_list_item(tabs, "Speech");
 		int tab_general=0, tab_menu=1, tab_sound=2, tab_speech=3;
-		int hvc = form.create_checkbox("Hear your voice when streaming voice messages", hearvoice);
+		int vct = form.create_list("Voice chat mode");
+		form.add_list_item(vct, "Live streaming");
+		form.add_list_item(vct, "Voice messages");
+		form.set_list_position(vct, voicemode, false);
+		form.assign_to_tab(vct, tabs, tab_general);
+		// The self-monitor label follows the selected mode: live sidetone while streaming, playback after a recorded message.
+		int hvc = form.create_checkbox(voicemode == 0 ? "Hear your voice while speaking" : "Hear your voice after recording", hearvoice);
 		form.assign_to_tab(hvc, tabs, tab_general);
 		int hldk = form.create_checkbox("Require holding of voicechat key", int_to_bool(holdkey));
 		form.assign_to_tab(hldk, tabs, tab_general);
@@ -683,7 +689,7 @@ void settingsmenu()
 		form.assign_to_tab(rest, tabs, tab_general);
 		int preffsok = form.create_button("&save settings", true);
 		int preffscn = form.create_button("&cancel");
-		form.focus(hvc); // the first control on the General tab now that the Game tab's checkboxes moved here
+		form.focus(vct); // land on the first control of the General tab (the Voice chat mode list)
 		while(true)
 		{
 			wait(5);
@@ -698,6 +704,12 @@ void settingsmenu()
 			first_letter = form.is_checked(flt);
 			speak_menu_position = form.is_checked(spn);
 			side_scrolling = form.is_checked(scr);
+			int cur_vmode = form.get_list_position(vct);
+			if(cur_vmode != -1 && cur_vmode != voicemode) // picked a different voice chat mode: relabel the self-monitor checkbox in place -- no form rebuild, so no re-announce and focus stays on the list
+			{
+				voicemode = cur_vmode;
+				form.set_caption(hvc, voicemode == 0 ? "Hear your voice while speaking" : "Hear your voice after recording");
+			}
 			if(key_pressed(KEY_ESCAPE)) return;
 			if(form.is_pressed(preffscn)) return;
 			if(form.is_pressed(preffsok))
