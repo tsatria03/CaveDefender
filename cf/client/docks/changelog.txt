@@ -1,4 +1,5 @@
 New in 3.7.
+The /restart countdown can now be any length of at least one second, with the old thirty-second minimum and one-hour maximum both removed.
 Pressing F4 now also tells you the most players ever connected to the server at once and when that record was set, shown alongside the uptime.
 New in 3.6.
 When a wall is destroyed, its bots now leave the round instead of piling onto the walls still standing, so the last wall is no longer swarmed by every bot and you can push to much higher rounds.

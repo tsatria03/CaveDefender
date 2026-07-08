@@ -74,13 +74,13 @@ string format_uptime(int uptime_seconds)
 // --- All-time peak concurrent players (reported alongside uptime on F4), persisted in data/preffs/peak.svr ---
 // Zero-pad a non-negative int to at least 2 digits ("5" -> "05") for the peak timestamp.
 string pad2(int n) { string s = "" + n; return (s.length() < 2) ? "0" + s : s; }
-// The current local date and time like "12/22/2022 at 5:45:05 PM" (US M/D/Y, 12-hour clock with AM/PM).
+// The current local date and time like "12/22/2022 at 5:45 PM" (US M/D/Y, 12-hour clock, no seconds).
 string format_now_stamp()
 {
 int h = TIME_HOUR;                        // 0-23
 string ampm = (h < 12) ? "AM" : "PM";
 int h12 = h % 12; if(h12 == 0) h12 = 12;  // 0 and 12 both read as 12
-return pad2(DATE_MONTH) + "/" + pad2(DATE_DAY) + "/" + DATE_YEAR + " at " + h12 + ":" + pad2(TIME_MINUTE) + ":" + pad2(TIME_SECOND) + " " + ampm;
+return pad2(DATE_MONTH) + "/" + pad2(DATE_DAY) + "/" + DATE_YEAR + " at " + h12 + ":" + pad2(TIME_MINUTE) + " " + ampm;
 }
 // Players currently LIVE (connected, not on a 45s reconnect hold) -- the server-wide count the peak tracks.
 int live_player_count()
@@ -2060,8 +2060,7 @@ send(event.peer_id, "Your room's password has been changed successfully.", 0,tru
 else if(parsed[0]=="restart" and index>-1 and rank_level(players[index].rank)>=2 and parsed.length()>1)
 {
 int secs=string_to_number(parsed[1]);
-if(secs<30) secs=30;
-if(secs>3600) secs=3600;
+if(secs<1) secs=1;
 send(0, "restartnotice "+format_restart_time(secs), 0,true);
 restart_pending=true;
 restart_delay=secs*1000;

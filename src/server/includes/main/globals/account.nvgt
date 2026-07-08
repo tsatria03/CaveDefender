@@ -121,11 +121,11 @@ f.close();
 return true;
 }
 // Append a warning to a player's on-disk record (warnings.usr) and return the new total. One per line:
-// level|staff|reason. Only the count is read back for now; the lines are kept for staff history.
+// level:staff:reason. Only the count is read back for now; the lines are kept for staff history.
 int add_warning(string name, int level, string staff, string reason)
 {
 string existing = read_field(name, "warnings", "");
-string entry = "" + level + "|" + staff + "|" + reason;
+string entry = "" + level + ":" + staff + ":" + reason;
 write_field(name, "warnings", (existing == "") ? entry : existing + "\n" + entry);
 return warning_count(name);
 }
@@ -137,7 +137,7 @@ if(w == "") return 0;
 return int(string_split(w, "\n", true).length());
 }
 // A human-readable list of a player's warnings for the staff /warnings viewer, one per line:
-// "1. Level 2 by adminname: reason". Reasons may contain the "|" separator, so everything after the second "|"
+// "1. Level 2 by adminname: reason". Reasons may contain the ":" separator, so everything after the second ":"
 // is rejoined as the reason. Returns a friendly line when there are none.
 string format_warnings(string name)
 {
@@ -148,10 +148,10 @@ string listing = "";
 int shown = 0;
 for(uint i=0; i<lines.length(); i++)
 {
-string[] parts = string_split(lines[i], "|", true);
+string[] parts = string_split(lines[i], ":", true);
 if(parts.length() < 3) continue;
 string reason = parts[2];
-for(uint j=3; j<parts.length(); j++) reason += "|" + parts[j]; // a "|" that was part of the reason
+for(uint j=3; j<parts.length(); j++) reason += ":" + parts[j]; // a ":" that was part of the reason
 shown++;
 listing += (shown>1 ? "\r\n" : "") + shown + ". Level " + parts[0] + " by " + parts[1] + ": " + reason;
 }
