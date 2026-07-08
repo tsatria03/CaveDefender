@@ -316,6 +316,7 @@ void dispatch_modal(string message)
 	else if(parsed[0]=="warnstext") handle_warnstext(message);
 	else if(parsed[0]=="banstext") handle_doctext(message, "Bans for ");
 	else if(parsed[0]=="mutestext") handle_doctext(message, "Mutes for ");
+	else if(parsed[0]=="reportstext") handle_reportstext(message);
 	else if(parsed[0]=="playerinfo") handle_playerinfo(message);
 	else if(parsed[0]=="askinput") handle_askinput(message);
 }
@@ -442,6 +443,13 @@ void handle_doctext(string message, string title_prefix)
 		string content = message.substr(nl + 1);
 		dockread(title_prefix + who, content);
 	}
+}
+// Server-sent reports log (staff only): "reportstext\n<content>" -> open it in the doc reader. Unlike the
+// warnings/bans/mutes viewers, this one is keyed to no player, so there's no name in the header line.
+void handle_reportstext(string message)
+{
+	int nl = string_contains(message, "\n", 1);
+	if(nl > 0) dockread("Reports", message.substr(nl + 1));
 }
 // Server-sent rules: "rulestext\n<which>\n<content>" -> open it in the doc reader, the same as help.
 void handle_rulestext(string message)
@@ -1136,6 +1144,12 @@ void netloop_impl()
 			if(netloop_depth>1) net_deferred.insert_last(message);
 			else handle_doctext(message, "Mutes for ");
 		}
+		else if (parsed[0] == "reportstext")
+		{
+			// Blocking UI (the reports reader): defer if another modal is already open.
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_reportstext(message);
+		}
 		else if (parsed[0] == "showmenu")
 		{
 			if(netloop_depth>1) net_deferred.insert_last(message);
@@ -1160,6 +1174,13 @@ void netloop_impl()
 		else if (parsed[0] == "notify" and parsed.length() > 1)
 		{
 			p.play_stationary("sounds/ui/misc/notify.ogg", false);
+			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
+		}
+		else if (parsed[0] == "report" and message.length() > parsed[0].length()+1)
+		{
+			// A player filed a report; only online staff receive this live heads-up. Its own dedicated cue sets it
+			// apart from ordinary alerts, and the full log is always available to staff with /reports.
+			p.play_stationary("sounds/ui/misc/report.ogg", false);
 			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "voicemutestate" and parsed.length() > 1)

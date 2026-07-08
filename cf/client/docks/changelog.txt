@@ -1,4 +1,5 @@
 New in 3.7.
+You can now report a player to the staff with the /report command, followed by their name and a reason, for example /report bob griefing our walls; it works on someone who has already left too. Any staff online are alerted the moment it comes in, and staff can read back every report, newest first, with the new /reports command, each one stamped with where you were when you sent it.
 While a game is paused by the host, the other players can now still use the chat keys and the buffer review keys while they wait, rather than having every key do nothing; movement, the voice key, and the rest stay frozen as before.
 Banning a player is now split into two commands so a reason can be added: /ban followed by a name is a permanent ban, /tempban followed by a name and a number of seconds is a timed one, and anything you type after that is an optional reason the banned player is shown and that other staff can see with /bans. The ban button on a player's card walks you through the same choices.
 The /restart countdown can now be any length of at least one second, with the old thirty-second minimum and one-hour maximum both removed.

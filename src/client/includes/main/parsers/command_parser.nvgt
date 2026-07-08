@@ -217,6 +217,20 @@ void comparse(string text, string channel = "global")
 				if(parsed.length() != 2) { syntax_error("/mutes username"); return; }
 				send(0, "getmutes "+parsed[1], 0, true);
 			}
+		else if(base == "/report")
+			{
+				// Anyone can report a player to the staff. Requires a target and a reason; the server accepts an
+				// offline player by username too, so someone who just left can still be reported.
+				if(parsed.length() < 3) { syntax_error("/report username reason"); return; }
+				send(0, text, 1, true);
+			}
+		else if(base == "/reports")
+			{
+				// Staff (moderator+) open a read-only view of every report on record, newest first, like /warnings.
+				if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
+				if(parsed.length() != 1) { syntax_error("/reports"); return; }
+				send(0, "getreports", 0, true);
+			}
 		else if(base == "/afk")
 	{
 		// No argument: go AFK yourself via the local countdown (any key cancels it). With a name, it's the

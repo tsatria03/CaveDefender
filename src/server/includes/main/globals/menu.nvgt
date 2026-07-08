@@ -696,6 +696,19 @@ int gi = get_game_index(rid);
 if(gi > -1) return (players[ti].spectating ? "Watching " : "In ") + display_name_flagged_for(games[gi].host) + "'s " + mode_tag(games[gi].mode) + " game.";
 return "Unknown.";
 }
+// A lowercase location clause for a report line -- where the reporter currently is (the scene of the report):
+// "the lobby", "<host>'s room", or "<host>'s <mode> game". Mirrors player_location_phrase but reads as a clause
+// inside a sentence ("...in the lobby: ...") rather than a standalone line.
+string report_location_phrase(int idx)
+{
+int rid = players[idx].room_id;
+if(rid == 0) return "the lobby";
+int ri = get_room_index(rid);
+if(ri > -1) return display_name_flagged_for(rooms[ri].host) + "'s room";
+int gi = get_game_index(rid);
+if(gi > -1) return display_name_flagged_for(games[gi].host) + "'s " + mode_tag(games[gi].mode) + " game";
+return "an unknown location";
+}
 // Which channels a player is currently muted in, for the staff-only line of the F6 info viewer.
 string player_mute_phrase(int ti)
 {

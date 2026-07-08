@@ -2,10 +2,10 @@
 
 **Unfinished. Fix major balancing issues in the environment versus player and player versus player modes.
 **Unfinished. Let players and staff send private messages to someone offline, delivered when that player next signs in.
-**Unfinished. Add a slash command that lets any player report something to staff.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a /report command so any player can report someone to the staff, with a staff /reports viewer that logs every report.
 **Finished. Split the ban command into permanent and timed versions so a reason can be added cleanly, giving /ban and /tempban.
 **Finished. Let the chat keys and buffer navigation keys work while a game is paused, keeping every other key disabled.
 **Finished. Remove a destroyed wall's bots instead of piling them onto the remaining walls, so the last standing wall isn't swarmed by every bot from the fallen ones.
