@@ -972,6 +972,22 @@ players[index].y=string_to_number(parsed[2]);
 broadcast_pos(index); // no-op for spectators (guarded), so watchers aren't tracked as players
 if(!players[index].spectating) gather_wood(index, 5); // auto-grab nearby wood -- but a watcher never picks up the players' wood
 }
+else if(parsed[0]=="voicecue" and index>-1 and parsed.length()==2 and (parsed[1]=="on" or parsed[1]=="off"))
+{
+// Relay a speaker's voice on/off cue (von/voff) to everyone sharing their space, positioned at the speaker, so
+// others hear the mic key in 3D like the voice itself. Same routing as the channel-3 voice relay: same room,
+// skip self, skip a listener who ignores the speaker. A voice-muted player can't talk, so send no cue.
+if(!is_muted_now(index, "voice"))
+{
+string cue="voicecue "+players[index].name+" "+players[index].x+" "+players[index].y+" "+parsed[1];
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].peer_id==event.peer_id or players[i].room_id!=players[index].room_id) continue;
+if(player_ignores(int(i), players[index].name)) continue; // listener has the speaker on their personal ignore list
+send(players[i].peer_id, cue, 0, true);
+}
+}
+}
 else if(parsed[0]=="setweapon" and index>-1 and parsed.length()>1)
 {
 // EVP: the client tells us which weapon it just drew, so we can restore the same one on a reconnect. Validate

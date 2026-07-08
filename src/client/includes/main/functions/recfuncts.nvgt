@@ -164,6 +164,7 @@ void recordcheck()
 	{
 		recording = true;
 		p.play_stationary("sounds/ui/misc/von.ogg", false);
+		send(0, "voicecue on", 0, true); // ask the server to relay a von cue to everyone sharing your space, so they hear you key the mic in 3D at your spot
 		voice_mic.flush_capture();
 		if(messages) { voice_enc.reset_state(); voice_msg_reset(); rectimer.restart(); } // fresh encoder (self-contained stream to match the receiver's fresh decoder) + message buffer + length clock
 		else if(hearvoice) apply_voice_fx(voice_monitor, me.x, me.y); // live self-monitor reverbs when you're inside the cave (no lowpass -- you're right there)
@@ -174,6 +175,7 @@ void recordcheck()
 		if(messages) voice_msg_capture(); // grab any frames buffered since the last drain so the tail isn't lost
 		recording = false;
 		p.play_stationary("sounds/ui/misc/voff.ogg", false);
+		send(0, "voicecue off", 0, true); // relay the matching voff cue when you stop talking
 		if(messages) voice_msg_send(); // ship the whole recording as one reliable "m" message, then play it back locally
 		spamtimer.restart();
 	}

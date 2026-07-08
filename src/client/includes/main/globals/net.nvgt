@@ -945,7 +945,20 @@ void netloop_impl()
 			else
 				p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 		}
-		else if (parsed[0] == "botspawn" and parsed.length() > 3)
+		else if (parsed[0] == "voicecue" and parsed.length() > 4)
+			{
+				// A player keyed their mic on or off: play their von/voff cue in 3D at their spot, so you hear nearby
+				// players start and stop talking, not just their voice. Routed like footsteps (PVP: crosspool through the wall).
+				if(parsed[1] != name)
+				{
+					int cx = string_to_number(parsed[2]);
+					int cy = string_to_number(parsed[3]);
+					string cuefile = (parsed[4] == "on") ? "ui/misc/von" : "ui/misc/voff";
+					if(game_mode == "pvp" and pvp_crosswall(cx, cy)) crosspool.play_3d("sounds/"+cuefile+".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
+					else p.play_3d("sounds/"+cuefile+".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
+				}
+			}
+			else if (parsed[0] == "botspawn" and parsed.length() > 3)
 		{
 			// An EVP builder bot appeared (or its position on join): "botspawn <id> <x> <y>". Roster only, no sound.
 			set_clientbot(string_to_number(parsed[1]), string_to_number(parsed[2]), string_to_number(parsed[3]));
