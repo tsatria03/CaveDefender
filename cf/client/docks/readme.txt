@@ -91,7 +91,7 @@ Whenever you finish a game having reached a higher round than your best ever, yo
 
 Choose play again to stay in the cavern, or leave to return to your room. In an open game with others, the cavern resets for a new round once everyone has answered, and the host begins it from the game menu as before.
 
-Press escape for the pause menu. If you host the game and a round is running, opening it pauses the game for everyone until you resume; a solo game stays paused, while an open game resumes on its own after a minute and a half. Anyone can leave from this menu at any time, and the host can stop the game from it.
+Press escape for the pause menu. If you host the game and a round is running, opening it pauses the game for everyone until you resume; a solo game stays paused, while an open game resumes on its own after a minute and a half. Anyone can leave from this menu at any time, and the host can stop the game from it. While the game is paused, the other players can still use the chat keys and review their message buffers, even though everything else waits for the host to resume.
 
 Environment versus player.
 
