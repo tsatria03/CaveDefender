@@ -822,7 +822,7 @@ return true;
 void on_wall_destroyed(int gameid, int gi, string dir)
 {
 send_to_game(games[gi].id, "walldestroyed "+dir); // members + spectators hear the breach
-redistribute_bots(gameid, dir, games[gi].size);
+remove_bots_on_wall(gameid, dir); // the fallen wall's bots leave -- they do NOT pile onto the walls still standing
 }
 // All walls down: end the round. Clear the bots and wood, drop into the "over" phase, and ask every
 // member how they did and whether to play again (roundover). The cavern is NOT reset yet — we wait until
