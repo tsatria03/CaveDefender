@@ -8,6 +8,7 @@ Press slash to open the chat, type a command, and press enter to send it. Every 
 
 /staff: Lists every staff member, online or offline, along with their rank.
 /where player: Tells you where an online player is, such as in the lobby, a room, or a game, by their username or their nickname. If that player has personally muted you, their location shows as private.
+/report player reason: Reports a player to the staff, for example /report bob kept smashing our own walls on purpose. Everything after the name is your reason, which is required. You can report an online player by their username or nickname, or someone who has already left by their username. Any staff online are alerted right away, and the report is saved so staff can read it later, stamped with where you were when you sent it; the reported player is not told.
 /pm player message: Sends a private message to a single online player, by their username or their nickname.
 /reply message, or /r message: Sends a private message to the last person who sent you one, so you don't have to type their name.
 /me message: Sends an action to everyone, with your name in front, for example /me waves becomes a message reading your name then waves. If you are staff, your rank is shown too.

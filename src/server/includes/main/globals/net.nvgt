@@ -115,6 +115,58 @@ void update_peak()
 int n = live_player_count();
 if(n > peak_players) { peak_players = n; peak_when = format_now_stamp(); save_peak(); }
 }
+// --- Player reports (filed with /report, reviewed by staff with /reports), persisted in data/preffs/reports.svr ---
+// A readable local timestamp for a report, e.g. "July 8, 2026 at 3:42 PM" (month name, 12-hour, no seconds),
+// matching the "Member since" style on the account card.
+string report_time_stamp()
+{
+int h = TIME_HOUR;
+string ampm = (h < 12) ? "AM" : "PM";
+int h12 = h % 12; if(h12 == 0) h12 = 12;
+return DATE_MONTH_NAME + " " + DATE_DAY + ", " + DATE_YEAR + " at " + h12 + ":" + pad2(TIME_MINUTE) + " " + ampm;
+}
+// Append one report to data/preffs/reports.svr. One report per line, TAB-delimited:
+// <stamp>\t<reporter>\t<reported>\t<location>\t<reason>. Tabs, not the colon used elsewhere, because the readable
+// stamp contains colons; the reason is last so it may contain anything (including tabs, rejoined on read). Nothing
+// is ever deleted -- a host hand-clears the file if it grows too long. Rewrites the whole file (reports are rare).
+void add_report(string reporter, string reported, string location, string reason)
+{
+string existing = "";
+if(file_exists("data/preffs/reports.svr"))
+{
+file rf; if(rf.open("data/preffs/reports.svr", "rb")) { existing = rf.read(); rf.close(); }
+}
+string line = report_time_stamp() + "\t" + reporter + "\t" + reported + "\t" + location + "\t" + reason;
+file wf;
+if(!wf.open("data/preffs/reports.svr", "wb")) return;
+wf.write(existing + line + "\n");
+wf.close();
+}
+// The staff /reports viewer: every report on record, newest first, numbered, in three-line blocks.
+string format_reports()
+{
+if(!file_exists("data/preffs/reports.svr")) return "There are no reports on record.";
+file rf;
+if(!rf.open("data/preffs/reports.svr", "rb")) return "There are no reports on record.";
+string raw = rf.read(); rf.close();
+string[] lines = string_split(raw, "\n", true);
+string listing = "";
+int shown = 0;
+for(int i = int(lines.length()) - 1; i >= 0; i--) // newest first: the file is appended in chronological order
+{
+if(lines[i].trim_whitespace() == "") continue;
+string[] parts = string_split(lines[i], "\t", true);
+if(parts.length() < 5) continue;
+string reason = string_join(parts, "\t", 4); // rejoin the reason (may itself contain tabs)
+shown++;
+if(shown > 1) listing += "\r\n\r\n";
+listing += shown + ". " + parts[1] + ", reported on " + parts[0] + ".\r\n";
+listing += "Reported " + parts[2] + ", in " + parts[3] + ".\r\n";
+listing += "Reason: " + reason;
+}
+if(listing == "") return "There are no reports on record.";
+return listing;
+}
 string string_join(string[]@ arr, string delimiter, uint start_index = 0, uint end_index = 0)
 {
     if (end_index == 0 || end_index > arr.length())
@@ -1582,6 +1634,13 @@ send(event.peer_id, "mutestext "+uname+"\n"+format_mutes(target), 0, true);
 }
 }
 }
+else if(parsed[0]=="getreports" and index>-1)
+{
+// Staff (moderator+) view every report on record, read-only, newest first, in the doc viewer. Unlike the
+// per-player viewers this takes no name. Non-staff is silently ignored.
+if(rank_level(players[index].rank) < 1) { }
+else send(event.peer_id, "reportstext\n"+format_reports(), 0, true);
+}
 else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
 {
 on_menu_result(index, parsed[1], int(string_to_number(parsed[2])));
@@ -2663,6 +2722,35 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                     else
                     {
                         send(event.peer_id, "Usage: /unban username", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/report" && parsed.length() >= 3)
+                {
+                    // Anyone can report a player to the staff. Target plus a required reason (everything after the
+                    // name). An offline player is accepted by username, since the point is often to report someone
+                    // who just left. The report is logged to reports.svr and pushed live to every online staffer.
+                    string tname = parsed[1];
+                    int ti = get_player_index_from(tname); // online by username or nickname
+                    string target = (ti > -1) ? players[ti].name : tname;
+                    if(!account_exists(target))
+                    {
+                        send(event.peer_id, "misc This player does not exist.", 0, true);
+                    }
+                    else if(string_to_lower_case(target) == string_to_lower_case(players[index].name))
+                    {
+                        send(event.peer_id, "misc You can't report yourself.", 0, true);
+                    }
+                    else
+                    {
+                        string reason = "";
+                        for(uint r=2; r<parsed.length(); r++) reason += (reason == "" ? "" : " ") + parsed[r];
+                        string location = report_location_phrase(index);
+                        string reporteddisp = (ti > -1) ? display_name_flagged(ti) : target;
+                        add_report(players[index].name, target, location, reason);
+                        string alert = "Report from " + display_name_flagged(index) + " about " + reporteddisp + " in " + location + ": " + reason;
+                        for(uint i=0; i<players.length(); i++)
+                            if(is_staff(players[i].rank) && int(i) != index) send(players[i].peer_id, "report "+alert, 0, true);
+                        send(event.peer_id, "misc Your report has been sent to the staff.", 0, true);
                     }
                 }
             }
