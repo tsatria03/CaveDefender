@@ -1,12 +1,12 @@
 ####These are the things that need to be finished for future versions of the game.
 
 **Unfinished. Fix major balancing issues in the environment versus player and player versus player modes.
-**Unfinished. Split the ban command into permanent and timed versions so a reason can be added cleanly, giving /ban and /tempban.
 **Unfinished. Let players and staff send private messages to someone offline, delivered when that player next signs in.
 **Unfinished. Add a slash command that lets any player report something to staff.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Split the ban command into permanent and timed versions so a reason can be added cleanly, giving /ban and /tempban.
 **Finished. Remove a destroyed wall's bots instead of piling them onto the remaining walls, so the last standing wall isn't swarmed by every bot from the fallen ones.
 **Finished. Add a Big, 75 by 75 map size to the start-game size menu in every mode.
 **Finished. Remove the limit on how far a wall can be reinforced, so players can over-build a buffer of any size.
