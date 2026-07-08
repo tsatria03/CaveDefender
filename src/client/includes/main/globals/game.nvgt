@@ -35,9 +35,38 @@ buffercheck();
 		}
 		if(in_game and game_paused)
 		{
-			// The host has the game paused: everything is frozen except Escape, which opens the leave menu.
-			// Audio was already suspended on the gamepaused message, so we skip the per-frame audio and
-			// gameplay updates too — nothing moves or restarts until the host resumes.
+			// The host has the game paused. Gameplay, movement, and voice stay frozen, but players who aren't
+			// shown a menu can still communicate and review messages while they wait: the chat keys work here,
+			// and the buffer navigation keys are already handled by buffercheck() at the top of the loop. Audio
+			// was suspended on the gamepaused message, so everything else is skipped by the continue below.
+			if(key_pressed(KEY_SLASH))
+			{
+				string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "");
+				if(msg!="") comparse(msg);
+				else speak("canceled");
+				continue;
+			}
+			if(key_pressed(KEY_APOSTROPHE) and myrank != "player")
+			{
+				string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "");
+				if(msg!="") comparse(msg, "staff");
+				else speak("canceled");
+				continue;
+			}
+			if(!watching and game_mode == "pvp" and key_pressed(KEY_SEMICOLON))
+			{
+				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "");
+				if(msg!="") comparse(msg, "team");
+				else speak("canceled");
+				continue;
+			}
+			if(key_pressed(KEY_BACKSLASH) and !shift_is_down())
+			{
+				string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "");
+				if(msg!="") comparse(msg, "local");
+				else speak("canceled");
+				continue;
+			}
 			if(key_pressed(KEY_ESCAPE)) { if(watching) stop_watching_prompt(); else send(0, "openpausemenu", 0, true); }
 			continue;
 		}
