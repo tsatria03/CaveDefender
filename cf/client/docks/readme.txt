@@ -180,7 +180,7 @@ Server information.
 F1. List everyone on the server.
 F2. Read the server's message of the day.
 F3. Ping the server and hear the round trip time.
-F4. Hear how long the server has been running.
+F4. Hear how long the server has been running, and the most players ever connected at once.
 F5. Toggle player beacons on or off.
 F6. Open the players menu.
 
