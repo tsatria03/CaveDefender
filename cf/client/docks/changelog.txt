@@ -1,4 +1,5 @@
 New in 3.6.
+The tones that play when a player starts and stops talking on voice chat are now heard by everyone nearby in 3D from that player's position, not only by the person talking.
 Your email is now private on the information card, shown only to staff instead of to everyone who opens a card.
 Preferences now has a Voice chat mode setting on the General tab, where you choose whether your voice streams live or sends as a recorded voice message.
 Voice chat can now send your voice as a recorded voice message instead of only streaming it live. Others hear the whole message once you finish speaking, rather than moment by moment as you talk. It still plays in 3D from where you sent it for everyone sharing your space, just like live voice.
