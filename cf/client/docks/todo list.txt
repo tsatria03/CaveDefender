@@ -1,11 +1,11 @@
 ####These are the things that need to be finished for future versions of the game.
 
 **Fix the major balancing issues in the environment versus player and player versus player modes.
-**Add a 75 by 75 map size option to all game modes.
 **Make sure PVE bots redistribute to standing walls and never keep attacking or reserve a destroyed one, especially when only one wall remains.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a Big, 75 by 75 map size to the start-game size menu in every mode.
 **Finished. Remove the limit on how far a wall can be reinforced, so players can over-build a buffer of any size.
 **Finished. Play the voice chat start and stop tones in 3D from a player's position for everyone nearby, wrapping the live stream or a recorded message's playback instead of only playing locally.
 **Finished. Make a player's email private on the information card, shown only to staff instead of everyone.

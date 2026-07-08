@@ -1,4 +1,5 @@
 New in 3.6.
+A new Big map size, 75 by 75, is now offered when starting a game in any mode, sitting between Medium and Large.
 There is no longer a limit on how far you can reinforce a wall, so you can build as big a buffer as you can gather the wood for, instead of stopping at four times its full strength.
 The tones that play when a player starts and stops talking on voice chat are now heard by everyone nearby in 3D from that player's position, not only by the person talking.
 Your email is now private on the information card, shown only to staff instead of to everyone who opens a card.

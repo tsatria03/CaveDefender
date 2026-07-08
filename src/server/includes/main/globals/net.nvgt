@@ -1602,7 +1602,7 @@ send(event.peer_id, "You must be in a room to start a game.", 0,true);
 else
 {
 int size=int(string_to_number(parsed[1]));
-if(size!=25 and size!=50 and size!=100) size=50;
+if(size!=25 and size!=50 and size!=75 and size!=100) size=50;
 bool solo=(parsed[2]=="solo");
 string mode="pve"; // gameplay mode; defaults to the original pve for a missing or unrecognized arg
 if(parsed.length()>3 and parsed[3]=="evp") mode="evp";
