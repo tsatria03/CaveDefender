@@ -947,16 +947,10 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "voicecue" and parsed.length() > 4)
 			{
-				// A player keyed their mic on or off: play their von/voff cue in 3D at their spot, so you hear nearby
-				// players start and stop talking, not just their voice. Routed like footsteps (PVP: crosspool through the wall).
-				if(parsed[1] != name)
-				{
-					int cx = string_to_number(parsed[2]);
-					int cy = string_to_number(parsed[3]);
-					string cuefile = (parsed[4] == "on") ? "ui/misc/von" : "ui/misc/voff";
-					if(game_mode == "pvp" and pvp_crosswall(cx, cy)) crosspool.play_3d("sounds/"+cuefile+".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
-					else p.play_3d("sounds/"+cuefile+".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
-				}
+				// A player keyed their mic on or off in LIVE mode: play their von/voff cue in 3D at their spot, so you
+				// hear nearby players start and stop talking, not just their voice. (Message mode instead wraps the cues
+				// around the recorded clip's playback, receiver-side in recfuncts, so no live cue arrives for it.)
+				if(parsed[1] != name) play_voice_cue_at(string_to_number(parsed[2]), string_to_number(parsed[3]), parsed[4]);
 			}
 			else if (parsed[0] == "botspawn" and parsed.length() > 3)
 		{

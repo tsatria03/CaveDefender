@@ -85,16 +85,21 @@ if(!walls[id].destroyable) return;
 walls[id].health-=amount;
 if(walls[id].health<0) walls[id].health=0;
 }
-// How far a wall may be over-built: 4.0 = up to 400% of its max health. Players can stockpile a buffer
-// against wave damage, but not make a wall effectively invincible (which trivialized the game).
+// How far a wall may be over-built WHEN the cap applies: 4.0 = up to 400% of its max health. This now governs
+// only the EVP builder bots' fortifying (otherwise unbounded during the build phase). PLAYER reinforcing passes
+// cap=false, so players can stockpile a buffer of any size -- the over-build limit was removed for them.
 const double wall_overbuild_cap = 4.0;
-// Reinforce a wall with wood, clamped to wall_overbuild_cap x its max health.
-void repair_wall(int id, double amount)
+// Reinforce a wall with wood. Player reinforcing is uncapped (cap=false); the EVP builders keep the default so
+// their fortifying is still clamped to wall_overbuild_cap x max health.
+void repair_wall(int id, double amount, bool cap=true)
 {
 if(id<0 or id>=int(walls.length()) or @walls[id]==null) return;
 walls[id].health+=amount;
-double cap = walls[id].maxhealth * wall_overbuild_cap;
-if(walls[id].health > cap) walls[id].health = cap;
+if(cap)
+{
+double climit = walls[id].maxhealth * wall_overbuild_cap;
+if(walls[id].health > climit) walls[id].health = climit;
+}
 }
 // EVP damage ratchet: how much of each player hit is PERMANENT -- it lowers the wall's repair ceiling (floor)
 // so the builders can never restore a wall above the damage the attackers have already done. The remaining

@@ -164,7 +164,7 @@ void recordcheck()
 	{
 		recording = true;
 		p.play_stationary("sounds/ui/misc/von.ogg", false);
-		send(0, "voicecue on", 0, true); // ask the server to relay a von cue to everyone sharing your space, so they hear you key the mic in 3D at your spot
+		if(!messages) send(0, "voicecue on", 0, true); // LIVE mode only: relay a von cue to everyone in your space so they hear you key the mic in 3D. Message mode plays the cues around the message PLAYBACK, receiver-side (see play_remote_message / voiceloop), so they wrap what listeners actually hear rather than the silent recording window.
 		voice_mic.flush_capture();
 		if(messages) { voice_enc.reset_state(); voice_msg_reset(); rectimer.restart(); } // fresh encoder (self-contained stream to match the receiver's fresh decoder) + message buffer + length clock
 		else if(hearvoice) apply_voice_fx(voice_monitor, me.x, me.y); // live self-monitor reverbs when you're inside the cave (no lowpass -- you're right there)
@@ -175,7 +175,7 @@ void recordcheck()
 		if(messages) voice_msg_capture(); // grab any frames buffered since the last drain so the tail isn't lost
 		recording = false;
 		p.play_stationary("sounds/ui/misc/voff.ogg", false);
-		send(0, "voicecue off", 0, true); // relay the matching voff cue when you stop talking
+		if(!messages) send(0, "voicecue off", 0, true); // LIVE mode only (see the on-cue above); the message-mode voff plays when the clip finishes on the receiver
 		if(messages) voice_msg_send(); // ship the whole recording as one reliable "m" message, then play it back locally
 		spamtimer.restart();
 	}
@@ -210,6 +210,16 @@ class playing_voice_message
 playing_voice_message@[] voice_msgs;
 const uint VOICE_MSG_MAX = 8; // safety cap on concurrent message clips; the oldest is dropped past this
 
+// Play a von/voff cue one-shot in 3D at (cx,cy), routed like footsteps: through crosspool (muffled through the
+// wall) for a cross-wall PVP source, otherwise p. Shared by the LIVE voicecue handler (net.nvgt, keyed off the
+// speaker's record start/stop) and the MESSAGE-mode cues that wrap a recorded message's playback below.
+void play_voice_cue_at(double cx, double cy, string onoff)
+{
+	string cuefile = (onoff == "on") ? "ui/misc/von" : "ui/misc/voff";
+	if(game_mode == "pvp" and pvp_crosswall(cx, cy)) crosspool.play_3d("sounds/" + cuefile + ".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
+	else p.play_3d("sounds/" + cuefile + ".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
+}
+
 // Decode a whole "m" voice-message blob and start it as one fixed-position 3D clip for this listener.
 void play_remote_message(int sx, int sy, string blob)
 {
@@ -234,6 +244,7 @@ void play_remote_message(int sx, int sy, string blob)
 	s.push_memory(pcm, false, VOICE_RATE, 1);
 	s.set_position(me.x, me.y, me.z, sx, sy, 0, calculate_theta(me_rotation), vpool.pan_step, vpool.volume_step);
 	s.play();
+	play_voice_cue_at(sx, sy, "on"); // von at the speaker's spot as the recorded message begins -- message mode's on-cue, done receiver-side so it wraps the playback (not the silent recording window)
 	playing_voice_message@ vm = playing_voice_message();
 	@vm.snd = s;
 	vm.sx = sx;
@@ -331,7 +342,9 @@ void voiceloop()
 	{
 		if(@voice_msgs[i].snd == null or !voice_msgs[i].snd.playing)
 		{
+			bool finished = (@voice_msgs[i].snd != null); // it existed and just stopped -> a natural finish (not a null/never-started entry)
 			if(@voice_msgs[i].snd != null) voice_msgs[i].snd.close();
+			if(finished) play_voice_cue_at(voice_msgs[i].sx, voice_msgs[i].sy, "off"); // voff at the message's spot the moment its playback ends -- message mode's off-cue
 			voice_msgs.remove_at(i);
 			continue;
 		}
