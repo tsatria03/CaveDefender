@@ -5,5 +5,7 @@ int rulesver=1; // current server-rules version, from conf.svr's rulesver= (pure
 int ruleswitch=1; // master on/off for the rules-agreement gate, from conf.svr's ruleswitch=. 1 (the default) = players must read and agree to the rules before they can play; 0 = the gate is deliberately disabled and anyone can play without agreeing. A separate, explicit switch so the system is never turned off by accident through rulesver; disabling it is an intentional choice. Takes effect on restart.
 string motd = "Welcome to the server!";
 timer svruptimer;
+int peak_players=0;   // all-time peak of concurrent live players ever seen on this server; loaded from/saved to data/preffs/peak.svr (survives restarts)
+string peak_when="";  // the formatted local date/time that peak was reached (e.g. "12/22/2022 at 5:45:05 PM"); blank until the first peak is recorded
 file f;
 instance servstence("cavedefender_server"); // single-instance guard; own app id so it won't clash with the client's on one machine.

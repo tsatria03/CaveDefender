@@ -71,6 +71,50 @@ string format_uptime(int uptime_seconds)
     uptime_message += string(seconds) + (seconds == 1 ? " second." : " seconds.");
     return uptime_message;
 }
+// --- All-time peak concurrent players (reported alongside uptime on F4), persisted in data/preffs/peak.svr ---
+// Zero-pad a non-negative int to at least 2 digits ("5" -> "05") for the peak timestamp.
+string pad2(int n) { string s = "" + n; return (s.length() < 2) ? "0" + s : s; }
+// The current local date and time like "12/22/2022 at 5:45:05 PM" (US M/D/Y, 12-hour clock with AM/PM).
+string format_now_stamp()
+{
+int h = TIME_HOUR;                        // 0-23
+string ampm = (h < 12) ? "AM" : "PM";
+int h12 = h % 12; if(h12 == 0) h12 = 12;  // 0 and 12 both read as 12
+return pad2(DATE_MONTH) + "/" + pad2(DATE_DAY) + "/" + DATE_YEAR + " at " + h12 + ":" + pad2(TIME_MINUTE) + ":" + pad2(TIME_SECOND) + " " + ampm;
+}
+// Players currently LIVE (connected, not on a 45s reconnect hold) -- the server-wide count the peak tracks.
+int live_player_count()
+{
+int n = 0;
+for(uint i=0; i<players.length(); i++) if(!players[i].held) n++;
+return n;
+}
+// Load the all-time peak from data/preffs/peak.svr (line 1 = count, line 2 = the formatted date/time). Missing file = no peak yet.
+void load_peak()
+{
+peak_players = 0; peak_when = "";
+if(!file_exists("data/preffs/peak.svr")) return;
+file pf;
+if(!pf.open("data/preffs/peak.svr", "rb")) return;
+string raw = pf.read(); pf.close();
+string[] lines = string_split(raw, "\r\n", true);
+if(lines.length() >= 1) peak_players = int(string_to_number(lines[0].trim_whitespace()));
+if(lines.length() >= 2) peak_when = lines[1];
+}
+// Persist the current peak to data/preffs/peak.svr.
+void save_peak()
+{
+file pf;
+if(!pf.open("data/preffs/peak.svr", "wb")) return;
+pf.write("" + peak_players + "\r\n" + peak_when + "\r\n");
+pf.close();
+}
+// After a player joins (fresh spawn or reconnect), bump the all-time peak if the live count is a new record.
+void update_peak()
+{
+int n = live_player_count();
+if(n > peak_players) { peak_players = n; peak_when = format_now_stamp(); save_peak(); }
+}
 string string_join(string[]@ arr, string delimiter, uint start_index = 0, uint end_index = 0)
 {
     if (end_index == 0 || end_index > arr.length())
@@ -863,6 +907,7 @@ else if(message=="/serveruptime")
 {
 int uptime_seconds = svruptimer.elapsed / 1000;
 string uptime_message = format_uptime(uptime_seconds);
+if(peak_players > 0) uptime_message += " Peak of " + peak_players + (peak_players == 1 ? " player" : " players") + ", on " + peak_when + ".";
 send(event.peer_id, uptime_message, 0, true);
 }
 else if(parsed[0]=="login" and parsed.length()>3)
@@ -909,6 +954,7 @@ players[index].restore_reannounce=false;
 send(event.peer_id, "voicemutestate "+(is_muted_now(index, "voice") ? "1" : "0"), 0, true); // silent voice-mute state so the client can warn on O without opening the mic; no message or sound
 send_yourrooms(event.peer_id, players[index].name);
 restore_scope(index);
+update_peak(); // a reconnect can set a new high if others joined while this player was held
 }
 else if(existing<0)
 {
@@ -933,6 +979,7 @@ send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 // New accounts are announced at creation time (see register_account), so logging in for the first time
 // is just a normal "online" notice like anyone else.
 send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
+update_peak(); // a player joined -- bump the all-time concurrent-player record if this is a new high
 // Load each channel mute from disk so it's enforced, but DON'T notify the player: a mute set while they
 // were offline shouldn't greet them with a message and sound every time they sign in (staff can still see
 // it on the F6 card, and any attempt to chat in that channel is quietly refused as always).

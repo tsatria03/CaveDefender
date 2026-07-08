@@ -11,6 +11,7 @@ svruptimer.restart();
 if(!directory_exists("data")) directory_create("data");
 if(!directory_exists("data/players")) directory_create("data/players");
 if(!directory_exists("data/preffs")) directory_create("data/preffs");
+load_peak(); // load the all-time concurrent-player record (data/preffs/peak.svr), reported with uptime on F4
 if(file_exists("data/preffs/conf.svr"))
 {
 f.open("data/preffs/conf.svr", "rb");
