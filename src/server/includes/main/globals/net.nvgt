@@ -190,9 +190,11 @@ send(event.peer_id, "error: this account predates the required email and can no 
 return;
 }
 int64 bu = get_ban_until(name);
+string breason = get_ban_reason(name);
+string bsuffix = (breason == "") ? "" : " Reason: " + breason;
 if(bu == 0)
 {
-send(event.peer_id, "error: you are banned from this server.", 0,true);
+send(event.peer_id, "error: you are banned from this server."+bsuffix, 0,true);
 return;
 }
 else if(bu > 0)
@@ -204,7 +206,7 @@ clear_ban(name);
 }
 else
 {
-send(event.peer_id, "error: you are banned for "+int(bu - nowsec)+" seconds.", 0,true);
+send(event.peer_id, "error: you are banned for "+int(bu - nowsec)+" seconds."+bsuffix, 0,true);
 return;
 }
 }
@@ -315,6 +317,29 @@ net.request();
 wait(5);
 }
 exit();
+}
+// Carries out a ban that has already passed the rank and target checks, shared by /ban (permanent) and
+// /tempban (timed). dur is the length in whole seconds (0 = permanent); reason is "" when none was given.
+// Records the ban with its reason, drops the target from the roster, tells them (with the reason), announces
+// the ban to everyone (without the reason -- that's staff-only), and confirms it to the acting staff member.
+void perform_ban(int actorpeer, int ti, int dur, string reason)
+{
+int64 until = (dur > 0) ? (now_epoch() + dur) : 0;
+int tpeer = players[ti].peer_id;
+string realname = players[ti].name;
+string trank = players[ti].rank;
+string tnick = players[ti].nickname;
+string tdisp = display_name_flagged(ti);
+set_ban(realname, until, reason);
+players.remove_at(ti);
+send(tpeer, "banned " + dur + (reason == "" ? "" : " " + reason), 0, true);
+for(uint i=0; i<players.length(); i++)
+{
+send(players[i].peer_id, "banannounce " + realname + " " + trank + " " + tnick, 0, true);
+}
+string rp = (reason == "") ? "." : ", with the reason: " + reason;
+if(dur > 0) send(actorpeer, "misc " + tdisp + " has been banned for " + dur + " seconds" + rp, 0, true);
+else send(actorpeer, "misc " + tdisp + " has been banned permanently" + rp, 0, true);
 }
 // Case-insensitive roster lookup by name; returns -1 if the player isn't connected.
 int get_online_index(string name)
@@ -2555,6 +2580,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                 }
                 else if(parsed[0] == "/ban" && rank_level(players[index].rank) >= 2)
                 {
+                    // Permanent ban. Everything after the username is an optional reason.
                     if(parsed.length() >= 2)
                     {
                         string tname = parsed[1];
@@ -2569,28 +2595,49 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         }
                         else
                         {
-                            int dur = (parsed.length() >= 3) ? int(string_to_number(parsed[2])) : 0;
-                            if(dur < 0) dur = 0;
-                            int64 until = (dur > 0) ? (now_epoch() + dur) : 0;
-                            int tpeer = players[ti].peer_id;
-                            string realname = players[ti].name;
-                            string trank = players[ti].rank;
-                            string tnick = players[ti].nickname;
-                            string tdisp = display_name_flagged(ti);
-                            set_ban(realname, until);
-                            players.remove_at(ti);
-                            send(tpeer, "banned "+dur, 0, true);
-                            for(uint i=0; i<players.length(); i++)
-                            {
-                                send(players[i].peer_id, "banannounce "+realname+" "+trank+" "+tnick, 0, true);
-                            }
-                            if(dur > 0) send(event.peer_id, "misc "+tdisp+" has been banned for "+dur+" seconds.", 0, true);
-                            else send(event.peer_id, "misc "+tdisp+" has been banned permanently.", 0, true);
+                            string reason = "";
+                            for(uint r=2; r<parsed.length(); r++) reason += (reason == "" ? "" : " ") + parsed[r];
+                            perform_ban(event.peer_id, ti, 0, reason);
                         }
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /ban username, or /ban username seconds", 0, true);
+                        send(event.peer_id, "Usage: /ban username, or /ban username reason", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/tempban" && rank_level(players[index].rank) >= 2)
+                {
+                    // Timed ban. The seconds are required and must be at least 1; everything after them is an optional reason.
+                    if(parsed.length() >= 3)
+                    {
+                        string tname = parsed[1];
+                        int dur = int(string_to_number(parsed[2]));
+                        if(dur < 1)
+                        {
+                            send(event.peer_id, "Usage: /tempban username seconds, or /tempban username seconds reason", 0, true);
+                        }
+                        else
+                        {
+                            int ti = get_player_index_from(tname); // online-only, by username or nickname
+                            if(ti < 0)
+                            {
+                                reply_target_not_found(event.peer_id, tname);
+                            }
+                            else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
+                            {
+                                send(event.peer_id, "You can't ban someone above your own rank.", 0, true);
+                            }
+                            else
+                            {
+                                string reason = "";
+                                for(uint r=3; r<parsed.length(); r++) reason += (reason == "" ? "" : " ") + parsed[r];
+                                perform_ban(event.peer_id, ti, dur, reason);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /tempban username seconds, or /tempban username seconds reason", 0, true);
                     }
                 }
                 else if(parsed[0] == "/unban" && rank_level(players[index].rank) >= 2)

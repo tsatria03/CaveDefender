@@ -479,7 +479,7 @@ void card_rank_command(string question, string prefix, string ranklist)
 	comparse(prefix + ranks[c]);
 }
 // The F6 player info card. Wire format:
-//   "playerinfo\n<username>\n<ignored>\n<is_self>\n<kick ban banned warn>\n<promote ranks>\n<demote ranks>\n<title>\n<body>"
+//   "playerinfo\n<username>\n<ignored>\n<is_self>\n<kick ban warn notify mute pm>\n<promote ranks>\n<demote ranks>\n<title>\n<body>"
 // Shown inline in a read-only, multiline input box (the same widget dockread builds, but with our own title).
 // Unless it's your own card it also gets a Mute checkbox (Alt+M, a personal ignore of their chat and voice), a
 // Private message button (Alt+P), and -- for staff, only the ones the server says you may use on this target --
@@ -511,14 +511,13 @@ void handle_playerinfo(string message)
 	int p8 = string_contains(r7, "\n", 1); if(p8 < 0) return;
 	string title = r7.substr(0, p8);
 	string body = r7.substr(p8 + 1);
-	string[] fl = string_split(flagline, " ", true); // "kick ban banned warn notify"
+	string[] fl = string_split(flagline, " ", true); // "kick ban warn notify mute pm"
 	bool can_kick = (fl.length() > 0 and fl[0] == "1");
 	bool can_ban = (fl.length() > 1 and fl[1] == "1");
-	bool is_banned = (fl.length() > 2 and fl[2] == "1");
-	bool can_warn = (fl.length() > 3 and fl[3] == "1");
-	bool can_notify = (fl.length() > 4 and fl[4] == "1");
-		bool can_mute = (fl.length() > 5 and fl[5] == "1"); // personal Mute checkbox: off for your own card and any staff member
-		bool can_pm = (fl.length() > 6 and fl[6] == "1"); // PM button: off when this player has personally muted you (your PM would bounce)
+	bool can_warn = (fl.length() > 2 and fl[2] == "1");
+	bool can_notify = (fl.length() > 3 and fl[3] == "1");
+		bool can_mute = (fl.length() > 4 and fl[4] == "1"); // personal Mute checkbox: off for your own card and any staff member
+		bool can_pm = (fl.length() > 5 and fl[5] == "1"); // PM button: off when this player has personally muted you (your PM would bounce)
 	bool can_promote = (prom != "");
 	bool can_demote = (demo != "");
 	form.reset();
@@ -530,7 +529,7 @@ void handle_playerinfo(string message)
 		if(can_mute) mutebox = form.create_checkbox("&mute this player", already_ignored); // Alt+M: personal ignore of their chat and voice (hidden for staff)
 		if(can_pm) pmbtn = form.create_button("&private message this player"); // Alt+P (hidden if this player has muted you)
 		if(can_kick) kickbtn = form.create_button("&kick this player"); // Alt+K
-		if(can_ban) banbtn = form.create_button(is_banned ? "&unban this player" : "&ban this player"); // Alt+U / Alt+B
+		if(can_ban) banbtn = form.create_button("&ban this player"); // Alt+B (a banned player is offline, so the card only ever bans; unban is the typed /unban command)
 		if(can_promote) prombtn = form.create_button("p&romote this player"); // Alt+R
 		if(can_demote) demobtn = form.create_button("&demote this player"); // Alt+D
 		if(can_notify) notifybtn = form.create_button("&notify this player"); // Alt+N
@@ -548,7 +547,7 @@ void handle_playerinfo(string message)
 		if(!is_self and mutebox > -1) now_ignored = form.is_checked(mutebox); // read the checkbox each frame, before any close deactivates the form
 		if(can_pm and form.is_pressed(pmbtn)) { action = "pm"; break; }
 		if(can_kick and form.is_pressed(kickbtn)) { action = "kick"; break; }
-		if(can_ban and form.is_pressed(banbtn)) { action = is_banned ? "unban" : "ban"; break; }
+		if(can_ban and form.is_pressed(banbtn)) { action = "ban"; break; }
 		if(can_promote and form.is_pressed(prombtn)) { action = "promote"; break; }
 		if(can_demote and form.is_pressed(demobtn)) { action = "demote"; break; }
 		if(can_notify and form.is_pressed(notifybtn)) { action = "notify"; break; }
@@ -565,22 +564,37 @@ void handle_playerinfo(string message)
 		else speak("canceled");
 	}
 	else if(action == "kick") card_confirm_command("Kick " + uname + "?", "/kick " + uname);
-	else if(action == "unban") comparse("/unban " + uname);
 	else if(action == "ban")
 	{
+		// Length first (permanent, or a time in seconds), then an optional reason. Canceling any step
+		// abandons the ban. Routes to /ban for permanent or /tempban for timed, which re-validate.
 		setupmenu();
 		m.add_item("Permanent");
 		m.add_item("For a set time");
-		m.intro_text = "Ban " + uname + ". Choose a ban length.";
+		m.intro_text = "Choose a ban length for " + uname + ".";
 		int bc = m.run();
-		if(bc == 0) card_confirm_command("Permanently ban " + uname + "?", "/ban " + uname);
-		else if(bc == 1)
+		if(bc != 0 and bc != 1) { speak("canceled"); return; }
+		string secs = "";
+		if(bc == 1)
 		{
-			string secs = vd.input_box("Ban " + uname, "Enter a ban length in seconds.", "");
-			if(secs != "") comparse("/ban " + uname + " " + secs);
-			else speak("canceled");
+			secs = vd.input_box("Ban " + uname, "Enter a ban length in seconds for this player. Press escape to cancel.", "");
+			if(secs == "") { speak("canceled"); return; }
 		}
-		else speak("canceled");
+		setupmenu();
+		m.add_item("No reason");
+		m.add_item("Add a reason");
+		m.intro_text = "Do you want to provide a ban reason for " + uname + "?";
+		int rc = m.run();
+		if(rc != 0 and rc != 1) { speak("canceled"); return; }
+		string reason = "";
+		if(rc == 1)
+		{
+			reason = vd.input_box("Ban " + uname, "Enter a ban reason for this player. Press escape to cancel.", "");
+			if(reason == "") { speak("canceled"); return; }
+		}
+		string suffix = (reason == "") ? "" : " " + reason;
+		if(bc == 0) comparse("/ban " + uname + suffix);
+		else comparse("/tempban " + uname + " " + secs + suffix);
 	}
 	else if(action == "promote") card_rank_command("Promote " + uname + " to which rank?", "/promote " + uname + " ", prom);
 	else if(action == "demote") card_rank_command("Demote " + uname + " to which rank?", "/demote " + uname + " ", demo);
@@ -798,8 +812,11 @@ void netloop_impl()
 		{
 			p.play_stationary("sounds/ui/misc/ban.ogg", false);
 			int rem = string_to_number(parsed[1]);
-			if(rem > 0) add_buffer_item("alerts", "You have been banned for " + rem + " seconds.");
-			else add_buffer_item("alerts", "You have been banned permanently.");
+			string breason = ""; // everything after the seconds token is the optional reason
+			for(uint r = 2; r < parsed.length(); r++) breason += (breason == "" ? "" : " ") + parsed[r];
+			string bsuffix = (breason == "") ? "." : ", with the reason: " + breason;
+			if(rem > 0) add_buffer_item("alerts", "You have been banned for " + rem + " seconds" + bsuffix);
+			else add_buffer_item("alerts", "You have been banned permanently" + bsuffix);
 			kicked = true;
 			connected = false;
 		}

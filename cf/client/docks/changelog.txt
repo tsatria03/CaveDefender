@@ -1,4 +1,5 @@
 New in 3.7.
+Banning a player is now split into two commands so a reason can be added: /ban followed by a name is a permanent ban, /tempban followed by a name and a number of seconds is a timed one, and anything you type after that is an optional reason the banned player is shown and that other staff can see with /bans. The ban button on a player's card walks you through the same choices.
 The /restart countdown can now be any length of at least one second, with the old thirty-second minimum and one-hour maximum both removed.
 Pressing F4 now also tells you the most players ever connected to the server at once and when that record was set, shown alongside the uptime.
 New in 3.6.

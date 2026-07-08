@@ -169,15 +169,18 @@ if(secs >= 60) { int64 m = secs/60; return m + (m==1 ? " minute" : " minutes"); 
 return secs + (secs==1 ? " second" : " seconds");
 }
 // A human-readable ban status for the staff /bans viewer. An expired timed ban reads as not banned (it's cleared
-// at the next login attempt anyway), so the viewer only ever shows a ban that's currently in effect.
+// at the next login attempt anyway), so the viewer only ever shows a ban that's currently in effect. When a reason
+// was recorded with the ban it's appended as its own sentence.
 string format_ban(string name)
 {
 int64 until = get_ban_until(name); // -1 not banned, 0 permanent, >0 epoch it expires at
 if(until < 0) return "This player is not banned.";
-if(until == 0) return "This player is banned permanently.";
+string reason = get_ban_reason(name);
+string suffix = (reason == "") ? "" : " Reason: " + reason;
+if(until == 0) return "This player is banned permanently." + suffix;
 int64 rem = until - now_epoch();
 if(rem <= 0) return "This player is not banned.";
-return "This player is banned, with " + format_duration(rem) + " remaining.";
+return "This player is banned, with " + format_duration(rem) + " remaining." + suffix;
 }
 // A human-readable per-channel mute status for the staff /mutes viewer, one channel per line. Expired timed mutes
 // are skipped, so it only lists channels the player is currently muted in.
@@ -424,6 +427,8 @@ return write_field(name, "mute_"+channel, "");
 }
 
 // Ban state: -1 = not banned, 0 = banned permanently, >0 = absolute epoch the ban expires at.
+// banned.usr holds "<until>" or, when a reason was given, "<until>:<reason>". parse_epoch reads only the
+// leading digits and stops at the colon, so the optional reason is invisible to the time read.
 int64 get_ban_until(string name)
 {
 if(!account_exists(name)) return -1;
@@ -431,11 +436,22 @@ string b = read_field(name, "banned");
 if(b == "") return -1;
 return parse_epoch(b);
 }
-// Persists a ban (until = 0 for permanent, otherwise an absolute epoch from now_epoch()).
-bool set_ban(string name, int64 until)
+// The optional reason stored with a ban: everything after the first ":" in banned.usr, or "" if none was given.
+// A reason may itself contain colons; only the first one separates it from the time, so we keep the rest intact.
+string get_ban_reason(string name)
+{
+if(!account_exists(name)) return "";
+string b = read_field(name, "banned");
+int c = string_contains(b, ":", 1);
+if(c < 0) return "";
+return string_right(b, b.length() - c - 1);
+}
+// Persists a ban (until = 0 for permanent, otherwise an absolute epoch from now_epoch()). An optional reason is
+// stored after a colon; usernames can't contain colons, but reasons are free text and may, which is fine.
+bool set_ban(string name, int64 until, string reason="")
 {
 if(!account_exists(name)) return false;
-return write_field(name, "banned", "" + until);
+return write_field(name, "banned", (reason == "") ? ("" + until) : ("" + until + ":" + reason));
 }
 // Clears any ban on an account.
 bool clear_ban(string name)

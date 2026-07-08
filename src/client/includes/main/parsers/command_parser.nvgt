@@ -381,7 +381,14 @@ void comparse(string text, string channel = "global")
 	else if(base == "/ban")
 	{
 		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
-		if(parsed.length() < 2) { syntax_error("/ban username, or /ban username seconds"); return; }
+		if(parsed.length() < 2) { syntax_error("/ban username, or /ban username reason"); return; }
+		send(0, text, 1, true);
+	}
+	else if(base == "/tempban")
+	{
+		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+		if(parsed.length() < 3) { syntax_error("/tempban username seconds, or /tempban username seconds reason"); return; }
+		if(int(string_to_number(parsed[2])) < 1) { syntax_error("/tempban username seconds, or /tempban username seconds reason"); return; }
 		send(0, text, 1, true);
 	}
 	else if(base == "/unban")
