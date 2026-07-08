@@ -419,6 +419,7 @@ void push_start_size(int index)
 string[] opts;
 opts.insert_last("Small, 25 by 25");
 opts.insert_last("Medium, 50 by 50");
+opts.insert_last("Big, 75 by 75");
 opts.insert_last("Large, 100 by 100");
 send_menu(players[index].peer_id, "startsize", "Choose the map size", opts);
 }
@@ -988,7 +989,7 @@ push_start_size(player_index);
 else if(id == "startsize")
 {
 if(choice < 0) return;
-int size = (choice == 0) ? 25 : (choice == 2) ? 100 : 50;
+int size = (choice == 0) ? 25 : (choice == 1) ? 50 : (choice == 2) ? 75 : 100;
 send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode, 0, true);
 }
 else if(id.substr(0, 8) == "confirm:")
