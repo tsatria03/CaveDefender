@@ -1,7 +1,14 @@
 ####These are the things that need to be finished for future versions of the game.
 
+**Make the voice chat on and off sounds play in 3D from a player's position for everyone else, not just locally.
+**Remove the cap on how far a wall can be reinforced.
+**Fix the major balancing issues in the environment versus player and player versus player modes.
+**Add a 75 by 75 map size option to all game modes.
+**Make sure PVE bots redistribute to standing walls and never keep attacking or reserve a destroyed one, especially when only one wall remains.
+
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Make a player's email private on the information card, shown only to staff instead of everyone.
 **Finished. Show a player's PVP win-loss record, PVE and EVP best rounds, and warning count on the information card for everyone.
 **Finished. Add staff /bans and /mutes commands that look up a player's ban and mute status the same way /warnings shows warnings.
 **Finished. Stop writing blank account files at signup, creating the room, mute, and ban files only when they are first needed.
