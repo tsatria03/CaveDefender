@@ -1013,12 +1013,11 @@ else
 {
 int wi = wall_in_dir(games[gi].id, dir, games[gi].size); // ring wall in PVP, outer border otherwise
 if(wi > -1 and walls[wi].health <= 0) send(event.peer_id, "That wall is destroyed.", 0,true);
-else if(wi > -1 and walls[wi].health >= walls[wi].maxhealth * wall_overbuild_cap) send(event.peer_id, "This wall can't be reinforced any further.", 0,true);
 else if(wi > -1)
 {
 string place_type = spend_one_wood(players[index].inv); // spend your biggest piece first (large -> medium -> small)
 int gain = wood_reinforce_value(place_type); // repair scales with the size spent (small<medium<large)
-repair_wall(wi, gain);
+repair_wall(wi, gain, false); // player reinforce is uncapped -- the over-build limit was removed
 if(games[gi].mode=="pvp") players[index].pvp_wood_placed++; // tally this defender's placements for the results screen
 send_wood_count(index);
 // Play the placement in 3D AT THE WALL being reinforced -- the placer's spot projected onto that border --
