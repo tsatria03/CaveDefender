@@ -4,6 +4,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a developer /bansall command that lists every banned account on the server, read-only, with each ban's length and reason.
 **Finished. Add developer /muteall and /unmuteall commands that mute and unmute everyone except developers in a channel, timed or indefinite.
 **Finished. Add a developer /kickall command that disconnects everyone except developers at once, with an optional reason shown to each kicked player.
 **Finished. Add developer /gamestop and /gamestart commands that freeze the whole server, pausing every game and locking all players out of moving and chatting until a developer lifts it.
