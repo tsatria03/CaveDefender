@@ -2424,12 +2424,21 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                             string krank = players[kick_index].rank;
                             string knick = players[kick_index].nickname;
                             int kpeer = players[kick_index].peer_id;
+                            string kdisp = afk_prefix(kick_index)+display_name_flagged(kick_index); // capture before removal for the staff note
+                            string adisp = afk_prefix(index)+display_name_flagged(index);           // actor's name; capture before removal, since remove_at can shift index
+                            string reason = "";
+                            for(uint r=2; r<parsed.length(); r++) reason += (reason == "" ? "" : " ") + parsed[r];
+                            // Staff reason: crash strings only (staff may quote what the player did); a caught reason is dropped and the kick still happens.
+                            bool reason_dropped = (reason != "" and filter_crash(reason));
+                            if(reason_dropped) reason = "";
                             players.remove_at(kick_index);
-                            send(kpeer, "kicked", 0, true);
+                            send(kpeer, "kicked"+(reason == "" ? "" : " "+reason), 0, true);
                             for(uint i=0; i<players.length(); i++)
                             {
                                 send(players[i].peer_id, "kickannounce "+kname+" "+krank+" "+knick, 0, true);
                             }
+                            notify_staff_audit(adisp+" kicked "+kdisp+(reason == "" ? "." : ": "+reason), event.peer_id); // other staff see the reason (the public announcement doesn't carry it)
+                            if(reason_dropped) send(event.peer_id, "misc That reason contained a screen reader crash string, so the kick went through without it.", 0, true);
                             }
                         }
                         else
@@ -2439,7 +2448,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                     }
                     else
                     {
-                        send(event.peer_id, "Usage: /kick username", 0, true);
+                        send(event.peer_id, "Usage: /kick username, or /kick username reason", 0, true);
                     }
                 }
                 else if(parsed[0] == "/promote" && rank_level(players[index].rank) >= 1)

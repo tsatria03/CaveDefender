@@ -25,4 +25,7 @@ Settle disagreements between staff in private, in staff chat or with the owner, 
 7. When in doubt, ask.
 If you are not sure whether something breaks the rules or how to respond, check with another staff member or the owner before you act. It is better to ask than to make a call you cannot take back.
 
+8. Be honest in your reasons.
+When an action takes a reason, such as a kick, ban, or warning, keep it truthful and specific: state what the player actually did, never enter a fake or misleading reason to justify an action you should not be taking, and never use the reason to insult or mock the player. A reason is optional, but a punishment always needs a real basis whether or not you write one down.
+
 Staff status is a tool for keeping CaveDefender safe and welcoming, not a privilege. Use it that way and the rest follows.
