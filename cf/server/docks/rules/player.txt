@@ -1,6 +1,6 @@
 Player rules.
 
-Welcome to CaveDefender. These rules keep the server a safe and welcoming place for everyone, and by playing here you agree to follow them. They apply wherever you reach other players: global, local, team chat, voice, and private messages.
+These rules keep the server a safe and welcoming place for everyone, and by playing here you agree to follow them. They apply wherever you reach other players: global, local, team chat, voice, and private messages.
 
 Before you can play, you must read these player rules and agree to them: type /rules agree to accept and enter the lobby, or /rules disagree to leave and return to the connection menu. You only agree once, and are asked again only if the rules are updated. You are also welcome to read the staff rules, so you can see the standards staff are held to, but you don't have to agree to those; agreeing to these player rules is all it takes to play.
 
@@ -43,4 +43,4 @@ Beyond a warning, staff may mute you, in one chat channel or all of them and eit
 
 Serious violations, such as cheating or sharing harmful content, can skip the gentler steps and go straight to a ban.
 
-With all of this in mind, thanks for helping keep CaveDefender fun and welcoming for everyone.
+With that, thanks for helping keep CaveDefender fun and welcoming for everyone.
