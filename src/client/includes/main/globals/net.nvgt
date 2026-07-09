@@ -1497,6 +1497,29 @@ void netloop_impl()
 			p.play_stationary("sounds/ui/misc/resume.ogg", false);
 			speak("Game resumed.");
 		}
+		else if (parsed[0] == "worldfreeze")
+		{
+			// A developer froze the whole server. Lock everything (the game loop's world_frozen branch), suspend
+			// local audio so the wood and bots go quiet, drop any in-progress mic capture, and play the stop cue
+			// with the alert riding in the alerts buffer -- like the staff-flag flip. Format: "worldfreeze\n<alert>".
+			world_frozen = true;
+			pause_pools();
+			recording = false;
+			if(@voice_mic != null) voice_mic.flush_capture(); // so a held mic doesn't burst its backlog out on resume
+			p.play_stationary("sounds/ui/misc/gamestop.ogg", false);
+			int wfnl = string_contains(message, "\n", 1);
+			if(wfnl > -1) add_buffer_item("alerts", message.substr(wfnl + 1));
+		}
+		else if (parsed[0] == "worldunfreeze")
+		{
+			// The developer lifted the freeze: unlock input and audio and play the start cue. Don't un-suspend a
+			// game the host still has paused underneath (game_paused stays authoritative for that).
+			world_frozen = false;
+			if(!game_paused) resume_pools();
+			p.play_stationary("sounds/ui/misc/gamestart.ogg", false);
+			int wfnl = string_contains(message, "\n", 1);
+			if(wfnl > -1) add_buffer_item("alerts", message.substr(wfnl + 1));
+		}
 		else if (parsed[0] == "pvpdesert" and parsed.length() > 2)
 			{
 				// A PVP side emptied: the match freezes (a gamepaused arrives alongside this) and a forfeit grace opens.

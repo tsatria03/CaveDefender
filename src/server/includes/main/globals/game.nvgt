@@ -6,6 +6,7 @@
 // 4 (one defender per wall); Solo games are private/unjoinable, Open games anyone in the room can join.
 // The build phase, wood, and bots come in later sub-sections (6b-6d); this file is the space + lifecycle.
 game@[] games;
+bool world_frozen=false; // developer world-stop (/freeze): true = the whole server is halted -- every game's sim is frozen and every client is locked out of moving, acting, and chatting. gametick returns early while set; see freeze_world/unfreeze_world below.
 class game
 {
 int id;
@@ -27,6 +28,7 @@ bool warned=false; // set once the heads-up for the upcoming wave has been sent;
 timer wavetimer;     // started when the wave begins; its elapsed time is the survival score
 bool paused=false;   // host-only shared pause: when true this game's whole sim is frozen for everyone
 timer pausetimer;    // times the current pause, so Open games can auto-resume after 90s (Solo: indefinite)
+bool world_paused=false; // set by freeze_world on a game it froze as part of a global /freeze (only games not already host-paused), so unfreeze_world resumes exactly those and leaves any host-paused game paused
 bool wave_attacking=true; // during the wave: true = bots attacking, false = resting so players can rebuild
 timer wave_cycletimer;    // times the current attack or rest segment of the wave
 int wave_cycle=0;         // ms per attack/rest segment (half the build phase); set when the wave begins
@@ -627,6 +629,65 @@ for(uint i=0; i<builders.length(); i++)
 if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.resume();
 send_to_game(games[gi].id, "gameresumed"); // members + spectators unfreeze together
 }
+// Developer world-stop. freeze_world halts the entire server as one true pause: every game's simulation is
+// frozen where it stands and every client is locked out (the client enforces the input/chat lockout on the
+// worldfreeze message; the netloop drops non-developer traffic while world_frozen). Each game not already
+// host-paused has its sim timers and bots paused exactly the way pause_game does, and is marked world_paused so
+// unfreeze_world resumes only those. A game already paused underneath (by its host, or a PVP desertion) keeps
+// that pause; we only stop its meta-timers -- the 90s auto-resume clock and the desertion grace -- so they
+// don't advance real time through the freeze. gametick returns early while world_frozen, so no round logic runs
+// at all. The announcement and gamestop/gamestart sound are sent by the /freeze and /unfreeze handlers.
+void freeze_world()
+{
+if(world_frozen) return;
+world_frozen=true;
+for(uint gi=0; gi<games.length(); gi++)
+{
+if(games[gi].paused)
+{
+// already frozen (host pause or desertion): leave its sim alone, just stop the meta-timers that would
+// otherwise keep counting real time through the freeze.
+games[gi].pausetimer.pause();
+if(games[gi].pvp_deserted) games[gi].pvp_desert_timer.pause();
+continue;
+}
+games[gi].world_paused=true;
+games[gi].phasetimer.pause();
+games[gi].woodtimer.pause();
+games[gi].wavetimer.pause();
+games[gi].wave_cycletimer.pause();
+for(uint i=0; i<enemies.length(); i++)
+if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.pause();
+for(uint i=0; i<builders.length(); i++)
+if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.pause();
+}
+}
+// Lift a world-stop: resume the sim of every game freeze_world paused, and restart the meta-timers on games that
+// stayed paused underneath. Host-paused and deserted games remain paused, exactly as they were.
+void unfreeze_world()
+{
+if(!world_frozen) return;
+world_frozen=false;
+for(uint gi=0; gi<games.length(); gi++)
+{
+if(!games[gi].world_paused)
+{
+// stayed paused through the freeze: resume the meta-timers we stopped, but leave the game paused.
+if(games[gi].paused) games[gi].pausetimer.resume();
+if(games[gi].pvp_deserted) games[gi].pvp_desert_timer.resume();
+continue;
+}
+games[gi].world_paused=false;
+games[gi].phasetimer.resume();
+games[gi].woodtimer.resume();
+if(!(games[gi].mode=="evp" and games[gi].phase=="wave" and !games[gi].wave_attacking)) games[gi].wavetimer.resume(); // EVP: keep the round clock frozen if we unpaused mid-rest (mirrors resume_game)
+games[gi].wave_cycletimer.resume();
+for(uint i=0; i<enemies.length(); i++)
+if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.resume();
+for(uint i=0; i<builders.length(); i++)
+if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.resume();
+}
+}
 // PVP: the match is decided. winner is "attack" (all four ring walls were brought down) or "defend" (the clock
 // ran out with at least one wall still standing). Drop into the "over" phase, clear the ground wood, and give
 // every member the results + play-again prompt (pvpresult); watchers just get a notice. The cavern resets to a
@@ -676,6 +737,7 @@ end_pvp_match(gi, (atk>0) ? "attack" : "defend"); // the side still standing win
 // Called every server tick: advance any finished build phase to the wave, and drop wood in active games.
 void gametick()
 {
+if(world_frozen) return; // developer world-stop: no round logic advances until /unfreeze
 for(uint i=0; i<games.length(); i++)
 {
 // PVP desertion watch (runs even while paused, so a deserted-and-frozen match can still refill, count down, or

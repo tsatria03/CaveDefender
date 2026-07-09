@@ -998,6 +998,13 @@ if(parsed.length()==0)
 // empty or malformed packet: an empty decrypted message splits to a zero-length array, so bail before any
 // parsed[0] branch below can index past the end and crash the whole server loop.
 }
+else if(world_frozen and !(parsed[0]=="login" or parsed[0]=="register" or parsed[0]=="spawn_player" or parsed[0]=="welcome" or (index>-1 and rank_level(players[index].rank)>=3 and (parsed[0]=="freeze" or parsed[0]=="unfreeze"))))
+{
+// Developer world-stop: while the game is frozen the server ignores every channel-0 message except a
+// developer's freeze/unfreeze and the login/spawn handshake (so a player can still connect and be frozen on
+// arrival). This is the authoritative lockout -- movement, pings, and every other command are dead, even to a
+// modified client, until a developer lifts the freeze.
+}
 else if(message=="ping_request")
 {
 send(event.peer_id, "ping_response", 0, true);
@@ -1058,6 +1065,7 @@ send(event.peer_id, "voicemutestate "+(is_muted_now(index, "voice") ? "1" : "0")
 send_yourrooms(event.peer_id, players[index].name);
 restore_scope(index);
 update_peak(); // a reconnect can set a new high if others joined while this player was held
+if(world_frozen) send(event.peer_id, "worldfreeze\nThe game is currently frozen.", 0, true); // reconnected during a developer world-stop: freeze them on arrival
 }
 else if(existing<0)
 {
@@ -1113,6 +1121,7 @@ if(i==uint(index) or players[i].room_id!=players[index].room_id) continue;
 send(event.peer_id, pos_msg(int(i)), 0,true);
 }
 deliver_offline_pms(index); // hand over any private messages left for them while they were offline
+if(world_frozen) send(event.peer_id, "worldfreeze\nThe game is currently frozen.", 0, true); // joined during a developer world-stop: freeze them on arrival (no fresh "X has frozen" line -- that already happened)
 }
 }
 }
@@ -2175,7 +2184,7 @@ set_saved_private(rooms[ri].host, parsed[1]);
 send(event.peer_id, "Your room's password has been changed successfully.", 0,true);
 }
 }
-else if(parsed[0]=="restart" and index>-1 and rank_level(players[index].rank)>=2 and parsed.length()>1)
+else if(parsed[0]=="restart" and index>-1 and rank_level(players[index].rank)>=3 and parsed.length()>1)
 {
 int secs=string_to_number(parsed[1]);
 if(secs<1) secs=1;
@@ -2184,12 +2193,35 @@ restart_pending=true;
 restart_delay=secs*1000;
 restart_timer.restart();
 }
-else if(parsed[0]=="fastrestart" and index>-1 and rank_level(players[index].rank)>=2)
+else if(parsed[0]=="fastrestart" and index>-1 and rank_level(players[index].rank)>=3)
 {
 do_restart();
 }
+else if(parsed[0]=="freeze" and index>-1 and rank_level(players[index].rank)>=3)
+{
+if(world_frozen) send(event.peer_id, "misc The game is already frozen.", 0, true);
+else
+{
+freeze_world();
+// Announce it to everyone the way the staff-flag flip is announced: AFK-, rank-, and nickname-aware, with the
+// gamestop cue riding in the alerts buffer (the client's worldfreeze handler plays it). Nobody chats or moves
+// until it's lifted.
+string wfann = "worldfreeze\nAttention! "+afk_prefix(index)+display_name_flagged(index)+" has frozen the game!";
+for(uint wfi=0; wfi<players.length(); wfi++) send(players[wfi].peer_id, wfann, 0, true);
 }
-if(event.type == event_receive && event.channel == 3)
+}
+else if(parsed[0]=="unfreeze" and index>-1 and rank_level(players[index].rank)>=3)
+{
+if(!world_frozen) send(event.peer_id, "misc The game is not frozen.", 0, true);
+else
+{
+unfreeze_world();
+string wfann = "worldunfreeze\nAttention! "+afk_prefix(index)+display_name_flagged(index)+" has unfrozen the game!";
+for(uint wfi=0; wfi<players.length(); wfi++) send(players[wfi].peer_id, wfann, 0, true);
+}
+}
+}
+if(event.type == event_receive && event.channel == 3 && !world_frozen) // world-stop: drop all voice while frozen (only a developer's channel-0 freeze/unfreeze is honored)
 {
 int index=get_player_index(event.peer_id);
 if(index>-1)
@@ -2221,7 +2253,7 @@ send(players[i].peer_id, relay, 3, vrel); // live frame unreliable (real-time st
 }
 }
 }
-if(event.type == event_receive && event.channel == 1)
+if(event.type == event_receive && event.channel == 1 && !world_frozen) // world-stop: drop all chat while frozen (freeze/unfreeze ride channel 0)
 {
     string message = get_event_message();
     bool messend = true;
