@@ -376,6 +376,11 @@ exit();
 // the ban to everyone (without the reason -- that's staff-only), and confirms it to the acting staff member.
 void perform_ban(int actorpeer, int ti, int dur, string reason)
 {
+// The reason is shown to the banned player (login rejection) and to staff in /bans, so a screen reader crash
+// string in it must never get through. Staff reasons are crash-filtered ONLY, not profanity-filtered, so staff
+// can quote what a player did; a reason that trips the crash filter is dropped and the ban still applies.
+bool reason_dropped = (reason != "" and filter_crash(reason));
+if(reason_dropped) reason = "";
 int64 until = (dur > 0) ? (now_epoch() + dur) : 0;
 int tpeer = players[ti].peer_id;
 string realname = players[ti].name;
@@ -392,6 +397,7 @@ send(players[i].peer_id, "banannounce " + realname + " " + trank + " " + tnick, 
 string rp = (reason == "") ? "." : ", with the reason: " + reason;
 if(dur > 0) send(actorpeer, "misc " + tdisp + " has been banned for " + dur + " seconds" + rp, 0, true);
 else send(actorpeer, "misc " + tdisp + " has been banned permanently" + rp, 0, true);
+if(reason_dropped) send(actorpeer, "misc That reason contained a screen reader crash string, so the ban went through without it.", 0, true);
 }
 // Case-insensitive roster lookup by name; returns -1 if the player isn't connected.
 int get_online_index(string name)
@@ -1353,14 +1359,17 @@ else if(parsed[0]=="afk" and index>-1)
 if(!players[index].afk)
 {
 players[index].afk=true;
-// Optional reason typed with /afk, announced once and stored nowhere. It's broadcast to every player, so it
-// gets the same filtering as chat; a reason that fails is dropped (the player still goes AFK, just without it).
+// Optional reason typed with /afk, announced once and stored nowhere. It's broadcast to every player across
+// channels (like local chat), so it always gets both filters; a reason that fails is dropped and the player is
+// told, but still goes AFK (they already sat through the countdown -- no point punishing them for one word).
 string reason = (parsed.length() > 1) ? string_join(parsed, " ", 1, parsed.length()).trim_whitespace() : "";
-if(reason != "" and (filter_crash(reason) or filter_chat(reason))) reason = "";
+bool afk_reason_dropped = (reason != "" and (filter_crash(reason) or filter_chat(reason)));
+if(afk_reason_dropped) reason = "";
 string disp=display_name_flagged(index);
 send(event.peer_id, "afkself 1\n"+reason, 0, true); // you: first-person misc + cue, with any reason
 for(uint ai=0; ai<players.length(); ai++) if(int(players[ai].peer_id)!=event.peer_id) send(players[ai].peer_id, "afkannounce 1\n"+disp+"\n"+reason, 0,true); // others: player events + cue, with any reason
 broadcast_pos(index); // refresh the AFK marker in everyone's player tracker
+if(afk_reason_dropped) send(event.peer_id, "misc Your away reason contained forbidden words, so you went away without it.", 0, true);
 }
 }
 else if(parsed[0]=="afkreturn" and index>-1)
@@ -2561,9 +2570,15 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         }
                         else
                         {
+                            // The reason is shown to the warned player, so a crash string must never get through. Like
+                            // ban, a staff reason is crash-filtered only (not profanity), so staff can quote the offense;
+                            // a reason that trips the crash filter is dropped and the warning still lands.
+                            bool wreason_dropped = filter_crash(wreason);
+                            if(wreason_dropped) wreason = "";
                             int wcount = add_warning(players[ti].name, wlevel, players[index].name, wreason);
                             send(players[ti].peer_id, "warn "+wlevel+"\n"+display_name(index)+"\n"+wreason, 0, true);
                             send(event.peer_id, "misc Warned "+display_name_flagged(ti)+" (level "+wlevel+"). This is warning number "+wcount+".", 0, true);
+                            if(wreason_dropped) send(event.peer_id, "misc That reason contained a screen reader crash string, so the warning went through without it.", 0, true);
                             for(uint wsi=0; wsi<players.length(); wsi++)
                             {
                                 if(is_staff(players[wsi].rank) && players[wsi].peer_id != event.peer_id)
@@ -2754,13 +2769,23 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                     {
                         string reason = "";
                         for(uint r=2; r<parsed.length(); r++) reason += (reason == "" ? "" : " ") + parsed[r];
-                        string location = report_location_phrase(index);
-                        string reporteddisp = (ti > -1) ? display_name_flagged(ti) : target;
-                        add_report(players[index].name, target, location, reason);
-                        string alert = "Report from " + display_name_flagged(index) + " about " + reporteddisp + " in " + location + ": " + reason;
-                        for(uint i=0; i<players.length(); i++)
-                            if(is_staff(players[i].rank) && int(i) != index) send(players[i].peer_id, "report "+alert, 0, true);
-                        send(event.peer_id, "misc Your report has been sent to the staff.", 0, true);
+                        if(filter_crash(reason) or filter_chat(reason))
+                        {
+                            // A report is player-authored and shown to staff, so it gets both filters like local chat.
+                            // The reason IS the substance of a report, so a bad one is rejected outright rather than
+                            // filed blank; the player just retypes (there's no countdown to lose, unlike AFK).
+                            send(event.peer_id, "misc Your report was not sent because its reason contained forbidden words.", 0, true);
+                        }
+                        else
+                        {
+                            string location = report_location_phrase(index);
+                            string reporteddisp = (ti > -1) ? display_name_flagged(ti) : target;
+                            add_report(players[index].name, target, location, reason);
+                            string alert = "Report from " + display_name_flagged(index) + " about " + reporteddisp + " in " + location + ": " + reason;
+                            for(uint i=0; i<players.length(); i++)
+                                if(is_staff(players[i].rank) && int(i) != index) send(players[i].peer_id, "report "+alert, 0, true);
+                            send(event.peer_id, "misc Your report has been sent to the staff.", 0, true);
+                        }
                     }
                 }
             }
