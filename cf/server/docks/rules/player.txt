@@ -4,23 +4,36 @@ Welcome to CaveDefender. These rules keep the server a safe and welcoming place 
 
 Before you can play, you must read these player rules and agree to them: type /rules agree to accept and enter the lobby, or /rules disagree to leave and return to the connection menu. You only agree once, and are asked again only if the rules are updated. You are also welcome to read the staff rules, so you can see the standards staff are held to, but you don't have to agree to those; agreeing to these player rules is all it takes to play.
 
-1. Be respectful. Treat everyone with kindness. Harassment, hate speech, racism, threats, insults, and disrespect toward anyone's beliefs or identity are not allowed. This holds everywhere, and moving it into private messages or off the server does not make it okay.
+1. Be respectful.
+Treat everyone with kindness. Harassment, hate speech, racism, threats, insults, and disrespect toward anyone's beliefs or identity are not allowed. This holds everywhere, and moving it into private messages or off the server does not make it okay.
 
-2. Do not spam or disrupt. Don't flood chat with repeated, meaningless, or gibberish messages, and don't try to send screen reader crash strings; the game blocks the ones it knows, but attempting it is still a violation. Spam also covers disruptive actions, such as rapidly creating and deleting rooms, or joining and leaving a game as a spectator to interfere with a round in progress.
+2. Do not spam or disrupt.
+Don't flood chat with repeated, meaningless, or gibberish messages, and don't try to send screen reader crash strings; the game blocks the ones it knows, but attempting it is still a violation. Spam also covers disruptive actions, such as rapidly creating and deleting rooms, or joining and leaving a game as a spectator to interfere with a round in progress.
 
-3. Keep content appropriate, and use the right channel. Adult or NSFW language is allowed only on the opt-in Unfiltered channel, never in local chat or the other channels, where it reaches people who did not choose to read it. Do not post disturbing, graphic, or violent material anywhere.
+3. Keep content appropriate, and use the right channel.
+Adult or NSFW language is allowed only on the opt-in Unfiltered channel, never in local chat or the other channels, where it reaches people who did not choose to read it. Do not post disturbing, graphic, or violent material anywhere.
 
-4. Do not share harmful or stolen content. This includes malicious links, viruses, pirated or unlicensed software, leaks, the game's source code, cracks or forks, anyone's personal or private information, and anything else you are not authorized to share. This is a serious violation and can result in an immediate ban with no warning.
+4. Do not share harmful or stolen content.
+This includes malicious links, viruses, pirated or unlicensed software, leaks, the game's source code, cracks or forks, anyone's personal or private information, and anything else you are not authorized to share. This is a serious violation and can result in an immediate ban with no warning.
 
-5. Do not cheat. Do not use anything to gain an unfair advantage, including key pressers or other non-human input, speed hacks, memory or variable manipulation, modified clients, or knowingly abusing bugs instead of reporting them. If you find a bug, report it to staff. Cheating can result in an immediate ban with no warning.
+5. Do not cheat.
+Do not use anything to gain an unfair advantage, including key pressers or other non-human input, speed hacks, memory or variable manipulation, modified clients, or knowingly abusing bugs instead of reporting them. If you find a bug, report it to staff. Cheating can result in an immediate ban with no warning.
 
-6. Respect staff. Staff are here to keep the server safe and running smoothly. Follow their instructions, and do not argue with or obstruct them. If you believe a staff member is acting unfairly, do not engage them; instead contact the server owner, for example by sending them a private message in game, or through whatever other contact the server provides. Staff may also act on anything that threatens the game or its players, even if it is not spelled out in these rules.
+6. Respect staff.
+Staff are here to keep the server safe and running smoothly. Follow their instructions, and do not argue with or obstruct them. If you believe a staff member is acting unfairly, do not engage them; instead contact the server owner, for example by sending them a private message in game, or through whatever other contact the server provides. Staff may also act on anything that threatens the game or its players, even if it is not spelled out in these rules.
 
-7. Be fair in rooms and games. Don't abuse the control you have over a room or game you host. Don't kick someone only to free their slot for someone else, or kick and invite people just to keep others out. Keep a private room's password to the people you actually mean to let in: don't share it around, post it in chat, or pressure anyone into handing it over. And don't disrupt a room or game you have joined or are watching. In a team game, play your side honestly: don't deliberately throw a match, help the other side against your own, or abandon your team just to spoil it for the players counting on you.
+7. Be fair in rooms and games.
+Don't abuse the control you have over a room or game you host. Don't kick someone only to free their slot for someone else, or kick and invite people just to keep others out. Keep a private room's password to the people you actually mean to let in: don't share it around, post it in chat, or pressure anyone into handing it over. And don't disrupt a room or game you have joined or are watching. In a team game, play your side honestly: don't deliberately throw a match, help the other side against your own, or abandon your team just to spoil it for the players counting on you.
 
-8. Do not impersonate anyone. Don't pretend to be another player or a staff member, and don't pick a name meant to trick people into thinking you are someone you are not. The game already stops you from taking another account's username as your nickname, but passing yourself off as someone else in any other way is not allowed either.
+8. Do not impersonate anyone.
+Don't pretend to be another player or a staff member, and don't pick a name meant to trick people into thinking you are someone you are not. The game already stops you from taking another account's username as your nickname, but passing yourself off as someone else in any other way is not allowed either.
 
-9. Look after your account. You are responsible for everything done on your account, so keep it to yourself and don't share it. You can manage it yourself in game, changing your email or your password whenever you like, and you may permanently delete it with the delete-account command, but that deletion is final and cannot be undone, so be certain before you confirm it. And don't use a second account to dodge a mute or a ban; evading a punishment that way only extends it, and can turn a temporary one into a permanent one.
+9. Look after your account.
+You are responsible for everything done on your account, so keep it to yourself and don't share it. You can manage it yourself in game, changing your email or your password whenever you like, and you may permanently delete it with the delete-account command, but that deletion is final and cannot be undone, so be certain before you confirm it. And don't use a second account to dodge a mute or a ban; evading a punishment that way only extends it, and can turn a temporary one into a permanent one.
+
+Reporting rule breaks.
+
+If you see someone breaking these rules, you can report them to the staff with the /report command, followed by the player's name and what happened, for example /report bob spamming the global channel. You can report a player who has already left by their username too. Any staff online are alerted at once, and your report is saved for them to read later; the player you report is never told who reported them. Please use it for genuine rule breaks, not for players you simply disagree with. What is done about a report, if anything, is up to the staff.
 
 How rules are enforced.
 
@@ -30,4 +43,4 @@ Beyond a warning, staff may mute you, in one chat channel or all of them and eit
 
 Serious violations, such as cheating or sharing harmful content, can skip the gentler steps and go straight to a ban.
 
-Thanks for helping keep CaveDefender fun and welcoming for everyone.
+With all of this in mind, thanks for helping keep CaveDefender fun and welcoming for everyone.

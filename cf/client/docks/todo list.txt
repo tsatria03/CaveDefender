@@ -1,10 +1,10 @@
 ####These are the things that need to be finished for future versions of the game.
 
 **Unfinished. Fix major balancing issues in the environment versus player and player versus player modes.
-**Unfinished. Let players and staff send private messages to someone offline, delivered when that player next signs in.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Let players send a private message to someone offline with /pm, delivered with a sound the next time that player signs in.
 **Finished. Add a /report command so any player can report someone to the staff, with a staff /reports viewer that logs every report.
 **Finished. Split the ban command into permanent and timed versions so a reason can be added cleanly, giving /ban and /tempban.
 **Finished. Let the chat keys and buffer navigation keys work while a game is paused, keeping every other key disabled.
