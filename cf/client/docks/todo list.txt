@@ -4,6 +4,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add developer /gamestop and /gamestart commands that freeze the whole server, pausing every game and locking all players out of moving and chatting until a developer lifts it.
 **Finished. Let staff add an optional reason when kicking a player with /kick, shown to the kicked player and noted to other staff.
 **Finished. Remove the staff ability to put another player AFK, and let anyone add an optional reason to their own AFK.
 **Finished. Let players send a private message to someone offline with /pm, delivered with a sound the next time that player signs in.

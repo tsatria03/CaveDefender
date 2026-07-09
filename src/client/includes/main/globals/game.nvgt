@@ -1,3 +1,14 @@
+// While the server is frozen, a developer can still open the normal chat boxes (same titles/prompts as usual)
+// to type a gamestop or gamestart command; any other command or a plain chat message is refused, since nothing
+// but starting or stopping the game works while it's frozen.
+void frozen_chat_input(string title, string prompt)
+{
+	string msg=vd.input_box(title, prompt, "");
+	if(msg=="") { speak("canceled"); return; }
+	string low=string_to_lower_case(msg.trim_whitespace());
+	if(low=="/gamestop" or low=="/gp" or low=="/gamestart" or low=="/gs") comparse(msg);
+	else add_buffer_item("misc", "The game is currently frozen.");
+}
 void game()
 {
 	send(0, "spawn_player "+name+" "+version+(justregistered?" new":""), 0,true);
@@ -16,6 +27,7 @@ void game()
 	current_game_host="";
 	afk=false;
 	afk_counting=false;
+	world_frozen=false;       // clear any stale world-stop; if the server is still frozen it re-sends worldfreeze on spawn
 	while(true)
 	{
 		wait(5);
@@ -31,6 +43,20 @@ buffercheck();
 			reconnect_aborted=true;
 			connection_dropped=true;
 			speak("canceled");
+			continue;
+		}
+		if(world_frozen)
+		{
+			// A developer has the whole server frozen. Buffer review still works (buffercheck at the top of the
+			// loop), but movement, menus, voice, and chat are all dead everywhere. A developer can still open the
+			// normal chat boxes -- same titles and prompts as usual -- to type a gamestop or gamestart command;
+			// anything else is refused. Each chat key is read once so none leaks onto the moment we unfreeze; a
+			// non-developer's keys do nothing. Everything else is skipped by the continue below.
+			bool dev = (my_rank_level() >= 3);
+			if(key_pressed(KEY_SLASH)) { if(dev) frozen_chat_input("Global chat", "Type a global message, or a slash command."); continue; }
+			if(key_pressed(KEY_APOSTROPHE)) { if(dev) frozen_chat_input("Staff chat", "Type a staff message, or a slash command."); continue; }
+			if(key_pressed(KEY_BACKSLASH) and !shift_is_down()) { if(dev) frozen_chat_input("Local chat", "Type a local message, or a slash command."); continue; }
+			if(key_pressed(KEY_SEMICOLON)) { if(dev and in_game and !watching and game_mode == "pvp") frozen_chat_input("Team chat", "Type a team message, or a slash command."); continue; }
 			continue;
 		}
 		if(in_game and game_paused)

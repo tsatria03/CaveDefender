@@ -122,7 +122,7 @@ void comparse(string text, string channel = "global")
 	}
 	else if(base == "/restart" or base == "/rt")
 	{
-		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+		if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 2) { syntax_error("/restart seconds"); return; }
 		int secs = string_to_number(parsed[1]);
 		if(secs < 1) { syntax_error("/restart seconds"); return; }
@@ -130,9 +130,21 @@ void comparse(string text, string channel = "global")
 	}
 	else if(base == "/fastrestart" or base == "/ft")
 	{
-		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
+		if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 1) { syntax_error("/fastrestart"); return; }
 		send(0, "fastrestart", 0, true);
+	}
+	else if(base == "/gamestop" or base == "/gp")
+	{
+		if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
+		if(parsed.length() != 1) { syntax_error("/gamestop"); return; }
+		send(0, "freeze", 0, true); // developer world-stop: halt the whole server until /gamestart
+	}
+	else if(base == "/gamestart" or base == "/gs")
+	{
+		if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
+		if(parsed.length() != 1) { syntax_error("/gamestart"); return; }
+		send(0, "unfreeze", 0, true);
 	}
 	// Chat-channel (1) commands the server parses out of the message itself.
 	else if(base == "/pm")

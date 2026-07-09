@@ -52,6 +52,7 @@ string game_phase="idle"; // the current game's round phase (idle/build/wave), s
 bool wave_attacking=true; // during a wave: true = enemies attacking, false = resting; synced from waveseg, for the Tab status readout
 int wave_number=0; // which attack burst (round) the wave is on; 1 on the first attack, +1 each later burst; synced for the wave announce and Tab status
 bool game_paused=false; // true while the host has the game paused (server-driven); freezes input and audio
+bool world_frozen=false; // true while a developer has the whole server frozen (/freeze, server-driven); locks all input and chat everywhere. Distinct from game_paused: stricter (no chat) and not tied to being in a game
 bool afk=false; // true while we're marked away (server-synced); any key brings us back
 bool afk_counting=false; // true during the /afk pre-countdown; any key cancels it before we go away
 int afk_count=0; // seconds elapsed in the AFK countdown (10 = go away)
