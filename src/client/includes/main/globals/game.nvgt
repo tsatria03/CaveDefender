@@ -83,6 +83,7 @@ buffercheck();
 			if(afk_wake_key_pressed())
 			{
 				afk_counting=false;
+				afk_reason=""; // canceled: drop any reason so it can't carry over to a later /afk
 				p.play_stationary("sounds/ui/misc/afkoff.ogg", false);
 				add_buffer_item("misc", "You are no longer going AFK.");
 			}
@@ -95,7 +96,9 @@ buffercheck();
 					// Going away. The afkon cue comes from the afkannounce broadcast everyone receives.
 					afk_counting=false;
 					afk=true;
-					send(0, "afk", 0, true);
+					send(0, "afk" + (afk_reason != "" ? " " + afk_reason : ""), 0, true); // pass the optional reason along for the announcement
+					afk_reason=""; // consumed
+
 				}
 				else p.play_stationary("sounds/ui/misc/afktimer.ogg", false);
 			}
