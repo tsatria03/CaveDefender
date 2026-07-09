@@ -167,6 +167,29 @@ listing += "Reason: " + reason;
 if(listing == "") return "There are no reports on record.";
 return listing;
 }
+// Read-only overview for the developer /bansall command: every account that currently holds an active ban. Bans
+// live on offline account folders, so there's no in-memory list -- we scan them all. Expired timed bans are
+// skipped. Listed in the order find_directories returns (there's no ban timestamp to sort by).
+string format_all_bans()
+{
+string[] dirs = find_directories("data/players/*");
+string listing = "";
+int shown = 0;
+for(uint i=0; i<dirs.length(); i++)
+{
+int64 until = get_ban_until(dirs[i]); // -1 not banned, 0 permanent, >0 epoch it expires at
+if(until < 0) continue;
+if(until > 0 and until - now_epoch() <= 0) continue; // timed ban already lapsed
+string reason = get_ban_reason(dirs[i]);
+string suffix = (reason == "") ? "" : " Reason: " + reason;
+string status = (until == 0) ? "banned permanently" : ("banned, with " + format_duration(until - now_epoch()) + " remaining");
+shown++;
+if(shown > 1) listing += "\r\n\r\n";
+listing += shown + ". " + dirs[i] + " is " + status + "." + suffix;
+}
+if(listing == "") return "There are no banned accounts on record.";
+return listing;
+}
 string string_join(string[]@ arr, string delimiter, uint start_index = 0, uint end_index = 0)
 {
     if (end_index == 0 || end_index > arr.length())
@@ -1683,6 +1706,13 @@ else if(parsed[0]=="getreports" and index>-1)
 // per-player viewers this takes no name. Non-staff is silently ignored.
 if(rank_level(players[index].rank) < 1) { }
 else send(event.peer_id, "reportstext\n"+format_reports(), 0, true);
+}
+else if(parsed[0]=="getbansall" and index>-1)
+{
+// Developer-only read-only overview of every banned account. Bans live on offline folders, so this is the only
+// way to see them all at once; like getreports it takes no name. Anyone below developer is silently ignored.
+if(rank_level(players[index].rank) < 3) { }
+else send(event.peer_id, "bansalltext\n"+format_all_bans(), 0, true);
 }
 else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
 {

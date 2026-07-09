@@ -270,6 +270,13 @@ void comparse(string text, string channel = "global")
 				if(parsed.length() != 1) { syntax_error("/reports"); return; }
 				send(0, "getreports", 0, true);
 			}
+		else if(base == "/bansall")
+		{
+			// Developer-only read-only list of every banned account on the server, in the doc viewer.
+			if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
+			if(parsed.length() != 1) { syntax_error("/bansall"); return; }
+			send(0, "getbansall", 0, true);
+		}
 		else if(base == "/afk")
 	{
 		// Go AFK yourself via the local countdown (any key cancels it). Self-only -- staff can no longer put

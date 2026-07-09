@@ -317,6 +317,7 @@ void dispatch_modal(string message)
 	else if(parsed[0]=="banstext") handle_doctext(message, "Bans for ");
 	else if(parsed[0]=="mutestext") handle_doctext(message, "Mutes for ");
 	else if(parsed[0]=="reportstext") handle_reportstext(message);
+	else if(parsed[0]=="bansalltext") handle_bansalltext(message);
 	else if(parsed[0]=="playerinfo") handle_playerinfo(message);
 	else if(parsed[0]=="askinput") handle_askinput(message);
 }
@@ -450,6 +451,13 @@ void handle_reportstext(string message)
 {
 	int nl = string_contains(message, "\n", 1);
 	if(nl > 0) dockread("Reports", message.substr(nl + 1));
+}
+// Server-sent list of every banned account (developer /bansall): "bansalltext\n<content>" -> open it in the doc
+// reader. Like the reports viewer it's keyed to no player, so there's no name in the header.
+void handle_bansalltext(string message)
+{
+	int nl = string_contains(message, "\n", 1);
+	if(nl > 0) dockread("All bans", message.substr(nl + 1));
 }
 // Server-sent rules: "rulestext\n<which>\n<content>" -> open it in the doc reader, the same as help.
 void handle_rulestext(string message)
@@ -1178,6 +1186,12 @@ void netloop_impl()
 			// Blocking UI (the reports reader): defer if another modal is already open.
 			if(netloop_depth>1) net_deferred.insert_last(message);
 			else handle_reportstext(message);
+		}
+		else if (parsed[0] == "bansalltext")
+		{
+			// Blocking UI (the all-bans reader): defer if another modal is already open.
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_bansalltext(message);
 		}
 		else if (parsed[0] == "showmenu")
 		{
