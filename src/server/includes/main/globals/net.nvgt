@@ -672,6 +672,26 @@ void notify_staff_audit(string text, int skip_peer)
 for(uint i=0; i<players.length(); i++)
 if(is_staff(players[i].rank) and int(players[i].peer_id) != skip_peer) send(players[i].peer_id, "misc "+text, 0, true);
 }
+// Deliver every offline PM queued for a freshly-spawned player, then clear the queue. Each goes as its own control
+// message so the client shows it in the private chats buffer with the PM sound and sets the reply target to the
+// sender's USERNAME (so /reply reaches them even if they're still offline). Fresh logins only, never reconnects.
+void deliver_offline_pms(int index)
+{
+string raw = get_offline_pms(players[index].name);
+if(raw == "") return;
+string[] lines = string_split(raw, "\n", true);
+for(uint i=0; i<lines.length(); i++)
+{
+if(lines[i].trim_whitespace() == "") continue;
+string[] parts = string_split(lines[i], "\t", true);
+if(parts.length() < 2) continue;
+string sender = parts[0];
+string msg = string_join(parts, "\t", 1, parts.length()); // rejoin the message (may contain tabs), everything after the sender
+string sdisp = read_field(sender, "nickname", sender); // the sender's current display name, or their username if none/deleted
+send(players[index].peer_id, "offlinepm " + sender + "\nOffline PM from " + sdisp + ": " + msg, 0, true);
+}
+clear_offline_pms(players[index].name);
+}
 // Sends a message to everyone sharing the given room scope (used by local chat). room_id 0 = lobby.
 void relay_to_local(int room_id, string msg, string language="", int sender_index=-1)
 {
@@ -1086,6 +1106,7 @@ for(uint i=0; i<players.length(); i++)
 if(i==uint(index) or players[i].room_id!=players[index].room_id) continue;
 send(event.peer_id, pos_msg(int(i)), 0,true);
 }
+deliver_offline_pms(index); // hand over any private messages left for them while they were offline
 }
 }
 }
@@ -2241,6 +2262,19 @@ else
 {
 send(event.peer_id, "PM to " + afk_prefix(target_index) + display_name_flagged(target_index) + ": " + pm_message, 2, true);
 send(players[target_index].peer_id, "PM from " + afk_prefix(index) + display_name_flagged(index) + ": " + pm_message, 2, true);
+}
+                    }
+else if(account_exists(target_user))
+{
+// The recipient is offline but the account exists: queue the message for their next login instead of erroring.
+// Honor their personal ignore list the same as a live PM (staff exempt via account_ignores), and echo an
+// "Offline PM to" copy to the sender so they know it was saved rather than delivered.
+if(account_ignores(target_user, players[index].name)) send(event.peer_id, "misc This player has muted you.", 0, true);
+else
+{
+string rdisp = read_field(target_user, "nickname", target_user); // the recipient's display name for the sender's echo
+add_offline_pm(target_user, players[index].name, pm_message);
+send(event.peer_id, "Offline PM to " + rdisp + ": " + pm_message, 2, true);
 }
                     }
 else

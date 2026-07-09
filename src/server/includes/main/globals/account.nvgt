@@ -219,6 +219,37 @@ string joined;
 for(uint i=0; i<list.length(); i++) joined += (i>0 ? "\n" : "") + list[i];
 return write_field(name, "ignored", joined);
 }
+// --- Offline private messages: queued by /pm to an offline player, delivered at their next login ---
+// Stored in offline_pms.usr, one message per line, TAB-delimited: <sender username>\t<message>. Tabs because the
+// message is free text (a username can't contain one) and it's the last field, rejoined on read. Unlimited: every
+// message is kept until the recipient signs in, when they are all delivered and the file cleared.
+void add_offline_pm(string recipient, string sender, string message)
+{
+string existing = read_field(recipient, "offline_pms", "");
+string entry = sender + "\t" + message;
+write_field(recipient, "offline_pms", (existing == "") ? entry : existing + "\n" + entry);
+}
+// The raw queued offline PMs for a recipient ("" if none), one per line; the caller parses each and then clears them.
+string get_offline_pms(string name)
+{
+return read_field(name, "offline_pms", "");
+}
+// Drop all queued offline PMs for a recipient (after they've been delivered).
+void clear_offline_pms(string name)
+{
+write_field(name, "offline_pms", "");
+}
+// Offline-capable version of player_ignores: does the recipient ACCOUNT have the sender on its personal ignore
+// list? Reads ignored.usr straight from disk so it works when the recipient isn't online. Staff are never ignored,
+// mirroring player_ignores, so a staff member's PM always goes through.
+bool account_ignores(string recipient, string sender)
+{
+if(is_staff(get_rank(sender))) return false;
+string[] list = get_ignored(recipient);
+string s = string_to_lower_case(sender);
+for(uint i=0; i<list.length(); i++) if(string_to_lower_case(list[i]) == s) return true;
+return false;
+}
 // Rename an account on disk: move its whole folder (every .usr file -- password, email, rank, warnings, wins,
 // mutes, bans, saved rooms, its OWN ignore list, everything) to the new username in one move, fix username.usr,
 // and reset the nickname to the new username (clearing any old nickname). If the renamed account was one of the

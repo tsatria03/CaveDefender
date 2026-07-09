@@ -47,7 +47,7 @@ The players menu.
 
 Press F6 anywhere to open the players menu, a list of everyone on the server shown by their away status, rank, name, and current language channel, the same people the /who command reads out.
 
-Choose a player to open a read-only information card about them, showing their username, nickname, email, pronouns, when they became a member, language channel, rank, whether they are away, where they are, the lobby, a room, or a game, the version of the game they are running, their player versus player win and loss record, their best round in both the cave defender and environment versus player modes, and how many warnings they have. Staff see a couple of extra lines on the card about the player's mute and ban record. Press escape or close to leave the card.
+Choose a player to open a read-only information card about them, showing their username, nickname, pronouns, when they became a member, language channel, rank, whether they are away, where they are, the lobby, a room, or a game, the version of the game they are running, their player versus player win and loss record, their best round in both the cave defender and environment versus player modes, and how many warnings they have. Staff also see the player's email and mute status. Press escape or close to leave the card.
 
 The card can also show a Mute this player checkbox, with the Alt plus M shortcut, and a Private message this player button, with Alt plus P, though each appears only when it applies to the player you are viewing, as described below.
 

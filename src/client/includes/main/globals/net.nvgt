@@ -1183,6 +1183,20 @@ void netloop_impl()
 			p.play_stationary("sounds/ui/misc/report.ogg", false);
 			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
+		else if (parsed[0] == "offlinepm")
+		{
+			// A private message left for us while we were offline, delivered at login. Format:
+			// "offlinepm <sender username>\nOffline PM from <display>: <message>". Show it in the private chats
+			// buffer with the PM sound, like a live PM, and point /reply at the sender's username so it reaches
+			// them even if they're still offline (turning into another offline PM).
+			int nl = string_contains(message, "\n", 1);
+			if(nl > parsed[0].length())
+			{
+				last_pm_sender = message.substr(parsed[0].length()+1, nl - parsed[0].length() - 1);
+				add_buffer_item("private chats", message.substr(nl + 1));
+				p.play_stationary("sounds/ui/misc/privchat.ogg", false);
+			}
+		}
 		else if (parsed[0] == "voicemutestate" and parsed.length() > 1)
 			{
 				voice_muted = (parsed[1] == "1"); // silent sync at spawn/restore: no sound or alert, just so pressing O can warn us
