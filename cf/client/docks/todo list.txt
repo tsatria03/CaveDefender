@@ -4,6 +4,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add developer /muteall and /unmuteall commands that mute and unmute everyone except developers in a channel, timed or indefinite.
 **Finished. Add a developer /kickall command that disconnects everyone except developers at once, with an optional reason shown to each kicked player.
 **Finished. Add developer /gamestop and /gamestart commands that freeze the whole server, pausing every game and locking all players out of moving and chatting until a developer lifts it.
 **Finished. Let staff add an optional reason when kicking a player with /kick, shown to the kicked player and noted to other staff.

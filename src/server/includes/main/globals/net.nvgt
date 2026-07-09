@@ -2742,6 +2742,90 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         send(event.peer_id, "Usage: /unmute username channel.", 0, true);
                     }
                 }
+                else if(parsed[0] == "/muteall" && rank_level(players[index].rank) >= 3)
+                {
+                    // Developer mass-mute: apply the same mute as /mute to every online player who isn't a developer
+                    // (mods and admins included; you and any co-developer are spared). It persists per account like a
+                    // normal mute -- a reconnecting player stays muted, timed mutes expire on their own. Each muted
+                    // player gets their own notice, but the per-player "was muted" broadcast is suppressed (dozens of
+                    // lines would flood everyone); you get one confirmation and any remaining developers a quiet note.
+                    if(parsed.length() >= 2)
+                    {
+                        string channel = string_to_lower_case(parsed[1]);
+                        if(channel != "all" and !valid_mute_channel(channel))
+                        {
+                            send(event.peer_id, "misc That is not a channel you can mute; use global, local, voice, team, or all.", 0, true);
+                        }
+                        else
+                        {
+                            int dur = (parsed.length() >= 3) ? int(string_to_number(parsed[2])) : 0;
+                            if(dur < 0) dur = 0;
+                            int64 until = (dur > 0) ? (now_epoch() + dur) : 0;
+                            array<string> chans = mute_channels_for(channel);
+                            string adisp = afk_prefix(index)+display_name_flagged(index);
+                            string chan_phrase = (channel=="all" ? "all channels" : "the "+channel+" channel");
+                            int muted_count = 0;
+                            for(uint i=0; i<players.length(); i++)
+                            {
+                                if(rank_level(players[i].rank) >= 3) continue; // developers (including you) are never mass-muted
+                                for(uint c=0; c<chans.length(); c++) { set_channel_mute(players[i].name, chans[c], until); set_player_mute(int(i), chans[c], until); }
+                                if(players[i].peer_id >= 0) notify_target_mute(int(i), channel, true, dur); // live players hear their own notice; held sessions are muted silently and learn on reconnect
+                                muted_count++;
+                            }
+                            if(muted_count == 0) send(event.peer_id, "misc There is no one to mute.", 0, true);
+                            else
+                            {
+                                send(event.peer_id, "misc You muted "+muted_count+(muted_count == 1 ? " player" : " players")+" in "+chan_phrase+".", 0, true);
+                                notify_staff_audit(adisp+" muted everyone in "+chan_phrase+".", event.peer_id);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /muteall channel, or /muteall channel seconds.", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/unmuteall" && rank_level(players[index].rank) >= 3)
+                {
+                    // Lifts a mass mute: clears the mute in this channel for every online non-developer who has one.
+                    // Individual mutes in the channel are cleared too -- there's no way to tell them apart, and a
+                    // developer using this means to wipe the channel clean.
+                    if(parsed.length() >= 2)
+                    {
+                        string channel = string_to_lower_case(parsed[1]);
+                        if(channel != "all" and !valid_mute_channel(channel))
+                        {
+                            send(event.peer_id, "misc That is not a channel you can unmute; use global, local, voice, team, or all.", 0, true);
+                        }
+                        else
+                        {
+                            array<string> chans = mute_channels_for(channel);
+                            string adisp = afk_prefix(index)+display_name_flagged(index);
+                            string chan_phrase = (channel=="all" ? "all channels" : "the "+channel+" channel");
+                            int unmuted_count = 0;
+                            for(uint i=0; i<players.length(); i++)
+                            {
+                                if(rank_level(players[i].rank) >= 3) continue;
+                                bool anymuted = false;
+                                for(uint c=0; c<chans.length(); c++) if(get_player_mute(int(i), chans[c]) != -1) anymuted = true;
+                                if(!anymuted) continue;
+                                for(uint c=0; c<chans.length(); c++) { clear_channel_mute(players[i].name, chans[c]); set_player_mute(int(i), chans[c], -1); }
+                                if(players[i].peer_id >= 0) notify_target_mute(int(i), channel, false, 0);
+                                unmuted_count++;
+                            }
+                            if(unmuted_count == 0) send(event.peer_id, "misc No one was muted in "+(channel=="all" ? "any channel" : chan_phrase)+".", 0, true);
+                            else
+                            {
+                                send(event.peer_id, "misc You unmuted "+unmuted_count+(unmuted_count == 1 ? " player" : " players")+" in "+chan_phrase+".", 0, true);
+                                notify_staff_audit(adisp+" unmuted everyone in "+chan_phrase+".", event.peer_id);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        send(event.peer_id, "Usage: /unmuteall channel.", 0, true);
+                    }
+                }
                 else if(parsed[0] == "/ban" && rank_level(players[index].rank) >= 2)
                 {
                     // Permanent ban. Everything after the username is an optional reason.

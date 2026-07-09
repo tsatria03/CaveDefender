@@ -188,6 +188,23 @@ void comparse(string text, string channel = "global")
 		if(m.run() != 0) { speak("canceled"); return; }
 		send(0, text, 1, true); // developer world-clear; optional reason after the command, so no arg count to check
 	}
+	else if(base == "/muteall")
+	{
+		if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
+		if(parsed.length() < 2) { syntax_error("/muteall channel, or /muteall channel seconds"); return; }
+		setupmenu();
+		m.add_item("yes");
+		m.add_item("no");
+		m.intro_text = "Are you sure you want to mute everyone on the server?";
+		if(m.run() != 0) { speak("canceled"); return; }
+		send(0, text, 1, true); // developer mass-mute; the server applies it to everyone but developers
+	}
+	else if(base == "/unmuteall")
+	{
+		if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
+		if(parsed.length() < 2) { syntax_error("/unmuteall channel"); return; }
+		send(0, text, 1, true);
+	}
 	else if(base == "/promote")
 	{
 		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }
