@@ -233,27 +233,24 @@ void comparse(string text, string channel = "global")
 			}
 		else if(base == "/afk")
 	{
-		// No argument: go AFK yourself via the local countdown (any key cancels it). With a name, it's the
-		// admin+ command to put another player AFK, forwarded to the server like the other staff commands.
-		if(parsed.length() == 1)
+		// Go AFK yourself via the local countdown (any key cancels it). Self-only -- staff can no longer put
+		// another player AFK; going away is always your own choice. Anything after /afk is your optional reason,
+		// captured now and sent when the countdown finishes; it's announced once and stored nowhere.
+		if(afk) // already away: typing /afk (with or without a reason) brings you back; the afkoff cue comes from the broadcast
 		{
-			if(afk) // already away: typing /afk brings you back (the afkoff cue comes from the broadcast)
-			{
-				afk=false;
-				send(0, "afkreturn", 0, true);
-				return;
-			}
-			if(afk_counting) return; // countdown already running
-			afk_counting=true;
-			afk_count=0;
-			afk_timer.restart();
-			p.play_stationary("sounds/ui/misc/afktimer.ogg", false);
-			add_buffer_item("misc", "Going AFK in 10 seconds. Press a key to cancel.");
+			afk=false;
+			send(0, "afkreturn", 0, true);
 			return;
 		}
-		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
-		if(parsed.length() != 2) { syntax_error("/afk, or /afk username"); return; }
-		send(0, text, 1, true);
+		if(afk_counting) return; // countdown already running
+		int sp = string_contains(text, " ", 1);
+		afk_reason = (sp > -1) ? text.substr(sp + 1) : ""; // everything after "/afk " is the reason, original spacing kept
+		afk_counting=true;
+		afk_count=0;
+		afk_timer.restart();
+		p.play_stationary("sounds/ui/misc/afktimer.ogg", false);
+		add_buffer_item("misc", "Going AFK in 10 seconds. Press a key to cancel.");
+		return;
 	}
 	else if(base == "/flag")
 	{

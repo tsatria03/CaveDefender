@@ -36,7 +36,6 @@ Where a command takes a player, you can give either their username or their curr
 
 Administrator and up.
 
-/afk player: Toggles another player's away state at once, with no countdown: an active player is put away, and a player who is already away is brought back. They hear the matching sound, everyone is told, and their name shows as AFK in the lists while they are away. Anyone can also mark themselves away by typing /afk with no name; see the player help.
 /ban player, or /ban player reason: Permanently bans a player so they can't sign in. Everything after the name is an optional reason; it is shown to the player when they try to sign in, and it appears alongside their ban in /bans. You can't ban someone above your own rank, but you can ban yourself, so use it carefully: you'll be banned like anyone else. If you do it by accident as the host, clear it by editing your account.
 /tempban player seconds, or /tempban player seconds reason: Bans a player for a set number of seconds, which must be at least 1. Everything after the seconds is an optional reason, shown the same way as with /ban, and the ban lifts on its own once the time runs out. The same rank rules apply as with /ban.
 /unban player: Lifts a ban.

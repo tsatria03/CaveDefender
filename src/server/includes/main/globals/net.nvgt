@@ -1353,9 +1353,13 @@ else if(parsed[0]=="afk" and index>-1)
 if(!players[index].afk)
 {
 players[index].afk=true;
+// Optional reason typed with /afk, announced once and stored nowhere. It's broadcast to every player, so it
+// gets the same filtering as chat; a reason that fails is dropped (the player still goes AFK, just without it).
+string reason = (parsed.length() > 1) ? string_join(parsed, " ", 1, parsed.length()).trim_whitespace() : "";
+if(reason != "" and (filter_crash(reason) or filter_chat(reason))) reason = "";
 string disp=display_name_flagged(index);
-send(event.peer_id, "afkself 1", 0, true); // you: first-person misc + cue
-for(uint ai=0; ai<players.length(); ai++) if(int(players[ai].peer_id)!=event.peer_id) send(players[ai].peer_id, "afkannounce 1\n"+disp, 0,true); // others: player events + cue
+send(event.peer_id, "afkself 1\n"+reason, 0, true); // you: first-person misc + cue, with any reason
+for(uint ai=0; ai<players.length(); ai++) if(int(players[ai].peer_id)!=event.peer_id) send(players[ai].peer_id, "afkannounce 1\n"+disp+"\n"+reason, 0,true); // others: player events + cue, with any reason
 broadcast_pos(index); // refresh the AFK marker in everyone's player tracker
 }
 }
@@ -2393,34 +2397,6 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         else apply_nickname(ti, parsed[2], event.peer_id, false);
                     }
                     else send(event.peer_id, "Usage: /nick name, or /nick default.", 0, true);
-                }
-                else if(parsed[0] == "/afk" && rank_level(players[index].rank) >= 2)
-                {
-                    if(parsed.length() >= 2)
-                    {
-                        int ti = get_player_index_from(parsed[1]);
-                        if(ti > -1)
-                        {
-                            // Toggle: an away player is brought back, an active one is put away.
-                            string disp = display_name_flagged(ti);
-                            if(!players[ti].afk)
-                            {
-                                players[ti].afk = true;
-                                send(players[ti].peer_id, "afkself 1", 0, true);
-                                for(uint ai=0; ai<players.length(); ai++) if(ai!=uint(ti)) send(players[ai].peer_id, "afkannounce 1\n"+disp, 0, true);
-                                broadcast_pos(ti);
-                            }
-                            else
-                            {
-                                players[ti].afk = false;
-                                send(players[ti].peer_id, "afkself 0", 0, true);
-                                for(uint ai=0; ai<players.length(); ai++) if(ai!=uint(ti)) send(players[ai].peer_id, "afkannounce 0\n"+disp, 0, true);
-                                broadcast_pos(ti);
-                            }
-                        }
-                        else reply_target_not_found(event.peer_id, parsed[1]);
-                    }
-                    else send(event.peer_id, "Usage: /afk username", 0, true);
                 }
                 else if(parsed[0] == "/kick" && rank_level(players[index].rank) >= 1)
                 {

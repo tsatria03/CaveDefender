@@ -882,22 +882,31 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "afkself" and parsed.length() > 1)
 		{
-			// You went away or came back: set the state, play the cue, and note it first-person in misc.
+			// You went away or came back: set the state, play the cue, and note it first-person in misc. Going
+			// away may carry your optional reason on the next line: "afkself 1\n<reason>".
 			afk_counting = false;
 			afk = (parsed[1] == "1");
-			if(afk) { p.play_stationary("sounds/ui/misc/afkon.ogg", false); add_buffer_item("misc", "You are now AFK."); }
+			if(afk)
+			{
+				int snl = string_contains(message, "\n", 1);
+				string sreason = (snl > -1) ? message.substr(snl + 1) : "";
+				p.play_stationary("sounds/ui/misc/afkon.ogg", false);
+				add_buffer_item("misc", sreason == "" ? "You are now AFK." : "You are now AFK: " + sreason);
+			}
 			else { p.play_stationary("sounds/ui/misc/afkoff.ogg", false); add_buffer_item("misc", "You are no longer AFK."); }
 		}
 		else if (parsed[0] == "afkannounce" and parsed.length() > 1)
 		{
-			// Another player went away or came back. Format: "afkannounce <1|0>\n<rank-aware name>". Everyone
-			// else hears the cue and gets a third-person note in the player events buffer.
-			int anl = string_contains(message, "\n", 1);
-			string adisp = (anl > -1) ? message.substr(anl + 1) : "";
+			// Another player went away or came back. Format: "afkannounce <1|0>\n<rank-aware name>", and when
+			// going away with a reason, "afkannounce 1\n<name>\n<reason>". Everyone else hears the cue and gets a
+			// third-person note in the player events buffer.
+			string[] alines = string_split(message, "\n", true);
+			string adisp = (alines.length() > 1) ? alines[1] : "";
+			string areason = (alines.length() > 2) ? alines[2] : "";
 			if(parsed[1] == "1")
 			{
 				p.play_stationary("sounds/ui/misc/afkon.ogg", false);
-				add_buffer_item("player events", adisp + " is now AFK.");
+				add_buffer_item("player events", areason == "" ? adisp + " is now AFK." : adisp + " is now AFK: " + areason);
 			}
 			else
 			{
