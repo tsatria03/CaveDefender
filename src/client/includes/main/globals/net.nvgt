@@ -571,7 +571,24 @@ void handle_playerinfo(string message)
 		if(pm != "") comparse("/pm " + uname + " " + pm);
 		else speak("canceled");
 	}
-	else if(action == "kick") card_confirm_command("Kick " + uname + "?", "/kick " + uname);
+	else if(action == "kick")
+	{
+		// Same shape as the ban flow, without the length: ask whether to add a reason, then kick. Canceling the
+		// menu or the reason box abandons the kick.
+		setupmenu();
+		m.add_item("No reason");
+		m.add_item("Add a reason");
+		m.intro_text = "Do you want to provide a kick reason for " + uname + "?";
+		int rc = m.run();
+		if(rc != 0 and rc != 1) { speak("canceled"); return; }
+		string reason = "";
+		if(rc == 1)
+		{
+			reason = vd.input_box("Kick " + uname, "Enter a kick reason for this player. Press escape to cancel.", "");
+			if(reason == "") { speak("canceled"); return; }
+		}
+		comparse("/kick " + uname + (reason == "" ? "" : " " + reason));
+	}
 	else if(action == "ban")
 	{
 		// Length first (permanent, or a time in seconds), then an optional reason. Canceling any step
@@ -730,7 +747,10 @@ void netloop_impl()
 		else if (parsed[0] == "kicked")
 		{
 			p.play_stationary("sounds/ui/misc/kick.ogg", false);
-			speak("You have been kicked from the server.", true);
+			// "kicked" or "kicked <reason>": the reason, when present, is spoken along with the notice (staff-only text,
+			// never in the public "was kicked" announcement).
+			string kreason = (message.length() > parsed[0].length()+1) ? message.substr(parsed[0].length()+1) : "";
+			speak(kreason == "" ? "You have been kicked from the server." : "You have been kicked from the server: " + kreason, true);
 			kicked = true;
 			connected = false;
 		}

@@ -1,10 +1,10 @@
 ####These are the things that need to be finished for future versions of the game.
 
 **Unfinished. Fix major balancing issues in the environment versus player and player versus player modes.
-**Unfinished. Let staff add an optional reason when kicking a player, shown to the kicked player.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Let staff add an optional reason when kicking a player with /kick, shown to the kicked player and noted to other staff.
 **Finished. Remove the staff ability to put another player AFK, and let anyone add an optional reason to their own AFK.
 **Finished. Let players send a private message to someone offline with /pm, delivered with a sound the next time that player signs in.
 **Finished. Add a /report command so any player can report someone to the staff, with a staff /reports viewer that logs every report.

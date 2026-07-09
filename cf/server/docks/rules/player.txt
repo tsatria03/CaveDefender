@@ -33,7 +33,7 @@ You are responsible for everything done on your account, so keep it to yourself 
 
 Reporting rule breaks.
 
-If you see someone breaking these rules, you can report them to the staff with the /report command, followed by the player's name and what happened, for example /report bob spamming the global channel. You can report a player who has already left by their username too. Any staff online are alerted at once, and your report is saved for them to read later; the player you report is never told who reported them. Please use it for genuine rule breaks, not for players you simply disagree with. What is done about a report, if anything, is up to the staff.
+If you see someone breaking these rules, you can report them to the staff with the /report command, followed by the player's name and what happened, for example /report bob spamming the global channel. You can report a player who has already left by their username too. Any staff online are alerted at once, and your report is saved for them to read later; the player you report is never told who reported them. Please use it for genuine rule breaks, not for players you simply disagree with. Filing a false or malicious report, reporting someone who did nothing wrong or lying about what happened, is itself a violation. What is done about a report, if anything, is up to the staff.
 
 How rules are enforced.
 

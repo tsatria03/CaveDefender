@@ -1,4 +1,5 @@
 New in 3.7.
+Kicking a player, with /kick, can now carry a reason: type it after the name, for example /kick bob spamming, and the kicked player is told why as they are dropped while the other staff get a quiet note, though it never appears in the public kicked announcement. The kick button on a player's card now asks whether to add a reason, the same way the ban button does.
 Any reason you type is now checked before others see it, so a screen reader crash string can no longer be slipped into an AFK, ban, warning, or report reason. If your reason is caught, the action still goes through without it and you are told why, except for a report, whose reason is the whole point, so a caught report is not sent at all.
 You can now add a reason when you go AFK: type it after /afk, for example /afk making lunch, and it is announced once when you go away, or leave it off to go away without one.
 Staff can no longer put another player AFK; going away is now always your own choice, so no one gets dropped into AFK mid-game without warning.
