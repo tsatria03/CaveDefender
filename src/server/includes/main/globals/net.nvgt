@@ -998,7 +998,7 @@ if(parsed.length()==0)
 // empty or malformed packet: an empty decrypted message splits to a zero-length array, so bail before any
 // parsed[0] branch below can index past the end and crash the whole server loop.
 }
-else if(world_frozen and !(parsed[0]=="login" or parsed[0]=="register" or parsed[0]=="spawn_player" or parsed[0]=="welcome" or (index>-1 and rank_level(players[index].rank)>=3 and (parsed[0]=="freeze" or parsed[0]=="unfreeze"))))
+else if(world_frozen and !(parsed[0]=="login" or parsed[0]=="register" or parsed[0]=="spawn_player" or parsed[0]=="welcome" or parsed[0]=="frozennotice" or (index>-1 and rank_level(players[index].rank)>=3 and (parsed[0]=="freeze" or parsed[0]=="unfreeze"))))
 {
 // Developer world-stop: while the game is frozen the server ignores every channel-0 message except a
 // developer's freeze/unfreeze and the login/spawn handshake (so a player can still connect and be frozen on
@@ -2220,6 +2220,12 @@ string wfann = "worldunfreeze\nAttention! "+afk_prefix(index)+display_name_flagg
 for(uint wfi=0; wfi<players.length(); wfi++) send(players[wfi].peer_id, wfann, 0, true);
 }
 }
+else if(parsed[0]=="frozennotice")
+{
+// The client asks for this when a developer types anything but a start/stop command in the frozen chat box; the
+// server owns the "you can't do that now" reply so it's authoritative and matches the notice a player gets on join.
+if(world_frozen) send(event.peer_id, "misc The game is currently frozen.", 0, true);
+}
 }
 if(event.type == event_receive && event.channel == 3 && !world_frozen) // world-stop: drop all voice while frozen (only a developer's channel-0 freeze/unfreeze is honored)
 {
@@ -2481,6 +2487,39 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                     else
                     {
                         send(event.peer_id, "Usage: /kick username, or /kick username reason", 0, true);
+                    }
+                }
+                else if(parsed[0] == "/kickall" && rank_level(players[index].rank) >= 3)
+                {
+                    // Developer world-clear: disconnect every player who isn't a developer, so you and any co-developer
+                    // stay. An optional reason after the command is shown to each kicked player, crash-filtered like
+                    // /kick (a caught reason is dropped and the kicks still happen). Everyone is gathered first, then
+                    // torn down together, so the roster shifting mid-loop can't skip anyone.
+                    string adisp = afk_prefix(index)+display_name_flagged(index); // actor's name; capture before removal, since remove_at shifts index
+                    string reason = "";
+                    for(uint r=1; r<parsed.length(); r++) reason += (reason == "" ? "" : " ") + parsed[r];
+                    bool reason_dropped = (reason != "" and filter_crash(reason));
+                    if(reason_dropped) reason = "";
+                    int[] targets;
+                    for(uint i=0; i<players.length(); i++)
+                        if(rank_level(players[i].rank) < 3) targets.insert_last(players[i].peer_id); // everyone below developer, live or held
+                    int kicked_count = 0;
+                    for(uint t=0; t<targets.length(); t++)
+                    {
+                        if(get_player_index(targets[t]) < 0) continue; // already gone (a teardown above closed their game/room and removed them)
+                        if(targets[t] >= 0) send(targets[t], "kicked"+(reason == "" ? "" : " "+reason), 0, true); // live player: tell their client to leave (held sessions have a negative sentinel peer, no one to notify)
+                        handle_disconnect_games(targets[t]);
+                        handle_disconnect_rooms(targets[t]);
+                        int pj = get_player_index(targets[t]); // re-find: the teardown can shift indices
+                        if(pj > -1) players.remove_at(pj);
+                        kicked_count++;
+                    }
+                    if(kicked_count == 0) send(event.peer_id, "misc There is no one to kick.", 0, true);
+                    else
+                    {
+                        send(event.peer_id, "misc You kicked "+kicked_count+(kicked_count == 1 ? " player" : " players")+" from the server.", 0, true);
+                        notify_staff_audit(adisp+" kicked everyone from the server"+(reason == "" ? "." : ": "+reason), event.peer_id); // any remaining developers see who cleared it (and why)
+                        if(reason_dropped) send(event.peer_id, "misc That reason contained a screen reader crash string, so the players were kicked without it.", 0, true);
                     }
                 }
                 else if(parsed[0] == "/promote" && rank_level(players[index].rank) >= 1)
