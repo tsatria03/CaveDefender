@@ -178,6 +178,16 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() < 2) { syntax_error("/kick username, or /kick username reason"); return; }
 		send(0, text, 1, true);
 	}
+	else if(base == "/kickall")
+	{
+		if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
+		setupmenu();
+		m.add_item("yes");
+		m.add_item("no");
+		m.intro_text = "Are you sure you want to kick everyone off the server?";
+		if(m.run() != 0) { speak("canceled"); return; }
+		send(0, text, 1, true); // developer world-clear; optional reason after the command, so no arg count to check
+	}
 	else if(base == "/promote")
 	{
 		if(my_rank_level() < 1) { unknown_command(parsed[0]); return; }

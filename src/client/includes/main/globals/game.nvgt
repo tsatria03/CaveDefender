@@ -7,7 +7,7 @@ void frozen_chat_input(string title, string prompt)
 	if(msg=="") { speak("canceled"); return; }
 	string low=string_to_lower_case(msg.trim_whitespace());
 	if(low=="/gamestop" or low=="/gp" or low=="/gamestart" or low=="/gs") comparse(msg);
-	else add_buffer_item("misc", "The game is currently frozen.");
+	else send(0, "frozennotice", 0, true); // anything but a start/stop command: the server replies "The game is currently frozen."
 }
 void game()
 {
@@ -57,6 +57,24 @@ buffercheck();
 			if(key_pressed(KEY_APOSTROPHE)) { if(dev) frozen_chat_input("Staff chat", "Type a staff message, or a slash command."); continue; }
 			if(key_pressed(KEY_BACKSLASH) and !shift_is_down()) { if(dev) frozen_chat_input("Local chat", "Type a local message, or a slash command."); continue; }
 			if(key_pressed(KEY_SEMICOLON)) { if(dev and in_game and !watching and game_mode == "pvp") frozen_chat_input("Team chat", "Type a team message, or a slash command."); continue; }
+			if(key_pressed(KEY_ESCAPE))
+			{
+				// Escape stays live for everyone while frozen so no one is trapped: it offers the usual exit to the
+				// connection menu (the same confirm as leaving from the lobby). Leaving a game back to its room isn't
+				// possible mid-freeze -- the server ignores that -- so escape quits the session instead. The disconnect
+				// itself is handled outside the frozen dispatch, so it always goes through.
+				bool doexit=true;
+				if(gamxit==1)
+				{
+					setupmenu();
+					m.add_item("yes");
+					m.add_item("no");
+					m.intro_text="Are you sure you want to exit?";
+					if(m.run()!=0) { speak("canceled"); doexit=false; }
+				}
+				if(doexit) { fade_multi_pool(fademode); leave_server(); return; }
+				continue;
+			}
 			continue;
 		}
 		if(in_game and game_paused)

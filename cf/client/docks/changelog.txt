@@ -1,4 +1,5 @@
 New in 3.8.
+Developers can now clear the whole server at once with the new /kickall command, disconnecting everyone except other developers, with an optional reason shown to each player as they are dropped. Everyone kicked can sign straight back in, so it empties the server without banning anyone.
 Developers can now freeze the whole server with the new /gamestop command and lift it again with /gamestart. A freeze is a complete world-stop: every game pauses where it stands and everyone, other staff and developers included, is locked out of moving, chatting, and everything else until it is lifted, though you can still read back your message buffers while you wait. Everyone hears it happen and is told who froze or unfroze the game.
 Restarting or shutting down the server, with /restart and /fastrestart, is now limited to developers, the people who actually host it, rather than every administrator. The staff help now lists these under their own developer-only section.
 New in 3.7.

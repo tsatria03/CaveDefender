@@ -1506,19 +1506,19 @@ void netloop_impl()
 			pause_pools();
 			recording = false;
 			if(@voice_mic != null) voice_mic.flush_capture(); // so a held mic doesn't burst its backlog out on resume
-			p.play_stationary("sounds/ui/misc/gamestop.ogg", false);
 			int wfnl = string_contains(message, "\n", 1);
 			if(wfnl > -1) add_buffer_item("alerts", message.substr(wfnl + 1));
+			dlgplay("sounds/ui/misc/gamestop.ogg", false); // blocking (skippable=false) like SimpleFighter, so rapid /gamestop and /gamestart toggling can't be spammed -- the cue must finish first
 		}
 		else if (parsed[0] == "worldunfreeze")
 		{
 			// The developer lifted the freeze: unlock input and audio and play the start cue. Don't un-suspend a
 			// game the host still has paused underneath (game_paused stays authoritative for that).
 			world_frozen = false;
-			if(!game_paused) resume_pools();
-			p.play_stationary("sounds/ui/misc/gamestart.ogg", false);
 			int wfnl = string_contains(message, "\n", 1);
 			if(wfnl > -1) add_buffer_item("alerts", message.substr(wfnl + 1));
+			dlgplay("sounds/ui/misc/gamestart.ogg", false);
+			if(!game_paused) resume_pools(); // resume the game's sounds only after the start cue finishes, so the wood and bots don't play over it
 		}
 		else if (parsed[0] == "pvpdesert" and parsed.length() > 2)
 			{
