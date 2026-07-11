@@ -3,3 +3,7 @@ userlimit=200
 owners=DevilGuardian,tsatria03,tony
 rulesver=3
 ruleswitch=1
+spamguard=1
+spamcount=5
+spamtime=3000
+spamdir=600

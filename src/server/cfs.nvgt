@@ -54,6 +54,25 @@ if(prefs.find("ruleswitch")!=-1)
 {
 ruleswitch=string_to_number(values[prefs.find("ruleswitch")]);
 }
+if(prefs.find("spamguard")!=-1)
+{
+spamguard=string_to_number(values[prefs.find("spamguard")]);
+}
+if(prefs.find("spamcount")!=-1)
+{
+spamcount=string_to_number(values[prefs.find("spamcount")]);
+}
+if(prefs.find("spamtime")!=-1)
+{
+spamtime=string_to_number(values[prefs.find("spamtime")]);
+}
+if(prefs.find("spamdir")!=-1)
+{
+spamdir=string_to_number(values[prefs.find("spamdir")]);
+}
+if(spamcount<1) spamcount=1; // a trip needs at least one message; guard against a config value that would trip on nothing or never
+if(spamtime<1) spamtime=1;   // the sliding window must be a positive span of milliseconds
+if(spamdir<0) spamdir=0;     // negative durations make no sense; 0 already means an indefinite mute
 f.close();
 }
     if(file_exists("data/preffs/motd.svr"))
@@ -88,7 +107,7 @@ f.open("data/preffs/conf.svr", "wb");
 string what;
 string ownerlist="";
 for(uint i=0; i<owners.length(); i++) ownerlist+=(i>0 ? "," : "")+owners[i];
-what="port="+port+"\r\n"+"userlimit="+userlimit+"\r\n"+"owners="+ownerlist+"\r\n"+"rulesver="+rulesver+"\r\n"+"ruleswitch="+ruleswitch+"\r\n";
+what="port="+port+"\r\n"+"userlimit="+userlimit+"\r\n"+"owners="+ownerlist+"\r\n"+"rulesver="+rulesver+"\r\n"+"ruleswitch="+ruleswitch+"\r\n"+"spamguard="+spamguard+"\r\n"+"spamcount="+spamcount+"\r\n"+"spamtime="+spamtime+"\r\n"+"spamdir="+spamdir+"\r\n";
 f.write(what);
 f.close();
 }
