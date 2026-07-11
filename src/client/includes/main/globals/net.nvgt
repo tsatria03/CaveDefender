@@ -663,6 +663,7 @@ void handle_askinput(string message)
 	if (alines.length() >= 3)
 	{
 		string amaskval = (alines.length() > 3) ? alines[3] : "0"; // "0" plain, "1" masked, "2" masked + a confirm-again box (setting a private room password)
+		string aprefill = (alines.length() > 4) ? alines[4] : ""; // optional value the server pre-drops into the box (staff joining their own private room); empty for every other prompt
 		if (amaskval == "2")
 		{
 			// Two fields (password + confirm) -> a real form the player can tab through, per our multi-field input
@@ -679,7 +680,7 @@ void handle_askinput(string message)
 		}
 		// Single field: a virtual dialog (masked for a password prompt, plain text otherwise).
 		bool amask = (amaskval == "1");
-		string aval = amask ? vd.password_box("Private room", alines[1], "", " ", "Spaces are not allowed.") : vd.input_box("Input", alines[1], "");
+		string aval = amask ? vd.password_box("Private room", alines[1], aprefill, " ", "Spaces are not allowed.") : vd.input_box("Input", alines[1], aprefill);
 		if (aval == "") { speak("canceled"); return; }
 		send(0, alines[2] + " " + aval, 0, true);
 	}

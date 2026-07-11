@@ -1198,6 +1198,11 @@ int wi = wall_in_dir(games[gi].id, dir, games[gi].size); // ring wall in PVP, ou
 if(wi > -1 and walls[wi].health <= 0) send(event.peer_id, "That wall is destroyed.", 0,true);
 else if(wi > -1)
 {
+// A per-game reinforce cap is set and this wall is already at (or above) it: refuse BEFORE spending any wood,
+// rather than silently eating the piece for no gain. "No limit" (reinforce_cap 0) never refuses.
+if(games[gi].reinforce_cap > 0 and walls[wi].health >= walls[wi].maxhealth * games[gi].reinforce_cap) send(event.peer_id, "You can't reinforce this wall any further.", 0,true);
+else
+{
 string place_type = spend_one_wood(players[index].inv); // spend your biggest piece first (large -> medium -> small)
 int gain = wood_reinforce_value(place_type); // repair scales with the size spent (small<medium<large)
 if(games[gi].reinforce_cap > 0) repair_wall(wi, gain, true, games[gi].reinforce_cap); // per-game reinforce limit (200/400/600/800% of full strength)
@@ -1224,6 +1229,7 @@ if(players[pm].room_id == players[index].room_id)
 send(players[pm].peer_id, "footstep objects/items/"+place_type+"/place "+placex+" "+placey, 0, true);
 send(event.peer_id, "reinforced "+dir+" "+gain, 0,true);
 broadcast_wall_strength(games[gi].id);
+}
 }
 }
 }
