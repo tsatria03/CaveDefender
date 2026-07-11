@@ -8,7 +8,7 @@ Before you can play, you must read these player rules and agree to them: type /r
 Treat everyone with kindness. Harassment, hate speech, racism, threats, insults, and disrespect toward anyone's beliefs or identity are not allowed. This holds everywhere, and moving it into private messages or off the server does not make it okay.
 
 2. Do not spam or disrupt.
-Don't flood chat with repeated, meaningless, or gibberish messages, and don't try to send screen reader crash strings; the game blocks the ones it knows, but attempting it is still a violation. Spam also covers disruptive actions, such as rapidly creating and deleting rooms, or joining and leaving a game as a spectator to interfere with a round in progress.
+Don't flood chat with repeated, meaningless, or gibberish messages, and don't try to send screen reader crash strings; the game blocks the ones it knows, but attempting it is still a violation. Global chat carries an automatic guard that may mute your global messages for a time if you send them too quickly, but that safeguard is not permission to spam: flooding any channel is a violation whether the guard catches it or not. Spam also covers disruptive actions, such as rapidly creating and deleting rooms, or joining and leaving a game as a spectator to interfere with a round in progress.
 
 3. Keep content appropriate, and use the right channel.
 Adult or NSFW language is allowed only on the opt-in Unfiltered channel, never in local chat or the other channels, where it reaches people who did not choose to read it. Do not post disturbing, graphic, or violent material anywhere.

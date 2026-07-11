@@ -39,6 +39,12 @@ Chat is filtered for forbidden words, a list set by the server's host. If a mess
 
 Separately, there is always-on protection against screen reader crash strings: character sequences that can crash text to speech engines such as Eloquence or IBMTTS when spoken aloud. This protection covers every chat channel, including Unfiltered, local, and staff, and cannot be turned off, so no one can crash other players' speech by sending one in chat.
 
+Anti-spam.
+
+Global chat has an anti-spam guard that keeps one person from flooding the channel. If you send too many global messages too quickly, the server automatically mutes your global chat for a set time, just like any timed mute: you are told it has happened, and it lifts on its own once the time is up. The guard watches global chat in particular because that is where the language channels live, so keeping it readable matters most there; local, team, and staff chat are not covered.
+
+How many messages count as spamming, how close together they have to arrive, and how long the mute lasts are all set by the server's host, who can also switch the guard off entirely. Staff are never affected by it. Once your mute lifts you begin with a clean slate, so a single quick message afterwards will not trip it again.
+
 Pronouns.
 
 Messages that talk about you in the third person can use your pronouns, for example when you raise your staff flag, change your nickname, or join a room. Choose them with /pronoun, which opens a menu of the options the server offers, such as masculine, feminine, singular they, or one of several neopronoun sets. Everyone starts on singular they, and your choice is saved for next time. There is also a none option, which simply uses your name in place of a pronoun, so the message reads with your name rather than he, she, or they.
