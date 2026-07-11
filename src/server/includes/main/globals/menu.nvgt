@@ -90,6 +90,40 @@ opts.insert_last("Delete room"); players[index].menu_actions.insert_last("delete
 opts.insert_last("Leave room"); players[index].menu_actions.insert_last("leave");
 send_menu(peer, "room", "Room menu", opts);
 }
+// Dispatch a room-menu action by its action key. Shared by the room menu (on_menu_result) and the Ctrl+<key> room
+// hotkeys, so both run identical logic; keyed by action NAME, not menu index, so it's immune to the private-only
+// Set/Retrieve password items shifting the menu positions. Each branch re-validates (host checks, etc.) itself.
+void do_room_action(int player_index, int peer, string act)
+{
+if(act == "leave") send(peer, "runcommand leaveroom", 0, true);
+else if(act == "getpw") send(peer, "runcommand getroompassword", 0, true);
+else if(act == "setpw")
+{
+int ri = get_room_index(players[player_index].room_id);
+if(ri > -1 and rooms[ri].host_peer != peer) send(peer, "Only the host can change the room's password.", 0, true);
+else ask_input(peer, "Enter the new room password (at least 6 characters).", "setroompassword", true, true);
+}
+else if(act == "kick")
+{
+int ri = get_room_index(players[player_index].room_id);
+if(ri > -1 and rooms[ri].host_peer != peer) send(peer, "Only the host can kick players from the room.", 0, true);
+else push_kick_list(player_index);
+}
+else if(act == "delete")
+{
+int ri = get_room_index(players[player_index].room_id);
+bool staff = is_staff(players[player_index].rank);
+bool host = (ri > -1 and rooms[ri].host_peer == peer);
+if(!staff and !host) send(peer, "Only the host can delete the room.", 0, true);
+else if(!staff and ri > -1 and rooms[ri].members.length() > 1) send(peer, "You can't delete the room while other players are in it.", 0, true);
+else confirm_menu(peer, "deleteroom", "Are you sure you want to delete this room? Everyone in it will be sent back to the lobby.");
+}
+else if(act == "invite") push_invite_list(player_index); // any room member may invite a lobby player
+else if(act == "joingame") push_game_list(player_index, "join");
+else if(act == "watchgame") push_watch_list(player_index); // any room member may watch a game
+else if(act == "stopgame") push_game_list(player_index, "stop");
+else if(act == "startgame") push_start_gamemode(player_index);
+}
 
 // A spoken count for a list menu's intro, e.g. "There are 3 players in your room." / "There is 1 player in the lobby."
 string players_count_phrase(int n, string where)
@@ -874,35 +908,7 @@ ask_input(peer, "Enter the room's password.", "joinroom " + rid, true, false, pr
 else if(id == "room")
 {
 if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) return; // cancelled
-string act = players[player_index].menu_actions[choice];
-if(act == "leave") send(peer, "runcommand leaveroom", 0, true);
-else if(act == "getpw") send(peer, "runcommand getroompassword", 0, true);
-else if(act == "setpw")
-{
-int ri = get_room_index(players[player_index].room_id);
-if(ri > -1 and rooms[ri].host_peer != peer) send(peer, "Only the host can change the room's password.", 0, true);
-else ask_input(peer, "Enter the new room password (at least 6 characters).", "setroompassword", true, true);
-}
-else if(act == "kick")
-{
-int ri = get_room_index(players[player_index].room_id);
-if(ri > -1 and rooms[ri].host_peer != peer) send(peer, "Only the host can kick players from the room.", 0, true);
-else push_kick_list(player_index);
-}
-else if(act == "delete")
-{
-int ri = get_room_index(players[player_index].room_id);
-bool staff = is_staff(players[player_index].rank);
-bool host = (ri > -1 and rooms[ri].host_peer == peer);
-if(!staff and !host) send(peer, "Only the host can delete the room.", 0, true);
-else if(!staff and ri > -1 and rooms[ri].members.length() > 1) send(peer, "You can't delete the room while other players are in it.", 0, true);
-else confirm_menu(peer, "deleteroom", "Are you sure you want to delete this room? Everyone in it will be sent back to the lobby.");
-}
-else if(act == "invite") push_invite_list(player_index); // any room member may invite a lobby player
-else if(act == "joingame") push_game_list(player_index, "join");
-else if(act == "watchgame") push_watch_list(player_index); // any room member may watch a game
-else if(act == "stopgame") push_game_list(player_index, "stop");
-else if(act == "startgame") push_start_gamemode(player_index);
+do_room_action(player_index, peer, players[player_index].menu_actions[choice]);
 }
 else if(id == "invite")
 {
