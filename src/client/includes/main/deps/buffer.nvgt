@@ -258,6 +258,18 @@ return;
 clipboard_copy_text(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 speak("Message copied",true);
 }
+// Alt+Shift+C: open the current buffer item in a read-only, arrow-navigable box (vd.info_box) with a Close
+// button, so you can read a long message at your own pace instead of only hearing it spoken. Single item only.
+void review_buffer_item()
+{
+if(bufferpos < 0 || bufferpos >= int(buffers.length()) || buffers[bufferpos].items.length()<=0)
+{
+speak("There's nothing to review in this buffer.");
+return;
+}
+string label = buffers[bufferpos].name + ", " + format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length());
+vd.info_box("Buffer review", label, buffers[bufferpos].items[buffers[bufferpos].bpos].name);
+}
 void clear_current_buffer()
 {
 if (bufferpos < 0 || bufferpos >= int(buffers.length()))
@@ -299,7 +311,7 @@ else next_buffer();
 if (shift_is_down())
 {
 if (key_repeating(KEY_M)) toggle_buffer();
-if (key_repeating(KEY_C)) copy_buffer_item();
+if (key_repeating(KEY_C)) { if (alt_is_down()) review_buffer_item(); else copy_buffer_item(); } // read KEY_C once, then branch: Alt+Shift+C reviews, Shift+C copies
 if (key_repeating(KEY_BACKSLASH)) { if (export_current_buffer()) clear_current_buffer(); }
 }
 }

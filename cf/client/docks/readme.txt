@@ -219,6 +219,7 @@ Shift plus right bracket. Jump to the last category.
 
 Shift plus letter M. Mute or unmute the current category, so its new messages stop or resume being read aloud.
 Shift plus letter C. Copy the current message to the clipboard.
+Alt plus shift plus letter C. Open the current message in a read-only box you can read at your own pace with the arrow keys, with a close button to leave it.
 Shift plus backslash. Export the current category to a log file, then clear it.
 
 Menus and leaving.

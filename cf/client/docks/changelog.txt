@@ -1,4 +1,5 @@
 New in 3.8.
+You can now open a single buffer message in a read-only box and read it at your own pace with the arrow keys, rather than only hearing it spoken. Press alt plus shift plus C on the message you're on, then close the box when you're done.
 When staff join their own private room, the password box now opens with the password already filled in, so they can just press enter instead of typing it. This only happens for a room you created yourself, never anyone else's private room, so you still enter those the normal way.
 You can no longer send a private message to yourself; trying to now tells you so, the same as you already can't report or demote yourself.
 Spamming the global chat now mutes you there automatically: send too many messages too quickly and the server mutes your global chat for a while, timing out on its own like any other mute. Staff are never affected by this. Server hosts can tune how many messages count as spam, how fast they have to come, and how long the mute lasts, or switch the whole thing off, in the server config.
