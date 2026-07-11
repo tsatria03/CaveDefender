@@ -1200,7 +1200,8 @@ else if(wi > -1)
 {
 string place_type = spend_one_wood(players[index].inv); // spend your biggest piece first (large -> medium -> small)
 int gain = wood_reinforce_value(place_type); // repair scales with the size spent (small<medium<large)
-repair_wall(wi, gain, false); // player reinforce is uncapped -- the over-build limit was removed
+if(games[gi].reinforce_cap > 0) repair_wall(wi, gain, true, games[gi].reinforce_cap); // per-game reinforce limit (200/400/600/800% of full strength)
+else repair_wall(wi, gain, false); // "No limit" was chosen: uncapped, as before
 if(games[gi].mode=="pvp") players[index].pvp_wood_placed++; // tally this defender's placements for the results screen
 send_wood_count(index);
 // Play the placement in 3D AT THE WALL being reinforced -- the placer's spot projected onto that border --
@@ -1811,7 +1812,10 @@ bool solo=(parsed[2]=="solo");
 string mode="pve"; // gameplay mode; defaults to the original pve for a missing or unrecognized arg
 if(parsed.length()>3 and parsed[3]=="evp") mode="evp";
 else if(parsed.length()>3 and parsed[3]=="pvp") mode="pvp";
-int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo, mode);
+double rcap = (parsed.length()>4) ? string_to_number(parsed[4]) : 0; // wall reinforce cap multiplier (2/4/8, or 0 = no limit); PVE/PVP only, EVP sends 0
+if(rcap < 0) rcap = 0;
+bool pileup = (parsed.length()>5 and parsed[5]=="1"); // PVE only: a fallen wall's bots pile onto the standing walls (Yes); EVP/PVP send 0
+int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo, mode, rcap, pileup);
 players[index].pregame_room = players[index].room_id; // the host started from their room; leaving the game returns them there
 send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+mode+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
 set_room_scope(index, gid);

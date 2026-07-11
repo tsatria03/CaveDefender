@@ -16,6 +16,8 @@ int host_peer;
 int size;         // grid size: 25 (small), 50 (medium), or 100 (large)
 bool solo;        // true = private/unjoinable; false = Open (others in the room may join)
 string mode="pve"; // gameplay mode: "pve" (defend the walls, the original Wallbreaker) or "evp" (attack the walls from outside while bots build them). Set at creation; all EVP gameplay branches on this.
+double reinforce_cap=0; // PVE/PVP only: how far players may reinforce a wall past its full (max) strength, as a multiple -- 2/4/8 = 200/400/800%, 0 = no limit. Chosen at creation, after map size. EVP builder bots ignore this and keep wall_overbuild_cap.
+bool bots_pileup=false; // PVE only: when true, a destroyed wall's attacking bots move onto the walls still standing (the old swarm) instead of leaving the round. Chosen at creation, after the reinforce step.
 int[] members;    // peer ids of everyone currently in the cavern
 string phase="idle"; // round phase: idle -> build -> wave -> over -> idle (host begins from idle)
 timer phasetimer;    // times the current phase (drives the build-phase countdown)
@@ -154,11 +156,13 @@ set_room_scope(int(i), back);
 }
 // Create a game inside a room and return its id. Uses the shared room_id namespace so a player's
 // room_id can point at a game just like a room, and spawns the four destroyable cavern walls.
-int create_game(int parent_room, string hostname, int hostpeer, int size, bool solo, string mode)
+int create_game(int parent_room, string hostname, int hostpeer, int size, bool solo, string mode, double reinforce_cap=0, bool bots_pileup=false)
 {
 int gid=next_room_id;
 next_room_id++;
 game g(gid, parent_room, hostname, hostpeer, size, solo, mode);
+g.reinforce_cap=reinforce_cap; // PVE/PVP wall reinforce ceiling chosen at creation (0 = no limit); unused by EVP
+g.bots_pileup=bots_pileup;     // PVE bot pile-up chosen at creation; unused by EVP/PVP (no attacking bots there)
 games.insert_last(g);
 if(mode=="pvp") spawn_ring_walls(gid, size, 400, 400); // PVP: the four destructible walls form a MIDDLE ring (interior defenders, exterior attackers)
 else spawn_border_walls(gid, size, 400, 400, true); // PVE/EVP: the four destroyable walls are the cavern border (max health 400)
@@ -884,7 +888,8 @@ return true;
 void on_wall_destroyed(int gameid, int gi, string dir)
 {
 send_to_game(games[gi].id, "walldestroyed "+dir); // members + spectators hear the breach
-remove_bots_on_wall(gameid, dir); // the fallen wall's bots leave -- they do NOT pile onto the walls still standing
+if(games[gi].bots_pileup) redistribute_bots_on_wall(gameid, dir, games[gi].size); // pile-up option (PVE): the fallen wall's bots move onto the walls still standing (the old swarm)
+else remove_bots_on_wall(gameid, dir); // default: the fallen wall's bots leave the round
 }
 // All walls down: end the round. Clear the bots and wood, drop into the "over" phase, and ask every
 // member how they did and whether to play again (roundover). The cavern is NOT reset yet — we wait until

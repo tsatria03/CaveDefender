@@ -91,13 +91,14 @@ if(walls[id].health<0) walls[id].health=0;
 const double wall_overbuild_cap = 4.0;
 // Reinforce a wall with wood. Player reinforcing is uncapped (cap=false); the EVP builders keep the default so
 // their fortifying is still clamped to wall_overbuild_cap x max health.
-void repair_wall(int id, double amount, bool cap=true)
+void repair_wall(int id, double amount, bool cap=true, double capmult=-1)
 {
 if(id<0 or id>=int(walls.length()) or @walls[id]==null) return;
 walls[id].health+=amount;
 if(cap)
 {
-double climit = walls[id].maxhealth * wall_overbuild_cap;
+double m = (capmult < 0) ? wall_overbuild_cap : capmult; // capmult -1 (default) = the EVP builder cap; a positive value = a per-game player reinforce limit (2/4/6/8)
+double climit = walls[id].maxhealth * m;
 if(walls[id].health > climit) walls[id].health = climit;
 }
 }

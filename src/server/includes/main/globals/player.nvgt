@@ -23,6 +23,8 @@ string[] menu_targets; // the argument behind each option of the last server-pus
 string[] menu_actions; // for a HETEROGENEOUS menu (e.g. the room menu), the action key behind each option.
 string menu_pending;   // a value carried across a cascading menu (e.g. the chosen access solo/open while picking the size).
 string pending_mode;   // the gameplay mode (pve/evp) chosen at the first start-game step, carried through the rest of the cascade to the startgame command.
+int pending_size=50;   // the map size chosen at the size step, carried across the reinforce (and PVE pile-up) steps to the final startgame command.
+int pending_reinforce=0; // the wall reinforce cap chosen at the reinforce step (2/4/8/0), carried across the PVE pile-up step to the final startgame command.
 inventory inv; // what this player is carrying (wood, etc.); authoritative here, mirrored to the client. Wired in 6c.
 int wood_collected=0;     // wood this player has personally picked up off the ground this game run; reset at each build start, reported at game over.
 int pending_bonus_wood=0; // milestone bonus wood COUNT to add to this player's stockpile at the next build phase (earned by beating their best round); cleared once granted.
