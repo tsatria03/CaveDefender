@@ -25,10 +25,12 @@ send(peer, payload, 0, true);
 // Ask a player to type a value to finish a server-driven flow. The client shows a local box with
 // `prompt` (masked when `masked`), then sends "<prefix> <text>" back, which an existing command
 // handler processes. This keeps text entry client-side while the decision/action stay on the server.
-void ask_input(int peer, string prompt, string prefix, bool masked, bool confirm=false)
+void ask_input(int peer, string prompt, string prefix, bool masked, bool confirm=false, string prefill="")
 {
 string mask = confirm ? "2" : (masked ? "1" : "0"); // "2" = masked plus a confirm-again box on the client (used when SETTING a private room password, not when joining)
-send(peer, "askinput\n" + prompt + "\n" + prefix + "\n" + mask, 0, true);
+// Optional prefill (5th line): a value the client drops into the box for the player, who can just accept it.
+// Used to autofill a staff member's OWN private room password when they join it; empty for every other prompt.
+send(peer, "askinput\n" + prompt + "\n" + prefix + "\n" + mask + "\n" + prefill, 0, true);
 }
 
 // A Yes/No confirmation menu. The id is "confirm:<command>"; on Yes the client relays that command back.
@@ -853,7 +855,17 @@ else if(id == "joinpublic" or id == "joinprivate")
 if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
 string rid = players[player_index].menu_targets[choice];
 if(id == "joinpublic") do_join_room(player_index, peer, int(string_to_number(rid)), "");
-else ask_input(peer, "Enter the room's password.", "joinroom " + rid, true); // private: ask, then joinroom <id> <pw>
+else
+{
+// Private room: ask for the password, then joinroom <id> <pw>. Convenience for staff joining THEIR OWN room:
+// prefill the box with that room's password (the server holds it in plain text) so they can just accept it.
+// Never prefilled for anyone else's room -- ownership, not rank, is the gate -- so a dev joining another
+// staffer's room still types it. The prefill stays empty for non-staff and for rooms they don't own.
+int jri = get_room_index(int(string_to_number(rid)));
+string prefill = "";
+if(jri > -1 and is_staff(players[player_index].rank) and string_to_lower_case(rooms[jri].host) == string_to_lower_case(players[player_index].name)) prefill = rooms[jri].password;
+ask_input(peer, "Enter the room's password.", "joinroom " + rid, true, false, prefill);
+}
 }
 else if(id == "room")
 {

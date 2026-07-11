@@ -15,6 +15,8 @@ Stop any game: A room's Stop game list shows you every game in that room so you 
 
 Delete any room: You can delete any room, even one with other players inside or games still running. A regular host can only delete their own room, and only when alone in it with no games.
 
+Autofill your own room's password: When you join a private room you created yourself, its password is filled into the prompt for you, so you can just press enter instead of typing it. This applies only to your own room; joining anyone else's private room still asks you to type the password normally.
+
 Act from a player's card: In the F6 players menu, choosing a player opens their information card, which gives staff buttons for kick, ban, promote, demote, notify, and warn. Only the actions your rank allows on that particular player appear, and each one asks for any details it needs, such as a ban length and an optional reason, a new rank, a notification, or a warning level and reason, then does exactly what the matching command below does, under the same rules. The card also has the personal mute and private message controls every player has; see the readme for those.
 
 Commands. Moderator and up.

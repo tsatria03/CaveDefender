@@ -69,6 +69,8 @@ From the lobby, press enter to open the lobby menu, where you can create or join
 
 Inside a room, press enter for the room menu. If you host the room you can use Kick from room to send a player back to the lobby, and, for a private room, set or retrieve its password. The Kick from room list also includes your own name, which you can pick to simply leave your own room, just like Leave room does. You can delete your own room, but only when you are the only one in it and no games are running.
 
+When you join a private room, you are asked for its password first. If you are staff joining a private room you created yourself, that box opens with the password already filled in, so you can just press enter rather than type it; this only happens for your own room, and joining anyone else's private room still asks you to type the password as usual.
+
 Anyone in a room can invite someone to it. Choose Invite to room from the room menu to see everyone currently in the lobby, and pick the person you want. They are told privately that you invited them, and they join by typing /accept, or refuse with /reject; an invitation lasts two minutes before it expires. Accepting brings them straight in, even past a private room's password, and you are told whether they accepted or declined.
 
 Games.
