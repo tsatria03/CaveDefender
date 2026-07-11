@@ -1,3 +1,5 @@
+New in 3.9.
+There is now a Buffer menu, opened with shift plus B on any category, that gathers everything you can do with your message buffers into one list: copy, export, or review the whole category or just the message you are on, mute or unmute the category, and export every category at once. It is simply a menu version of the buffer keys, which all still work as before.
 New in 3.8.
 You can now open a single buffer message in a read-only box and read it at your own pace with the arrow keys, rather than only hearing it spoken. Press alt plus shift plus C on the message you're on, then close the box when you're done.
 When staff join their own private room, the password box now opens with the password already filled in, so they can just press enter instead of typing it. This only happens for a room you created yourself, never anyone else's private room, so you still enter those the normal way.
