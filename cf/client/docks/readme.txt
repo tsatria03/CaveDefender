@@ -221,7 +221,7 @@ Shift plus letter M. Mute or unmute the current category, so its new messages st
 Shift plus letter C. Copy the current message to the clipboard.
 Alt plus shift plus letter C. Open the current message in a read-only box you can read at your own pace with the arrow keys, with a close button to leave it.
 Shift plus backslash. Export the current category to a log file, then clear it.
-Shift plus letter B. Open the Buffer menu, which gathers everything you can do with the current category into one list: copy, export, or review the whole category or just the message you are on, mute or unmute the category, and export every category at once.
+Shift plus letter B. Open the Buffer menu, which gathers everything you can do with the current category into one list: copy, export, or review the whole category or just the message you are on, and mute or unmute the category.
 
 Menus and leaving.
 

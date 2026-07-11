@@ -318,32 +318,30 @@ vd.info_box("Buffer review", label, data);
 }
 // Shift+B: a local "Buffer menu" front-end over the buffer actions, so they're discoverable without the hotkeys.
 // Every option always shows (per design); empty/unmuteable cases just speak the same refusal the hotkeys do.
-// Export buffer and Export all buffers export THEN clear (like the Shift+backslash hotkey), so re-exporting can't
-// append duplicate entries to the log. Export buffer item exports only -- removing one message mid-buffer would be
-// disruptive, and the exact same single message is only duplicated by a deliberate, rare repeat.
+// Export buffer exports THEN clears (like the Shift+backslash hotkey), so re-exporting can't append duplicate
+// entries to the log. Export buffer item exports only -- removing one message mid-buffer would be disruptive, and
+// the exact same single message is only duplicated by a deliberate, rare repeat.
 void buffer_menu()
 {
 if(bufferpos < 0 or bufferpos >= int(buffers.length())) return;
 m.reset();
-m.intro_text = "Buffer menu";
+m.intro_text = buffers[bufferpos].name + ", buffer menu"; // lead with the focused category, e.g. "global chats, buffer menu"
 @m.background_callback = @net_keepalive_cb; // pump the network each tick so the open menu doesn't time us out
 m.add_item("Copy buffer");        // 0
 m.add_item("Copy buffer item");   // 1
 m.add_item("Export buffer");      // 2
 m.add_item("Export buffer item"); // 3
-m.add_item("Export all buffers"); // 4
-m.add_item(buffers[bufferpos].muted ? "Unmute buffer" : "Mute buffer"); // 5: label reflects current state
-m.add_item("Review buffer");      // 6
-m.add_item("Review buffer item"); // 7
+m.add_item(buffers[bufferpos].muted ? "Unmute buffer" : "Mute buffer"); // 4: label reflects current state
+m.add_item("Review buffer");      // 5
+m.add_item("Review buffer item"); // 6
 int choice = m.run();
 if(choice == 0) copy_current_buffer();
 else if(choice == 1) copy_buffer_item();
 else if(choice == 2) { if(export_current_buffer()) clear_current_buffer(); } // export then clear, like the hotkey, so a re-export can't duplicate what's already logged
 else if(choice == 3) export_current_item(); // single item: export only (see note above buffer_menu)
-else if(choice == 4) { if(export_all_buffers()) clear_all_buffers(); } // export every category, then clear them all, same anti-duplicate reason
-else if(choice == 5) toggle_buffer();
-else if(choice == 6) review_current_buffer();
-else if(choice == 7) review_buffer_item();
+else if(choice == 4) toggle_buffer();
+else if(choice == 5) review_current_buffer();
+else if(choice == 6) review_buffer_item();
 else speak("canceled"); // -1: escaped or cancelled
 }
 void clear_current_buffer()
