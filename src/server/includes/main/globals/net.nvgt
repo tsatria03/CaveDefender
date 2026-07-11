@@ -2337,7 +2337,12 @@ if(event.type == event_receive && event.channel == 1 && !world_frozen) // world-
                     string target_user = parsed[1];
                     string pm_message = string_join(parsed, " ", 2, parsed.length());
                     int target_index = get_player_index_from(target_user);
-                    if(target_index > -1)
+                    string target_name = (target_index > -1) ? players[target_index].name : target_user; // resolve to an account name (online by username or nickname, else whatever was typed) for the self-check
+                    if(string_to_lower_case(target_name) == string_to_lower_case(players[index].name))
+{
+                        send(event.peer_id, "misc You can't send a private message to yourself.", 0, true); // like /report and /demote, you can't target yourself
+                    }
+                    else if(target_index > -1)
 {
 // If the recipient has personally muted the sender, the PM can't be delivered -- tell the sender so (a reminder,
 // like other games), instead of the old silent fake "PM to" copy. player_ignores returns false when the sender is
