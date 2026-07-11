@@ -194,11 +194,19 @@ buffercheck();
 		bool running = autorun;
 		if (alt_is_down()) running = !running;
 		movetime = running ? runtime : walktime;
-		if (key_pressed(KEY_C))
+		if (!control_is_down() and key_pressed(KEY_C)) // !control so Ctrl+C stays free for the lobby create-room hotkey
 		{
 			speak(me.x+", "+me.y+" on "+gmt()+". Facing "+facing_name(facing)+".");
 		}
-		if (key_pressed(KEY_P)) track_players();
+		// Lobby quick-actions: Ctrl+C creates a public room, Ctrl+Shift+C a private one; Ctrl+J joins a public room,
+			// Ctrl+Shift+J a private one. Lobby only. Each key is read once and branched on Shift (one-shot keys), and
+			// sends the exact menuresult the matching lobby menu item sends (0-3), so the server does the identical work.
+			if (current_room==0 and !in_game and control_is_down())
+			{
+				if (key_pressed(KEY_C)) send(0, shift_is_down() ? "menuresult lobby 1" : "menuresult lobby 0", 0, true); // create private / public room
+				if (key_pressed(KEY_J)) send(0, shift_is_down() ? "menuresult lobby 3" : "menuresult lobby 2", 0, true); // join private / public room
+			}
+			if (key_pressed(KEY_P)) track_players();
 		if (in_game and game_outside and !shift_is_down() and key_pressed(KEY_B)) track_bots(); // EVP only: locate the builder bots; !shift so Shift+B stays the buffer menu even here
 		if (key_pressed(KEY_R)) // read once: key_pressed is one-shot, so a second read in the same frame misses it
 		{

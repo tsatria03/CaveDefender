@@ -382,7 +382,7 @@ if (key_repeating(KEY_RBRACKET))
 if (shift_is_down()) bottom_buffer();
 else next_buffer();
 }
-if (shift_is_down())
+if (shift_is_down() and !control_is_down()) // !control so a Ctrl+Shift combo (e.g. the lobby create/join private hotkeys) doesn't also fire a buffer action
 {
 if (key_repeating(KEY_M)) toggle_buffer();
 if (key_repeating(KEY_C)) { if (alt_is_down()) review_buffer_item(); else copy_buffer_item(); } // read KEY_C once, then branch: Alt+Shift+C reviews, Shift+C copies

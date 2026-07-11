@@ -1,4 +1,5 @@
 New in 3.9.
+In the lobby, you can now create or join a room straight from the keyboard without opening the menu first: control plus C creates a public room and control plus J joins one, and adding shift makes each the private version. They do the same as the matching lobby menu items and work only in the lobby.
 There is now a Buffer menu, opened with shift plus B on any category, that gathers everything you can do with your message buffers into one list: copy, export, or review the whole category or just the message you are on, and mute or unmute the category. It is simply a menu version of some of the buffer keys, which all still work as before.
 New in 3.8.
 You can now open a single buffer message in a read-only box and read it at your own pace with the arrow keys, rather than only hearing it spoken. Press alt plus shift plus C on the message you're on, then close the box when you're done.

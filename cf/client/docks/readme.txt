@@ -169,6 +169,14 @@ Alt plus letter R. Toggle auto-running on or off, saved between sessions.
 
 Letter, C. Speak your coordinates, the surface you are standing on, and the way you are facing.
 
+Rooms.
+
+These work only in the lobby, and do the same as the matching lobby menu items without opening the menu first.
+Control plus letter C. Create a public room.
+Control plus shift plus letter C. Create a private room.
+Control plus letter J. Join a public room.
+Control plus shift plus letter J. Join a private room.
+
 Chat.
 
 Slash. Open global chat to type a message or a slash command.
