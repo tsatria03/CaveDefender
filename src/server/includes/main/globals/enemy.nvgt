@@ -45,6 +45,30 @@ void remove_bots_on_wall(int gameid, string deadwall)
 for(int i=int(enemies.length())-1; i>=0; i--)
 if(@enemies[i]!=null and enemies[i].game_id==gameid and enemies[i].wall==deadwall) enemies.remove_at(i);
 }
+// The pile-up option, chosen at game creation: instead of removing a fallen wall's bots, MOVE them onto the walls
+// still standing, spread round-robin. This is the old swarm behavior -- as walls fall, the survivors inherit more
+// and more attackers and the last wall gets hammered by everyone. If no wall is left standing (the last one just
+// fell), the bots are simply dropped, since the round is about to end anyway. Reassigns the bots' target wall
+// rather than removing them, so it's safe to call mid enemy-attack loop.
+void redistribute_bots_on_wall(int gameid, string deadwall, double size)
+{
+string[]@ dirs = WALL_DIRS;
+string[] standing;
+for(uint d=0; d<dirs.length(); d++)
+{
+if(dirs[d]==deadwall) continue;
+int wi = border_wall(gameid, dirs[d], size);
+if(wi>-1 and walls[wi].health>0) standing.insert_last(dirs[d]);
+}
+if(standing.length()==0) { remove_bots_on_wall(gameid, deadwall); return; } // last wall fell; nowhere to move them
+int next=0;
+for(uint i=0; i<enemies.length(); i++)
+{
+if(@enemies[i]==null or enemies[i].game_id!=gameid or enemies[i].wall!=deadwall) continue;
+enemies[i].wall = standing[next % standing.length()]; // spread the fallen wall's attackers across the survivors
+next++;
+}
+}
 // Spawn one bot in a game, attacking the given wall with the given weapon.
 void spawn_enemy(int gameid, string wall, int weapon)
 {

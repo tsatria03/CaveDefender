@@ -423,6 +423,26 @@ opts.insert_last("Big, 75 by 75");
 opts.insert_last("Large, 100 by 100");
 send_menu(players[index].peer_id, "startsize", "Choose the map size", opts);
 }
+// Start-game cascade (PVE/PVP only): pick how far players may reinforce a wall past its full strength. 200% is the
+// first item and the default; the last option removes the cap. Maps to the startgame reinforce argument (2/4/8/0).
+void push_start_reinforce(int index)
+{
+string[] opts;
+opts.insert_last("200 percent"); // option 0 -> 2 (default, first)
+opts.insert_last("400 percent"); // 1 -> 4
+opts.insert_last("800 percent"); // 2 -> 8
+opts.insert_last("No limit");    // 3 -> 0
+send_menu(players[index].peer_id, "startreinforce", "Choose a wall reinforce limit", opts);
+}
+// Start-game cascade (PVE only): ask whether a fallen wall's bots pile onto the walls still standing. Yes is the
+// first item and the default (the old swarm behavior); No leaves the current behavior where those bots just leave.
+void push_start_pileup(int index)
+{
+string[] opts;
+opts.insert_last("Yes"); // option 0 -> pile up (default, first)
+opts.insert_last("No");  // 1 -> leave the round
+send_menu(players[index].peer_id, "startpileup", "Should enemy bots pile onto the remaining walls when a wall is destroyed?", opts);
+}
 
 // Called when a player answers a server menu. player_index is their roster index, id is the menu's
 // id, choice is the 0-based option index they picked (or -1 if they cancelled). This is the hook
@@ -1001,7 +1021,27 @@ else if(id == "startsize")
 {
 if(choice < 0) return;
 int size = (choice == 0) ? 25 : (choice == 1) ? 50 : (choice == 2) ? 75 : 100;
-send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode, 0, true);
+players[player_index].pending_size = size; // carried across the reinforce step
+if(players[player_index].pending_mode == "evp")
+send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " 0 0", 0, true); // EVP has no reinforce or pile-up step; both unused, pass 0
+else
+push_start_reinforce(player_index); // PVE/PVP: ask the wall reinforce limit next
+}
+else if(id == "startreinforce")
+{
+if(choice < 0) return; // cancelled the reinforce picker
+int rein = (choice == 0) ? 2 : (choice == 1) ? 4 : (choice == 2) ? 8 : 0; // 200/400/800 percent, or 0 = no limit
+players[player_index].pending_reinforce = rein; // carried across the PVE pile-up step
+if(players[player_index].pending_mode == "pve")
+push_start_pileup(player_index); // PVE only: ask the bot pile-up question next
+else
+send(peer, "runcommand startgame " + players[player_index].pending_size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " " + rein + " 0", 0, true); // PVP: no attacking bots to pile up, pass 0
+}
+else if(id == "startpileup")
+{
+if(choice < 0) return; // cancelled the pile-up picker
+int pileup = (choice == 0) ? 1 : 0; // Yes (first) = pile up, No = leave
+send(peer, "runcommand startgame " + players[player_index].pending_size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " " + players[player_index].pending_reinforce + " " + pileup, 0, true);
 }
 else if(id.substr(0, 8) == "confirm:")
 {

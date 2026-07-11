@@ -4,6 +4,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Let the host pick a wall reinforce limit of 200, 400, or 800 percent or no limit when starting a PVE or PVP game, and in PVE choose whether enemy bots pile onto the remaining walls when one falls.
 **Finished. Add a developer /bansall command that lists every banned account on the server, read-only, with each ban's length and reason.
 **Finished. Add developer /muteall and /unmuteall commands that mute and unmute everyone except developers in a channel, timed or indefinite.
 **Finished. Add a developer /kickall command that disconnects everyone except developers at once, with an optional reason shown to each kicked player.
