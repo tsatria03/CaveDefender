@@ -14,6 +14,7 @@ string rank="player";
 string language="English"; // the player's current language chat channel (bare name); loaded from language.usr at spawn, defaults to English.
 string pronoun=""; // how third-person messages refer to this player; the bare key from pronouns.svr, set from pronoun.usr at spawn (default_pronoun() if unset or invalid).
 int64 mute_global=-1, mute_local=-1, mute_voice=-1, mute_team=-1; // per channel: -1 = not muted, 0 = indefinite, >0 = epoch it expires at. (Staff can't be muted, so there's no staff channel.)
+int64[] global_msg_times; // anti-spam: svruptimer.elapsed (ms since boot) of this player's recent global-chat messages, newest appended last; entries older than spamtime are pruned each message, and the whole list is cleared when the spam guard trips. Transient, never persisted.
 int x=1, y=1; // map position; defaults to the client's spawn at (1,1) until a position update arrives.
 int room_id=0; // 0 = main lobby; otherwise the id of the room this player is currently in.
 string team=""; // which side this player is on within their game (PVP: attack/defend); routes team chat. Empty in co-op games, so team chat reaches everyone in the game until PVP splits the sides.
@@ -160,6 +161,33 @@ for(uint i=0; i<players.length(); i++)
 if(int(players[i].peer_id) == tpeer) continue;
 send(players[i].peer_id, "alert "+text, 0, true);
 }
+}
+// Anti-spam: record one global-chat message from this player and, if they've now sent spamcount messages within
+// the last spamtime milliseconds, auto-mute them in global for spamdir seconds (0 = indefinite) and report it.
+// The mute goes through the same machinery a staff /mute uses (on-disk field + in-memory state), so it persists,
+// times itself out, shows in /mutes, and can be lifted early with /unmute. Staff are exempt and spamguard=0 turns
+// the whole thing off; both cases record nothing and return false. Returns true if the guard tripped, in which
+// case the caller must NOT relay the offending message (it, and its penalty, are the trip).
+bool spam_check_global(int index)
+{
+if(spamguard != 1) return false; // feature disabled by the host
+if(index < 0 or index >= int(players.length())) return false;
+if(is_staff(players[index].rank)) return false; // staff are never rate-limited
+int64 now = svruptimer.elapsed; // monotonic ms since boot, the same clock every timestamp is stored against
+// Drop any recorded messages that have aged out of the sliding window (walk backwards so removals don't skip entries).
+for(int i=int(players[index].global_msg_times.length())-1; i>=0; i--)
+if(now - players[index].global_msg_times[i] >= spamtime) players[index].global_msg_times.remove_at(i);
+players[index].global_msg_times.insert_last(now);
+if(int(players[index].global_msg_times.length()) < spamcount) return false; // still under the limit
+// Tripped. Clear the list so the counter starts from a clean slate once the mute lifts, then apply the mute.
+players[index].global_msg_times.resize(0);
+int64 until = (spamdir > 0) ? (now_epoch() + spamdir) : 0; // 0 = indefinite, straight through to the mute system
+set_channel_mute(players[index].name, "global", until); // persist to the account
+set_player_mute(index, "global", until);                // mirror into live state so is_muted_now sees it at once
+notify_target_mute(index, "global", true, int(spamdir)); // the standard "you are muted in global for N" alert + sound
+send(players[index].peer_id, "misc You have been automatically muted in global chat for sending messages too quickly.", 0, true);
+notify_staff_audit(display_name(index) + " was automatically muted in global chat for spamming.", -1); // quiet staff-only note
+return true;
 }
 // An "afk " prefix for a player who is away, or "" otherwise. Prepended in every informational user
 // listing (who, /staff, the R/L/G readouts) so an away player reads as "afk bob" / "afk moderator bob".

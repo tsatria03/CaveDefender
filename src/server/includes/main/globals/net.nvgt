@@ -2373,6 +2373,10 @@ else
                     {
                         send(event.peer_id, muted_chat_message(index, "global"), 0, true);
                     }
+                    else if(spam_check_global(index))
+                    {
+                        // Anti-spam tripped: the player was just auto-muted in global and told why; drop this action.
+                    }
                     else
                     {
                         string action = string_join(parsed, " ", 1, parsed.length());
@@ -2993,6 +2997,10 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
             if(is_muted_now(index, "global"))
             {
                 send(event.peer_id, muted_chat_message(index, "global"), 0, true);
+            }
+            else if(spam_check_global(index))
+            {
+                // Anti-spam tripped: the player was just auto-muted in global and told why; drop this message.
             }
             else
             {
