@@ -177,6 +177,18 @@ Control plus shift plus letter C. Create a private room.
 Control plus letter J. Join a public room.
 Control plus shift plus letter J. Join a private room.
 
+While inside a room, these run the room menu's actions without opening it first.
+Control plus letter S. Start a game.
+Control plus shift plus letter S. Stop a game.
+Control plus letter J. Join a game.
+Control plus letter W. Watch a game.
+Control plus letter I. Invite a player to the room.
+Control plus letter K. Kick a player from the room.
+Control plus letter P. Set the room's password. Private rooms you host only.
+Control plus letter R. Retrieve the room's password. Private rooms you host only.
+Control plus letter D. Delete the room.
+Control plus letter L. Leave the room.
+
 Chat.
 
 Slash. Open global chat to type a message or a slash command.
