@@ -17,7 +17,13 @@ void show_server_menu(string message)
 		// no tab (menus that have no hotkeys) pass straight through.
 		string[] parts = string_split(lines[i], "\t", true);
 		string opt = parts[0];
-		if(parts.length() > 1 and menushortcuts) opt += ". " + parts[1];
+		if(parts.length() > 1 and menushortcuts)
+		{
+			// Format the shortcut as " (Control plus C)": drop the trailing period and wrap it in parentheses after
+			// the label -- e.g. "Create a public room (Control plus C)".
+			string sc = string_replace(parts[1], ".", "", true);
+			opt += " (" + sc + ")";
+		}
 		m.add_item(opt);
 	}
 	m.intro_text = lines[1];
