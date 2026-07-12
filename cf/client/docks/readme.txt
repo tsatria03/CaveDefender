@@ -266,7 +266,7 @@ Letter, B. Locate the builder bots, nearest first. EVP only.
 Number row, 1, 2, 3, or 4. Draw the axe, bat, crowbar, or hammer. For attackers, that is EVP and PVP.
 Spacebar. Held, swings your drawn weapon at the nearest wall in reach. For attackers, that is EVP and PVP.
 
-Round menu shortcuts. These run the round menu's actions without opening it, and only do something when the action is actually available to you.
+Round menu shortcuts. These run the round menu's actions without opening it, and only do something when the action is actually available to you. Every menu that has these shortcuts, the lobby, room, and round menus, also shows each item's shortcut beside it, so you can learn them by opening the menu too.
 Control plus letter B. Begin the round. Host only.
 Control plus letter S. Skip the build phase. Staff host only.
 Control plus letter I. Invite a player to the game. Host of an open game.

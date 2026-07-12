@@ -1751,10 +1751,10 @@ send(event.peer_id, "misc You must read the server rules before you can play. Ty
 else if(players[index].room_id==0)
 {
 string[] opts;
-opts.insert_last("Create a public room");
-opts.insert_last("Create a private room");
-opts.insert_last("Join a public room");
-opts.insert_last("Join a private room");
+opts.insert_last("Create a public room. Control plus C.");
+opts.insert_last("Create a private room. Control plus shift plus C.");
+opts.insert_last("Join a public room. Control plus J.");
+opts.insert_last("Join a private room. Control plus shift plus J.");
 send_menu(event.peer_id, "lobby", "Lobby menu", opts);
 }
 else if(get_room_index(players[index].room_id)>-1)
