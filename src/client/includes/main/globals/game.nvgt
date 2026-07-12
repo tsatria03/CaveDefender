@@ -216,8 +216,8 @@ buffercheck();
 				if (key_pressed(KEY_W)) send(0, "roomaction watchgame", 0, true);
 				if (key_pressed(KEY_I)) send(0, "roomaction invite", 0, true);
 				if (key_pressed(KEY_K)) send(0, "roomaction kick", 0, true);
-				if (key_pressed(KEY_P)) send(0, "roomaction setpw", 0, true);   // set password (private room you host)
-				if (key_pressed(KEY_R)) send(0, "roomaction getpw", 0, true);   // retrieve password (private room you host)
+				if (current_room_private and key_pressed(KEY_P)) send(0, "roomaction setpw", 0, true);   // set password: private room you host only, so don't fire in a public room
+				if (current_room_private and key_pressed(KEY_R)) send(0, "roomaction getpw", 0, true);   // retrieve password: private room you host only
 				if (key_pressed(KEY_D)) send(0, "roomaction delete", 0, true);
 				if (key_pressed(KEY_L)) send(0, "roomaction leave", 0, true);
 			}
@@ -226,8 +226,8 @@ buffercheck();
 			// re-validates host/phase/staff server-side. PVP shares this menu but adds side options, so it gets its own block.
 			if (in_game and (game_mode=="pve" or game_mode=="evp") and current_game_host==name and control_is_down())
 			{
-				if (key_pressed(KEY_B)) send(0, "gameaction beginround", 0, true);
-				if (key_pressed(KEY_S)) send(0, "gameaction skipbuild", 0, true);
+				if (game_phase=="idle" and key_pressed(KEY_B)) send(0, "gameaction beginround", 0, true); // only before the round starts, so a wrong-phase press is silent
+				if (game_phase=="build" and key_pressed(KEY_S)) send(0, "gameaction skipbuild", 0, true); // only during the build phase, so a wrong-phase press is silent
 				if (key_pressed(KEY_I)) send(0, "gameaction gameinvite", 0, true);
 				if (key_pressed(KEY_K)) send(0, "gameaction gamekick", 0, true);
 			}
@@ -240,8 +240,8 @@ buffercheck();
 				if (key_pressed(KEY_W)) send(0, "gameaction pvpwatch", 0, true); // watch instead (everyone)
 				if (current_game_host==name)
 				{
-					if (key_pressed(KEY_B)) send(0, "gameaction beginround", 0, true);
-					if (key_pressed(KEY_S)) send(0, "gameaction skipbuild", 0, true);
+					if (game_phase=="idle" and key_pressed(KEY_B)) send(0, "gameaction beginround", 0, true); // only before the round starts, so a wrong-phase press is silent
+					if (game_phase=="build" and key_pressed(KEY_S)) send(0, "gameaction skipbuild", 0, true); // only during the build phase, so a wrong-phase press is silent
 					if (key_pressed(KEY_I)) send(0, "gameaction gameinvite", 0, true);
 					if (key_pressed(KEY_K)) send(0, "gameaction gamekick", 0, true);
 					if (key_pressed(KEY_A)) send(0, "gameaction pvpassign", 0, true);
