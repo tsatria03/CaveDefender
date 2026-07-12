@@ -681,6 +681,8 @@ void settingsmenu()
 		form.assign_to_tab(spn, tabs, tab_menu);
 		int scr = form.create_checkbox("Enable side scrolling in menus", side_scrolling);
 		form.assign_to_tab(scr, tabs, tab_menu);
+			int mks = form.create_checkbox("Read keyboard shortcuts in menus", menushortcuts);
+			form.assign_to_tab(mks, tabs, tab_menu);
 		int ttscfg = form.create_button("&Configure voice");
 		form.assign_to_tab(ttscfg, tabs, tab_speech);
 		int speechtest = form.create_button("&Preview voice");
@@ -704,6 +706,7 @@ void settingsmenu()
 			first_letter = form.is_checked(flt);
 			speak_menu_position = form.is_checked(spn);
 			side_scrolling = form.is_checked(scr);
+				menushortcuts = form.is_checked(mks);
 			int cur_vmode = form.get_list_position(vct);
 			if(cur_vmode != -1 && cur_vmode != voicemode) // picked a different voice chat mode: relabel the self-monitor checkbox in place -- no form rebuild, so no re-announce and focus stays on the list
 			{
