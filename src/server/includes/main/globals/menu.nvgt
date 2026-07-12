@@ -75,19 +75,19 @@ int ri = get_room_index(players[index].room_id);
 if(ri < 0) return;
 players[index].menu_actions.resize(0);
 string[] opts;
-opts.insert_last("Start game"); players[index].menu_actions.insert_last("startgame");
-opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stopgame");
-opts.insert_last("Join game"); players[index].menu_actions.insert_last("joingame");
-opts.insert_last("Watch game"); players[index].menu_actions.insert_last("watchgame");
-opts.insert_last("Invite to room"); players[index].menu_actions.insert_last("invite");
-opts.insert_last("Kick from room"); players[index].menu_actions.insert_last("kick");
+opts.insert_last("Start game. Control plus S."); players[index].menu_actions.insert_last("startgame");
+opts.insert_last("Stop game. Control plus shift plus S."); players[index].menu_actions.insert_last("stopgame");
+opts.insert_last("Join game. Control plus J."); players[index].menu_actions.insert_last("joingame");
+opts.insert_last("Watch game. Control plus W."); players[index].menu_actions.insert_last("watchgame");
+opts.insert_last("Invite to room. Control plus I."); players[index].menu_actions.insert_last("invite");
+opts.insert_last("Kick from room. Control plus K."); players[index].menu_actions.insert_last("kick");
 if(rooms[ri].is_private)
 {
-opts.insert_last("Set password"); players[index].menu_actions.insert_last("setpw");
-opts.insert_last("Retrieve password"); players[index].menu_actions.insert_last("getpw");
+opts.insert_last("Set password. Control plus P."); players[index].menu_actions.insert_last("setpw");
+opts.insert_last("Retrieve password. Control plus R."); players[index].menu_actions.insert_last("getpw");
 }
-opts.insert_last("Delete room"); players[index].menu_actions.insert_last("delete");
-opts.insert_last("Leave room"); players[index].menu_actions.insert_last("leave");
+opts.insert_last("Delete room. Control plus D."); players[index].menu_actions.insert_last("delete");
+opts.insert_last("Leave room. Control plus L."); players[index].menu_actions.insert_last("leave");
 send_menu(peer, "room", "Room menu", opts);
 }
 // Dispatch a room-menu action by its action key. Shared by the room menu (on_menu_result) and the Ctrl+<key> room
@@ -331,21 +331,21 @@ else if(phase == "wave") status = "The enemies are attacking.";
 else status = "Waiting to start.";
 players[index].menu_actions.resize(0);
 string[] opts;
-if(host and phase == "idle") { opts.insert_last("Begin round"); players[index].menu_actions.insert_last("beginround"); }
-else if(host and phase == "build" and staff) { opts.insert_last("Skip build phase"); players[index].menu_actions.insert_last("skipbuild"); }
+if(host and phase == "idle") { opts.insert_last("Begin round. Control plus B."); players[index].menu_actions.insert_last("beginround"); }
+else if(host and phase == "build" and staff) { opts.insert_last("Skip build phase. Control plus S."); players[index].menu_actions.insert_last("skipbuild"); }
 // PVP staging (idle): every member picks a side, and the host can also assign anyone; the even-team rule is enforced at Begin round.
 if(games[gi].mode == "pvp" and phase == "idle")
 {
-opts.insert_last("Choose your side"); players[index].menu_actions.insert_last("pvpside");
-if(host) { opts.insert_last("Assign players to sides"); players[index].menu_actions.insert_last("pvpassign"); }
-if(games[gi].members.length() > 1) { opts.insert_last("Watch instead"); players[index].menu_actions.insert_last("pvpwatch"); } // step aside to a deck so an odd count can go even; pointless when you're the only one
+opts.insert_last("Choose your side. Control plus C."); players[index].menu_actions.insert_last("pvpside");
+if(host) { opts.insert_last("Assign players to sides. Control plus A."); players[index].menu_actions.insert_last("pvpassign"); }
+if(games[gi].members.length() > 1) { opts.insert_last("Watch instead. Control plus W."); players[index].menu_actions.insert_last("pvpwatch"); } // step aside to a deck so an odd count can go even; pointless when you're the only one
 }
 // Invite/kick are open-game host options (a solo game has only the host). Invite shows while the game is still
 // joinable and has a free slot; kick shows whenever there's someone other than the host to remove.
 if(host and !games[gi].solo)
 {
-if(phase == "idle" or phase == "build") { opts.insert_last("Invite to game"); players[index].menu_actions.insert_last("gameinvite"); } // full games still show it, to report the cap when chosen
-opts.insert_last("Kick from game"); players[index].menu_actions.insert_last("gamekick"); // always shown; reports "no one to kick" when you're alone
+if(phase == "idle" or phase == "build") { opts.insert_last("Invite to game. Control plus I."); players[index].menu_actions.insert_last("gameinvite"); } // full games still show it, to report the cap when chosen
+opts.insert_last("Kick from game. Control plus K."); players[index].menu_actions.insert_last("gamekick"); // always shown; reports "no one to kick" when you're alone
 }
 if(opts.length() == 0) return; // nothing actionable: stay silent and let Tab report the round status
 send_menu(peer, "game", "Round menu. " + status, opts);
