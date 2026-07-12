@@ -1731,6 +1731,12 @@ else if(parsed[0]=="roomaction" and index>-1 and parsed.length()>1)
 // actually in a room (room_id != 0); do_room_action re-validates host-only actions (kick, delete, setpw) itself.
 if(players[index].room_id != 0) do_room_action(index, event.peer_id, parsed[1]);
 }
+else if(parsed[0]=="gameaction" and index>-1 and parsed.length()>1)
+{
+// A Ctrl+<key> round-menu hotkey: run the named round action directly, skipping the round menu. Only valid while
+// in a game; do_game_action's downstream commands (beginround, skipbuild) and pickers re-validate host/phase/staff.
+if(get_game_index(players[index].room_id) >= 0) do_game_action(index, event.peer_id, parsed[1]);
+}
 else if(parsed[0]=="openmenu" and index>-1)
 {
 // The client asks the server to open the menu for wherever they are; the server is the authority on
