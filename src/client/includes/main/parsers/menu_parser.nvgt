@@ -10,7 +10,16 @@ void show_server_menu(string message)
 	string[] header = string_split(lines[0], " ", true);
 	string menuid = header.length() > 1 ? header[1] : "0";
 	setupmenu();
-	for(uint i = 2; i < lines.length(); i++) m.add_item(lines[i]);
+	for(uint i = 2; i < lines.length(); i++)
+	{
+		// A menu item may carry its keyboard shortcut after a tab: "<label>\t<shortcut>". Re-attach it as
+		// ". <shortcut>" only when the player wants shortcuts shown; otherwise show the label alone. Items with
+		// no tab (menus that have no hotkeys) pass straight through.
+		string[] parts = string_split(lines[i], "\t", true);
+		string opt = parts[0];
+		if(parts.length() > 1 and menushortcuts) opt += ". " + parts[1];
+		m.add_item(opt);
+	}
 	m.intro_text = lines[1];
 	// Silence the looping ground-item sounds (wood) while an in-game menu is up, unless the game is already
 	// frozen by the host's shared pause (which paused every pool, so leave that ownership alone).

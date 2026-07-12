@@ -92,6 +92,10 @@ if(st.d.exists("speak_menu_position"))
 {
 speak_menu_position=st.read_bool("speak_menu_position");
 }
+if(st.d.exists("menushortcuts"))
+{
+menushortcuts=st.read_bool("menushortcuts");
+}
 if(st.d.exists("gamxit"))
 {
 gamxit=st.read_int("gamxit");
@@ -190,6 +194,7 @@ st.add("menuwrap",menuwrap);
 st.add("first_letter",first_letter);
 st.add("side_scrolling",side_scrolling);
 st.add("speak_menu_position",speak_menu_position);
+st.add("menushortcuts",menushortcuts);
 st.add("gamxit",gamxit);
 st.add("autorun",autorun);
 st.add("typingSounds",typingSounds);
