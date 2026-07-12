@@ -696,6 +696,7 @@ void settingsmenu()
 		{
 			wait(5);
 			form.monitor();
+			net_keepalive(); // service the network so opening preferences mid-session (Alt+P in game) doesn't time the connection out; a no-op before login, so the main-menu path is unaffected
 			hearvoice = form.is_checked(hvc);
 			holdkey = bool_to_int(form.is_checked(hldk));
 			gamxit = bool_to_int(form.is_checked(esc));

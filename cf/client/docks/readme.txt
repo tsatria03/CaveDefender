@@ -1,6 +1,6 @@
 Welcome to CaveDefender!
 
-CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in the player versus player mode, take one side of the walls and fight other players across them. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help.
+CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in the player versus player mode, take one side of the walls and fight other players across them. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help. For the full list of the keys the game uses, see the keyboard commands section near the end of this readme.
 
 Connecting and signing in.
 
@@ -29,7 +29,7 @@ Semicolon opens team chat, which reaches only your own side and works only in a 
 
 Global chat is also divided into language channels. You only hear global messages from people on the same language channel as you, so each language has its own conversation. Local chat, private messages, and staff chat all reach across channels, so local chat reaches everyone sharing your space whatever channel they are on. Choose your language with /channel, everyone starts on English, and your choice is saved for next time.
 
-One of the channels is named Unfiltered. It works like any other channel, in that you only hear global chat from people who have also chosen it, but it is the one channel where the word filter is switched off for global chat. Local chat is always filtered no matter which channel you are on, since it reaches everyone sharing your space. Unfiltered is meant for talking freely, including adult or NSFW topics, so pick it only if you are happy to both read and write that kind of language. No one is ever put there automatically, and you can leave it any time by choosing another channel with /channel.
+One of the channels is named Unfiltered. It works like any other channel, in that you only hear global chat from people who have also chosen it, but it is the one channel where the word filter is switched off for global chat. Unfiltered is meant for talking freely, including adult or NSFW topics, so pick it only if you are happy to both read and write that kind of language. No one is ever put there automatically, and you can leave it any time by choosing another channel with /channel.
 
 You can run any command from any chat you have access to.
 
@@ -149,10 +149,6 @@ You float on a deck above the cavern and roam it freely while the whole battle p
 
 Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. When you watch an environment versus player game, the deck sits out on the gravel to match, and the b key locates the builder bots as well. When you watch a player versus player game, you choose whether to observe from the indoor deck above the defenders or the outdoor deck above the attackers. Press escape to stop watching and return to the room.
 
-Connection problems.
-
-If your connection drops while you are in a room, a game, or watching one, you are not dropped out of it straight away. The server holds your place for 45 seconds, and the game quietly keeps trying to reconnect the whole time. Get back within that window, which usually happens on its own, and you are put right back where you were, in the same room or game, with your wood, your score, and your host role intact, rather than being dumped in the lobby. To everyone else you simply went offline and then came back. If the game or room ends while you are away, you return to wherever you would have been sent, your room or the lobby; and if you do not make it back in time, or the server itself restarts, you come back to the lobby as usual.
-
 Keyboard commands.
 
 This is the full list of keys CaveDefender uses. Some keys only do something in the right place, for example the wall and weapon keys work only while you are in a game; where that matters it is noted. A few keys do one thing on their own and another with shift held, and both are listed.
@@ -164,7 +160,7 @@ Right arrow. Step right.
 Up arrow. Step forward.
 Down arrow. Step backward.
 
-Alt. Held while moving, flips between walking and running for as long as you hold it: with auto-running off, holding alt runs; with auto-running on, holding alt walks.
+Alt. Held while moving, switches between walking and running; which way round depends on your auto-running setting.
 Alt plus letter R. Toggle auto-running on or off, saved between sessions.
 
 C. Speak your coordinates, the surface you are standing on, and the way you are facing.
@@ -203,10 +199,10 @@ Control plus W. Watch instead. Player versus player only.
 
 Chat.
 
-Slash. Open global chat to type a message or a slash command.
-Backslash. Open local chat, heard by everyone in your current space.
+Slash. Open global chat.
+Backslash. Open local chat.
 Apostrophe. Open staff chat. Staff only.
-Semicolon. Open team chat, heard only by your own side. Only in a player versus player game; does nothing in the other modes.
+Semicolon. Open team chat. Player versus player only.
 
 Glancing around.
 
@@ -258,6 +254,7 @@ Shift plus B. Open the Buffer menu, which gathers everything you can do with the
 Menus and leaving.
 
 Enter. Open the menu for where you are: the lobby menu in the lobby, the room menu in a room, or the round menu in a game you host.
+Alt plus P. Open your preferences without leaving, the same settings you reach from the main menu; saving or canceling returns you to where you were.
 Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the connection menu, asking you to confirm first if that setting is on.
 
 In a game.
@@ -278,3 +275,7 @@ B. Locate the builder bots, nearest first. EVP only.
 Number row, 1, 2, 3, or 4. Draw the axe, bat, crowbar, or hammer. For attackers, that is EVP and PVP.
 
 Spacebar. Held, swings your drawn weapon at the nearest wall in reach. For attackers, that is EVP and PVP.
+
+Connection problems.
+
+If your connection drops while you are in a room, a game, or watching one, you are not dropped out of it straight away. The server holds your place for 45 seconds, and the game quietly keeps trying to reconnect the whole time. Get back within that window, which usually happens on its own, and you are put right back where you were, in the same room or game, with your wood, your score, and your host role intact, rather than being dumped in the lobby. To everyone else you simply went offline and then came back. If the game or room ends while you are away, you return to wherever you would have been sent, your room or the lobby; and if you do not make it back in time, or the server itself restarts, you come back to the lobby as usual.
