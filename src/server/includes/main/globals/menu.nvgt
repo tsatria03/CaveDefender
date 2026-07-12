@@ -93,20 +93,28 @@ send_menu(peer, "room", "Room menu", opts);
 // Dispatch a room-menu action by its action key. Shared by the room menu (on_menu_result) and the Ctrl+<key> room
 // hotkeys, so both run identical logic; keyed by action NAME, not menu index, so it's immune to the private-only
 // Set/Retrieve password items shifting the menu positions. Each branch re-validates (host checks, etc.) itself.
-void do_room_action(int player_index, int peer, string act)
+void do_room_action(int player_index, int peer, string act, bool silent=false)
 {
+// silent = true when a Ctrl+<key> hotkey called this rather than the menu. A hotkey pressed in the wrong context
+// (not the host, a public room, not alone in the room) just does nothing; the menu still explains why, since you
+// deliberately chose that item. So every "you can't..." message below is gated behind !silent.
 if(act == "leave") send(peer, "runcommand leaveroom", 0, true);
-else if(act == "getpw") send(peer, "runcommand getroompassword", 0, true);
+else if(act == "getpw")
+{
+int ri = get_room_index(players[player_index].room_id);
+if(ri > -1 and rooms[ri].is_private) send(peer, "runcommand getroompassword", 0, true); // only a private room has a password; the Ctrl+R hotkey mustn't fire in a public room (the menu offers this for private rooms only)
+}
 else if(act == "setpw")
 {
 int ri = get_room_index(players[player_index].room_id);
-if(ri > -1 and rooms[ri].host_peer != peer) send(peer, "Only the host can change the room's password.", 0, true);
+if(ri < 0 or !rooms[ri].is_private) return; // only a private room has a password; the Ctrl+P hotkey mustn't open the prompt in a public room (the menu offers this for private rooms only)
+if(rooms[ri].host_peer != peer) { if(!silent) send(peer, "Only the host can change the room's password.", 0, true); }
 else ask_input(peer, "Enter the new room password (at least 6 characters).", "setroompassword", true, true);
 }
 else if(act == "kick")
 {
 int ri = get_room_index(players[player_index].room_id);
-if(ri > -1 and rooms[ri].host_peer != peer) send(peer, "Only the host can kick players from the room.", 0, true);
+if(ri > -1 and rooms[ri].host_peer != peer) { if(!silent) send(peer, "Only the host can kick players from the room.", 0, true); }
 else push_kick_list(player_index);
 }
 else if(act == "delete")
@@ -114,8 +122,8 @@ else if(act == "delete")
 int ri = get_room_index(players[player_index].room_id);
 bool staff = is_staff(players[player_index].rank);
 bool host = (ri > -1 and rooms[ri].host_peer == peer);
-if(!staff and !host) send(peer, "Only the host can delete the room.", 0, true);
-else if(!staff and ri > -1 and rooms[ri].members.length() > 1) send(peer, "You can't delete the room while other players are in it.", 0, true);
+if(!staff and !host) { if(!silent) send(peer, "Only the host can delete the room.", 0, true); }
+else if(!staff and ri > -1 and rooms[ri].members.length() > 1) { if(!silent) send(peer, "You can't delete the room while other players are in it.", 0, true); }
 else confirm_menu(peer, "deleteroom", "Are you sure you want to delete this room? Everyone in it will be sent back to the lobby.");
 }
 else if(act == "invite") push_invite_list(player_index); // any room member may invite a lobby player

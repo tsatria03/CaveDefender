@@ -1729,7 +1729,7 @@ else if(parsed[0]=="roomaction" and index>-1 and parsed.length()>1)
 {
 // A Ctrl+<key> room hotkey: run the named room-menu action directly, skipping the room menu. Only valid while
 // actually in a room (room_id != 0); do_room_action re-validates host-only actions (kick, delete, setpw) itself.
-if(players[index].room_id != 0) do_room_action(index, event.peer_id, parsed[1]);
+if(players[index].room_id != 0) do_room_action(index, event.peer_id, parsed[1], true); // silent: a hotkey in the wrong context does nothing quietly (the menu path, on_menu_result, stays non-silent)
 }
 else if(parsed[0]=="gameaction" and index>-1 and parsed.length()>1)
 {
