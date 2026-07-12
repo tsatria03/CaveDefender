@@ -167,27 +167,39 @@ Down arrow. Step backward.
 Alt. Held while moving, flips between walking and running for as long as you hold it: with auto-running off, holding alt runs; with auto-running on, holding alt walks.
 Alt plus letter R. Toggle auto-running on or off, saved between sessions.
 
-Letter, C. Speak your coordinates, the surface you are standing on, and the way you are facing.
+C. Speak your coordinates, the surface you are standing on, and the way you are facing.
 
 Rooms.
 
 These work only in the lobby, and do the same as the matching lobby menu items without opening the menu first.
-Control plus letter C. Create a public room.
-Control plus shift plus letter C. Create a private room.
-Control plus letter J. Join a public room.
-Control plus shift plus letter J. Join a private room.
+
+Control plus C. Create a public room.
+Control plus shift plus C. Create a private room.
+Control plus J. Join a public room.
+Control plus shift plus J. Join a private room.
 
 While inside a room, these run the room menu's actions without opening it first.
-Control plus letter S. Start a game.
-Control plus shift plus letter S. Stop a game.
-Control plus letter J. Join a game.
-Control plus letter W. Watch a game.
-Control plus letter I. Invite a player to the room.
-Control plus letter K. Kick a player from the room.
-Control plus letter P. Set the room's password. Private rooms you host only.
-Control plus letter R. Retrieve the room's password. Private rooms you host only.
-Control plus letter D. Delete the room.
-Control plus letter L. Leave the room.
+
+Control plus S. Start a game.
+Control plus shift plus S. Stop a game.
+Control plus J. Join a game.
+Control plus W. Watch a game.
+Control plus I. Invite a player to the room.
+Control plus K. Kick a player from the room.
+Control plus P. Set the room's password. Private rooms only.
+Control plus R. Retrieve the room's password. Private rooms only.
+Control plus D. Delete the room.
+Control plus L. Leave the room.
+
+Round menu shortcuts. These run the round menu's actions without opening it, and only do something when the action is actually available to you. Every menu that has these shortcuts, the lobby, room, and round menus, also shows each item's shortcut beside it, so you can learn them by opening the menu too. Once you know the keys, you can hide these labels by turning off Read keyboard shortcuts in menus on the Menu tab of preferences.
+
+Control plus B. Begin the round. Host only.
+Control plus S. Skip the build phase. Staff host only.
+Control plus I. Invite a player to the game. Host of an open game.
+Control plus K. Kick a player from the game. Host of an open game.
+Control plus C. Choose your side. Player versus player only.
+Control plus A. Assign players to sides. Player versus player host only.
+Control plus W. Watch instead. Player versus player only.
 
 Chat.
 
@@ -198,10 +210,10 @@ Semicolon. Open team chat, heard only by your own side. Only in a player versus 
 
 Glancing around.
 
-Letter, P. Locate the other players around you, nearest first, by direction and distance.
-Letter, R. List who is around: the rooms from the lobby, who is in your room from a room, or who is in the game's room from a game.
-Letter, L. List who is in the lobby. Works anywhere, including in a game.
-Letter, G. List games: every game on the server from the lobby, the games in your room from a room, or who is in your game from a game.
+P. Locate the other players around you, nearest first, by direction and distance.
+R. List who is around: the rooms from the lobby, who is in your room from a room, or who is in the game's room from a game.
+L. List who is in the lobby. Works anywhere, including in a game.
+G. List games: every game on the server from the lobby, the games in your room from a room, or who is in your game from a game.
 
 Server information.
 
@@ -221,7 +233,7 @@ End. Lower the ambience volume.
 
 Voice chat.
 
-Letter, O. Talk over voice chat. With hold to talk on, hold O to talk; with it off, press O to start talking and press it again to stop.
+O. Talk over voice chat. With hold to talk on, hold O to talk; with it off, press O to start talking and press it again to stop.
 
 The message buffers.
 
@@ -237,11 +249,11 @@ Right bracket. Move to the next category.
 Shift plus left bracket. Jump to the first category.
 Shift plus right bracket. Jump to the last category.
 
-Shift plus letter M. Mute or unmute the current category, so its new messages stop or resume being read aloud.
-Shift plus letter C. Copy the current message to the clipboard.
-Alt plus shift plus letter C. Open the current message in a read-only box you can read at your own pace with the arrow keys, with a close button to leave it.
+Shift plus M. Mute or unmute the current category, so its new messages stop or resume being read aloud.
+Shift plus C. Copy the current message to the clipboard.
+Alt plus shift plus C. Open the current message in a read-only box you can read at your own pace with the arrow keys, with a close button to leave it.
 Shift plus backslash. Export the current category to a log file, then clear it.
-Shift plus letter B. Open the Buffer menu, which gathers everything you can do with the current category into one list: copy, export, or review the whole category or just the message you are on, and mute or unmute the category.
+Shift plus B. Open the Buffer menu, which gathers everything you can do with the current category into one list: copy, export, or review the whole category or just the message you are on, and mute or unmute the category.
 
 Menus and leaving.
 
@@ -254,23 +266,15 @@ These work while you are in a game.
 
 Tab. Hear the current round status.
 
-Letter, N, E, S, or W. Hear the strength of the north, east, south, or west wall.
-Letter, T. Hear a summary of all four walls.
-Letter, I. Hear how much wood you are carrying, broken down by size. For defenders, that is PVE and PVP; not while watching.
-Letter, D. Locate the wood lying around you, nearest first, with each piece's size. For defenders, that is PVE and PVP; not while watching.
+N, E, S, or W. Hear the strength of the north, east, south, or west wall.
+T. Hear a summary of all four walls.
+I. Hear how much wood you are carrying, broken down by size. For defenders, that is PVE and PVP; not while watching.
+D. Locate the wood lying around you, nearest first, with each piece's size. For defenders, that is PVE and PVP; not while watching.
 
 Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. Defenders only, in PVE and PVP.
 
-Letter, B. Locate the builder bots, nearest first. EVP only.
+B. Locate the builder bots, nearest first. EVP only.
 
 Number row, 1, 2, 3, or 4. Draw the axe, bat, crowbar, or hammer. For attackers, that is EVP and PVP.
-Spacebar. Held, swings your drawn weapon at the nearest wall in reach. For attackers, that is EVP and PVP.
 
-Round menu shortcuts. These run the round menu's actions without opening it, and only do something when the action is actually available to you. Every menu that has these shortcuts, the lobby, room, and round menus, also shows each item's shortcut beside it, so you can learn them by opening the menu too. Once you know the keys, you can hide these labels by turning off Read keyboard shortcuts in menus on the Menu tab of preferences.
-Control plus letter B. Begin the round. Host only.
-Control plus letter S. Skip the build phase. Staff host only.
-Control plus letter I. Invite a player to the game. Host of an open game.
-Control plus letter K. Kick a player from the game. Host of an open game.
-Control plus letter C. Choose your side. Player versus player only.
-Control plus letter A. Assign players to sides. Player versus player host only.
-Control plus letter W. Watch instead. Player versus player only.
+Spacebar. Held, swings your drawn weapon at the nearest wall in reach. For attackers, that is EVP and PVP.

@@ -10,7 +10,7 @@ int voicemode = 0; // "Voice chat mode": 0 = Live streaming (heard live as you t
 bool hearvoice=false; // self-monitor of your own voice; the checkbox label follows voicemode ("Hear your voice while speaking" when streaming, "...after recording" for messages). Off by default.
 bool voice_muted=false; // are we currently voice-muted by staff? Kept in sync silently (voicemutestate at spawn/restore, plus the live muted/unmuted voice/all notices) so pressing O can warn us and skip streaming instead of the server dropping every packet
 int gamxit=1;
-bool menushortcuts=true; // show each menu item's keyboard shortcut in the lobby/room/round menus (e.g. "Create a public room. Control plus C."); toggled on the preferences Menu tab, saved in prefs. Default on so new players discover the hotkeys.
+bool menushortcuts=true; // show each menu item's keyboard shortcut in the lobby/room/round menus (e.g. "Create a public room (Control plus C)"); toggled on the preferences Menu tab, saved in prefs. Default on so new players discover the hotkeys.
 bool autorun=false; // when on you run by default and holding a movement modifier (alt/ctrl/shift) walks instead; toggled in-map with Alt+R, saved in prefs
 double ambvolume=0, musvolume=0; // in-world ambience/music volume (0 = full, down to -100); set on every map's spawned beds, adjusted in-map with Home/End (ambience) and PageUp/PageDown (music), saved in prefs
 timer worldvoltimer; // throttles the in-map Home/End/PageUp/PageDown world-volume key repeats
