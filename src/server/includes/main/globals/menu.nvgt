@@ -624,7 +624,9 @@ for(uint i=0; i<langs.length(); i++)
 {
 players[index].menu_targets.insert_last(langs[i]); // raw "English (English)" line, so the choice maps back via language_bare
 int n = players_on_channel(language_bare(langs[i]));
-opts.insert_last(langs[i] + " " + n + (n==1 ? " player in this channel." : " players in this channel."));
+string label = langs[i] + " " + n + (n==1 ? " player in this channel." : " players in this channel.");
+if(string_to_lower_case(language_bare(langs[i])) == string_to_lower_case(players[index].language)) label += " Currently active."; // mark the channel you're on
+opts.insert_last(label);
 }
 send_menu(peer, "channel", "Select a language channel to use.", opts);
 }
@@ -737,8 +739,15 @@ int peer = players[index].peer_id;
 string[] opts = load_pronoun_options();
 if(opts.length() == 0) { send(peer, "No pronoun options are configured.", 0, true); return; }
 players[index].menu_targets.resize(0);
-for(uint i=0; i<opts.length(); i++) players[index].menu_targets.insert_last(opts[i]);
-send_menu(peer, "pronoun", "Select the pronouns used to refer to you in messages.", opts);
+string[] display;
+for(uint i=0; i<opts.length(); i++)
+{
+players[index].menu_targets.insert_last(opts[i]); // raw line kept so pronoun_bare maps the choice back
+string label = opts[i];
+if(string_to_lower_case(pronoun_bare(opts[i])) == string_to_lower_case(players[index].pronoun)) label += " Currently active."; // mark the pronoun you use
+display.insert_last(label);
+}
+send_menu(peer, "pronoun", "Select the pronouns used to refer to you in messages.", display);
 }
 // The F6 player list: every connected player, server-wide (the same set F1/who reports), as a navigable
 // menu. Each label mirrors /who -- the AFK prefix, the rank-prefixed name, and "(username)" when the
