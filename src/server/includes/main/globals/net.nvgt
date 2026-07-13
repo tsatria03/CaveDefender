@@ -1748,18 +1748,9 @@ if(!players[index].agreed)
 // reminder is shown, since there's no longer a login-time alert.
 send(event.peer_id, "misc You must read the server rules before you can play. Type /rules to read them, then /rules agree to continue, or /rules disagree to leave.", 0,true);
 }
-else if(players[index].room_id==0)
+else if(players[index].room_id==0 or get_room_index(players[index].room_id)>-1)
 {
-string[] opts;
-opts.insert_last("Create a public room\tControl plus C.");
-opts.insert_last("Create a private room\tControl plus shift plus C.");
-opts.insert_last("Join a public room\tControl plus J.");
-opts.insert_last("Join a private room\tControl plus shift plus J.");
-send_menu(event.peer_id, "lobby", "Lobby menu", opts);
-}
-else if(get_room_index(players[index].room_id)>-1)
-{
-push_room_menu(index);
+push_actions_menu(index); // Enter in the lobby or a room opens the Actions menu (Account panel + the Lobby/Room panel)
 }
 else if(get_game_index(players[index].room_id)>-1)
 {
