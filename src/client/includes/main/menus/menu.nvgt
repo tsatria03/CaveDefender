@@ -320,9 +320,9 @@ void addserver()
 void loadservermenu()
 {
 	setupmenu(false);
-	m.add_item("Custom" + (server_custom ? " Currently active." : ""), "custom"); // Custom is active when you're on a manually entered address
+	m.add_item("Custom" + (server_custom ? ". Currently active." : ""), "custom"); // Custom is active when you're on a manually entered address
 	for(uint i=0; i<servers.length(); i++)
-		m.add_item(server_list_text(i) + ((!server_custom and servers[i].sip==ip and servers[i].sport==port) ? " Currently active." : ""), ""+i); // mark the server you're set to
+		m.add_item(server_list_text(i) + ((!server_custom and servers[i].sip==ip and servers[i].sport==port) ? ". Currently active." : ""), ""+i); // mark the server you're set to
 	m.add_item("back", "back");
 	m.intro_text="Choose a server to use in the game.";
 	int mres=m.run();
@@ -461,7 +461,7 @@ void loadaccountmenu()
 	if(accounts.length()==0) { dlgmessage("There are no saved accounts to use. Press enter to continue."); return; }
 	setupmenu(false);
 	for(uint i=0; i<accounts.length(); i++)
-		m.add_item(account_list_text(i) + (string_to_lower_case(accounts[i].uname)==string_to_lower_case(name) ? " Currently active." : ""), ""+i); // mark the account you're set to
+		m.add_item(account_list_text(i) + (string_to_lower_case(accounts[i].uname)==string_to_lower_case(name) ? ". Currently active." : ""), ""+i); // mark the account you're set to
 	m.add_item("back", "back");
 	m.intro_text="Choose an account to use in the game.";
 	int mres=m.run();
