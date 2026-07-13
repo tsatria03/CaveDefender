@@ -304,6 +304,29 @@ void net_keepalive_cb(form_menu@ mm, string data)
 {
 	if(connected or reconnecting) netloop();
 }
+// The server relays an Account-panel choice that needs a client-side input flow: "accountaction <which>".
+// We reuse the existing slash-command flows so validation and the wire messages stay in one place -- comparse
+// opens the masked change-password form directly, and for email/nickname we collect the value here first (the
+// server never sees passwords and can't type for you), then hand it to the same command.
+void handle_accountaction(string message)
+{
+	string[] parsed = string_split(message, " ", true);
+	if(parsed.length() < 2) return;
+	string which = parsed[1];
+	if(which == "changepass") comparse("/changepass"); // no args opens the three-field masked form
+	else if(which == "changemail")
+	{
+		string v = vd.input_box("Change email", "Enter your new email address.", email); // prefilled with your current email
+		if(v == "") { speak("canceled"); return; }
+		comparse("/changemail " + v);
+	}
+	else if(which == "nick")
+	{
+		string v = vd.input_box("Change nickname", "Enter your new nickname, or type default to use your account name.", "");
+		if(v == "") { speak("canceled"); return; }
+		comparse("/nick " + v);
+	}
+}
 // Open the blocking UI for a deferred message once the previous modal has closed.
 void dispatch_modal(string message)
 {
@@ -320,6 +343,7 @@ void dispatch_modal(string message)
 	else if(parsed[0]=="bansalltext") handle_bansalltext(message);
 	else if(parsed[0]=="playerinfo") handle_playerinfo(message);
 	else if(parsed[0]=="askinput") handle_askinput(message);
+	else if(parsed[0]=="accountaction") handle_accountaction(message);
 }
 // The round ended (all walls fell): "roundover <seconds> <collected> <rounds> <bonus> <milestone>". Show the
 // results dialog (and a milestone-reward dialog if we earned bonus wood), then ask whether to play again or
@@ -1203,6 +1227,12 @@ void netloop_impl()
 		{
 			if(netloop_depth>1) net_deferred.insert_last(message);
 			else handle_askinput(message);
+		}
+		else if (parsed[0] == "accountaction" and parsed.length() > 1)
+		{
+			// An Account-panel choice that opens a client input flow; defer if another modal is already up.
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_accountaction(message);
 		}
 		else if (parsed[0] == "runcommand")
 		{
