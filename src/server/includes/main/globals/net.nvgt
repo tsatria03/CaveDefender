@@ -1757,6 +1757,20 @@ else if(get_game_index(players[index].room_id)>-1)
 push_game_menu(index); // Enter in a game = round controls
 }
 }
+else if(parsed[0]=="openpanel" and index>-1 and parsed.length()>1)
+{
+// A Ctrl+A / Ctrl+H hotkey jumps straight to an Actions-menu panel, skipping the Actions menu itself. Gated like
+// openmenu (no panels until you've agreed to the rules), and each panel is pushed only in its own context: the
+// account panel in the lobby or a room, the lobby panel only in the lobby, the room panel only in a room. A
+// wrong-context press does nothing quietly, matching the other context-specific hotkeys.
+if(players[index].agreed)
+{
+string which = parsed[1];
+if(which == "account" and (players[index].room_id==0 or get_room_index(players[index].room_id)>-1)) push_account_menu(index);
+else if(which == "lobby" and players[index].room_id==0) push_lobby_menu(index);
+else if(which == "room" and get_room_index(players[index].room_id)>-1) push_room_menu(index);
+}
+}
 else if(parsed[0]=="openpausemenu" and index>-1)
 {
 // Escape in a game. The host, during a running round, pauses the whole game for everyone and gets the

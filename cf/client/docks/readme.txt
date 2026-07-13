@@ -65,7 +65,7 @@ If you are staff, the card also shows action buttons for the things your rank le
 
 The actions menu.
 
-In the lobby or any room you are in, press enter to open the actions menu. It has two items. The account panel gathers your personal, account-tied settings in one place: your language channel, your pronoun, your muted players list, and changing your nickname, email, or password, each doing the same as the matching slash command. The lobby panel, called the room panel when you are in a room, is the create and join rooms menu, or the room menu, both described just below. In a game, enter opens the round menu instead, and your personal settings stay reachable through their slash commands, the players menu on F6, and your preferences on Alt plus P.
+In the lobby or any room you are in, press enter to open the actions menu. It has two items. The account panel gathers your personal, account-tied settings in one place: your language channel, your pronoun, your muted players list, and changing your nickname, email, or password, each doing the same as the matching slash command. The lobby panel, called the room panel when you are in a room, is the create and join rooms menu, or the room menu, both described just below. In a game, enter opens the round menu instead, and your personal settings stay reachable through their slash commands, the players menu on F6, and your preferences on Alt plus P. You can also jump straight to a panel without the actions menu: control plus A opens the account panel, and control plus H opens the lobby or room panel for wherever you are.
 
 Rooms.
 
@@ -171,7 +171,10 @@ C. Speak your coordinates, the surface you are standing on, and the way you are 
 
 Rooms.
 
-These work only in the lobby, and do the same as the matching lobby menu items without opening the menu first.
+Control plus A. Open the account panel. Works in the lobby and any room.
+Control plus H. Open the panel for where you are: the lobby panel in the lobby, or the room panel in a room.
+
+The rest of these run individual lobby or room menu items directly. These first ones work only in the lobby, and do the same as the matching lobby menu items without opening the menu first.
 
 Control plus C. Create a public room.
 Control plus shift plus C. Create a private room.

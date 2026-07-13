@@ -73,8 +73,8 @@ void push_actions_menu(int index)
 {
 int peer = players[index].peer_id;
 string[] opts;
-opts.insert_last("Account panel"); // 0: personal account settings
-opts.insert_last(players[index].room_id == 0 ? "Lobby panel" : "Room panel"); // 1: rooms/games (lobby) or room management (room)
+opts.insert_last("Account panel\tControl plus A."); // 0: personal account settings (Ctrl+A jumps straight here)
+opts.insert_last((players[index].room_id == 0 ? "Lobby panel" : "Room panel") + "\tControl plus H."); // 1: rooms/games (lobby) or room management (room); Ctrl+H jumps here
 send_menu(peer, "actions", "Actions menu", opts);
 }
 // The lobby menu: create or join a public/private room. Reached from the Actions menu's "Lobby panel" item, and
@@ -88,7 +88,7 @@ opts.insert_last("Create a public room\tControl plus C.");
 opts.insert_last("Create a private room\tControl plus shift plus C.");
 opts.insert_last("Join a public room\tControl plus J.");
 opts.insert_last("Join a private room\tControl plus shift plus J.");
-send_menu(peer, "lobby", "Lobby menu", opts);
+send_menu(peer, "lobby", "Lobby panel", opts);
 }
 // The Account panel (from the Actions menu): personal, account-persisted settings. The first three items reuse
 // the same sub-menus /channel, /pronoun, and /ignored push; the three change items run on the client (which owns
@@ -97,12 +97,14 @@ void push_account_menu(int index)
 {
 int peer = players[index].peer_id;
 string[] opts;
-opts.insert_last("Select a language channel");
-opts.insert_last("Select a pronoun");
+opts.insert_last("Select a language channel. Currently set to " + players[index].language + ".");
+opts.insert_last("Select a pronoun. Currently set to " + players[index].pronoun + ".");
 opts.insert_last("View muted players");
-opts.insert_last("Change your nickname");
-opts.insert_last("Change your email");
-opts.insert_last("Change your password");
+opts.insert_last("Change your nickname. Currently set to " + players[index].nickname + ".");
+// Email is staff-only PII, exactly as on the info card: show the current address only to staff; a regular player (even on their own panel) just sees the action.
+if(is_staff(players[index].rank)) opts.insert_last("Change your email. Currently set to " + read_field(players[index].name, "email") + ".");
+else opts.insert_last("Change your email");
+opts.insert_last("Change your password"); // never reveal the current password
 send_menu(peer, "account", "Account panel", opts);
 }
 // The room menu (Enter while in a room). Heterogeneous, so each option's action key is recorded in
@@ -127,7 +129,7 @@ opts.insert_last("Retrieve password\tControl plus R."); players[index].menu_acti
 }
 opts.insert_last("Delete room\tControl plus D."); players[index].menu_actions.insert_last("delete");
 opts.insert_last("Leave room\tControl plus L."); players[index].menu_actions.insert_last("leave");
-send_menu(peer, "room", "Room menu", opts);
+send_menu(peer, "room", "Room panel", opts);
 }
 // Dispatch a room-menu action by its action key. Shared by the room menu (on_menu_result) and the Ctrl+<key> room
 // hotkeys, so both run identical logic; keyed by action NAME, not menu index, so it's immune to the private-only
