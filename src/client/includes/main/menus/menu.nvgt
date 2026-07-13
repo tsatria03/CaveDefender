@@ -320,9 +320,9 @@ void addserver()
 void loadservermenu()
 {
 	setupmenu(false);
-	m.add_item("Custom", "custom");
+	m.add_item("Custom" + (server_custom ? " Currently active." : ""), "custom"); // Custom is active when you're on a manually entered address
 	for(uint i=0; i<servers.length(); i++)
-		m.add_item(server_list_text(i), ""+i);
+		m.add_item(server_list_text(i) + ((!server_custom and servers[i].sip==ip and servers[i].sport==port) ? " Currently active." : ""), ""+i); // mark the server you're set to
 	m.add_item("back", "back");
 	m.intro_text="Choose a server to use in the game.";
 	int mres=m.run();
@@ -461,7 +461,7 @@ void loadaccountmenu()
 	if(accounts.length()==0) { dlgmessage("There are no saved accounts to use. Press enter to continue."); return; }
 	setupmenu(false);
 	for(uint i=0; i<accounts.length(); i++)
-		m.add_item(account_list_text(i), ""+i);
+		m.add_item(account_list_text(i) + (string_to_lower_case(accounts[i].uname)==string_to_lower_case(name) ? " Currently active." : ""), ""+i); // mark the account you're set to
 	m.add_item("back", "back");
 	m.intro_text="Choose an account to use in the game.";
 	int mres=m.run();
@@ -752,13 +752,14 @@ void settingsmenu()
 				string[]@ devices = get_sound_output_devices();
 				devices.remove_at(0);
 				setupmenu();
-				for(uint i=0; i<devices.length(); i++) m.add_item(devices[i], devices[i]);
+				m.add_item("Default" + (soundcard == "Default" ? " Currently active." : ""), "default"); // system default output, kept selectable and markable like the recording chooser's Default
+					for(uint i=0; i<devices.length(); i++) m.add_item(devices[i] + (devices[i] == soundcard ? " Currently active." : ""), devices[i]); // mark the device you're using
 				m.intro_text="Choose a sound device you'd like to use in the game.";
 				int dres=m.run();
-				if(dres>=0 and dres<int(devices.length()))
+				if(dres>=0 and dres<=int(devices.length())) // <= because the Default item at index 0 added one more slot
 				{
-					soundcard=devices[dres];
-					sound_output_device=dres+1;
+					soundcard = (dres==0) ? "Default" : devices[dres-1]; // index 0 is the Default item; named devices shifted down by one
+					sound_output_device = (dres==0) ? 1 : dres; // Default = the startup default (1); a named device keeps its old value (its old index dres-1, plus one)
 					dlgmessage("Sound device set to "+soundcard+". Press enter to continue.");
 				}
 				break;
@@ -767,7 +768,7 @@ void settingsmenu()
 			{
 				string[]@ idevs = get_sound_input_devices(); // already includes a "Default" entry at index 0
 				setupmenu();
-				for(uint i=0; i<idevs.length(); i++) m.add_item(idevs[i], ""+i);
+				for(uint i=0; i<idevs.length(); i++) m.add_item(idevs[i] + (idevs[i] == recname ? " Currently active." : ""), ""+i); // mark the recording device you're using
 				m.intro_text="Choose a recording device you'd like to use for voice chat.";
 				int rres=m.run();
 				if(rres<0) speak("canceled");
