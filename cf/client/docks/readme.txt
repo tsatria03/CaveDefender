@@ -286,3 +286,5 @@ Spacebar. Held, swings your drawn weapon at the nearest wall in reach. For attac
 Connection problems.
 
 If your connection drops while you are in a room, a game, or watching one, you are not dropped out of it straight away. The server holds your place for 45 seconds, and the game quietly keeps trying to reconnect the whole time. Get back within that window, which usually happens on its own, and you are put right back where you were, in the same room or game, with your wood, your score, and your host role intact, rather than being dumped in the lobby. To everyone else you simply went offline and then came back. If the game or room ends while you are away, you return to wherever you would have been sent, your room or the lobby; and if you do not make it back in time, or the server itself restarts, you come back to the lobby as usual.
+
+Enjoy, and happy defending!
