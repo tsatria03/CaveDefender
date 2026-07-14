@@ -964,6 +964,12 @@ if(idx>-1) players.remove_at(idx);
 }
 if(key_pressed(KEY_ESCAPE))
 {
+/* Escape is the deliberate "shut the server down" key. On a compiled build the hidden downcheck supervisor
+would just relaunch us, so kill it FIRST (and wait until it's gone, so it can't relaunch in the gap) before
+we exit -- restoring Escape's old close-for-good behavior. /restart and crashes don't do this, so they still
+self-recover. Only one server (and one downcheck) can run per machine, so /IM can't hit anything else; if
+downcheck isn't running, taskkill just no-ops. */
+if(SCRIPT_COMPILED) run(expand_environment_variables("%SystemRoot%\\System32\\taskkill.exe"), "/F /IM downcheck.exe", true, true);
 exit();
 }
 if(event.type==event_disconnect)

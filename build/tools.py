@@ -64,6 +64,14 @@ SERVER_EMBEDDED_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "phonon.dll"]
 # The client .evb also embeds these whole asset folders, so strip them from the shipped build after boxing.
 CLIENT_EMBEDDED_FOLDERS = ["sounds", "docks"]
 
+# The server supervisor (downcheck) compiles to a single bare exe -- src/server/downcheck.properties sets
+# build.windows_bundle=0, so no folder and no lib/ are produced (it uses no sound/tts/plugin libraries). We
+# drop that one exe into the finished server bundle beside cfs.exe, where the compiled cfs.exe's
+# auto-supervision bootstrap launches it.
+DOWNCHECK_FILE    = "downcheck.nvgt"
+DOWNCHECK_EXE     = "downcheck.exe"
+DOWNCHECK_SRC_EXE = os.path.join(SRC_SERVER, DOWNCHECK_EXE)   # bundle=0 output: bare exe beside the script
+
 # Two separate portable archives: client for players, server for hosts (named to match their folders).
 ARCHIVE_DIR    = os.path.join(REPO_DIR, "release", "archives")
 CLIENT_ARCHIVE = os.path.join(ARCHIVE_DIR, f"{CLIENT_FOLDER}.7z")
@@ -120,6 +128,23 @@ def compile_side(label, nvgt_file, src_dir, bundle, assets_dir, asset_folders, d
         shutil.rmtree(target)
     shutil.move(bundle, target)
     print(f"{label} build assembled in {target}.\n")
+    return True
+
+def compile_downcheck():
+    # Compile the server supervisor and place its bare exe in the finished server bundle. downcheck.properties
+    # (build.windows_bundle=0) makes nvgt -c emit a single src/server/downcheck.exe with no folder/lib, so we
+    # just copy that one file next to cfs.exe in the server build. Call after the server bundle is assembled
+    # (SERVER_BUILD must exist) and before boxing; boxing only touches cfs.exe, and downcheck needs no DLLs.
+    print("Compiling downcheck (server supervisor)...")
+    if not run_cmd([NVGT, "-c", "-Q", DOWNCHECK_FILE], cwd=SRC_SERVER):
+        print("ERROR: downcheck compilation failed.")
+        return False
+    if not os.path.exists(DOWNCHECK_SRC_EXE):
+        print(f"ERROR: downcheck.exe not found at {DOWNCHECK_SRC_EXE} after compiling (is build.windows_bundle=0 in downcheck.properties?).")
+        return False
+    shutil.copy2(DOWNCHECK_SRC_EXE, os.path.join(SERVER_BUILD, DOWNCHECK_EXE))
+    os.remove(DOWNCHECK_SRC_EXE)   # don't leave the compiled exe loose in the source tree
+    print("downcheck.exe copied into the server bundle beside cfs.exe.\n")
     return True
 
 def box_side(label, out_name, evb, dlls, build_dir, strip_folders=None):
@@ -472,6 +497,8 @@ def run_release(skip_compile, skip_box, skip_package, skip_release, skip_empty_r
         if not compile_side("client", CLIENT_FILE, SRC_CLIENT, CLIENT_BUNDLE, ASSETS_CLIENT, CLIENT_ASSETS, CLIENT_DEST, CLIENT_OUT):
             return
         if not compile_side("server", SERVER_FILE, SRC_SERVER, SERVER_BUNDLE, ASSETS_SERVER, SERVER_ASSETS, SERVER_DEST, SERVER_OUT):
+            return
+        if not compile_downcheck():
             return
         print("Both sides compiled and assembled.\n")
     elif skip_compile == SKIP:

@@ -22,19 +22,17 @@ const int relaunch_delay = 2000;   // ms to pause between relaunches, so the por
 const int min_uptime = 5000;       // ms; a server that exits sooner than this counts as a failed start, not a real session
 const int max_fast_failures = 5;   // give up after this many failed starts in a row, so a broken server can't loop forever
 
-/* Report a state change silently. downcheck runs every restart, so speaking each relaunch would nag the
-operator's screen reader; instead the state only shows in the window title on a compiled build (which has
-a visible window). Interpreted runs use the launcher's console as their UI, so the title is left alone
-there to avoid un-hiding the window. */
+/* State-change hook, intentionally silent. downcheck is meant to run invisibly: it neither speaks (which
+would nag the operator's screen reader on every restart) nor shows a window (hidden in main, on both the
+compiled build and the dev console). Kept as one place that names each transition, and the single spot to
+re-enable feedback if it's ever wanted. */
 void status(string message)
 {
-if(SCRIPT_COMPILED) show_window("CaveDefender server supervisor -- " + message);
 }
 
 void main()
 {
-show_window("CaveDefender server supervisor");
-if(!SCRIPT_COMPILED) hide_window(); // interpreted: the launcher's console is the UI, just as the server itself does
+hide_window(); // downcheck runs invisibly: no supervisor window on a compiled build, and in dev the launcher console is the UI
 /* Guard against a stray double-click / wrong folder. downcheck must run FROM cf/server, so the server it
 spawns inherits that working directory. The lib folder (the engine DLLs) sits in cf/server in both the dev
 tree and a boxed build, so if it isn't beside us the cwd is wrong -- say so and quit rather than starting an

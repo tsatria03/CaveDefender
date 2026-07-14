@@ -8,7 +8,7 @@ supervised and brings us back after any /restart or crash. Dev runs go through d
 this only ever fires for a double-clicked cfs.exe; SCRIPT_COMPILED keeps it dormant when interpreted. */
 if(SCRIPT_COMPILED and read_environment_variable("CFS_SUPERVISED", "") != "1")
 {
-run("downcheck.exe", "", false, false); // downcheck (beside us in cf/server) will relaunch us with the marker set
+run("downcheck.exe", "", false, true); // launch downcheck hidden (background); it relaunches us -- visibly -- with the marker set
 exit();
 }
 if(servstence.is_already_running)
