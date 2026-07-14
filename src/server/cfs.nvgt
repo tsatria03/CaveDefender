@@ -35,8 +35,8 @@ int oidx=prefs.find("owners");
 if(oidx==-1) oidx=prefs.find("owner"); // accept the legacy single-name "owner" field too
 if(oidx!=-1)
 {
-// The owner field is a comma-separated list of up to 3 aliases for the one owner (extra entries ignored). A
-// present-but-blank field means no owner. Absent field keeps the built-in default.
+/* The owner field is a comma-separated list of up to 3 aliases for the one owner (extra entries ignored). A
+present-but-blank field means no owner. Absent field keeps the built-in default. */
 owners.resize(0);
 string[] aliases=string_split(values[oidx], ",", true);
 for(uint i=0; i<aliases.length() and owners.length()<3; i++)

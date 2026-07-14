@@ -1,8 +1,8 @@
-// What a player is carrying, as item type -> count. Kept general (a dictionary, not just a wood
-// integer) so future items beyond wood need no new structure. Authoritative on the server — the client
-// can't be trusted to count wood it spends on shared walls — so one of these lives on each server
-// player object (see player.nvgt). Modeled on SimpleFighter's inventory, trimmed to the pure data
-// operations; the cycle / pan / speak UI is the client's job. Wired into gameplay in 6c.
+/* What a player is carrying, as item type -> count. Kept general (a dictionary, not just a wood
+integer) so future items beyond wood need no new structure. Authoritative on the server — the client
+can't be trusted to count wood it spends on shared walls — so one of these lives on each server
+player object (see player.nvgt). Modeled on SimpleFighter's inventory, trimmed to the pure data
+operations; the cycle / pan / speak UI is the client's job. Wired into gameplay in 6c. */
 class inventory
 {
 dictionary items;

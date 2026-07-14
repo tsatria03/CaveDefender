@@ -1,15 +1,15 @@
-// Wall-smasher bots — the enemies in a game's wave. Each is tied to a game (by its game id, which is a
-// room_id) and to one wall it attacks, with a weapon that sets its attack speed and damage. Bots are
-// abstract (no map position; they're conceptually "at" a wall), unkillable, and never leave on their
-// own; a bot leaves only when the wall it attacks is destroyed -- its attackers are then REMOVED, not moved to
-// another wall, so the last standing wall isn't swarmed by every fallen wall's bots. Server-
-// authoritative; the client just plays the relayed hit sounds. Modeled on Sammy Center's wallsmasher.
-// Weapons: 1 = axe (fast/weak), 4 = bat (just above axe), 2 = crowbar (medium), 3 = hammer (slow/strong).
+/* Wall-smasher bots — the enemies in a game's wave. Each is tied to a game (by its game id, which is a
+room_id) and to one wall it attacks, with a weapon that sets its attack speed and damage. Bots are
+abstract (no map position; they're conceptually "at" a wall), unkillable, and never leave on their
+own; a bot leaves only when the wall it attacks is destroyed -- its attackers are then REMOVED, not moved to
+another wall, so the last standing wall isn't swarmed by every fallen wall's bots. Server-
+authoritative; the client just plays the relayed hit sounds. Modeled on Sammy Center's wallsmasher.
+Weapons: 1 = axe (fast/weak), 4 = bat (just above axe), 2 = crowbar (medium), 3 = hammer (slow/strong). */
 int next_enemy_id=1;
 enemy@[] enemies;
-// The four cavern walls in a fixed order. Shared so the per-wall scans (fill_walls_to, builder targeting, the
-// EVP wall-HP/clear checks) don't rebuild this array on every call; the readers alias it by handle and only
-// ever iterate it, never modify it.
+/* The four cavern walls in a fixed order. Shared so the per-wall scans (fill_walls_to, builder targeting, the
+EVP wall-HP/clear checks) don't rebuild this array on every call; the readers alias it by handle and only
+ever iterate it, never modify it. */
 string[] WALL_DIRS = {"west", "east", "north", "south"};
 class enemy
 {
@@ -36,20 +36,20 @@ for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==gameid and enemies[i].wall==dir) n++;
 return n;
 }
-// Remove every bot that was attacking a now-destroyed wall. They are NOT moved onto the walls still standing --
-// that old redistribution piled all four walls' bots onto the last survivor (~36-44 by round 18-21), swarming a
-// single wall and wiping even a 400%-reinforced one in seconds. Now a fallen wall's attackers simply leave, so
-// each standing wall only ever faces its own per-wall target and the total assault shrinks as walls fall.
+/* Remove every bot that was attacking a now-destroyed wall. They are NOT moved onto the walls still standing --
+that old redistribution piled all four walls' bots onto the last survivor (~36-44 by round 18-21), swarming a
+single wall and wiping even a 400%-reinforced one in seconds. Now a fallen wall's attackers simply leave, so
+each standing wall only ever faces its own per-wall target and the total assault shrinks as walls fall. */
 void remove_bots_on_wall(int gameid, string deadwall)
 {
 for(int i=int(enemies.length())-1; i>=0; i--)
 if(@enemies[i]!=null and enemies[i].game_id==gameid and enemies[i].wall==deadwall) enemies.remove_at(i);
 }
-// The pile-up option, chosen at game creation: instead of removing a fallen wall's bots, MOVE them onto the walls
-// still standing, spread round-robin. This is the old swarm behavior -- as walls fall, the survivors inherit more
-// and more attackers and the last wall gets hammered by everyone. If no wall is left standing (the last one just
-// fell), the bots are simply dropped, since the round is about to end anyway. Reassigns the bots' target wall
-// rather than removing them, so it's safe to call mid enemy-attack loop.
+/* The pile-up option, chosen at game creation: instead of removing a fallen wall's bots, MOVE them onto the walls
+still standing, spread round-robin. This is the old swarm behavior -- as walls fall, the survivors inherit more
+and more attackers and the last wall gets hammered by everyone. If no wall is left standing (the last one just
+fell), the bots are simply dropped, since the round is about to end anyway. Reassigns the bots' target wall
+rather than removing them, so it's safe to call mid enemy-attack loop. */
 void redistribute_bots_on_wall(int gameid, string deadwall, double size)
 {
 string[]@ dirs = WALL_DIRS;
@@ -76,9 +76,9 @@ enemy e(next_enemy_id, gameid, wall, weapon);
 next_enemy_id++;
 enemies.insert_last(e);
 }
-// Bring every STANDING wall in a game up to `target` bots, adding fresh random-weapon bots to fill any
-// shortfall. Walls already at or above target are left alone, and destroyed walls are skipped -- so a fallen
-// wall's removed bots are never refilled, and each standing wall just holds its own per-wall target.
+/* Bring every STANDING wall in a game up to `target` bots, adding fresh random-weapon bots to fill any
+shortfall. Walls already at or above target are left alone, and destroyed walls are skipped -- so a fallen
+wall's removed bots are never refilled, and each standing wall just holds its own per-wall target. */
 void fill_walls_to(int gameid, double size, int target)
 {
 string[]@ dirs = WALL_DIRS; // alias the shared constant; iterated read-only, not rebuilt per call
@@ -90,8 +90,8 @@ int have = enemies_on_wall(gameid, dirs[d]);
 for(int n=have; n<target; n++) spawn_enemy(gameid, dirs[d], random(1, 4));
 }
 }
-// Random damage per weapon: axe 1-3, bat 2-4, crowbar 3-6, hammer 4-8 (heavier weapons hit harder and swing
-// wider, so the crowbar and hammer can land the occasional big blow). Drives both PVE bot strikes and EVP player swings.
+/* Random damage per weapon: axe 1-3, bat 2-4, crowbar 3-6, hammer 4-8 (heavier weapons hit harder and swing
+wider, so the crowbar and hammer can land the occasional big blow). Drives both PVE bot strikes and EVP player swings. */
 int enemy_damage(int weapon)
 {
 if(weapon==1) return random(1, 3); // axe
@@ -99,9 +99,9 @@ if(weapon==4) return random(2, 4); // bat
 if(weapon==2) return random(3, 6); // crowbar
 return random(4, 8);               // hammer
 }
-// Map a weapon NAME (as the EVP client sends it) to the internal weapon id used by enemy_damage and the
-// wallhit sound (1 axe, 2 crowbar, 3 hammer, 4 bat). Used by the player "attack" handler so a player's swing
-// deals the same per-weapon damage a bot's would and plays the matching hit sound.
+/* Map a weapon NAME (as the EVP client sends it) to the internal weapon id used by enemy_damage and the
+wallhit sound (1 axe, 2 crowbar, 3 hammer, 4 bat). Used by the player "attack" handler so a player's swing
+deals the same per-weapon damage a bot's would and plays the matching hit sound. */
 int weapon_id_for_name(string w)
 {
 if(w=="axe") return 1;
@@ -110,9 +110,9 @@ if(w=="hammer") return 3;
 if(w=="bat") return 4;
 return 1; // unknown -> axe
 }
-// Every server tick: each bot whose attack timer is up swings at its wall, dealing its weapon's damage,
-// then the new wall strengths and a hit event (wall + weapon) go out to the game so clients play the
-// 3D hit sound. A bot whose wall was just destroyed is removed on that hit (on_wall_destroyed), so none linger.
+/* Every server tick: each bot whose attack timer is up swings at its wall, dealing its weapon's damage,
+then the new wall strengths and a hit event (wall + weapon) go out to the game so clients play the
+3D hit sound. A bot whose wall was just destroyed is removed on that hit (on_wall_destroyed), so none linger. */
 void enemy_attacks()
 {
 for(uint i=0; i<enemies.length(); i++)

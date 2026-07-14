@@ -1,9 +1,9 @@
-// Rooms are sub-lobbies inside the main lobby. A room is identified by its host (shown as
-// "<host>'s room"); it can hold many players and will host the up-to-4-player game instances added
-// in later sections. Each host may own up to TWO rooms: one public and one private. Rooms are
-// PERSISTENT: leaving just returns you to the lobby and the room stays open; a room closes only when
-// its host deletes it or logs off the server. Map switching and player scoping (who sees whom) come
-// in a later section.
+/* Rooms are sub-lobbies inside the main lobby. A room is identified by its host (shown as
+"<host>'s room"); it can hold many players and will host the up-to-4-player game instances added
+in later sections. Each host may own up to TWO rooms: one public and one private. Rooms are
+PERSISTENT: leaving just returns you to the lobby and the room stays open; a room closes only when
+its host deletes it or logs off the server. Map switching and player scoping (who sees whom) come
+in a later section. */
 int next_room_id = 1;
 room@[] rooms;
 class room
@@ -21,13 +21,13 @@ host = hostname;
 host_peer = hostpeer;
 is_private = priv;
 password = pass;
-// NOTE: the creator is NOT auto-added to members here. They're only "in" the room when they actually
-// enter it (createroom adds them), so a room recreated on login stays empty until someone joins.
+/* NOTE: the creator is NOT auto-added to members here. They're only "in" the room when they actually
+enter it (createroom adds them), so a room recreated on login stays empty until someone joins. */
 }
 }
-// Create a room for a player, validating that they aren't already in one and don't already host this
-// type, plus the private-room password length. Sends feedback on failure. Shared by the createroom
-// command and the lobby menu so the rules live in one place.
+/* Create a room for a player, validating that they aren't already in one and don't already host this
+type, plus the private-room password length. Sends feedback on failure. Shared by the createroom
+command and the lobby menu so the rules live in one place. */
 void do_create_room(int index, int peer, bool priv, string pass)
 {
 if(players[index].room_id != 0)
@@ -59,8 +59,8 @@ send(peer, "play roomcreate.ogg", 0,true);
 string chint = priv ? "You can join it with its password from the join private room option." : "You can join it from the join public room option.";
 broadcast_event(display_name_flagged(index)+" just created a "+(priv?"private":"public")+" room. "+chint, peer);
 }
-// Try to put a player into a room by id, validating presence, existence, and (for private rooms) the
-// password. Sends feedback on failure. Shared by the joinroom command and the lobby join menus.
+/* Try to put a player into a room by id, validating presence, existence, and (for private rooms) the
+password. Sends feedback on failure. Shared by the joinroom command and the lobby join menus. */
 void do_join_room(int index, int peer, int roomid, string password)
 {
 if(players[index].room_id != 0)
@@ -98,9 +98,9 @@ string room_display(int ri)
 if(ri < 0 or ri >= int(rooms.length())) return "a room";
 return display_name_flagged_for(rooms[ri].host) + "'s " + (rooms[ri].is_private ? "private" : "public") + " room";
 }
-// A room member invites a lobby player. Re-validates (inviter still in a room, target still online and in
-// the lobby), stores the pending invite on the target (a newer invite replaces any older one), and alerts
-// them privately with the invite sound. The message is rank/nickname aware for both the inviter and the room.
+/* A room member invites a lobby player. Re-validates (inviter still in a room, target still online and in
+the lobby), stores the pending invite on the target (a newer invite replaces any older one), and alerts
+them privately with the invite sound. The message is rank/nickname aware for both the inviter and the room. */
 void do_invite(int inviter_index, string target_name)
 {
 int peer = players[inviter_index].peer_id;
@@ -118,8 +118,8 @@ string msg = display_name_flagged(inviter_index) + " has invited you to " + room
 send(players[ti].peer_id, "roominvite\n" + msg, 0, true);
 send(peer, "misc Invitation sent to " + display_name_flagged(ti) + ".", 0, true);
 }
-// The invited player typed /accept: re-validate the still-pending invite and join them into the room,
-// bypassing a private room's password, then tell the inviter. Clears the invite either way.
+/* The invited player typed /accept: re-validate the still-pending invite and join them into the room,
+bypassing a private room's password, then tell the inviter. Clears the invite either way. */
 void accept_invite(int index)
 {
 int peer = players[index].peer_id;
@@ -154,8 +154,8 @@ for(uint i=0; i<rooms.length(); i++)
 if(rooms[i].id==id) return i;
 return -1;
 }
-// True if this peer already hosts a room of the given privacy. A host may have one public and one
-// private room (two at most), so creation is blocked only per type.
+/* True if this peer already hosts a room of the given privacy. A host may have one public and one
+private room (two at most), so creation is blocked only per type. */
 bool hosts_type(int peer, bool priv)
 {
 for(uint i=0; i<rooms.length(); i++)
@@ -182,16 +182,16 @@ if(rooms[i].members[j]==peer) { rooms[i].members.remove_at(j); return; }
 }
 }
 }
-// Called when a peer disconnects from the server. Every room they host closes (up to one public and
-// one private), and any remaining members in those rooms are sent back to the lobby. They are also
-// removed from any other room they were merely a member of.
+/* Called when a peer disconnects from the server. Every room they host closes (up to one public and
+one private), and any remaining members in those rooms are sent back to the lobby. They are also
+removed from any other room they were merely a member of. */
 void handle_disconnect_rooms(int peer)
 {
 for(int i=int(rooms.length())-1; i>=0; i--)
 {
 if(rooms[i].host_peer != peer) continue;
-// The office is closing, so end every game running inside it first (mirrors deleteroom), or those
-// games (now persisting while idle) would be left orphaned with no parent room.
+/* The office is closing, so end every game running inside it first (mirrors deleteroom), or those
+games (now persisting while idle) would be left orphaned with no parent room. */
 for(int g=int(games.length())-1; g>=0; g--)
 if(games[g].parent_room==rooms[i].id) end_game(g);
 for(uint j=0; j<rooms[i].members.length(); j++)

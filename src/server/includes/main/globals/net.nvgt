@@ -9,18 +9,18 @@ timer restart_timer;
 network net;
 network_event event;
 
-// The standard "target not found" reply for a player-targeting command that requires an ONLINE target: a
-// registered-but-offline account gets "not online", an unknown name gets "does not exist". (/unban is the one
-// exception -- it's offline-capable, so it sends only the "does not exist" half directly.)
+/* The standard "target not found" reply for a player-targeting command that requires an ONLINE target: a
+registered-but-offline account gets "not online", an unknown name gets "does not exist". (/unban is the one
+exception -- it's offline-capable, so it sends only the "does not exist" half directly.) */
 void reply_target_not_found(int peer_id, string name)
 {
 if(account_exists(name)) send(peer_id, "misc This player is not online.", 0, true);
 else send(peer_id, "misc This player does not exist.", 0, true);
 }
-// Shared validation for /mute and /unmute (their only difference is the action body). Resolves the online
-// target, validates the channel, and applies the at-or-below-rank gate, replying with the right error (verb =
-// "mute"/"unmute") on any failure. Returns the target's roster index on success, or -1 if it already sent an
-// error and the caller should stop.
+/* Shared validation for /mute and /unmute (their only difference is the action body). Resolves the online
+target, validates the channel, and applies the at-or-below-rank gate, replying with the right error (verb =
+"mute"/"unmute") on any failure. Returns the target's roster index on success, or -1 if it already sent an
+error and the caller should stop. */
 int resolve_mute_target(int actor, string tname, string channel, string verb)
 {
 int ti = get_player_index_from(tname); // online-only, by username or nickname
@@ -51,8 +51,8 @@ string format_uptime(int uptime_seconds)
     uptime_message += string(seconds) + (seconds == 1 ? " second." : " seconds.");
     return uptime_message;
 }
-// --- All-time peak concurrent players (reported alongside uptime on F4), persisted in data/preffs/peak.svr ---
-// Zero-pad a non-negative int to at least 2 digits ("5" -> "05") for the peak timestamp.
+/* --- All-time peak concurrent players (reported alongside uptime on F4), persisted in data/preffs/peak.svr ---
+Zero-pad a non-negative int to at least 2 digits ("5" -> "05") for the peak timestamp. */
 string pad2(int n) { string s = "" + n; return (s.length() < 2) ? "0" + s : s; }
 // The current local date and time like "12/22/2022 at 5:45 PM" (US M/D/Y, 12-hour clock, no seconds).
 string format_now_stamp()
@@ -95,9 +95,9 @@ void update_peak()
 int n = live_player_count();
 if(n > peak_players) { peak_players = n; peak_when = format_now_stamp(); save_peak(); }
 }
-// --- Player reports (filed with /report, reviewed by staff with /reports), persisted in data/preffs/reports.svr ---
-// A readable local timestamp for a report, e.g. "July 8, 2026 at 3:42 PM" (month name, 12-hour, no seconds),
-// matching the "Member since" style on the account card.
+/* --- Player reports (filed with /report, reviewed by staff with /reports), persisted in data/preffs/reports.svr ---
+A readable local timestamp for a report, e.g. "July 8, 2026 at 3:42 PM" (month name, 12-hour, no seconds),
+matching the "Member since" style on the account card. */
 string report_time_stamp()
 {
 int h = TIME_HOUR;
@@ -105,10 +105,10 @@ string ampm = (h < 12) ? "AM" : "PM";
 int h12 = h % 12; if(h12 == 0) h12 = 12;
 return DATE_MONTH_NAME + " " + DATE_DAY + ", " + DATE_YEAR + " at " + h12 + ":" + pad2(TIME_MINUTE) + " " + ampm;
 }
-// Append one report to data/preffs/reports.svr. One report per line, TAB-delimited:
-// <stamp>\t<reporter>\t<reported>\t<location>\t<reason>. Tabs, not the colon used elsewhere, because the readable
-// stamp contains colons; the reason is last so it may contain anything (including tabs, rejoined on read). Nothing
-// is ever deleted -- a host hand-clears the file if it grows too long. Rewrites the whole file (reports are rare).
+/* Append one report to data/preffs/reports.svr. One report per line, TAB-delimited:
+<stamp>\t<reporter>\t<reported>\t<location>\t<reason>. Tabs, not the colon used elsewhere, because the readable
+stamp contains colons; the reason is last so it may contain anything (including tabs, rejoined on read). Nothing
+is ever deleted -- a host hand-clears the file if it grows too long. Rewrites the whole file (reports are rare). */
 void add_report(string reporter, string reported, string location, string reason)
 {
 string existing = "";
@@ -147,9 +147,9 @@ listing += "Reason: " + reason;
 if(listing == "") return "There are no reports on record.";
 return listing;
 }
-// Read-only overview for the developer /bansall command: every account that currently holds an active ban. Bans
-// live on offline account folders, so there's no in-memory list -- we scan them all. Expired timed bans are
-// skipped. Listed in the order find_directories returns (there's no ban timestamp to sort by).
+/* Read-only overview for the developer /bansall command: every account that currently holds an active ban. Bans
+live on offline account folders, so there's no in-memory list -- we scan them all. Expired timed bans are
+skipped. Listed in the order find_directories returns (there's no ban timestamp to sort by). */
 string format_all_bans()
 {
 string[] dirs = find_directories("data/players/*");
@@ -196,11 +196,11 @@ return i;
 }
 return -1;
 }
-// Resolve a typed name to an ONLINE player: username first (the stable identity), then nickname (the
-// display name). Case-INSENSITIVE, matching login/account lookups and get_online_index -- an account is a
-// case-insensitive identity (you can't have both "bob" and "Bob"), so "/mute Bob" correctly targets account
-// "bob". Nicknames are unique case-insensitively among online players (and vs usernames), so a nickname match
-// stays unambiguous, and a real username always wins over a coincidental nickname.
+/* Resolve a typed name to an ONLINE player: username first (the stable identity), then nickname (the
+display name). Case-INSENSITIVE, matching login/account lookups and get_online_index -- an account is a
+case-insensitive identity (you can't have both "bob" and "Bob"), so "/mute Bob" correctly targets account
+"bob". Nicknames are unique case-insensitively among online players (and vs usernames), so a nickname match
+stays unambiguous, and a real username always wins over a coincidental nickname. */
 int get_player_index_from(string name)
 {
 string low=string_to_lower_case(name);
@@ -210,16 +210,16 @@ for(int i=0; i<players.length(); i++)
 if(string_to_lower_case(players[i].nickname)==low) return i;
 return -1;
 }
-// Maps a peer id -> the username it successfully authenticated as in login(). spawn_player seats a peer ONLY
-// as its verified name, so a peer can't log in as one account and spawn as another, and can't spawn without
-// logging in at all. The entry is removed when the peer disconnects.
+/* Maps a peer id -> the username it successfully authenticated as in login(). spawn_player seats a peer ONLY
+as its verified name, so a peer can't log in as one account and spawn as another, and can't spawn without
+logging in at all. The entry is removed when the peer disconnects. */
 void login(string name, string password, string ver)
 {
 if(ver != version)
 {
-// Direction-aware: a client older than the server should update its game; a client NEWER than the server means
-// the SERVER is the one behind, so don't wrongly tell the player to update. version strings are "major.minor"
-// with minors that always roll over at .9, so a plain numeric compare orders them correctly.
+/* Direction-aware: a client older than the server should update its game; a client NEWER than the server means
+the SERVER is the one behind, so don't wrongly tell the player to update. version strings are "major.minor"
+with minors that always roll over at .9, so a plain numeric compare orders them correctly. */
 if(string_to_number(ver) < string_to_number(version))
 send(event.peer_id, "error: your game is out of date. your version: "+ver+", server version: "+version+". Please update your game to connect to this server.", 0,true);
 else
@@ -236,8 +236,8 @@ if(!verify_password(name, password))
 send(event.peer_id, "error: incorrect password.", 0,true);
 return;
 }
-// Email is mandatory as of the email update: an older account created before it has no email.usr, so it's
-// refused here and the player must make a new account (which collects an email) to play.
+/* Email is mandatory as of the email update: an older account created before it has no email.usr, so it's
+refused here and the player must make a new account (which collects an email) to play. */
 if(read_field(name, "email") == "")
 {
 send(event.peer_id, "error: this account predates the required email and can no longer be used; please create a new account.", 0,true);
@@ -269,13 +269,13 @@ for(uint i=0; i<players.length(); i++)
 {
 if(players[i].name==name)
 {
-// This account already has a session in the roster: either a HELD one (dropped, holding its slot within the
-// grace window) or a still-LIVE one -- a ghost the server's enet hasn't timed out yet, or a genuine second
-// login. In every case this IS the same account (re)connecting, so ADOPT that session onto this new peer and
-// restore their scope, rather than tearing it down and dumping them in the lobby. This makes reconnect work
-// whether or not the grace hold has engaged yet (killing the detect-the-drop race), and a real second login
-// simply takes the session over into wherever it was. Rebind repoints members[]/host_peer + the roster entry;
-// spawn_player then replays their game/room/watch scope with inventory and host status intact.
+/* This account already has a session in the roster: either a HELD one (dropped, holding its slot within the
+grace window) or a still-LIVE one -- a ghost the server's enet hasn't timed out yet, or a genuine second
+login. In every case this IS the same account (re)connecting, so ADOPT that session onto this new peer and
+restore their scope, rather than tearing it down and dumping them in the lobby. This makes reconnect work
+whether or not the grace hold has engaged yet (killing the detect-the-drop race), and a real second login
+simply takes the session over into wherever it was. Rebind repoints members[]/host_peer + the roster entry;
+spawn_player then replays their game/room/watch scope with inventory and host status intact. */
 int oldpeer=players[i].peer_id;
 bool washeld=players[i].held;
 if(!washeld) net.disconnect_peer_forcefully(oldpeer); // a live old socket (real second client, or a not-yet-timed-out ghost): drop it so two clients don't both drive one session
@@ -317,8 +317,8 @@ if(account_exists(name))
 send(event.peer_id, "error: an account with that name already exists.", 0,true);
 return;
 }
-// The email is cosmetic and unverified; just require a plausible non-empty value (the client asks for a real
-// one). It's stored as-is in email.usr and never used for login.
+/* The email is cosmetic and unverified; just require a plausible non-empty value (the client asks for a real
+one). It's stored as-is in email.usr and never used for login. */
 if(email == "" or string_contains(email, "@", 1) < 0)
 {
 send(event.peer_id, "error: a valid email address is required.", 0,true);
@@ -332,8 +332,8 @@ return;
 if(create_account(name, email, password))
 {
 send(event.peer_id, "registered", 0,true);
-// Tell everyone already online that a new account was made, right now at creation time (before the new
-// player has logged in). The registrant isn't in the roster yet, so this loop naturally skips them.
+/* Tell everyone already online that a new account was made, right now at creation time (before the new
+player has logged in). The registrant isn't in the roster yet, so this loop naturally skips them. */
 for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "newchar "+name, 0, true);
 }
 else
@@ -341,8 +341,8 @@ else
 send(event.peer_id, "error: failed to create the account.", 0,true);
 }
 }
-// Builds the /restart countdown sentence. 60 seconds or more is expressed in whole minutes
-// (floored), anything less is expressed in seconds.
+/* Builds the /restart countdown sentence. 60 seconds or more is expressed in whole minutes
+(floored), anything less is expressed in seconds. */
 string format_restart_time(int seconds)
 {
 if(seconds>=60)
@@ -353,10 +353,10 @@ return "Attention! The server will restart in "+mins+" minutes.";
 }
 return "Attention! The server will restart in "+seconds+" seconds.";
 }
-// Closes the server. Forcefully disconnects every client first so each one's enet sees the drop
-// immediately and bounces back to its connection menu, pumps the host briefly so those
-// disconnects actually flush out, then exits the process. Used by both /restart (after its
-// countdown) and /fastrestart (immediately). Bringing the server back up is handled externally.
+/* Closes the server. Forcefully disconnects every client first so each one's enet sees the drop
+immediately and bounces back to its connection menu, pumps the host briefly so those
+disconnects actually flush out, then exits the process. Used by both /restart (after its
+countdown) and /fastrestart (immediately). Bringing the server back up is handled externally. */
 void do_restart()
 {
 for(uint i=0; i<players.length(); i++)
@@ -372,15 +372,15 @@ wait(5);
 }
 exit();
 }
-// Carries out a ban that has already passed the rank and target checks, shared by /ban (permanent) and
-// /tempban (timed). dur is the length in whole seconds (0 = permanent); reason is "" when none was given.
-// Records the ban with its reason, drops the target from the roster, tells them (with the reason), announces
-// the ban to everyone (without the reason -- that's staff-only), and confirms it to the acting staff member.
+/* Carries out a ban that has already passed the rank and target checks, shared by /ban (permanent) and
+/tempban (timed). dur is the length in whole seconds (0 = permanent); reason is "" when none was given.
+Records the ban with its reason, drops the target from the roster, tells them (with the reason), announces
+the ban to everyone (without the reason -- that's staff-only), and confirms it to the acting staff member. */
 void perform_ban(int actorpeer, int ti, int dur, string reason)
 {
-// The reason is shown to the banned player (login rejection) and to staff in /bans, so a screen reader crash
-// string in it must never get through. Staff reasons are crash-filtered ONLY, not profanity-filtered, so staff
-// can quote what a player did; a reason that trips the crash filter is dropped and the ban still applies.
+/* The reason is shown to the banned player (login rejection) and to staff in /bans, so a screen reader crash
+string in it must never get through. Staff reasons are crash-filtered ONLY, not profanity-filtered, so staff
+can quote what a player did; a reason that trips the crash filter is dropped and the ban still applies. */
 bool reason_dropped = (reason != "" and filter_crash(reason));
 if(reason_dropped) reason = "";
 int64 until = (dur > 0) ? (now_epoch() + dur) : 0;
@@ -417,15 +417,15 @@ bool is_online(string name)
 {
 return get_online_index(name)>-1;
 }
-// --- Reconnect grace (hold-and-restore) ---
-// How long a dropped session's game/room slot, host status, and inventory are held before the real teardown
-// runs, if they never reconnect. Matches the client's auto-retry window so the automatic reconnect covers the
-// entire hold.
+/* --- Reconnect grace (hold-and-restore) ---
+How long a dropped session's game/room slot, host status, and inventory are held before the real teardown
+runs, if they never reconnect. Matches the client's auto-retry window so the automatic reconnect covers the
+entire hold. */
 const int reconnect_grace_ms=45000;
-// Repoint every stored reference from oldpeer to newpeer across games and rooms (both member lists and
-// host_peer) and the roster entry itself. Used to swap a session onto a negative sentinel id when it goes on
-// hold, and back onto the real new peer id when it reconnects, so a held slot survives the peer-id change with
-// no dangling references anywhere.
+/* Repoint every stored reference from oldpeer to newpeer across games and rooms (both member lists and
+host_peer) and the roster entry itself. Used to swap a session onto a negative sentinel id when it goes on
+hold, and back onto the real new peer id when it reconnects, so a held slot survives the peer-id change with
+no dangling references anywhere. */
 void rebind_peer(int oldpeer, int newpeer)
 {
 for(uint i=0; i<games.length(); i++)
@@ -443,9 +443,9 @@ if(rooms[i].members[j]==oldpeer) rooms[i].members[j]=newpeer;
 int pi=get_player_index(oldpeer);
 if(pi>-1) players[pi].peer_id=newpeer;
 }
-// Is this session worth holding on a drop? True if they're in a non-lobby space (a room, office, game, or
-// watching -- room_id != 0) or they host a live room or game. A bare lobby session with nothing hosted has
-// nothing to restore, so it's torn down immediately instead of held.
+/* Is this session worth holding on a drop? True if they're in a non-lobby space (a room, office, game, or
+watching -- room_id != 0) or they host a live room or game. A bare lobby session with nothing hosted has
+nothing to restore, so it's torn down immediately instead of held. */
 bool has_restorable_state(int index)
 {
 if(index<0 or index>=int(players.length())) return false;
@@ -455,11 +455,11 @@ for(uint i=0; i<rooms.length(); i++) if(rooms[i].host_peer==peer) return true;
 for(uint i=0; i<games.length(); i++) if(games[i].host_peer==peer) return true;
 return false;
 }
-// Put a dropped session on hold for the grace window instead of tearing it down: announce them offline (the
-// same connections-buffer notice as a normal disconnect) and strip their presence from the space they're in,
-// but KEEP their roster entry, game/room membership, host status, and inventory. Their dead peer id is swapped
-// for a unique negative sentinel so a recycled enet peer can't collide with the held slot. The netloop poll
-// runs the real teardown once held_timer passes reconnect_grace_ms; a reconnect (login) restores them first.
+/* Put a dropped session on hold for the grace window instead of tearing it down: announce them offline (the
+same connections-buffer notice as a normal disconnect) and strip their presence from the space they're in,
+but KEEP their roster entry, game/room membership, host status, and inventory. Their dead peer id is swapped
+for a unique negative sentinel so a recycled enet peer can't collide with the held slot. The netloop poll
+runs the real teardown once held_timer passes reconnect_grace_ms; a reconnect (login) restores them first. */
 void begin_hold(int index)
 {
 players[index].held=true;
@@ -484,11 +484,11 @@ int sentinel=next_held_id; next_held_id--;
 verified_logins.delete(""+oldpeer); // the reconnect sets a fresh verified_logins entry for the new peer
 rebind_peer(oldpeer, sentinel);
 }
-// Send a peer the CURRENT phase of a game for a mid-round arrival (join, spectate, or reconnect restore): the
-// accurate remaining time -- the build countdown, or an EVP wave's remaining round-timer seconds that the
-// client counts down locally -- plus, if we're mid-wave in a REST window, the segment sync so the client shows
-// the right window and pauses its EVP countdown. Without this a mid-round arrival reads "0 seconds left" and
-// defaults to an attack window until the next natural segment flip.
+/* Send a peer the CURRENT phase of a game for a mid-round arrival (join, spectate, or reconnect restore): the
+accurate remaining time -- the build countdown, or an EVP wave's remaining round-timer seconds that the
+client counts down locally -- plus, if we're mid-wave in a REST window, the segment sync so the client shows
+the right window and pauses its EVP countdown. Without this a mid-round arrival reads "0 seconds left" and
+defaults to an attack window until the next natural segment flip. */
 void send_game_phase_to(int peer, int gi)
 {
 if(gi<0 or gi>=int(games.length())) return;
@@ -498,14 +498,14 @@ else if(games[gi].mode=="evp" and games[gi].phase=="wave") rem = games[gi].evp_r
 else rem = 0;
 if(rem<0) rem=0;
 send(peer, "gamephase "+games[gi].phase+" "+rem+" "+games[gi].wave_number, 0, true);
-// The gamephase handler assumes a wave opens ATTACKING; if we're actually in a rest window, sync that (this
-// also pauses the client's EVP round-timer countdown so rem holds). An attack window needs nothing more.
+/* The gamephase handler assumes a wave opens ATTACKING; if we're actually in a rest window, sync that (this
+also pauses the client's EVP round-timer countdown so rem holds). An attack window needs nothing more. */
 if(games[gi].phase=="wave" and !games[gi].wave_attacking) send(peer, "waveseg 0 "+games[gi].wave_number, 0, true);
 }
-// Re-open (silently, no death boom) any already-breached walls on a client that just drew a FRESH intact cavern
-// -- used by a mid-round join and a reconnect restore, so a player doesn't bump a gap that is actually open (the
-// client enforces wall collision by tile, and draw_map re-lays all four walls solid). Spectators don't need this:
-// they roam the deck behind their own indestructible border, and the client's re-tile is guarded by !watching.
+/* Re-open (silently, no death boom) any already-breached walls on a client that just drew a FRESH intact cavern
+-- used by a mid-round join and a reconnect restore, so a player doesn't bump a gap that is actually open (the
+client enforces wall collision by tile, and draw_map re-lays all four walls solid). Spectators don't need this:
+they roam the deck behind their own indestructible border, and the client's re-tile is guarded by !watching. */
 void send_wall_breaches(int peer, int gi)
 {
 if(gi<0 or gi>=int(games.length())) return;
@@ -516,12 +516,12 @@ int bwi = wall_in_dir(games[gi].id, bdirs[bd], games[gi].size); // mode-aware: P
 if(bwi>-1 and walls[bwi].health<=0) send(peer, "wallbreach "+bdirs[bd], 0, true);
 }
 }
-// Replay a reconnected (restored) player's current space to their fresh client, changing none of their held
-// state (membership, host status, inventory). Mirrors what join_game_now / do_spectate / do_join_room send on
-// entry, but mutates nothing except re-centring their position -- the client re-centres `me` on the redraw, so
-// the server must match (as after a round reset) or reach checks would misfire. broadcast_pos re-adds them to
-// everyone else's tracker. Their room_id already reflects wherever the hold left them (their game, a room, the
-// lobby, or a watch), including any space change forced while they were held (e.g. their game ended).
+/* Replay a reconnected (restored) player's current space to their fresh client, changing none of their held
+state (membership, host status, inventory). Mirrors what join_game_now / do_spectate / do_join_room send on
+entry, but mutates nothing except re-centring their position -- the client re-centres `me` on the redraw, so
+the server must match (as after a round reset) or reach checks would misfire. broadcast_pos re-adds them to
+everyone else's tracker. Their room_id already reflects wherever the hold left them (their game, a room, the
+lobby, or a watch), including any space change forced while they were held (e.g. their game ended). */
 void restore_scope(int index)
 {
 int peer=players[index].peer_id;
@@ -549,16 +549,16 @@ if(gi>-1)
 {
 // Back into the cavern as a member, with their preserved inventory.
 send(peer, "gamejoined "+games[gi].id+" "+games[gi].size+" "+(games[gi].solo?"solo":"open")+" "+games[gi].mode+" "+games[gi].host+"\n"+display_name_flagged_for(games[gi].host), 0, true);
-// PVP: re-send their side so the fresh client re-learns it (re-spawns to the right place and re-arms if attacking).
-// Attackers restore out at the exterior entry -- not the centre the redraw assumes -- so set that on the server
-// too; sent before the gamephase/equipweapon below so the client's PVP auto-arm sees the correct side.
+/* PVP: re-send their side so the fresh client re-learns it (re-spawns to the right place and re-arms if attacking).
+Attackers restore out at the exterior entry -- not the centre the redraw assumes -- so set that on the server
+too; sent before the gamephase/equipweapon below so the client's PVP auto-arm sees the correct side. */
 if(games[gi].mode=="pvp" and players[index].team!="")
 {
 if(players[index].team=="attack") { int wmin=games[gi].size/4; players[index].x=wmin/2; players[index].y=games[gi].size/2; }
 send(peer, "yourside "+players[index].team, 0, true);
 }
-// EVP (and a PVP attacker): restore the weapon they had drawn BEFORE the gamephase message, so its auto-axe
-// (which only fires when the client is unarmed) doesn't override it. PVE members and PVP defenders carry none.
+/* EVP (and a PVP attacker): restore the weapon they had drawn BEFORE the gamephase message, so its auto-axe
+(which only fires when the client is unarmed) doesn't override it. PVE members and PVP defenders carry none. */
 if((games[gi].mode=="evp" or (games[gi].mode=="pvp" and players[index].team=="attack")) and (games[gi].phase=="build" or games[gi].phase=="wave") and players[index].weapon!="") send(peer, "equipweapon "+players[index].weapon, 0, true);
 send_game_phase_to(peer, gi);
 send_builders_to(peer, rid);
@@ -567,9 +567,9 @@ send_wall_breaches(peer, gi); // re-open (silently) any already-breached walls t
 for(uint i=0; i<items.length(); i++)
 if(@items[i]!=null and items[i].room_id==rid) send(peer, "spawnitem "+items[i].id+" "+items[i].type+" "+items[i].x+" "+items[i].y, 0, true);
 send_wood_count(index); // their PRESERVED inventory, not a cleared one
-// Reconnected during the end-of-round results screen: re-send their play-again prompt (the exact roundover/
-// evpover message), so they can still answer instead of being stuck in an "over" cavern with no prompt -- which
-// would also block the others' reset, since an unanswered member holds it up.
+/* Reconnected during the end-of-round results screen: re-send their play-again prompt (the exact roundover/
+evpover message), so they can still answer instead of being stuck in an "over" cavern with no prompt -- which
+would also block the others' reset, since an unanswered member holds it up. */
 if(games[gi].phase=="over" and !players[index].playagain_answered and players[index].pending_results!="") send(peer, players[index].pending_results, 0, true);
 if(games[gi].paused) send(peer, "gamepaused", 0, true);
 broadcast_pos(index); // re-add them to the other members' trackers (held is already cleared)
@@ -587,8 +587,8 @@ for(uint i=0; i<players.length(); i++)
 if(i!=uint(index) and players[i].room_id==rid and !players[i].held) send(peer, pos_msg(int(i)), 0, true);
 return;
 }
-// Lobby (room_id 0): they were held for hosting a room. The client already drew the lobby on spawn, so just
-// re-advertise them and hand them the other lobby occupants.
+/* Lobby (room_id 0): they were held for hosting a room. The client already drew the lobby on spawn, so just
+re-advertise them and hand them the other lobby occupants. */
 broadcast_pos(index);
 for(uint i=0; i<players.length(); i++)
 if(i!=uint(index) and players[i].room_id==0 and !players[i].held) send(peer, pos_msg(int(i)), 0, true);
@@ -601,9 +601,9 @@ if(rank=="administrator") return "Administrator";
 if(rank=="moderator") return "Moderator";
 return rank;
 }
-// Scans every account on disk for staff and builds the /staff sentence, listing top of the
-// hierarchy first (developers, then administrators, then moderators), each tagged (Online) or
-// (Offline) based on the current roster.
+/* Scans every account on disk for staff and builds the /staff sentence, listing top of the
+hierarchy first (developers, then administrators, then moderators), each tagged (Online) or
+(Offline) based on the current roster. */
 string build_staff_list()
 {
 string[] files=find_directories("data/players/*");
@@ -612,8 +612,8 @@ for(uint i=0; i<files.length(); i++)
 {
 string acct=files[i];
 if(acct=="" or acct=="." or acct=="..") continue;
-// Read just the rank first and skip non-staff before touching the rest of the account -- most accounts aren't
-// staff, so this avoids a full 5-field load_account on every folder each time /staff runs.
+/* Read just the rank first and skip non-staff before touching the rest of the account -- most accounts aren't
+staff, so this avoids a full 5-field load_account on every folder each time /staff runs. */
 string rank=read_field(acct, "rank", "player");
 if(!is_staff(rank)) continue;
 string dispname=read_field(acct, "username");
@@ -640,8 +640,8 @@ if(total==1) head="There is 1 staff member on this game. ";
 else head="There are "+total+" staff members on this game. ";
 return head+list+".";
 }
-// Tells a player which of their saved rooms exist so the client can warn before the create flow.
-// Sends "yourrooms <0/1 public> <0/1 private>".
+/* Tells a player which of their saved rooms exist so the client can warn before the create flow.
+Sends "yourrooms <0/1 public> <0/1 private>". */
 void send_yourrooms(int peer, string name)
 {
 send(peer, "yourrooms "+(get_saved_public(name)?"1":"0")+" "+(get_saved_private(name)!=""?"1":"0"), 0,true);
@@ -654,9 +654,9 @@ for(uint i=0; i<players.length(); i++)
 if(is_staff(players[i].rank)) send(players[i].peer_id, msg, 0, true);
 }
 }
-// Sends a message to everyone on the sender's team within their game (used by team chat). team splits a game's
-// players into sides (PVP); in co-op games everyone shares one team, so it reaches the whole game. Respects the
-// recipient's personal ignore list, like local chat.
+/* Sends a message to everyone on the sender's team within their game (used by team chat). team splits a game's
+players into sides (PVP); in co-op games everyone shares one team, so it reaches the whole game. Respects the
+recipient's personal ignore list, like local chat. */
 void relay_to_team(int sender_index, string msg)
 {
 if(sender_index<0 or sender_index>=int(players.length())) return;
@@ -671,18 +671,18 @@ if(player_ignores(int(i), sender_name)) continue; // recipient ignores the sende
 send(players[i].peer_id, msg, 0, true);
 }
 }
-// Sends a third-person staff audit line (a promote/demote/unban/notify) to every online staff member -- a
-// moderation record visible only to staff, not regular players, routed to the misc buffer like /warn's staff
-// notice. skip_peer excludes one peer (e.g. the actor); pass -1 to include everyone, so the actor gets the
-// third-person copy alongside their own first-person confirmation.
+/* Sends a third-person staff audit line (a promote/demote/unban/notify) to every online staff member -- a
+moderation record visible only to staff, not regular players, routed to the misc buffer like /warn's staff
+notice. skip_peer excludes one peer (e.g. the actor); pass -1 to include everyone, so the actor gets the
+third-person copy alongside their own first-person confirmation. */
 void notify_staff_audit(string text, int skip_peer)
 {
 for(uint i=0; i<players.length(); i++)
 if(is_staff(players[i].rank) and int(players[i].peer_id) != skip_peer) send(players[i].peer_id, "misc "+text, 0, true);
 }
-// Deliver every offline PM queued for a freshly-spawned player, then clear the queue. Each goes as its own control
-// message so the client shows it in the private chats buffer with the PM sound and sets the reply target to the
-// sender's USERNAME (so /reply reaches them even if they're still offline). Fresh logins only, never reconnects.
+/* Deliver every offline PM queued for a freshly-spawned player, then clear the queue. Each goes as its own control
+message so the client shows it in the private chats buffer with the PM sound and sets the reply target to the
+sender's USERNAME (so /reply reaches them even if they're still offline). Fresh logins only, never reconnects. */
 void deliver_offline_pms(int index)
 {
 string raw = get_offline_pms(players[index].name);
@@ -707,15 +707,15 @@ string sender_name = (sender_index>=0 and sender_index<int(players.length())) ? 
 for(uint i=0; i<players.length(); i++)
 {
 if(players[i].room_id != room_id) continue;
-// "" (the local-chat callers) = everyone in the space, regardless of language channel; an optional language
-// filter remains available for any future caller that wants same-language-only delivery in a space.
+/* "" (the local-chat callers) = everyone in the space, regardless of language channel; an optional language
+filter remains available for any future caller that wants same-language-only delivery in a space. */
 if(language != "" and string_to_lower_case(players[i].language) != string_to_lower_case(language)) continue;
 if(sender_name != "" and player_ignores(int(i), sender_name)) continue; // recipient has the sender on their personal ignore list
 send(players[i].peer_id, msg, 0, true);
 }
 }
-// Broadcast a global-channel chat message only to players on the same language channel as the sender, so
-// global chat is scoped per language (like local). PMs and staff chat bypass this and reach across languages.
+/* Broadcast a global-channel chat message only to players on the same language channel as the sender, so
+global chat is scoped per language (like local). PMs and staff chat bypass this and reach across languages. */
 void relay_global(int sender_index, string what)
 {
 if(sender_index < 0 or sender_index >= int(players.length())) return;
@@ -724,9 +724,9 @@ string sender_name = players[sender_index].name;
 for(uint i=0; i<players.length(); i++)
 if(string_to_lower_case(players[i].language) == string_to_lower_case(lang) and !player_ignores(int(i), sender_name)) send(players[i].peer_id, what, 1, true); // skip recipients ignoring the sender
 }
-// Broadcast a third-person lifecycle notice (room/game created, left, stopped, kicked, etc.) to everyone's
-// player events buffer, server-wide, skipping the actor(s) who instead get a first-person confirmation in
-// their own misc buffer. The text should already use a flag-aware name (display_name_flagged[_for]).
+/* Broadcast a third-person lifecycle notice (room/game created, left, stopped, kicked, etc.) to everyone's
+player events buffer, server-wide, skipping the actor(s) who instead get a first-person confirmation in
+their own misc buffer. The text should already use a flag-aware name (display_name_flagged[_for]). */
 void broadcast_event(string text, int skip1 = -1, int skip2 = -1)
 {
 for(uint i=0; i<players.length(); i++)
@@ -735,9 +735,9 @@ if(int(players[i].peer_id) == skip1 or int(players[i].peer_id) == skip2) continu
 send(players[i].peer_id, "event "+text, 0, true);
 }
 }
-// Change an online player's nickname (ti = their roster index). requested is the new nickname, or "default"
-// to revert to their account username. Validates format and uniqueness, persists to nickname.usr, updates
-// the roster + tracker, and alerts everyone. issuer_peer receives any error. byself controls the wording.
+/* Change an online player's nickname (ti = their roster index). requested is the new nickname, or "default"
+to revert to their account username. Validates format and uniqueness, persists to nickname.usr, updates
+the roster + tracker, and alerts everyone. issuer_peer receives any error. byself controls the wording. */
 bool apply_nickname(int ti, string requested, int issuer_peer, bool byself)
 {
 string uname = players[ti].name;
@@ -763,8 +763,8 @@ if(int(i) == ti) continue;
 if(string_to_lower_case(players[i].nickname) == string_to_lower_case(newnick) or string_to_lower_case(players[i].name) == string_to_lower_case(newnick))
 { send(issuer_peer, "misc This nickname is already taken. Try again.", 0, true); return false; }
 }
-// Also reject any EXISTING account's username other than your own (online OR offline), so you can't take a
-// logged-out player's identity as your display name. Your own username is fine -- that's the default nickname.
+/* Also reject any EXISTING account's username other than your own (online OR offline), so you can't take a
+logged-out player's identity as your display name. Your own username is fine -- that's the default nickname. */
 if(string_to_lower_case(newnick) != string_to_lower_case(uname) and account_exists(newnick))
 { send(issuer_peer, "misc This nickname is already taken. Try again.", 0, true); return false; }
 string oldannounce = afk_prefix(ti) + display_name_flagged(ti); // old display, AFK + flag aware
@@ -776,11 +776,11 @@ for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "alert "+oldanno
 broadcast_pos(ti); // refresh the nickname shown in the player tracker
 return true;
 }
-// Move a player to a new room scope (0 = lobby) and keep everyone's rosters in sync. Position, beacons
-// and voice are scoped per room: on a move we tell the old scope to drop the player (despawn) and the
-// new scope to pick them up (exchanging positions both ways). Server-wide online/offline presence is
-// unaffected. Send the matching roomjoined/roomleft/etc. message to the mover BEFORE calling this, so
-// their client clears its roster first and then receives the new scope's occupants.
+/* Move a player to a new room scope (0 = lobby) and keep everyone's rosters in sync. Position, beacons
+and voice are scoped per room: on a move we tell the old scope to drop the player (despawn) and the
+new scope to pick them up (exchanging positions both ways). Server-wide online/offline presence is
+unaffected. Send the matching roomjoined/roomleft/etc. message to the mover BEFORE calling this, so
+their client clears its roster first and then receives the new scope's occupants. */
 void set_room_scope(int pindex, int newroom)
 {
 string nm = players[pindex].name;
@@ -790,8 +790,8 @@ for(uint i=0; i<players.length(); i++)
 if(i!=uint(pindex) and players[i].room_id==oldroom) send(players[i].peer_id, "despawn "+nm, 0, true);
 players[pindex].room_id = newroom;
 players[pindex].team = ""; // clear any PVP side when moving between spaces, so it never leaks into another game's team chat; a PVP side is chosen fresh after entering an idle PVP game
-// Spawn at the center of the new space: the lobby and offices are 50x50 (center 25); a game cavern is
-// sized by its map, so its center is size/2 (matching the client's draw_map centering).
+/* Spawn at the center of the new space: the lobby and offices are 50x50 (center 25); a game cavern is
+sized by its map, so its center is size/2 (matching the client's draw_map centering). */
 int center = 25;
 int gi = get_game_index(newroom);
 if(gi > -1) center = games[gi].size / 2;
@@ -814,18 +814,18 @@ send_wood_count(pindex);
 send(pr, wall_strength_msg(newroom), 0, true);
 }
 }
-// "pos <name> <x> <y> <visible-rank> <afk>" for a player, so the client's player tracker (P) can show the
-// same flag-aware rank and AFK marker the listings use. visible-rank is the rank only when the player is
-// staff AND has their flag on, otherwise "player"; afk is 1 or 0.
+/* "pos <name> <x> <y> <visible-rank> <afk>" for a player, so the client's player tracker (P) can show the
+same flag-aware rank and AFK marker the listings use. visible-rank is the rank only when the player is
+staff AND has their flag on, otherwise "player"; afk is 1 or 0. */
 string pos_msg(int pindex)
 {
 string vr = (is_staff(players[pindex].rank) and players[pindex].flagged) ? players[pindex].rank : "player";
 string af = players[pindex].afk ? "1" : "0";
 return "pos "+players[pindex].name+" "+players[pindex].x+" "+players[pindex].y+" "+vr+" "+af+" "+players[pindex].nickname;
 }
-// Broadcast a player's current position to everyone sharing their room scope (used on each move). A
-// spectator is never advertised -- this single guard keeps watchers out of everyone's player tracker and
-// beacons (no "pos" means they're never added to other clients' rosters).
+/* Broadcast a player's current position to everyone sharing their room scope (used on each move). A
+spectator is never advertised -- this single guard keeps watchers out of everyone's player tracker and
+beacons (no "pos" means they're never added to other clients' rosters). */
 void broadcast_pos(int pindex)
 {
 if(players[pindex].spectating or players[pindex].held) return; // never advertise a spectator or a held (offline-pending) player's position
@@ -852,9 +852,9 @@ string m = wall_strength_msg(gameid);
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id == gameid) send(players[i].peer_id, m, 0, true);
 }
-// Pick up every wood within `radius` tiles of the player (radius 0 = the exact tile they're on). Only in
-// a game during the build or wave phase. Adds to the player's inventory, removes the items (telling
-// everyone in the game), and gives the picker the take sound plus an updated wood count.
+/* Pick up every wood within `radius` tiles of the player (radius 0 = the exact tile they're on). Only in
+a game during the build or wave phase. Adds to the player's inventory, removes the items (telling
+everyone in the game), and gives the picker the take sound plus an updated wood count. */
 void gather_wood(int pindex, int radius)
 {
 int rid = players[pindex].room_id;
@@ -949,10 +949,10 @@ players[i].invite_from = "";
 send(players[i].peer_id, "invitexpired", 0, true);
 }
 }
-// Expire held (disconnected-but-holding) sessions: once the grace window passes with no reconnect, run the real
-// teardown now. Their peer_id is the negative sentinel, which is exactly what members[]/host_peer hold, so the
-// disconnect handlers find and remove them correctly. They were already announced offline at hold time, so no
-// second offline notice here.
+/* Expire held (disconnected-but-holding) sessions: once the grace window passes with no reconnect, run the real
+teardown now. Their peer_id is the negative sentinel, which is exactly what members[]/host_peer hold, so the
+disconnect handlers find and remove them correctly. They were already announced offline at hold time, so no
+second offline notice here. */
 for(int i=int(players.length())-1; i>=0; i--)
 {
 if(!players[i].held or players[i].held_timer.elapsed < reconnect_grace_ms) continue;
@@ -971,9 +971,9 @@ if(event.type==event_disconnect)
 int dindex=get_player_index(event.peer_id);
 if(dindex>-1 and has_restorable_state(dindex))
 {
-// They were in a room/game/watching or host something: hold the slot for the grace window instead of
-// tearing down now. begin_hold announces them offline, strips their presence, and swaps their peer id for
-// a sentinel. The netloop poll below tears it down for real if they don't reconnect in time.
+/* They were in a room/game/watching or host something: hold the slot for the grace window instead of
+tearing down now. begin_hold announces them offline, strips their presence, and swaps their peer id for
+a sentinel. The netloop poll below tears it down for real if they don't reconnect in time. */
 begin_hold(dindex);
 }
 else
@@ -997,15 +997,15 @@ string[] parsed=string_split(message, " ", true);
 int index=get_player_index(event.peer_id);
 if(parsed.length()==0)
 {
-// empty or malformed packet: an empty decrypted message splits to a zero-length array, so bail before any
-// parsed[0] branch below can index past the end and crash the whole server loop.
+/* empty or malformed packet: an empty decrypted message splits to a zero-length array, so bail before any
+parsed[0] branch below can index past the end and crash the whole server loop. */
 }
 else if(world_frozen and !(parsed[0]=="login" or parsed[0]=="register" or parsed[0]=="spawn_player" or parsed[0]=="welcome" or parsed[0]=="frozennotice" or (index>-1 and rank_level(players[index].rank)>=3 and (parsed[0]=="freeze" or parsed[0]=="unfreeze"))))
 {
-// Developer world-stop: while the game is frozen the server ignores every channel-0 message except a
-// developer's freeze/unfreeze and the login/spawn handshake (so a player can still connect and be frozen on
-// arrival). This is the authoritative lockout -- movement, pings, and every other command are dead, even to a
-// modified client, until a developer lifts the freeze.
+/* Developer world-stop: while the game is frozen the server ignores every channel-0 message except a
+developer's freeze/unfreeze and the login/spawn handshake (so a player can still connect and be frozen on
+arrival). This is the authoritative lockout -- movement, pings, and every other command are dead, even to a
+modified client, until a developer lifts the freeze. */
 }
 else if(message=="ping_request")
 {
@@ -1024,24 +1024,24 @@ send(event.peer_id, uptime_message, 0, true);
 }
 else if(parsed[0]=="login" and parsed.length()>3)
 {
-// login is exactly "login <name> <password> <version>"; extra tokens mean a space slipped into the name
-// or password (the client forms block this, but a non-standard client could still send it), which would
-// verify a truncated credential -- reject it so a space never causes a failed login or unloggable account.
+/* login is exactly "login <name> <password> <version>"; extra tokens mean a space slipped into the name
+or password (the client forms block this, but a non-standard client could still send it), which would
+verify a truncated credential -- reject it so a space never causes a failed login or unloggable account. */
 if(parsed.length()>4) send(event.peer_id, "error: usernames and passwords cannot contain spaces.", 0,true);
 else login(parsed[1], parsed[2], parsed[3]);
 }
 else if(parsed[0]=="register" and parsed.length()>3)
 {
-// register is exactly "register <name> <email> <password>"; extra tokens mean a space in one of them,
-// which would silently truncate the stored value and make the account impossible to log into.
+/* register is exactly "register <name> <email> <password>"; extra tokens mean a space in one of them,
+which would silently truncate the stored value and make the account impossible to log into. */
 if(parsed.length()>4) send(event.peer_id, "error: usernames, emails, and passwords cannot contain spaces.", 0,true);
 else register_account(parsed[1], parsed[2], parsed[3]);
 }
 else if(parsed[0]=="spawn_player" and parsed.length()>2)
 {
-// A peer may seat itself ONLY as the account it authenticated as in login() -- never the name the client
-// sends in the packet. This closes the bypass where a peer could skip login (or log in as a throwaway) and
-// spawn as any account, inheriting its rank (including the owner's forced developer).
+/* A peer may seat itself ONLY as the account it authenticated as in login() -- never the name the client
+sends in the packet. This closes the bypass where a peer could skip login (or log in as a throwaway) and
+spawn as any account, inheriting its rank (including the owner's forced developer). */
 string vname;
 if(!verified_logins.get(""+event.peer_id, vname))
 {
@@ -1054,10 +1054,10 @@ for(uint i=0; i<players.length(); i++)
 if(players[i].name==vname){ existing=int(i); break; }
 if(existing>-1 and players[existing].restoring and players[existing].peer_id==event.peer_id)
 {
-// Reconnect restore: login() already adopted the held session (peer rebound, hold cleared). Don't create a
-// new player or reset any state -- announce them back online and put them back into their room/game/watch
-// scope with inventory and host status intact. The in-memory channel mutes are preserved on the held session
-// and stay enforced; we deliberately DON'T re-announce them (no message or sound) on reconnect.
+/* Reconnect restore: login() already adopted the held session (peer rebound, hold cleared). Don't create a
+new player or reset any state -- announce them back online and put them back into their room/game/watch
+scope with inventory and host status intact. The in-memory channel mutes are preserved on the held session
+and stay enforced; we deliberately DON'T re-announce them (no message or sound) on reconnect. */
 players[existing].restoring=false;
 index=existing;
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
@@ -1089,13 +1089,13 @@ players[index].pronoun = is_valid_pronoun(pron) ? pron : default_pronoun();
 players[index].ignored = get_ignored(players[index].name); // personal ignore list (ignored.usr): whose chat/voice this player drops
 players[index].agreed = has_agreed_rules(players[index].name); // rules agreement (rules.usr vs rulesver); gates play until agreed. The reminder to read/agree is shown when they try to open the lobby, not at spawn.
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
-// New accounts are announced at creation time (see register_account), so logging in for the first time
-// is just a normal "online" notice like anyone else.
+/* New accounts are announced at creation time (see register_account), so logging in for the first time
+is just a normal "online" notice like anyone else. */
 send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
 update_peak(); // a player joined -- bump the all-time concurrent-player record if this is a new high
-// Load each channel mute from disk so it's enforced, but DON'T notify the player: a mute set while they
-// were offline shouldn't greet them with a message and sound every time they sign in (staff can still see
-// it on the F6 card, and any attempt to chat in that channel is quietly refused as always).
+/* Load each channel mute from disk so it's enforced, but DON'T notify the player: a mute set while they
+were offline shouldn't greet them with a message and sound every time they sign in (staff can still see
+it on the F6 card, and any attempt to chat in that channel is quietly refused as always). */
 array<string> spchans = mute_channels_for("all");
 for(uint sc=0; sc<spchans.length(); sc++)
 {
@@ -1109,8 +1109,8 @@ else set_player_mute(index, spchans[sc], mu);
 }
 }
 send(event.peer_id, "voicemutestate "+(is_muted_now(index, "voice") ? "1" : "0"), 0, true); // silent voice-mute state so the client can warn on O without opening the mic; no message or sound
-// Recreate this host's saved rooms (recreate-on-login). They sit ready in the lobby's room list;
-// the player themselves stays in the lobby until they Join one.
+/* Recreate this host's saved rooms (recreate-on-login). They sit ready in the lobby's room list;
+the player themselves stays in the lobby until they Join one. */
 if(get_saved_public(players[index].name)) create_room(players[index].name, event.peer_id, false, "");
 string savedpriv = get_saved_private(players[index].name);
 if(savedpriv != "") create_room(players[index].name, event.peer_id, true, savedpriv);
@@ -1136,9 +1136,9 @@ if(!players[index].spectating) gather_wood(index, 5); // auto-grab nearby wood -
 }
 else if(parsed[0]=="voicecue" and index>-1 and parsed.length()==2 and (parsed[1]=="on" or parsed[1]=="off"))
 {
-// Relay a speaker's voice on/off cue (von/voff) to everyone sharing their space, positioned at the speaker, so
-// others hear the mic key in 3D like the voice itself. Same routing as the channel-3 voice relay: same room,
-// skip self, skip a listener who ignores the speaker. A voice-muted player can't talk, so send no cue.
+/* Relay a speaker's voice on/off cue (von/voff) to everyone sharing their space, positioned at the speaker, so
+others hear the mic key in 3D like the voice itself. Same routing as the channel-3 voice relay: same room,
+skip self, skip a listener who ignores the speaker. A voice-muted player can't talk, so send no cue. */
 if(!is_muted_now(index, "voice"))
 {
 string cue="voicecue "+players[index].name+" "+players[index].x+" "+players[index].y+" "+parsed[1];
@@ -1152,15 +1152,15 @@ send(players[i].peer_id, cue, 0, true);
 }
 else if(parsed[0]=="setweapon" and index>-1 and parsed.length()>1)
 {
-// EVP: the client tells us which weapon it just drew, so we can restore the same one on a reconnect. Validate
-// against the four weapons; ignore anything else.
+/* EVP: the client tells us which weapon it just drew, so we can restore the same one on a reconnect. Validate
+against the four weapons; ignore anything else. */
 string w=parsed[1];
 if(w=="axe" or w=="bat" or w=="crowbar" or w=="hammer") players[index].weapon=w;
 }
 else if(parsed[0]=="reinforce" and index>-1)
 {
-// Shift+Enter near a wall: spend 1 wood for a random +10 to +20 strength on the NEAREST wall in reach.
-// Position-based (not facing-based), so it works from up to wall_reach tiles out in any direction.
+/* Shift+Enter near a wall: spend 1 wood for a random +10 to +20 strength on the NEAREST wall in reach.
+Position-based (not facing-based), so it works from up to wall_reach tiles out in any direction. */
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) {} // not in a game
 else if(games[gi].phase != "build" and games[gi].phase != "wave") send(event.peer_id, "You can only reinforce during a round.", 0,true);
@@ -1177,8 +1177,8 @@ int wi = wall_in_dir(games[gi].id, dir, games[gi].size); // ring wall in PVP, ou
 if(wi > -1 and walls[wi].health <= 0) send(event.peer_id, "That wall is destroyed.", 0,true);
 else if(wi > -1)
 {
-// A per-game reinforce cap is set and this wall is already at (or above) it: refuse BEFORE spending any wood,
-// rather than silently eating the piece for no gain. "No limit" (reinforce_cap 0) never refuses.
+/* A per-game reinforce cap is set and this wall is already at (or above) it: refuse BEFORE spending any wood,
+rather than silently eating the piece for no gain. "No limit" (reinforce_cap 0) never refuses. */
 if(games[gi].reinforce_cap > 0 and walls[wi].health >= walls[wi].maxhealth * games[gi].reinforce_cap) send(event.peer_id, "You can't reinforce this wall any further.", 0,true);
 else
 {
@@ -1188,8 +1188,8 @@ if(games[gi].reinforce_cap > 0) repair_wall(wi, gain, true, games[gi].reinforce_
 else repair_wall(wi, gain, false); // "No limit" was chosen: uncapped, as before
 if(games[gi].mode=="pvp") players[index].pvp_wood_placed++; // tally this defender's placements for the results screen
 send_wood_count(index);
-// Play the placement in 3D AT THE WALL being reinforced -- the placer's spot projected onto that border --
-// so everyone, the placer included, hears which wall and side the wood went to. Reuses the footstep relay.
+/* Play the placement in 3D AT THE WALL being reinforced -- the placer's spot projected onto that border --
+so everyone, the placer included, hears which wall and side the wood went to. Reuses the footstep relay. */
 int placex = players[index].x, placey = players[index].y;
 if(games[gi].mode=="pvp") // project onto the inset ring, not the outer border
 {
@@ -1215,16 +1215,16 @@ broadcast_wall_strength(games[gi].id);
 }
 else if(parsed[0]=="attack" and index>-1 and parsed.length()>1)
 {
-// EVP: a player's swing landed (the client times the windup). Apply this weapon's damage to the NEAREST
-// wall in reach -- the mirror of reinforce -- then broadcast the strike so everyone hears the impact. A
-// swing with no wall in reach simply whiffs (no message, since the swing is a continuous held action).
+/* EVP: a player's swing landed (the client times the windup). Apply this weapon's damage to the NEAREST
+wall in reach -- the mirror of reinforce -- then broadcast the strike so everyone hears the impact. A
+swing with no wall in reach simply whiffs (no message, since the swing is a continuous held action). */
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) {} // not in a game
 else if(games[gi].mode == "pvp")
 {
-// PVP (section 3): the attacking side swings at the ring walls for FEEDBACK only -- no damage yet (that's the
-// next section). Find the nearest ring wall in reach; during a wave's attack window the swing connects (wallhit),
-// otherwise (build/prep phase or a build window) it ricochets (wallrico). Defenders never attack walls.
+/* PVP (section 3): the attacking side swings at the ring walls for FEEDBACK only -- no damage yet (that's the
+next section). Find the nearest ring wall in reach; during a wave's attack window the swing connects (wallhit),
+otherwise (build/prep phase or a build window) it ricochets (wallrico). Defenders never attack walls. */
 if(players[index].team == "attack" and (games[gi].phase == "build" or games[gi].phase == "wave"))
 {
 string dir = ring_wall_in_reach(players[index].x, players[index].y, games[gi].size);
@@ -1236,9 +1236,9 @@ if(wi > -1 and walls[wi].health > 0)
 int wid = weapon_id_for_name(parsed[1]);
 if(games[gi].phase == "wave" and games[gi].wave_attacking)
 {
-// Attack window: the swing actually damages the wall (the weapon's tier, same table the bots use), then
-// everyone (and watchers) hears the strike. Unlike EVP there is no permanent-floor ratchet -- a STANDING
-// wall is fully repairable; only a wall demolished to 0 is permanent (it leaves impassable debris client-side).
+/* Attack window: the swing actually damages the wall (the weapon's tier, same table the bots use), then
+everyone (and watchers) hears the strike. Unlike EVP there is no permanent-floor ratchet -- a STANDING
+wall is fully repairable; only a wall demolished to 0 is permanent (it leaves impassable debris client-side). */
 int dmg = enemy_damage(wid);
 damage_wall(wi, dmg);
 players[index].pvp_damage += dmg; // tally this attacker's total damage for the results screen
@@ -1264,9 +1264,9 @@ if(wi > -1 and walls[wi].health > 0)
 int wid = weapon_id_for_name(parsed[1]);
 if(games[gi].phase == "wave" and games[gi].wave_attacking)
 {
-// The wave's attack segment is on: the swing actually damages the wall, and everyone (and watchers) hear the
-// strike. Half of the hit (evp_permanent_fraction) is permanent -- it lowers the wall's repair ceiling, so the
-// builders can claw the rest back during a rest window but never the whole hit, and the attackers always gain ground.
+/* The wave's attack segment is on: the swing actually damages the wall, and everyone (and watchers) hear the
+strike. Half of the hit (evp_permanent_fraction) is permanent -- it lowers the wall's repair ceiling, so the
+builders can claw the rest back during a rest window but never the whole hit, and the attackers always gain ground. */
 int dmg = enemy_damage(wid);
 damage_wall(wi, dmg);
 lower_wall_floor(wi, dmg * evp_permanent_fraction);
@@ -1276,8 +1276,8 @@ if(walls[wi].health <= 0) on_wall_destroyed(games[gi].id, gi, dir);
 }
 else
 {
-// Build phase or a rest segment: the wall can't be hurt right now (the bots are repairing), so the swing
-// just ricochets -- the weapon's hit clip plays (no damage) so everyone (and watchers) hears the swing connect.
+/* Build phase or a rest segment: the wall can't be hurt right now (the bots are repairing), so the swing
+just ricochets -- the weapon's hit clip plays (no damage) so everyone (and watchers) hears the swing connect. */
 send_to_game(games[gi].id, "wallrico "+dir+" "+wid);
 }
 }
@@ -1286,8 +1286,8 @@ send_to_game(games[gi].id, "wallrico "+dir+" "+wid);
 }
 else if(parsed[0]=="step" and parsed.length()>3 and index>-1)
 {
-// Relay a footstep/wall-bump sound to everyone sharing the stepper's room, so they hear the move. A
-// spectator's own steps are NOT relayed -- watchers move unheard by the players below.
+/* Relay a footstep/wall-bump sound to everyone sharing the stepper's room, so they hear the move. A
+spectator's own steps are NOT relayed -- watchers move unheard by the players below. */
 if(!players[index].spectating)
 {
 string fs="footstep "+parsed[1]+" "+parsed[2]+" "+parsed[3];
@@ -1331,9 +1331,9 @@ else if(parsed[0]=="ignoremenu" and index>-1) push_ignore_menu(index); // /ignor
 else if(parsed[0]=="ignoredmenu" and index>-1) push_ignored_menu(index); // /ignored: review and unmute your personal ignore list
 else if(parsed[0]=="ignore" and index>-1 and parsed.length()>1)
 {
-// Personal mute from the F6 info card: add a username to this player's ignore list (their chat and voice
-// stop reaching this player). The target isn't notified when muted, but a PM to this player will tell them
-// they've been muted. Can't ignore yourself, and can't mute staff (they're never personally muteable).
+/* Personal mute from the F6 info card: add a username to this player's ignore list (their chat and voice
+stop reaching this player). The target isn't notified when muted, but a PM to this player will tell them
+they've been muted. Can't ignore yourself, and can't mute staff (they're never personally muteable). */
 string tu = parsed[1];
 if(string_to_lower_case(tu) != string_to_lower_case(players[index].name) and account_exists(tu) and !is_staff(get_rank(tu)) and !player_ignores(index, tu)) // staff can never be personally muted
 {
@@ -1377,9 +1377,9 @@ else if(parsed[0]=="afk" and index>-1)
 if(!players[index].afk)
 {
 players[index].afk=true;
-// Optional reason typed with /afk, announced once and stored nowhere. It's broadcast to every player across
-// channels (like local chat), so it always gets both filters; a reason that fails is dropped and the player is
-// told, but still goes AFK (they already sat through the countdown -- no point punishing them for one word).
+/* Optional reason typed with /afk, announced once and stored nowhere. It's broadcast to every player across
+channels (like local chat), so it always gets both filters; a reason that fails is dropped and the player is
+told, but still goes AFK (they already sat through the countdown -- no point punishing them for one word). */
 string reason = (parsed.length() > 1) ? string_join(parsed, " ", 1, parsed.length()).trim_whitespace() : "";
 bool afk_reason_dropped = (reason != "" and (filter_crash(reason) or filter_chat(reason)));
 if(afk_reason_dropped) reason = "";
@@ -1471,9 +1471,9 @@ send(event.peer_id, "helptext "+which+"\n"+content, 0,true);
 else if(parsed[0]=="rules" and index>-1 and parsed.length()>1)
 {
 string which=string_to_lower_case(parsed[1]);
-// "agree"/"disagree" are the rules-gate answers, not pages. Agreeing requires having read the required
-// pages first: everyone must read the PLAYER rules, and staff must also read the STAFF rules.
-// Disagreeing drops the player back to the connection menu. Both are open to everyone.
+/* "agree"/"disagree" are the rules-gate answers, not pages. Agreeing requires having read the required
+pages first: everyone must read the PLAYER rules, and staff must also read the STAFF rules.
+Disagreeing drops the player back to the connection menu. Both are open to everyone. */
 if(which=="agree")
 {
 if(players[index].agreed) send(event.peer_id, "misc You already agreed to the server rules.", 0,true);
@@ -1499,8 +1499,8 @@ players.remove_at(index);
 verified_logins.delete(""+event.peer_id);
 }
 }
-// Both rules pages are open to everyone (unlike the staff help): players can read the staff rules too, so they
-// can see the standards staff are held to and hold them accountable.
+/* Both rules pages are open to everyone (unlike the staff help): players can read the staff rules too, so they
+can see the standards staff are held to and hold them accountable. */
 else if(which!="player" and which!="staff")
 {
 send(event.peer_id, "No rules page named "+parsed[1]+". Try player or staff.", 0,true);
@@ -1509,8 +1509,8 @@ else if(!file_exists("docks/rules/"+which+".txt"))
 {
 send(event.peer_id, "The "+which+" rules page is missing on the server.", 0,true);
 }
-// A regular player must read their own (player) rules before they're allowed to peek at the staff rules;
-// staff can read either page in any order.
+/* A regular player must read their own (player) rules before they're allowed to peek at the staff rules;
+staff can read either page in any order. */
 else if(which=="staff" and !is_staff(players[index].rank) and !players[index].read_player_rules)
 {
 send(event.peer_id, "misc Please read the player rules first with /rules, then you can read the staff rules.", 0,true);
@@ -1528,8 +1528,8 @@ send(event.peer_id, "rulestext "+which+"\n"+content, 0,true);
 }
 else if(parsed[0]=="where" and index>-1 and parsed.length()>1)
 {
-// Everyone: report where an ONLINE player is, using the same phrase the F6 card shows, named for the target
-// (e.g. "Bob is in the lobby."). Resolves by username or nickname; offline/unknown gets the usual not-found line.
+/* Everyone: report where an ONLINE player is, using the same phrase the F6 card shows, named for the target
+(e.g. "Bob is in the lobby."). Resolves by username or nickname; offline/unknown gets the usual not-found line. */
 int ti = get_player_index_from(parsed[1]);
 if(ti < 0) reply_target_not_found(event.peer_id, parsed[1]);
 else if(player_ignores(ti, players[index].name)) send(event.peer_id, "misc This player's location is private.", 0, true); // they've personally muted you, so you can't look up their whereabouts (staff are exempt via player_ignores)
@@ -1541,8 +1541,8 @@ send(event.peer_id, "misc "+display_name(ti)+" is "+string_to_lower_case(loc.sub
 }
 else if(parsed[0]=="changepassself" and index>-1 and parsed.length()==3)
 {
-// Self /changepass: verify the CURRENT password, then store the new Argon2id hash and log the player out so they
-// re-sign-in with it (the client knows the new password and updates its saved account). Passwords never ride chat.
+/* Self /changepass: verify the CURRENT password, then store the new Argon2id hash and log the player out so they
+re-sign-in with it (the client knows the new password and updates its saved account). Passwords never ride chat. */
 string cur = parsed[1];
 string np = parsed[2];
 if(!verify_password(players[index].name, cur)) send(event.peer_id, "misc Your current password is incorrect.", 0, true);
@@ -1558,8 +1558,8 @@ players.remove_at(index); // free the slot now so the ensuing disconnect doesn't
 }
 else if(parsed[0]=="changepassadmin" and index>-1 and parsed.length()==3)
 {
-// Admin RESET: administrator+ sets another online player's password without their old one (at-or-below rank), then
-// logs them out. Their saved password is left stale (they don't know the new one), so staff tell them out of band.
+/* Admin RESET: administrator+ sets another online player's password without their old one (at-or-below rank), then
+logs them out. Their saved password is left stale (they don't know the new one), so staff tell them out of band. */
 if(rank_level(players[index].rank) < 2) send(event.peer_id, "misc You can't reset another player's password.", 0, true);
 else
 {
@@ -1582,9 +1582,9 @@ players.remove_at(ti);
 }
 else if(parsed[0]=="delcharself" and index>-1 and parsed.length()==2)
 {
-// Self /delchar: verify the player's OWN password, then delete their account, announce it, and log them out. The
-// owner may delete itself (delete_account drops that alias from conf.svr's owners list). Departure is announced by the deletion notice,
-// not a plain "offline" line, so remove from the roster before broadcasting so this player is naturally skipped.
+/* Self /delchar: verify the player's OWN password, then delete their account, announce it, and log them out. The
+owner may delete itself (delete_account drops that alias from conf.svr's owners list). Departure is announced by the deletion notice,
+not a plain "offline" line, so remove from the roster before broadcasting so this player is naturally skipped. */
 string pw = parsed[1];
 if(!verify_password(players[index].name, pw)) send(event.peer_id, "misc Incorrect password.", 0, true);
 else
@@ -1604,8 +1604,8 @@ send(tpeer, "delchardone", 0, true);
 }
 else if(parsed[0]=="delcharadmin" and index>-1 and parsed.length()==2)
 {
-// Admin /delchar <username>: administrator+ deletes another ONLINE player's account (at-or-below rank). The owner
-// can't be deleted by anyone else (use the self form); self-targeting is bounced to the password-checked self form.
+/* Admin /delchar <username>: administrator+ deletes another ONLINE player's account (at-or-below rank). The owner
+can't be deleted by anyone else (use the self form); self-targeting is bounced to the password-checked self form. */
 if(rank_level(players[index].rank) < 2) send(event.peer_id, "misc You can't delete other players' accounts.", 0, true);
 else
 {
@@ -1636,9 +1636,9 @@ send(tpeer, "delcharkicked", 0, true);
 }
 else if(parsed[0]=="getwarnings" and index>-1 and parsed.length()>1)
 {
-// Staff (moderator+) view a player's saved warning history, read-only, in the client's doc viewer. Accepts a
-// username OR (for an online player) a nickname: resolve an online player first, else treat it as a username for
-// an offline account (warnings live on disk, like /unban). Non-staff is silently ignored.
+/* Staff (moderator+) view a player's saved warning history, read-only, in the client's doc viewer. Accepts a
+username OR (for an online player) a nickname: resolve an online player first, else treat it as a username for
+an offline account (warnings live on disk, like /unban). Non-staff is silently ignored. */
 if(rank_level(players[index].rank) < 1) { }
 else
 {
@@ -1654,8 +1654,8 @@ send(event.peer_id, "warnstext "+uname+"\n"+format_warnings(target), 0, true);
 }
 else if(parsed[0]=="getbans" and index>-1 and parsed.length()>1)
 {
-// Staff (moderator+) view a player's ban status, read-only, in the doc viewer. Same targeting as /warnings:
-// an online player by username or nickname, else a username for an offline account (bans live on disk).
+/* Staff (moderator+) view a player's ban status, read-only, in the doc viewer. Same targeting as /warnings:
+an online player by username or nickname, else a username for an offline account (bans live on disk). */
 if(rank_level(players[index].rank) < 1) { }
 else
 {
@@ -1671,8 +1671,8 @@ send(event.peer_id, "banstext "+uname+"\n"+format_ban(target), 0, true);
 }
 else if(parsed[0]=="getmutes" and index>-1 and parsed.length()>1)
 {
-// Staff (moderator+) view a player's per-channel mute status, read-only, in the doc viewer. Same targeting as
-// /warnings: an online player by username or nickname, else a username for an offline account (mutes live on disk).
+/* Staff (moderator+) view a player's per-channel mute status, read-only, in the doc viewer. Same targeting as
+/warnings: an online player by username or nickname, else a username for an offline account (mutes live on disk). */
 if(rank_level(players[index].rank) < 1) { }
 else
 {
@@ -1688,15 +1688,15 @@ send(event.peer_id, "mutestext "+uname+"\n"+format_mutes(target), 0, true);
 }
 else if(parsed[0]=="getreports" and index>-1)
 {
-// Staff (moderator+) view every report on record, read-only, newest first, in the doc viewer. Unlike the
-// per-player viewers this takes no name. Non-staff is silently ignored.
+/* Staff (moderator+) view every report on record, read-only, newest first, in the doc viewer. Unlike the
+per-player viewers this takes no name. Non-staff is silently ignored. */
 if(rank_level(players[index].rank) < 1) { }
 else send(event.peer_id, "reportstext\n"+format_reports(), 0, true);
 }
 else if(parsed[0]=="getbansall" and index>-1)
 {
-// Developer-only read-only overview of every banned account. Bans live on offline folders, so this is the only
-// way to see them all at once; like getreports it takes no name. Anyone below developer is silently ignored.
+/* Developer-only read-only overview of every banned account. Bans live on offline folders, so this is the only
+way to see them all at once; like getreports it takes no name. Anyone below developer is silently ignored. */
 if(rank_level(players[index].rank) < 3) { }
 else send(event.peer_id, "bansalltext\n"+format_all_bans(), 0, true);
 }
@@ -1706,25 +1706,25 @@ on_menu_result(index, parsed[1], int(string_to_number(parsed[2])));
 }
 else if(parsed[0]=="roomaction" and index>-1 and parsed.length()>1)
 {
-// A Ctrl+<key> room hotkey: run the named room-menu action directly, skipping the room menu. Only valid while
-// actually in a room (room_id != 0); do_room_action re-validates host-only actions (kick, delete, setpw) itself.
+/* A Ctrl+<key> room hotkey: run the named room-menu action directly, skipping the room menu. Only valid while
+actually in a room (room_id != 0); do_room_action re-validates host-only actions (kick, delete, setpw) itself. */
 if(players[index].room_id != 0) do_room_action(index, event.peer_id, parsed[1], true); // silent: a hotkey in the wrong context does nothing quietly (the menu path, on_menu_result, stays non-silent)
 }
 else if(parsed[0]=="gameaction" and index>-1 and parsed.length()>1)
 {
-// A Ctrl+<key> round-menu hotkey: run the named round action directly, skipping the round menu. Only valid while
-// in a game; do_game_action's downstream commands (beginround, skipbuild) and pickers re-validate host/phase/staff.
+/* A Ctrl+<key> round-menu hotkey: run the named round action directly, skipping the round menu. Only valid while
+in a game; do_game_action's downstream commands (beginround, skipbuild) and pickers re-validate host/phase/staff. */
 if(get_game_index(players[index].room_id) >= 0) do_game_action(index, event.peer_id, parsed[1]);
 }
 else if(parsed[0]=="openmenu" and index>-1)
 {
-// The client asks the server to open the menu for wherever they are; the server is the authority on
-// the options. Lobby and rooms are server-driven now; the in-game menu is still client-rendered.
+/* The client asks the server to open the menu for wherever they are; the server is the authority on
+the options. Lobby and rooms are server-driven now; the in-game menu is still client-rendered. */
 if(!players[index].agreed)
 {
-// Rules gate: the lobby menu is the only way into rooms/games, so blocking it (plus /accept, /reject, and
-// invites) keeps an unagreed player out of all gameplay until they agree. This is where the read/agree
-// reminder is shown, since there's no longer a login-time alert.
+/* Rules gate: the lobby menu is the only way into rooms/games, so blocking it (plus /accept, /reject, and
+invites) keeps an unagreed player out of all gameplay until they agree. This is where the read/agree
+reminder is shown, since there's no longer a login-time alert. */
 send(event.peer_id, "misc You must read the server rules before you can play. Type /rules to read them, then /rules agree to continue, or /rules disagree to leave.", 0,true);
 }
 else if(players[index].room_id==0 or get_room_index(players[index].room_id)>-1)
@@ -1738,10 +1738,10 @@ push_game_menu(index); // Enter in a game = round controls
 }
 else if(parsed[0]=="openpanel" and index>-1 and parsed.length()>1)
 {
-// A Ctrl+A / Ctrl+H hotkey jumps straight to an Actions-menu panel, skipping the Actions menu itself. Gated like
-// openmenu (no panels until you've agreed to the rules), and each panel is pushed only in its own context: the
-// account panel in the lobby or a room, the lobby panel only in the lobby, the room panel only in a room. A
-// wrong-context press does nothing quietly, matching the other context-specific hotkeys.
+/* A Ctrl+A / Ctrl+H hotkey jumps straight to an Actions-menu panel, skipping the Actions menu itself. Gated like
+openmenu (no panels until you've agreed to the rules), and each panel is pushed only in its own context: the
+account panel in the lobby or a room, the lobby panel only in the lobby, the room panel only in a room. A
+wrong-context press does nothing quietly, matching the other context-specific hotkeys. */
 if(players[index].agreed)
 {
 string which = parsed[1];
@@ -1752,8 +1752,8 @@ else if(which == "room" and get_room_index(players[index].room_id)>-1) push_room
 }
 else if(parsed[0]=="openpausemenu" and index>-1)
 {
-// Escape in a game. The host, during a running round, pauses the whole game for everyone and gets the
-// pause menu; anyone else (or the host while idle/over) gets a plain leave menu that doesn't pause.
+/* Escape in a game. The host, during a running round, pauses the whole game for everyone and gets the
+pause menu; anyone else (or the host while idle/over) gets a plain leave menu that doesn't pause. */
 int gi=get_game_index(players[index].room_id);
 if(gi>-1)
 {
@@ -1765,9 +1765,9 @@ else push_leave_menu(index);
 }
 else if(parsed[0]=="playagain" and index>-1 and parsed.length()>1)
 {
-// Answer to the end-of-round "play again?" prompt. Only meaningful while the game is in the "over"
-// phase. No = leave to the office (migrates the host if needed); yes = stay. Once everyone who is left
-// has answered, the cavern resets to a fresh idle round for the host to begin.
+/* Answer to the end-of-round "play again?" prompt. Only meaningful while the game is in the "over"
+phase. No = leave to the office (migrates the host if needed); yes = stay. Once everyone who is left
+has answered, the cavern resets to a fresh idle round for the host to begin. */
 int gi=get_game_index(players[index].room_id);
 if(gi>-1 and games[gi].phase=="over")
 {
@@ -1852,9 +1852,9 @@ send(event.peer_id, "You can't begin a round with yourself.", 0,true);
 }
 else if(games[gi].mode=="pvp")
 {
-// PVP: enforce even, fully-assigned sides (1v1 or 2v2) before starting. On a passing gate, open the
-// build/prep phase like the other modes -- set_game_phase's PVP branch (pvp_build_setup) places each side
-// and arms the attackers; it deliberately avoids the shared PVE engine (no enemy bots, no blanket wood grant).
+/* PVP: enforce even, fully-assigned sides (1v1 or 2v2) before starting. On a passing gate, open the
+build/prep phase like the other modes -- set_game_phase's PVP branch (pvp_build_setup) places each side
+and arms the attackers; it deliberately avoids the shared PVE engine (no enemy bots, no blanket wood grant). */
 string problem = pvp_start_problem(gi);
 if(problem != "") send(event.peer_id, problem, 0,true);
 else
@@ -1895,8 +1895,8 @@ set_game_phase(gi, "wave");
 }
 else if(parsed[0]=="stopgame" and index>-1 and parsed.length()>1)
 {
-// Stop a specific game by id (the room menu's Stop-game list): allowed for staff (any game) or that
-// game's own host (e.g. a host who left a game running and wants to kill it from the room).
+/* Stop a specific game by id (the room menu's Stop-game list): allowed for staff (any game) or that
+game's own host (e.g. a host who left a game running and wants to kill it from the room). */
 int gi=get_game_index(int(string_to_number(parsed[1])));
 if(gi==-1)
 {
@@ -1984,8 +1984,8 @@ do_join_room(index, event.peer_id, int(string_to_number(parsed[1])), pw);
 }
 else if(parsed[0]=="scopemembers" and index>-1)
 {
-// Everyone in a given space (room_id). With no argument it's the requester's own scope; with one it's
-// that specific space (the R/L/G keys use this — L passes 0 for the lobby). Works for lobby, office, or game.
+/* Everyone in a given space (room_id). With no argument it's the requester's own scope; with one it's
+that specific space (the R/L/G keys use this — L passes 0 for the lobby). Works for lobby, office, or game. */
 int target = (parsed.length()>1) ? int(string_to_number(parsed[1])) : players[index].room_id;
 string payload="scopememberlist";
 for(uint i=0; i<players.length(); i++)
@@ -2008,8 +2008,8 @@ send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="allgamemembers" and index>-1)
 {
-// Game count + everyone in any game across the whole server (the G key, pressed from the lobby). Shares
-// the roomgamelist reply format with roomgamemembers; the client just labels it "on the server".
+/* Game count + everyone in any game across the whole server (the G key, pressed from the lobby). Shares
+the roomgamelist reply format with roomgamemembers; the client just labels it "on the server". */
 string payload="roomgamelist "+games.length();
 for(uint i=0; i<players.length(); i++)
 if(get_game_index(players[i].room_id)>-1 and !players[i].spectating and !players[i].held) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // spectators aren't counted as game players; held (offline) sessions aren't either
@@ -2017,8 +2017,8 @@ send(event.peer_id, payload, 0,true);
 }
 else if(parsed[0]=="roomsoverview" and index>-1)
 {
-// Room count + everyone standing in a room's office (NOT its games) across the server (the R key, from
-// the lobby). Office occupants have room_id == that room's id; game players have room_id == a game id.
+/* Room count + everyone standing in a room's office (NOT its games) across the server (the R key, from
+the lobby). Office occupants have room_id == that room's id; game players have room_id == a game id. */
 string payload="roomsoverviewlist "+rooms.length();
 for(uint i=0; i<players.length(); i++)
 if(get_room_index(players[i].room_id)>-1 and !players[i].held) payload+="\n"+afk_prefix(i)+display_name_flagged(i); // held (offline) sessions aren't listed as office occupants
@@ -2239,9 +2239,9 @@ if(world_frozen) send(event.peer_id, "misc The game is already frozen.", 0, true
 else
 {
 freeze_world();
-// Announce it to everyone the way the staff-flag flip is announced: AFK-, rank-, and nickname-aware, with the
-// gamestop cue riding in the alerts buffer (the client's worldfreeze handler plays it). Nobody chats or moves
-// until it's lifted.
+/* Announce it to everyone the way the staff-flag flip is announced: AFK-, rank-, and nickname-aware, with the
+gamestop cue riding in the alerts buffer (the client's worldfreeze handler plays it). Nobody chats or moves
+until it's lifted. */
 string wfann = "worldfreeze\nAttention! "+afk_prefix(index)+display_name_flagged(index)+" has frozen the game!";
 for(uint wfi=0; wfi<players.length(); wfi++) send(players[wfi].peer_id, wfann, 0, true);
 }
@@ -2258,8 +2258,8 @@ for(uint wfi=0; wfi<players.length(); wfi++) send(players[wfi].peer_id, wfann, 0
 }
 else if(parsed[0]=="frozennotice")
 {
-// The client asks for this when a developer types anything but a start/stop command in the frozen chat box; the
-// server owns the "you can't do that now" reply so it's authoritative and matches the notice a player gets on join.
+/* The client asks for this when a developer types anything but a start/stop command in the frozen chat box; the
+server owns the "you can't do that now" reply so it's authoritative and matches the notice a player gets on join. */
 if(world_frozen) send(event.peer_id, "misc The game is currently frozen.", 0, true);
 }
 }
@@ -2270,9 +2270,9 @@ if(index>-1)
 {
 if(is_muted_now(index, "voice"))
 {
-// Voice-muted: silently drop the stream. The client already knows its voice-mute state (voicemutestate at
-// spawn/restore plus the live muted/unmuted notices) and warns the player on O before opening the mic, so
-// a muted client shouldn't even reach here; this is just the authoritative backstop, no reply needed.
+/* Voice-muted: silently drop the stream. The client already knows its voice-mute state (voicemutestate at
+spawn/restore plus the live muted/unmuted notices) and warns the player on O before opening the mic, so
+a muted client shouldn't even reach here; this is just the authoritative backstop, no reply needed. */
 }
 else
 {
@@ -2346,9 +2346,9 @@ if(event.type == event_receive && event.channel == 1 && !world_frozen) // world-
                     }
                     else if(target_index > -1)
 {
-// If the recipient has personally muted the sender, the PM can't be delivered -- tell the sender so (a reminder,
-// like other games), instead of the old silent fake "PM to" copy. player_ignores returns false when the sender is
-// staff, so staff PMs always go through.
+/* If the recipient has personally muted the sender, the PM can't be delivered -- tell the sender so (a reminder,
+like other games), instead of the old silent fake "PM to" copy. player_ignores returns false when the sender is
+staff, so staff PMs always go through. */
 if(player_ignores(target_index, players[index].name)) send(event.peer_id, "misc This player has muted you.", 0, true);
 else
 {
@@ -2358,9 +2358,9 @@ send(players[target_index].peer_id, "PM from " + afk_prefix(index) + display_nam
                     }
 else if(account_exists(target_user))
 {
-// The recipient is offline but the account exists: queue the message for their next login instead of erroring.
-// Honor their personal ignore list the same as a live PM (staff exempt via account_ignores), and echo an
-// "Offline PM to" copy to the sender so they know it was saved rather than delivered.
+/* The recipient is offline but the account exists: queue the message for their next login instead of erroring.
+Honor their personal ignore list the same as a live PM (staff exempt via account_ignores), and echo an
+"Offline PM to" copy to the sender so they know it was saved rather than delivered. */
 if(account_ignores(target_user, players[index].name)) send(event.peer_id, "misc This player has muted you.", 0, true);
 else
 {
@@ -2403,8 +2403,8 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                 }
                 else if(parsed[0] == "/changemail" && parsed.length() >= 2)
                 {
-                    // Change an account's cosmetic email (email.usr). Self: /changemail <email> (anyone). Admin:
-                    // /changemail <username> <email> (administrator+, at-or-below rank, online target). No logout -- email is cosmetic.
+                    /* Change an account's cosmetic email (email.usr). Self: /changemail <email> (anyone). Admin:
+                    /changemail <username> <email> (administrator+, at-or-below rank, online target). No logout -- email is cosmetic. */
                     if(parsed.length() == 2)
                     {
                         string em = parsed[1];
@@ -2433,10 +2433,10 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                 }
                 else if(parsed[0] == "/changename" && parsed.length() == 3)
                 {
-                    // Administrator+ renames an account (the username, the identity), resetting its nickname to the new
-                    // name. Online-only target (username or nickname), at-or-below rank. Quiet: only the renamed player,
-                    // a staff audit line, and the actor are told. The rename carries the whole account folder and fixes
-                    // up owner status and everyone's personal ignore lists; the player is then logged out to sign back in.
+                    /* Administrator+ renames an account (the username, the identity), resetting its nickname to the new
+                    name. Online-only target (username or nickname), at-or-below rank. Quiet: only the renamed player,
+                    a staff audit line, and the actor are told. The rename carries the whole account folder and fixes
+                    up owner status and everyone's personal ignore lists; the player is then logged out to sign back in. */
                     if(rank_level(players[index].rank) < 2) send(event.peer_id, "misc You can't rename players.", 0, true);
                     else
                     {
@@ -2462,9 +2462,9 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                         if(string_to_lower_case(players[pi].ignored[k]) == string_to_lower_case(oldname)) players[pi].ignored[k] = newname;
                                 send(event.peer_id, "misc You renamed "+display_name_flagged(ti)+" to "+newname+".", 0, true);
                                 notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" renamed "+afk_prefix(ti)+display_name_flagged(ti)+" to "+newname+".", -1);
-                                // Log the renamed player out: announce them offline under the OLD name, tell their client to
-                                // return to the connection menu, then drop them from the roster. The ensuing disconnect handles
-                                // host migration and room/game cleanup if they were hosting.
+                                /* Log the renamed player out: announce them offline under the OLD name, tell their client to
+                                return to the connection menu, then drop them from the roster. The ensuing disconnect handles
+                                host migration and room/game cleanup if they were hosting. */
                                 send(0, "offline "+oldname+" "+oldrank+" "+oldnick, 0, true);
                                 send(tpeer, "renamed "+newname, 0, true);
                                 players.remove_at(ti);
@@ -2536,10 +2536,10 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                 }
                 else if(parsed[0] == "/kickall" && rank_level(players[index].rank) >= 3)
                 {
-                    // Developer world-clear: disconnect every player who isn't a developer, so you and any co-developer
-                    // stay. An optional reason after the command is shown to each kicked player, crash-filtered like
-                    // /kick (a caught reason is dropped and the kicks still happen). Everyone is gathered first, then
-                    // torn down together, so the roster shifting mid-loop can't skip anyone.
+                    /* Developer world-clear: disconnect every player who isn't a developer, so you and any co-developer
+                    stay. An optional reason after the command is shown to each kicked player, crash-filtered like
+                    /kick (a caught reason is dropped and the kicks still happen). Everyone is gathered first, then
+                    torn down together, so the roster shifting mid-loop can't skip anyone. */
                     string adisp = afk_prefix(index)+display_name_flagged(index); // actor's name; capture before removal, since remove_at shifts index
                     string reason = "";
                     for(uint r=1; r<parsed.length(); r++) reason += (reason == "" ? "" : " ") + parsed[r];
@@ -2695,9 +2695,9 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         }
                         else
                         {
-                            // The reason is shown to the warned player, so a crash string must never get through. Like
-                            // ban, a staff reason is crash-filtered only (not profanity), so staff can quote the offense;
-                            // a reason that trips the crash filter is dropped and the warning still lands.
+                            /* The reason is shown to the warned player, so a crash string must never get through. Like
+                            ban, a staff reason is crash-filtered only (not profanity), so staff can quote the offense;
+                            a reason that trips the crash filter is dropped and the warning still lands. */
                             bool wreason_dropped = filter_crash(wreason);
                             if(wreason_dropped) wreason = "";
                             int wcount = add_warning(players[ti].name, wlevel, players[index].name, wreason);
@@ -2789,11 +2789,11 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                 }
                 else if(parsed[0] == "/muteall" && rank_level(players[index].rank) >= 3)
                 {
-                    // Developer mass-mute: apply the same mute as /mute to every online player who isn't a developer
-                    // (mods and admins included; you and any co-developer are spared). It persists per account like a
-                    // normal mute -- a reconnecting player stays muted, timed mutes expire on their own. Each muted
-                    // player gets their own notice, but the per-player "was muted" broadcast is suppressed (dozens of
-                    // lines would flood everyone); you get one confirmation and any remaining developers a quiet note.
+                    /* Developer mass-mute: apply the same mute as /mute to every online player who isn't a developer
+                    (mods and admins included; you and any co-developer are spared). It persists per account like a
+                    normal mute -- a reconnecting player stays muted, timed mutes expire on their own. Each muted
+                    player gets their own notice, but the per-player "was muted" broadcast is suppressed (dozens of
+                    lines would flood everyone); you get one confirmation and any remaining developers a quiet note. */
                     if(parsed.length() >= 2)
                     {
                         string channel = string_to_lower_case(parsed[1]);
@@ -2832,9 +2832,9 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                 }
                 else if(parsed[0] == "/unmuteall" && rank_level(players[index].rank) >= 3)
                 {
-                    // Lifts a mass mute: clears the mute in this channel for every online non-developer who has one.
-                    // Individual mutes in the channel are cleared too -- there's no way to tell them apart, and a
-                    // developer using this means to wipe the channel clean.
+                    /* Lifts a mass mute: clears the mute in this channel for every online non-developer who has one.
+                    Individual mutes in the channel are cleared too -- there's no way to tell them apart, and a
+                    developer using this means to wipe the channel clean. */
                     if(parsed.length() >= 2)
                     {
                         string channel = string_to_lower_case(parsed[1]);
@@ -2960,9 +2960,9 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                 }
                 else if(parsed[0] == "/report" && parsed.length() >= 3)
                 {
-                    // Anyone can report a player to the staff. Target plus a required reason (everything after the
-                    // name). An offline player is accepted by username, since the point is often to report someone
-                    // who just left. The report is logged to reports.svr and pushed live to every online staffer.
+                    /* Anyone can report a player to the staff. Target plus a required reason (everything after the
+                    name). An offline player is accepted by username, since the point is often to report someone
+                    who just left. The report is logged to reports.svr and pushed live to every online staffer. */
                     string tname = parsed[1];
                     int ti = get_player_index_from(tname); // online by username or nickname
                     string target = (ti > -1) ? players[ti].name : tname;
@@ -2980,9 +2980,9 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         for(uint r=2; r<parsed.length(); r++) reason += (reason == "" ? "" : " ") + parsed[r];
                         if(filter_crash(reason) or filter_chat(reason))
                         {
-                            // A report is player-authored and shown to staff, so it gets both filters like local chat.
-                            // The reason IS the substance of a report, so a bad one is rejected outright rather than
-                            // filed blank; the player just retypes (there's no countdown to lose, unlike AFK).
+                            /* A report is player-authored and shown to staff, so it gets both filters like local chat.
+                            The reason IS the substance of a report, so a bad one is rejected outright rather than
+                            filed blank; the player just retypes (there's no countdown to lose, unlike AFK). */
                             send(event.peer_id, "misc Your report was not sent because its reason contained forbidden words.", 0, true);
                         }
                         else

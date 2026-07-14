@@ -1,19 +1,19 @@
-// Account storage. Each account is a FOLDER at data/players/<username>/, holding one small file per
-// field: username.usr, password.usr, pronoun.usr, rank.usr, muted.usr, banned.usr.
-// This lets a server host read or edit a single field by hand without parsing a combined file.
-//
-// Passwords are never stored in plaintext: password.usr holds "argon2id$<nb_blocks>$<nb_passes>$<salt>$<hash>"
-// -- a random CSPRNG salt (plaintext, NOT secret) and the memory-hard Argon2id hash of the password, with the
-// cost params inline so a verify reproduces them (no SHA-256 fallback). rank is one of
-// player / moderator / administrator / developer. muted.usr and banned.usr each use the same scheme:
-// empty = not muted/banned, "0" = indefinite/permanent, any other number = the absolute epoch it
-// expires at.
+/* Account storage. Each account is a FOLDER at data/players/<username>/, holding one small file per
+field: username.usr, password.usr, pronoun.usr, rank.usr, muted.usr, banned.usr.
+This lets a server host read or edit a single field by hand without parsing a combined file.
 
-// The on-disk folder for an account. Folders keep the case the account was created with (so an account
-// made as "DevilGuardian" stays DevilGuardian on disk, not devilguardian). Lookups stay case-insensitive:
-// try the name as typed first (which on a case-insensitive filesystem already matches any case), then
-// scan for an existing folder that matches ignoring case, and finally fall back to the original case for
-// a brand-new account being created.
+Passwords are never stored in plaintext: password.usr holds "argon2id$<nb_blocks>$<nb_passes>$<salt>$<hash>"
+-- a random CSPRNG salt (plaintext, NOT secret) and the memory-hard Argon2id hash of the password, with the
+cost params inline so a verify reproduces them (no SHA-256 fallback). rank is one of
+player / moderator / administrator / developer. muted.usr and banned.usr each use the same scheme:
+empty = not muted/banned, "0" = indefinite/permanent, any other number = the absolute epoch it
+expires at. */
+
+/* The on-disk folder for an account. Folders keep the case the account was created with (so an account
+made as "DevilGuardian" stays DevilGuardian on disk, not devilguardian). Lookups stay case-insensitive:
+try the name as typed first (which on a case-insensitive filesystem already matches any case), then
+scan for an existing folder that matches ignoring case, and finally fall back to the original case for
+a brand-new account being created. */
 string account_dir(string name)
 {
 string direct = "data/players/" + name;
@@ -28,9 +28,9 @@ string field_path(string name, string field)
 {
 return account_dir(name) + "/" + field + ".usr";
 }
-// Case-insensitive (account_dir resolves an existing folder regardless of case): login relies on it (sign in
-// regardless of case), registration relies on it (you can't create both "Bob" and "bob" -- the second resolves
-// to the first's folder and is refused), and command targeting resolves names case-insensitively too.
+/* Case-insensitive (account_dir resolves an existing folder regardless of case): login relies on it (sign in
+regardless of case), registration relies on it (you can't create both "Bob" and "bob" -- the second resolves
+to the first's folder and is refused), and command targeting resolves names case-insensitively too. */
 bool account_exists(string name)
 {
 return directory_exists(account_dir(name));
@@ -43,16 +43,16 @@ for(uint i=0; i<owners.length(); i++)
 if(string_to_lower_case(owners[i]) == low) return true;
 return false;
 }
-// Replace an owner alias (case-insensitive) with a new name and persist to conf.svr; used when an owner account is
-// renamed, so its alias in the owners list stays current. No-op if the old name isn't an owner alias.
+/* Replace an owner alias (case-insensitive) with a new name and persist to conf.svr; used when an owner account is
+renamed, so its alias in the owners list stays current. No-op if the old name isn't an owner alias. */
 void replace_owner_alias(string oldname, string newname)
 {
 string low = string_to_lower_case(oldname);
 for(uint i=0; i<owners.length(); i++)
 if(string_to_lower_case(owners[i]) == low) { owners[i] = newname; writeprefs(); return; }
 }
-// Remove an owner alias (case-insensitive) from the owners list and persist to conf.svr; used when an owner account
-// is deleted, so that freed name is no longer auto-trusted as owner. The other aliases stay. No-op if not an alias.
+/* Remove an owner alias (case-insensitive) from the owners list and persist to conf.svr; used when an owner account
+is deleted, so that freed name is no longer auto-trusted as owner. The other aliases stay. No-op if not an alias. */
 void remove_owner_alias(string name)
 {
 string low = string_to_lower_case(name);
@@ -62,40 +62,40 @@ if(string_to_lower_case(owners[i]) == low) { owners.remove_at(i); writeprefs(); 
 // The staff-attention flag (flag.usr): "1" = rank is shown to regular players, empty = incognito. Default off.
 bool get_flag(string name) { return read_field(name, "flag", "") == "1"; }
 void set_flag(string name, bool on) { write_field(name, "flag", on ? "1" : ""); }
-// The rules-agreement version (rules.usr): the rulesver the player last agreed to (blank/0/missing = never). They
-// count as agreed while it's >= the current rulesver, so bumping rulesver in conf.svr re-prompts everyone once.
+/* The rules-agreement version (rules.usr): the rulesver the player last agreed to (blank/0/missing = never). They
+count as agreed while it's >= the current rulesver, so bumping rulesver in conf.svr re-prompts everyone once. */
 bool has_agreed_rules(string name) { if(ruleswitch == 0) return true; return int(string_to_number(read_field(name, "rules", "0"))) >= rulesver; }
 void set_agreed_rules(string name) { write_field(name, "rules", "" + rulesver); }
-// The display nickname (nickname.usr): shown in place of the username everywhere a name is spoken. Defaults
-// to the account's own username (the "default" state). Hand-editable; auto-created at registration.
+/* The display nickname (nickname.usr): shown in place of the username everywhere a name is spoken. Defaults
+to the account's own username (the "default" state). Hand-editable; auto-created at registration. */
 string get_nickname(string name) { return read_field(name, "nickname", read_field(name, "username", name)); }
 bool set_nickname(string name, string nick) { return write_field(name, "nickname", nick); }
-// The language chat channel (language.usr): the BARE English language name, e.g. "English" (NOT the menu's
-// "English (English)" form). Defaults to English. Hand-editable, but must match a configured channel in
-// languages.svr to take effect -- an invalid value falls back to English at spawn (is_valid_language).
+/* The language chat channel (language.usr): the BARE English language name, e.g. "English" (NOT the menu's
+"English (English)" form). Defaults to English. Hand-editable, but must match a configured channel in
+languages.svr to take effect -- an invalid value falls back to English at spawn (is_valid_language). */
 string get_language(string name) { return read_field(name, "language", "English"); }
 bool set_language(string name, string lang) { return write_field(name, "language", lang); }
-// The pronoun set (pronoun.usr): the bare key from pronouns.svr, e.g. "Masculine/male", deciding how third-person
-// messages refer to the player. Defaults to the configured they/them option (default_pronoun). Hand-editable, but
-// must match a configured option in pronouns.svr to take effect -- an invalid value falls back at spawn.
+/* The pronoun set (pronoun.usr): the bare key from pronouns.svr, e.g. "Masculine/male", deciding how third-person
+messages refer to the player. Defaults to the configured they/them option (default_pronoun). Hand-editable, but
+must match a configured option in pronouns.svr to take effect -- an invalid value falls back at spawn. */
 string get_pronoun(string name) { return read_field(name, "pronoun", default_pronoun()); }
 bool set_pronoun(string name, string p) { return write_field(name, "pronoun", p); }
-// Personal-best rounds, per mode, each in its own file so it's obvious which is which: PVE = highest wave survived
-// (pvebestround.usr; a game-over that beats it also grants the one-time milestone wood bonus), EVP = most rounds
-// ever cleared as the attacker (evpbestround.usr). Both default to 0.
+/* Personal-best rounds, per mode, each in its own file so it's obvious which is which: PVE = highest wave survived
+(pvebestround.usr; a game-over that beats it also grants the one-time milestone wood bonus), EVP = most rounds
+ever cleared as the attacker (evpbestround.usr). Both default to 0. */
 int get_pve_best_round(string name) { return int(string_to_number(read_field(name, "pvebestround", "0"))); }
 bool set_pve_best_round(string name, int round) { return write_field(name, "pvebestround", "" + round); }
 int get_evp_best_round(string name) { return int(string_to_number(read_field(name, "evpbestround", "0"))); }
 bool set_evp_best_round(string name, int round) { return write_field(name, "evpbestround", "" + round); }
-// PVP lifetime record (pvpwins.usr / pvplosses.usr): the running count of player-versus-player matches this
-// account's side won or lost. Incremented once at the end of each match (the winning side gains a win, the losing
-// side a loss; watchers get nothing). File-per-field like every other account value, so a host can read them by hand.
+/* PVP lifetime record (pvpwins.usr / pvplosses.usr): the running count of player-versus-player matches this
+account's side won or lost. Incremented once at the end of each match (the winning side gains a win, the losing
+side a loss; watchers get nothing). File-per-field like every other account value, so a host can read them by hand. */
 int get_wins(string name) { return int(string_to_number(read_field(name, "pvpwins", "0"))); }
 bool set_wins(string name, int n) { return write_field(name, "pvpwins", "" + n); }
 int get_losses(string name) { return int(string_to_number(read_field(name, "pvplosses", "0"))); }
 bool set_losses(string name, int n) { return write_field(name, "pvplosses", "" + n); }
-// Read a single field file, trimmed (so hand-added trailing newlines don't break things). Returns
-// def when the file is missing or empty.
+/* Read a single field file, trimmed (so hand-added trailing newlines don't break things). Returns
+def when the file is missing or empty. */
 string read_field(string name, string field, string def="")
 {
 string p = field_path(name, field);
@@ -120,8 +120,8 @@ f.write(value);
 f.close();
 return true;
 }
-// Append a warning to a player's on-disk record (warnings.usr) and return the new total. One per line:
-// level:staff:reason. Only the count is read back for now; the lines are kept for staff history.
+/* Append a warning to a player's on-disk record (warnings.usr) and return the new total. One per line:
+level:staff:reason. Only the count is read back for now; the lines are kept for staff history. */
 int add_warning(string name, int level, string staff, string reason)
 {
 string existing = read_field(name, "warnings", "");
@@ -136,9 +136,9 @@ string w = read_field(name, "warnings", "");
 if(w == "") return 0;
 return int(string_split(w, "\n", true).length());
 }
-// A human-readable list of a player's warnings for the staff /warnings viewer, one per line:
-// "1. Level 2 by adminname: reason". Reasons may contain the ":" separator, so everything after the second ":"
-// is rejoined as the reason. Returns a friendly line when there are none.
+/* A human-readable list of a player's warnings for the staff /warnings viewer, one per line:
+"1. Level 2 by adminname: reason". Reasons may contain the ":" separator, so everything after the second ":"
+is rejoined as the reason. Returns a friendly line when there are none. */
 string format_warnings(string name)
 {
 string w = read_field(name, "warnings", "");
@@ -158,8 +158,8 @@ listing += (shown>1 ? "\r\n" : "") + shown + ". Level " + parts[0] + " by " + pa
 if(listing == "") return "This player has no warnings on record.";
 return listing;
 }
-// A number of seconds as its largest sensible whole unit, e.g. "2 days", "3 hours", "45 minutes", "30 seconds".
-// Used by the /bans and /mutes viewers to say how long is left on a timed ban or mute.
+/* A number of seconds as its largest sensible whole unit, e.g. "2 days", "3 hours", "45 minutes", "30 seconds".
+Used by the /bans and /mutes viewers to say how long is left on a timed ban or mute. */
 string format_duration(int64 secs)
 {
 if(secs < 1) secs = 1; // about to expire; never say "0 seconds"
@@ -168,9 +168,9 @@ if(secs >= 3600) { int64 h = secs/3600; return h + (h==1 ? " hour" : " hours"); 
 if(secs >= 60) { int64 m = secs/60; return m + (m==1 ? " minute" : " minutes"); }
 return secs + (secs==1 ? " second" : " seconds");
 }
-// A human-readable ban status for the staff /bans viewer. An expired timed ban reads as not banned (it's cleared
-// at the next login attempt anyway), so the viewer only ever shows a ban that's currently in effect. When a reason
-// was recorded with the ban it's appended as its own sentence.
+/* A human-readable ban status for the staff /bans viewer. An expired timed ban reads as not banned (it's cleared
+at the next login attempt anyway), so the viewer only ever shows a ban that's currently in effect. When a reason
+was recorded with the ban it's appended as its own sentence. */
 string format_ban(string name)
 {
 int64 until = get_ban_until(name); // -1 not banned, 0 permanent, >0 epoch it expires at
@@ -182,8 +182,8 @@ int64 rem = until - now_epoch();
 if(rem <= 0) return "This player is not banned.";
 return "This player is banned, with " + format_duration(rem) + " remaining." + suffix;
 }
-// A human-readable per-channel mute status for the staff /mutes viewer, one channel per line. Expired timed mutes
-// are skipped, so it only lists channels the player is currently muted in.
+/* A human-readable per-channel mute status for the staff /mutes viewer, one channel per line. Expired timed mutes
+are skipped, so it only lists channels the player is currently muted in. */
 string format_mutes(string name)
 {
 array<string> chans = mute_channels_for("all"); // global, local, voice, team
@@ -201,9 +201,9 @@ listing += (shown>1 ? "\r\n" : "") + shown + ". " + chans[i] + " (" + when + ")"
 if(shown == 0) return "This player is not muted in any channel.";
 return "Muted in:\r\n" + listing;
 }
-// A player's personal ignore list (ignored.usr), one username per line: the people whose chat and voice this
-// player has chosen not to receive. Loaded into the roster at spawn and matched case-insensitively; this is a
-// personal preference, unrelated to staff mutes.
+/* A player's personal ignore list (ignored.usr), one username per line: the people whose chat and voice this
+player has chosen not to receive. Loaded into the roster at spawn and matched case-insensitively; this is a
+personal preference, unrelated to staff mutes. */
 string[] get_ignored(string name)
 {
 string raw = read_field(name, "ignored", "");
@@ -219,10 +219,10 @@ string joined;
 for(uint i=0; i<list.length(); i++) joined += (i>0 ? "\n" : "") + list[i];
 return write_field(name, "ignored", joined);
 }
-// --- Offline private messages: queued by /pm to an offline player, delivered at their next login ---
-// Stored in offline_pm's.usr, one message per line, TAB-delimited: <sender username>\t<message>. Tabs because the
-// message is free text (a username can't contain one) and it's the last field, rejoined on read. Unlimited: every
-// message is kept until the recipient signs in, when they are all delivered and the file cleared.
+/* --- Offline private messages: queued by /pm to an offline player, delivered at their next login ---
+Stored in offline_pm's.usr, one message per line, TAB-delimited: <sender username>\t<message>. Tabs because the
+message is free text (a username can't contain one) and it's the last field, rejoined on read. Unlimited: every
+message is kept until the recipient signs in, when they are all delivered and the file cleared. */
 void add_offline_pm(string recipient, string sender, string message)
 {
 string existing = read_field(recipient, "offline_pm's", "");
@@ -239,9 +239,9 @@ void clear_offline_pms(string name)
 {
 write_field(name, "offline_pm's", "");
 }
-// Offline-capable version of player_ignores: does the recipient ACCOUNT have the sender on its personal ignore
-// list? Reads ignored.usr straight from disk so it works when the recipient isn't online. Staff are never ignored,
-// mirroring player_ignores, so a staff member's PM always goes through.
+/* Offline-capable version of player_ignores: does the recipient ACCOUNT have the sender on its personal ignore
+list? Reads ignored.usr straight from disk so it works when the recipient isn't online. Staff are never ignored,
+mirroring player_ignores, so a staff member's PM always goes through. */
 bool account_ignores(string recipient, string sender)
 {
 if(is_staff(get_rank(sender))) return false;
@@ -250,14 +250,14 @@ string s = string_to_lower_case(sender);
 for(uint i=0; i<list.length(); i++) if(string_to_lower_case(list[i]) == s) return true;
 return false;
 }
-// Rename an account on disk: move its whole folder (every .usr file -- password, email, rank, warnings, wins,
-// mutes, bans, saved rooms, its OWN ignore list, everything) to the new username in one move, fix username.usr,
-// and reset the nickname to the new username (clearing any old nickname). If the renamed account was one of the
-// owner aliases, that alias is updated to the new name in conf.svr's owners list so it keeps forced-developer
-// status under the new name. Finally rewrite old->new in EVERY account's on-disk ignore list, so other
-// players' personal mutes of this person survive the rename (otherwise a rename would silently drop their mutes).
-// The caller must have already validated newname (6-24, filterchar, not already existing). Returns false only if
-// the folder move itself fails, in which case nothing was changed.
+/* Rename an account on disk: move its whole folder (every .usr file -- password, email, rank, warnings, wins,
+mutes, bans, saved rooms, its OWN ignore list, everything) to the new username in one move, fix username.usr,
+and reset the nickname to the new username (clearing any old nickname). If the renamed account was one of the
+owner aliases, that alias is updated to the new name in conf.svr's owners list so it keeps forced-developer
+status under the new name. Finally rewrite old->new in EVERY account's on-disk ignore list, so other
+players' personal mutes of this person survive the rename (otherwise a rename would silently drop their mutes).
+The caller must have already validated newname (6-24, filterchar, not already existing). Returns false only if
+the folder move itself fails, in which case nothing was changed. */
 bool rename_account(string oldname, string newname)
 {
 string olddir = account_dir(oldname); // the real folder (resolved case-insensitively)
@@ -278,11 +278,11 @@ if(changed) set_ignored(dirs[i], list);
 }
 return true;
 }
-// Delete an account: remove its whole folder and scrub the deleted name from EVERY other account's on-disk ignore
-// list, so no stale personal mute lingers (a re-registered name would otherwise silently inherit mutes aimed at the
-// old holder). If the account was one of the owner aliases, that name is dropped from conf.svr's owners list (the
-// other aliases stay owners) so the freed username isn't silently re-trusted as owner if someone re-registers it.
-// Returns false only if the folder delete fails, in which case nothing was changed. Case-insensitive name match.
+/* Delete an account: remove its whole folder and scrub the deleted name from EVERY other account's on-disk ignore
+list, so no stale personal mute lingers (a re-registered name would otherwise silently inherit mutes aimed at the
+old holder). If the account was one of the owner aliases, that name is dropped from conf.svr's owners list (the
+other aliases stay owners) so the freed username isn't silently re-trusted as owner if someone re-registers it.
+Returns false only if the folder delete fails, in which case nothing was changed. Case-insensitive name match. */
 bool delete_account(string name)
 {
 if(!directory_delete(account_dir(name))) return false;
@@ -300,13 +300,13 @@ if(changed) set_ignored(dirs[i], list);
 return true;
 }
 
-// Argon2id cost parameters for password hashing (see string_argon2id in the engine): 4 MiB of memory
-// (nb_blocks * 1024) and 3 passes -- memory-hard, so a stolen password.usr can't be brute-forced cheaply.
+/* Argon2id cost parameters for password hashing (see string_argon2id in the engine): 4 MiB of memory
+(nb_blocks * 1024) and 3 passes -- memory-hard, so a stolen password.usr can't be brute-forced cheaply. */
 const uint argon2_blocks = 4096; // 4 MiB work area
 const uint argon2_passes = 3;
 const uint argon2_hashlen = 32;  // 32-byte (256-bit) derived hash
-// A random per-account salt from the engine CSPRNG (random_bytes), mapped to printable lowercase-alphanumeric
-// so it stays a single colon/$-free token inside the stored "argon2id$blocks$passes$salt$hash" blob.
+/* A random per-account salt from the engine CSPRNG (random_bytes), mapped to printable lowercase-alphanumeric
+so it stays a single colon/$-free token inside the stored "argon2id$blocks$passes$salt$hash" blob. */
 string make_salt()
 {
 string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -315,9 +315,9 @@ string salt = "";
 for(uint i=0; i<rb.length(); i++) salt += charset.substr(character_to_ascii(rb[i]) % charset.length(), 1); // rb[i] is a 1-char string here, so convert it to its byte value first
 return salt;
 }
-// The stored password blob for a salt+password: "argon2id$<nb_blocks>$<nb_passes>$<salt>$<hex hash>". The cost
-// params ride along so a verify recomputes with the exact settings the hash was made with (and they can be
-// raised later without breaking existing accounts).
+/* The stored password blob for a salt+password: "argon2id$<nb_blocks>$<nb_passes>$<salt>$<hex hash>". The cost
+params ride along so a verify recomputes with the exact settings the hash was made with (and they can be
+raised later without breaking existing accounts). */
 string password_blob(string salt, string password)
 {
 return "argon2id$"+argon2_blocks+"$"+argon2_passes+"$"+salt+"$"+string_argon2id(password, salt, argon2_blocks, argon2_passes, argon2_hashlen);
@@ -327,11 +327,11 @@ bool create_account(string name, string email, string password)
 {
 if(account_exists(name)) return false;
 string salt = make_salt();
-// Write every field, ANDing the results. write_field can fail (disk full, permissions, a locked handle), and
-// the first write already created the folder -- so a partial failure would leave a directory that
-// account_exists() reports as existing (blocking re-registration) but verify_password() rejects (no valid
-// password file), permanently locking the name. So if ANY write fails, delete the half-made folder and return
-// false: the account then simply doesn't exist and the player can try again.
+/* Write every field, ANDing the results. write_field can fail (disk full, permissions, a locked handle), and
+the first write already created the folder -- so a partial failure would leave a directory that
+account_exists() reports as existing (blocking re-registration) but verify_password() rejects (no valid
+password file), permanently locking the name. So if ANY write fails, delete the half-made folder and return
+false: the account then simply doesn't exist and the player can try again. */
 bool ok = true;
 ok = write_field(name, "username", name) and ok;
 ok = write_field(name, "email", email) and ok; // cosmetic, unverified; hand-editable, never used for login
@@ -341,8 +341,8 @@ ok = write_field(name, "language", "English") and ok; // everyone starts on the 
 ok = write_field(name, "pronoun", default_pronoun()) and ok; // default: the configured they/them option, until the player picks with /pronoun
 ok = write_field(name, "password", password_blob(salt, password)) and ok;
 ok = write_field(name, "rank", is_owner(name) ? "developer" : "player") and ok;
-// pubroom, privroom, muted, and banned are intentionally NOT written at creation: they'd only be blank, and
-// read_field returns "" for a missing file anyway (no room, not muted, not banned), so each is created on first use.
+/* pubroom, privroom, muted, and banned are intentionally NOT written at creation: they'd only be blank, and
+read_field returns "" for a missing file anyway (no room, not muted, not banned), so each is created on first use. */
 if(!ok)
 {
 if(directory_exists(account_dir(name))) directory_delete(account_dir(name)); // roll back the partial account so the name stays free
@@ -351,8 +351,8 @@ return false;
 return true;
 }
 
-// Loads an account's fields into a dictionary (keys: name, password, rank, muted, banned). Kept for
-// callers that want several fields at once, such as the /staff listing.
+/* Loads an account's fields into a dictionary (keys: name, password, rank, muted, banned). Kept for
+callers that want several fields at once, such as the /staff listing. */
 dictionary@ load_account(string name)
 {
 dictionary@ d = dictionary();
@@ -369,9 +369,9 @@ bool verify_password(string name, string password)
 {
 if(!account_exists(name)) return false;
 string blob = read_field(name, "password");
-// Format: "argon2id$<nb_blocks>$<nb_passes>$<salt>$<hex hash>". Anything else (e.g. a pre-Argon2 account) is
-// rejected -- there is no legacy SHA-256 fallback, so any such account must be re-registered. The cost params
-// and hash length are read back from the blob, so a verify always matches how the stored hash was produced.
+/* Format: "argon2id$<nb_blocks>$<nb_passes>$<salt>$<hex hash>". Anything else (e.g. a pre-Argon2 account) is
+rejected -- there is no legacy SHA-256 fallback, so any such account must be re-registered. The cost params
+and hash length are read back from the blob, so a verify always matches how the stored hash was produced. */
 string[] parts = string_split(blob, "$", true);
 if(parts.length() != 5 or parts[0] != "argon2id") return false;
 uint blocks = uint(string_to_number(parts[1]));
@@ -389,8 +389,8 @@ if(!account_exists(name)) return "player";
 return read_field(name, "rank", "player");
 }
 
-// Rank hierarchy as a number, used to gate commands by minimum level.
-// player(0) < moderator(1) < administrator(2) < developer(3).
+/* Rank hierarchy as a number, used to gate commands by minimum level.
+player(0) < moderator(1) < administrator(2) < developer(3). */
 int rank_level(string rank)
 {
 if(rank=="developer") return 3;
@@ -398,8 +398,8 @@ if(rank=="administrator") return 2;
 if(rank=="moderator") return 1;
 return 0;
 }
-// Staff = any rank above player. Used for DISPLAY (chat-name prefix, /staff listing, the
-// "you are now..." notice), not command gating.
+/* Staff = any rank above player. Used for DISPLAY (chat-name prefix, /staff listing, the
+"you are now..." notice), not command gating. */
 bool is_staff(string rank)
 {
 return rank_level(rank) >= 1;
@@ -412,8 +412,8 @@ if(!account_exists(name)) return false;
 return write_field(name, "rank", rank);
 }
 
-// Current time as whole seconds since the Unix epoch, used for absolute mute/ban expiry. NVGT's
-// Poco-backed timestamp converts implicitly to int64 microseconds since 1970 (UTC).
+/* Current time as whole seconds since the Unix epoch, used for absolute mute/ban expiry. NVGT's
+Poco-backed timestamp converts implicitly to int64 microseconds since 1970 (UTC). */
 int64 now_epoch()
 {
 timestamp ts;
@@ -421,9 +421,9 @@ int64 micros = ts;
 return micros / 1000000;
 }
 
-// Parse a non-negative integer string to int64 exactly, digit by digit. Mute/ban expiries are absolute
-// epochs (~1.7 billion); string_to_number returns a 32-bit float that can't hold that precisely, so a
-// round-trip through it could be off by tens of seconds. This stays exact. Stops at the first non-digit.
+/* Parse a non-negative integer string to int64 exactly, digit by digit. Mute/ban expiries are absolute
+epochs (~1.7 billion); string_to_number returns a 32-bit float that can't hold that precisely, so a
+round-trip through it could be off by tens of seconds. This stays exact. Stops at the first non-digit. */
 int64 parse_epoch(string s)
 {
 int64 result = 0;
@@ -435,8 +435,8 @@ result = result * 10 + int64(d);
 }
 return result;
 }
-// Per-channel mute state. Each channel is stored in its own field (mute_global, mute_local, mute_staff,
-// mute_voice): "" = not muted, 0 = muted indefinitely, >0 = the absolute epoch the mute expires at.
+/* Per-channel mute state. Each channel is stored in its own field (mute_global, mute_local, mute_staff,
+mute_voice): "" = not muted, 0 = muted indefinitely, >0 = the absolute epoch the mute expires at. */
 int64 get_channel_mute(string name, string channel)
 {
 if(!account_exists(name)) return -1;
@@ -457,9 +457,9 @@ if(!account_exists(name)) return false;
 return write_field(name, "mute_"+channel, "");
 }
 
-// Ban state: -1 = not banned, 0 = banned permanently, >0 = absolute epoch the ban expires at.
-// banned.usr holds "<until>" or, when a reason was given, "<until>:<reason>". parse_epoch reads only the
-// leading digits and stops at the colon, so the optional reason is invisible to the time read.
+/* Ban state: -1 = not banned, 0 = banned permanently, >0 = absolute epoch the ban expires at.
+banned.usr holds "<until>" or, when a reason was given, "<until>:<reason>". parse_epoch reads only the
+leading digits and stops at the colon, so the optional reason is invisible to the time read. */
 int64 get_ban_until(string name)
 {
 if(!account_exists(name)) return -1;
@@ -467,8 +467,8 @@ string b = read_field(name, "banned");
 if(b == "") return -1;
 return parse_epoch(b);
 }
-// The optional reason stored with a ban: everything after the first ":" in banned.usr, or "" if none was given.
-// A reason may itself contain colons; only the first one separates it from the time, so we keep the rest intact.
+/* The optional reason stored with a ban: everything after the first ":" in banned.usr, or "" if none was given.
+A reason may itself contain colons; only the first one separates it from the time, so we keep the rest intact. */
 string get_ban_reason(string name)
 {
 if(!account_exists(name)) return "";
@@ -477,8 +477,8 @@ int c = string_contains(b, ":", 1);
 if(c < 0) return "";
 return string_right(b, b.length() - c - 1);
 }
-// Persists a ban (until = 0 for permanent, otherwise an absolute epoch from now_epoch()). An optional reason is
-// stored after a colon; usernames can't contain colons, but reasons are free text and may, which is fine.
+/* Persists a ban (until = 0 for permanent, otherwise an absolute epoch from now_epoch()). An optional reason is
+stored after a colon; usernames can't contain colons, but reasons are free text and may, which is fine. */
 bool set_ban(string name, int64 until, string reason="")
 {
 if(!account_exists(name)) return false;
@@ -490,10 +490,10 @@ bool clear_ban(string name)
 if(!account_exists(name)) return false;
 return write_field(name, "banned", "");
 }
-// Saved rooms (recreated when the account logs in). pubroom.usr = "1" if they have a public room,
-// blank if not. privroom.usr = the private room's password (stored ENCRYPTED, base64-wrapped -- see
-// get_saved_private), blank if they have no private room (the password's presence IS the flag). A host can
-// hand-create pubroom.usr; privroom.usr is encrypted, so set a private room's password from in-game instead.
+/* Saved rooms (recreated when the account logs in). pubroom.usr = "1" if they have a public room,
+blank if not. privroom.usr = the private room's password (stored ENCRYPTED, base64-wrapped -- see
+get_saved_private), blank if they have no private room (the password's presence IS the flag). A host can
+hand-create pubroom.usr; privroom.usr is encrypted, so set a private room's password from in-game instead. */
 bool get_saved_public(string name)
 {
 return read_field(name, "pubroom") == "1";
@@ -502,13 +502,13 @@ bool set_saved_public(string name, bool has)
 {
 return write_field(name, "pubroom", has ? "1" : "");
 }
-// The saved private-room password, or "" if the account has no private room. Stored in privroom.usr as a single
-// "<ciphertext>:<key>" blob (mirroring the old account "<salt>:<hash>" layout): a fresh random key (make_salt,
-// CSPRNG) and the AES-encrypted, base64-wrapped password, joined by a colon. Reversible on purpose so Retrieve
-// password still works. This is obfuscation -- the key sits beside the ciphertext, so it keeps the password out of
-// plain sight, not safe from someone who has the file. Neither base64 (A-Za-z0-9+/=) nor the key (a-z0-9) contains
-// a colon, so the first ":" cleanly splits the two. STRING_BASE64_DEFAULT is pinned on both encode and decode
-// (their registered defaults differ, padded vs padless). An empty field stays "" (the "no private room" flag).
+/* The saved private-room password, or "" if the account has no private room. Stored in privroom.usr as a single
+"<ciphertext>:<key>" blob (mirroring the old account "<salt>:<hash>" layout): a fresh random key (make_salt,
+CSPRNG) and the AES-encrypted, base64-wrapped password, joined by a colon. Reversible on purpose so Retrieve
+password still works. This is obfuscation -- the key sits beside the ciphertext, so it keeps the password out of
+plain sight, not safe from someone who has the file. Neither base64 (A-Za-z0-9+/=) nor the key (a-z0-9) contains
+a colon, so the first ":" cleanly splits the two. STRING_BASE64_DEFAULT is pinned on both encode and decode
+(their registered defaults differ, padded vs padless). An empty field stays "" (the "no private room" flag). */
 string get_saved_private(string name)
 {
 string blob = read_field(name, "privroom");

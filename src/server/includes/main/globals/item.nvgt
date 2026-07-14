@@ -1,9 +1,9 @@
-// An item lying in a game's cavern — for now, wood to gather and feed into the walls. Items are scoped
-// by room_id exactly like walls (every cavern shares the same 0..N grid, so a space id keeps them
-// apart), and authoritative here on the server; the client mirrors them for audio (an ambient loop at
-// the item's spot, a pickup sound). Each carries a unique id so a pickup can name exactly which item
-// was taken. Modeled on SimpleFighter's ground-item and Sammy Center's wood, rebuilt lean. Nothing
-// spawns or picks these up yet — the spawning/gather wiring lands in 6c.
+/* An item lying in a game's cavern — for now, wood to gather and feed into the walls. Items are scoped
+by room_id exactly like walls (every cavern shares the same 0..N grid, so a space id keeps them
+apart), and authoritative here on the server; the client mirrors them for audio (an ambient loop at
+the item's spot, a pickup sound). Each carries a unique id so a pickup can name exactly which item
+was taken. Modeled on SimpleFighter's ground-item and Sammy Center's wood, rebuilt lean. Nothing
+spawns or picks these up yet — the spawning/gather wiring lands in 6c. */
 int next_item_id=1;
 item@[] items;
 class item
@@ -49,27 +49,27 @@ if(items[i].room_id==room_id and items[i].x==x and items[i].y==y) return i;
 }
 return -1;
 }
-// How much wood may sit on a cavern's floor at once (scales with map size). Bigger maps get a much
-// higher ceiling so the extra drops aren't suppressed, but it's kept modest (never a flood) since at
-// most four players defend any map. Tiered by the three map sizes (25 / 50 / 100).
+/* How much wood may sit on a cavern's floor at once (scales with map size). Bigger maps get a much
+higher ceiling so the extra drops aren't suppressed, but it's kept modest (never a flood) since at
+most four players defend any map. Tiered by the three map sizes (25 / 50 / 100). */
 int wood_cap(int size)
 {
 if(size<=25) return 6;
 if(size<=50) return 18;
 return 40;
 }
-// How many wood pieces drop per spawn tick. The drop cadence is flat across map sizes, so on a big map
-// one piece per tick is the same trickle spread over far more ground -- this is what actually starves
-// larger maps. Dropping more per tick raises the supply RATE with size (the real fix), kept measured so
-// big maps are richer but never awash. Tiered by the three map sizes (25 / 50 / 100).
+/* How many wood pieces drop per spawn tick. The drop cadence is flat across map sizes, so on a big map
+one piece per tick is the same trickle spread over far more ground -- this is what actually starves
+larger maps. Dropping more per tick raises the supply RATE with size (the real fix), kept measured so
+big maps are richer but never awash. Tiered by the three map sizes (25 / 50 / 100). */
 int wood_drops_per_tick(int size)
 {
 if(size<=25) return 1;
 if(size<=50) return 2;
 return 4;
 }
-// Ground wood comes in three sizes, each with its own sounds. To the economy they're all just "wood" (any
-// size counts toward the cap and gathers into a wall the same); the size only varies the sound the client plays.
+/* Ground wood comes in three sizes, each with its own sounds. To the economy they're all just "wood" (any
+size counts toward the cap and gathers into a wall the same); the size only varies the sound the client plays. */
 bool is_wood(string type) { return type=="small_wood" or type=="medium_wood" or type=="large_wood"; }
 string random_wood_type()
 {
@@ -78,8 +78,8 @@ if(r==1) return "small_wood";
 if(r==2) return "medium_wood";
 return "large_wood";
 }
-// A player's wood is stored per size in their inventory (small_wood/medium_wood/large_wood). wood_total treats
-// them as one pool for the "do you have any wood" checks; the size matters at reinforce time (see below).
+/* A player's wood is stored per size in their inventory (small_wood/medium_wood/large_wood). wood_total treats
+them as one pool for the "do you have any wood" checks; the size matters at reinforce time (see below). */
 int wood_total(inventory@ inv) { return inv.count("small_wood")+inv.count("medium_wood")+inv.count("large_wood"); }
 // Spend `amount` pieces of any size(s) the player has (order doesn't matter here). False if short.
 bool spend_wood(inventory@ inv, int amount)
@@ -91,17 +91,17 @@ if(left>0 and inv.count("medium_wood")>0) { int u=inv.count("medium_wood"); if(u
 if(left>0 and inv.count("large_wood")>0) { int u=inv.count("large_wood"); if(u>left) u=left; inv.take("large_wood", u); left-=u; }
 return true;
 }
-// How much one piece reinforces a wall, by size. Mirrors enemy_damage's tiered random() model, scaled x5 to fit
-// the 400-health walls: small maps to the axe range, medium to the bat range, large to the crowbar range, so
-// repair and damage share the same shape. Medium (10-20) matches the old flat reinforce value.
+/* How much one piece reinforces a wall, by size. Mirrors enemy_damage's tiered random() model, scaled x5 to fit
+the 400-health walls: small maps to the axe range, medium to the bat range, large to the crowbar range, so
+repair and damage share the same shape. Medium (10-20) matches the old flat reinforce value. */
 int wood_reinforce_value(string size)
 {
 if(size=="large_wood") return random(15, 30);  // crowbar 3-6 x5
 if(size=="small_wood") return random(5, 10);    // smallest tier
 return random(10, 20);                           // medium_wood: bat 2-4 x5 (also the fallback)
 }
-// Spend exactly ONE piece of wood, taking the BIGGEST first (large -> medium -> small) so a reinforce uses your
-// best wood, and return the size spent (or "" if the player has none) so the caller can score and sound it.
+/* Spend exactly ONE piece of wood, taking the BIGGEST first (large -> medium -> small) so a reinforce uses your
+best wood, and return the size spent (or "" if the player has none) so the caller can score and sound it. */
 string spend_one_wood(inventory@ inv)
 {
 if(inv.count("large_wood")>0) { inv.take("large_wood", 1); return "large_wood"; }
@@ -109,9 +109,9 @@ if(inv.count("medium_wood")>0) { inv.take("medium_wood", 1); return "medium_wood
 if(inv.count("small_wood")>0) { inv.take("small_wood", 1); return "small_wood"; }
 return "";
 }
-// Give `amount` pieces of wood, all of ONE randomly-chosen size (starting stockpile, milestone bonus), and
-// return the size chosen so a caller can name it. The count range is the same whatever the size, so the size
-// only varies the total strength (small<medium<large) around the same average the old even mix gave.
+/* Give `amount` pieces of wood, all of ONE randomly-chosen size (starting stockpile, milestone bonus), and
+return the size chosen so a caller can name it. The count range is the same whatever the size, so the size
+only varies the total strength (small<medium<large) around the same average the old even mix gave. */
 string give_wood_single(inventory@ inv, int amount)
 {
 string t = random_wood_type();
