@@ -1,0 +1,86 @@
+/* CaveDefender server supervisor -- the "downtime checker".
+Keeps the server up. It launches the server, waits for it to exit, then relaunches it. A /restart or
+/fastrestart command (do_restart() in the server's net.nvgt calls exit()) and an outright crash both
+simply end the server process -- to downcheck they look identical, and it brings the server back
+either way. To stop the server for good, close the downcheck console window (killing the supervisor is
+what ends the session, so it does not relaunch -- closing the SERVER's window alone just triggers a
+relaunch). A crash-loop guard bails out if the server keeps dying immediately, so a broken build can't
+spin forever burning CPU.
+
+Runs in two forms, chosen automatically -- the same SCRIPT_COMPILED trick the client's restart() uses
+(cfc.nvgt):
+  - Compiled   (downcheck.exe, production): launches the compiled server, cfs.exe.
+  - Interpreted (nvgt.exe downcheck.nvgt, dev): launches nvgt.exe on the server source.
+The server inherits downcheck's working directory, so downcheck MUST run from cf/server (its Python
+launcher, downcheck.py, sets that cwd, exactly as the server's own cfs.py does). Nothing here touches
+existing server code -- downcheck is purely additive. */
+
+const string engine = "C:\\nvgt2\\nvgt.exe";              // the pinned NVGT runtime (dev / interpreted)
+const string server_exe = "cfs.exe";                       // the compiled server (production), beside downcheck.exe in cf/server
+const string server_script = "../../src/server/cfs.nvgt";  // server source, resolved from cwd = cf/server (dev)
+const int relaunch_delay = 2000;   // ms to pause between relaunches, so the port and the single-instance lock have time to release
+const int min_uptime = 5000;       // ms; a server that exits sooner than this counts as a failed start, not a real session
+const int max_fast_failures = 5;   // give up after this many failed starts in a row, so a broken server can't loop forever
+
+/* Report a state change silently. downcheck runs every restart, so speaking each relaunch would nag the
+operator's screen reader; instead the state only shows in the window title on a compiled build (which has
+a visible window). Interpreted runs use the launcher's console as their UI, so the title is left alone
+there to avoid un-hiding the window. */
+void status(string message)
+{
+if(SCRIPT_COMPILED) show_window("CaveDefender server supervisor -- " + message);
+}
+
+void main()
+{
+show_window("CaveDefender server supervisor");
+if(!SCRIPT_COMPILED) hide_window(); // interpreted: the launcher's console is the UI, just as the server itself does
+/* Guard against a stray double-click / wrong folder. downcheck must run FROM cf/server, so the server it
+spawns inherits that working directory. The lib folder (the engine DLLs) sits in cf/server in both the dev
+tree and a boxed build, so if it isn't beside us the cwd is wrong -- say so and quit rather than starting an
+invisible relaunch loop (and, if double-clicked, on the wrong engine via the .nvgt file association). */
+if(!directory_exists("lib"))
+{
+// A compiled build stays silent (no speech, no popup) and just exits; in dev, say why so the mistake is caught.
+if(!SCRIPT_COMPILED)
+{
+screen_reader_output("Wrong folder. Start the server from the c f server folder with c f s dot p y. Nothing was started.", true);
+alert("CaveDefender server supervisor", "downcheck must run from the cf/server folder (started by cfs.py in dev, or the compiled cfs.exe / downcheck.exe). The working directory is wrong, so nothing was started.");
+}
+return;
+}
+/* Mark the servers we spawn as supervised. They inherit our environment, so a compiled server (cfs.exe)
+sees this and runs normally instead of bootstrapping another supervisor -- that marker is what stops the
+server and downcheck launching each other in a loop. */
+write_environment_variable("CFS_SUPERVISED", "1");
+status("Starting the server.");
+int fast_failures = 0;
+while(true)
+{
+timer uptime;
+uptime.restart();
+bool launched = SCRIPT_COMPILED ? run(server_exe, "", true, false) : run(engine, server_script, true, false);
+if(!launched)
+{
+// Couldn't start the server at all (missing exe, bad path) -- treat as a failed start and don't spin.
+fast_failures++;
+if(fast_failures >= max_fast_failures) { status("Could not start the server after several tries; stopping. Fix the path, then run downcheck again."); return; }
+status("Could not start the server; retrying shortly.");
+wait(relaunch_delay);
+continue;
+}
+// run() has returned, so the server exited: a restart command, a crash, or its window was closed.
+if(uptime.elapsed < min_uptime)
+{
+fast_failures++;
+if(fast_failures >= max_fast_failures) { status("The server keeps failing to stay up; stopping so it does not loop. Fix the problem, then run downcheck again."); return; }
+status("The server exited right away; relaunching. Attempt " + fast_failures + " of " + max_fast_failures + ".");
+}
+else
+{
+fast_failures = 0; // it ran for a real session, so a normal restart or a late crash -- clear the streak
+status("The server went down; relaunching. To stop, close the downcheck console window.");
+}
+wait(relaunch_delay);
+}
+}

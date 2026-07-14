@@ -2,6 +2,15 @@
 
 void main()
 {
+/* Auto-supervision. If this is the compiled server (cfs.exe) started directly -- not by downcheck, which
+sets CFS_SUPERVISED before launching us -- hand off: start downcheck and exit, so downcheck relaunches us
+supervised and brings us back after any /restart or crash. Dev runs go through downcheck via cfs.py, so
+this only ever fires for a double-clicked cfs.exe; SCRIPT_COMPILED keeps it dormant when interpreted. */
+if(SCRIPT_COMPILED and read_environment_variable("CFS_SUPERVISED", "") != "1")
+{
+run("downcheck.exe", "", false, false); // downcheck (beside us in cf/server) will relaunch us with the marker set
+exit();
+}
 if(servstence.is_already_running)
 {
 alert("error", "You can only have one instance of this server running!");

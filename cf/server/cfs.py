@@ -2,15 +2,18 @@ import sys
 import subprocess
 from pathlib import Path
 
-# Launch the CaveDefender server. The .nvgt source lives in src/server, but the
-# assets (data, docks, lib) live here in cf/server, so we run with cwd set to
-# this folder so every cwd-relative path resolves against cf/server. Run as a
-# .py (python.exe) so a console is present; subprocess.run blocks until the server
-# exits, keeping that window open for the whole session (it's the server's UI).
+# Launch the CaveDefender server, supervised. We run downcheck (the supervisor), not the server
+# directly: downcheck launches the server and relaunches it after any /restart, /fastrestart, or crash,
+# so the server always comes back on its own. The .nvgt source lives in src/server, but the assets
+# (data, docks, lib) live here in cf/server, so we run with cwd set to this folder -- and downcheck
+# passes that same cwd to the server it spawns. Run as a .py (python.exe) so a console is present;
+# subprocess.run blocks until downcheck exits, keeping the window open for the whole session. Close this
+# window to stop the server for good. (To run the server once WITHOUT supervision, launch
+# "C:\nvgt2\nvgt.exe src/server/cfs.nvgt" from this folder by hand instead.)
 
 NVGT = r"C:\nvgt2\nvgt.exe"
 HERE = Path(__file__).resolve().parent
-SCRIPT = HERE.parent.parent / "src" / "server" / "cfs.nvgt"
+SCRIPT = HERE.parent.parent / "src" / "server" / "downcheck.nvgt"
 VERSION_TXT = HERE.parent.parent / "build" / "version.txt"
 VERSION_NVGT = HERE.parent.parent / "src" / "server" / "includes" / "version.nvgt"
 
@@ -45,13 +48,13 @@ if not Path(NVGT).is_file():
     input("Press Enter to exit...")
     sys.exit(1)
 if not SCRIPT.is_file():
-    print("Could not find the server script at:\n" + str(SCRIPT))
+    print("Could not find the supervisor script (downcheck.nvgt) at:\n" + str(SCRIPT))
     input("Press Enter to exit...")
     sys.exit(1)
 
 sync_version()
-print("Started CaveDefender server")
+print("Started CaveDefender server (supervised by downcheck)")
 result = subprocess.run([NVGT, str(SCRIPT)], cwd=str(HERE))
 if result.returncode != 0:
-    print("The server exited with an error (code %d)." % result.returncode)
+    print("Downcheck exited with an error (code %d)." % result.returncode)
     input("Press Enter to exit...")
