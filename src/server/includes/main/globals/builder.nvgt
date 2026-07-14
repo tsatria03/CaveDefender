@@ -1,11 +1,11 @@
-// Wall-builder bots — the "enemies" of an EVP game, the mirror of the wall-smasher enemies. Each is tied to
-// a game (by its game id / room_id) and PHYSICALLY MOVES around the cavern floor: it walks to a piece of
-// ground wood, picks it up, carries it to the weakest standing wall, and (within wall_reach tiles) places it
-// to repair the wall, then goes for more. Players hear the bots by their footsteps (concrete steps, which
-// sound distinct from players' gravel steps) plus the wood take/place sounds, all played positionally at the
-// bot's spot. Builders are PURELY builders -- they never attack players. Server-authoritative; clients just
-// play the relayed sounds. (Syncing bot POSITIONS to clients for the B-key locator is a separate pass; this
-// file is movement + footsteps only.) SPAWNING/escalation is driven by the EVP phase loop, not here.
+/* Wall-builder bots — the "enemies" of an EVP game, the mirror of the wall-smasher enemies. Each is tied to
+a game (by its game id / room_id) and PHYSICALLY MOVES around the cavern floor: it walks to a piece of
+ground wood, picks it up, carries it to the weakest standing wall, and (within wall_reach tiles) places it
+to repair the wall, then goes for more. Players hear the bots by their footsteps (concrete steps, which
+sound distinct from players' gravel steps) plus the wood take/place sounds, all played positionally at the
+bot's spot. Builders are PURELY builders -- they never attack players. Server-authoritative; clients just
+play the relayed sounds. (Syncing bot POSITIONS to clients for the B-key locator is a separate pass; this
+file is movement + footsteps only.) SPAWNING/escalation is driven by the EVP phase loop, not here. */
 int next_builder_id=1;
 builder@[] builders;
 class builder
@@ -24,9 +24,9 @@ builder(int bid, int gid, int ix, int iy, int spd)
 id=bid; game_id=gid; x=ix; y=iy; movespeed=spd;
 }
 }
-// EVP difficulty: how many builders defend on a given round -- base 3 plus one for every round already
-// cleared, capped at 8 (the cap keeps the footstep/position traffic and the floor sane). Each builder still
-// rolls its own 100-200ms move speed at spawn, so the round-to-round ramp is "more defenders".
+/* EVP difficulty: how many builders defend on a given round -- base 3 plus one for every round already
+cleared, capped at 8 (the cap keeps the footstep/position traffic and the floor sane). Each builder still
+rolls its own 100-200ms move speed at spawn, so the round-to-round ramp is "more defenders". */
 int evp_builders_for_round(int rounds_cleared) { int n = 3 + rounds_cleared; return n > 8 ? 8 : n; }
 // How many builders are working in a game right now.
 int builders_in(int gameid)
@@ -50,8 +50,8 @@ builders.insert_last(b);
 send_to_game(gameid, "botspawn "+b.id+" "+b.x+" "+b.y); // clients add it to their bot roster (for the B locator)
 }
 }
-// Send one peer the current positions of every builder in a game (on join/spectate, so a late arrival's bot
-// roster -- and the B locator -- starts correct).
+/* Send one peer the current positions of every builder in a game (on join/spectate, so a late arrival's bot
+roster -- and the B locator -- starts correct). */
 void send_builders_to(int peer, int gameid)
 {
 for(uint i=0; i<builders.length(); i++)
@@ -64,9 +64,9 @@ send_to_game(gameid, "botclear"); // clients drop this game's bot roster
 for(int i=int(builders.length())-1; i>=0; i--)
 if(@builders[i]!=null and builders[i].game_id==gameid) builders.remove_at(i);
 }
-// The STANDING wall in a game with the LOWEST health (the most urgent to repair), or "" if none stand.
-// Builders never rebuild a fallen wall (health 0) -- once a wall breaks it stays a breach, so the attackers
-// can clear walls one at a time and the round is won when the last one falls.
+/* The STANDING wall in a game with the LOWEST health (the most urgent to repair), or "" if none stand.
+Builders never rebuild a fallen wall (health 0) -- once a wall breaks it stays a breach, so the attackers
+can clear walls one at a time and the round is won when the last one falls. */
 string weakest_standing_wall(int gameid, double size)
 {
 string[]@ dirs = WALL_DIRS; // alias the shared constant; iterated read-only, not rebuilt per call
@@ -89,8 +89,8 @@ if(dir=="north") return size - y;
 if(dir=="south") return y;
 return 999999;
 }
-// The items[] index of the nearest ground wood in a game to (x,y), or -1 if none. Manhattan distance, since
-// the bots step orthogonally so that's the real path length.
+/* The items[] index of the nearest ground wood in a game to (x,y), or -1 if none. Manhattan distance, since
+the bots step orthogonally so that's the real path length. */
 int nearest_wood_index(int gameid, int x, int y)
 {
 int best=-1; int bestd=0;
@@ -112,11 +112,11 @@ else if(builders[bi].x > tx) builders[bi].x--;
 else if(builders[bi].y < ty) builders[bi].y++;
 else if(builders[bi].y > ty) builders[bi].y--;
 }
-// Every server tick: advance each builder one beat if its move timer is up. A builder walks to the nearest
-// wood, grabs it, carries it to the weakest standing wall, and within wall_reach tiles pauses to place it
-// (repairing the wall) -- footsteps and the wood take/place sounds play positionally as it travels. It idles
-// (silent) when there's no wood to fetch or no wall left to fix. Skips paused games and anything outside an
-// active round. (Called from gametick beside enemy_attacks.)
+/* Every server tick: advance each builder one beat if its move timer is up. A builder walks to the nearest
+wood, grabs it, carries it to the weakest standing wall, and within wall_reach tiles pauses to place it
+(repairing the wall) -- footsteps and the wood take/place sounds play positionally as it travels. It idles
+(silent) when there's no wood to fetch or no wall left to fix. Skips paused games and anything outside an
+active round. (Called from gametick beside enemy_attacks.) */
 void builder_tick()
 {
 for(uint i=0; i<builders.length(); i++)
@@ -129,9 +129,9 @@ if(games[gi].paused) continue; // frozen by the host; builders wait (their timer
 if(games[gi].phase!="build" and games[gi].phase!="wave") continue; // only work during a round
 if(builders[i].movetimer.elapsed < builders[i].movespeed) continue; // not time for this bot's next beat yet
 int s = games[gi].size;
-// EVP attack/rest cycle: builders may PLACE wood (repair walls) during the build phase and the wave's REST
-// segments, but during an ATTACK segment they hold -- they still roam and carry wood, just don't repair, so
-// the players' damage sticks until the rest window opens.
+/* EVP attack/rest cycle: builders may PLACE wood (repair walls) during the build phase and the wave's REST
+segments, but during an ATTACK segment they hold -- they still roam and carry wood, just don't repair, so
+the players' damage sticks until the rest window opens. */
 bool can_build = !(games[gi].phase=="wave" and games[gi].wave_attacking);
 if(builders[i].placing)
 {
@@ -143,9 +143,9 @@ int wi = border_wall(gid, builders[i].target_wall, s);
 if(wi>-1 and walls[wi].health>0)
 {
 repair_wall(wi, wood_reinforce_value(builders[i].carried_type)); // repair scales with the size the bot carried (small<medium<large), same as a player's reinforce
-// EVP damage ratchet (see lower_wall_floor): during the build phase the bots fortify freely, so the wall's
-// repair ceiling rises with the work; during a wave rest they may only restore up to that ceiling, never
-// past the permanent damage the attackers have already done.
+/* EVP damage ratchet (see lower_wall_floor): during the build phase the bots fortify freely, so the wall's
+repair ceiling rises with the work; during a wave rest they may only restore up to that ceiling, never
+past the permanent damage the attackers have already done. */
 if(games[gi].phase=="build") { if(walls[wi].health > walls[wi].floor) walls[wi].floor = walls[wi].health; }
 else if(walls[wi].health > walls[wi].floor) walls[wi].health = walls[wi].floor;
 broadcast_wall_strength(gid);
@@ -167,8 +167,8 @@ builders[i].target_wall=nw;
 string dir = builders[i].target_wall;
 if(wall_distance(dir, builders[i].x, builders[i].y, s) <= wall_reach)
 {
-// In reach. During a build/rest window, pause this beat to place (the placement pause equals the bot's move
-// speed). During an attack window, hold at the wall -- carrying, silent -- until the rest segment opens.
+/* In reach. During a build/rest window, pause this beat to place (the placement pause equals the bot's move
+speed). During an attack window, hold at the wall -- carrying, silent -- until the rest segment opens. */
 if(can_build)
 {
 builders[i].placing=true;

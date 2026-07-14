@@ -1,11 +1,11 @@
-// Server-initiated, client-rendered menus. The server never draws UI on a player's screen; it
-// describes a menu and each client renders it with its own menu code (see the client's
-// menu_parser.nvgt). Call broadcast_menu() to push a menu to everyone who is in-game; each client
-// replies "menuresult <id> <choice>", which lands in on_menu_result() below.
-//
-// id    : a short, space-free tag you choose, so results map back to the right menu.
-// title : the menu's intro text.
-// options : the items, in order; the client returns the 0-based index of the one picked.
+/* Server-initiated, client-rendered menus. The server never draws UI on a player's screen; it
+describes a menu and each client renders it with its own menu code (see the client's
+menu_parser.nvgt). Call broadcast_menu() to push a menu to everyone who is in-game; each client
+replies "menuresult <id> <choice>", which lands in on_menu_result() below.
+
+id    : a short, space-free tag you choose, so results map back to the right menu.
+title : the menu's intro text.
+options : the items, in order; the client returns the 0-based index of the one picked. */
 void broadcast_menu(string id, string title, string[] options)
 {
 string payload = "showmenu " + id + "\n" + title;
@@ -13,8 +13,8 @@ for(uint i = 0; i < options.length(); i++) payload += "\n" + options[i];
 send(0, payload, 0, true);
 }
 
-// Unicast a menu to a single player (broadcast_menu goes to everyone). Same showmenu wire format; the
-// client renders it and replies "menuresult <id> <choice>".
+/* Unicast a menu to a single player (broadcast_menu goes to everyone). Same showmenu wire format; the
+client renders it and replies "menuresult <id> <choice>". */
 void send_menu(int peer, string id, string title, string[] options)
 {
 string payload = "showmenu " + id + "\n" + title;
@@ -22,19 +22,19 @@ for(uint i = 0; i < options.length(); i++) payload += "\n" + options[i];
 send(peer, payload, 0, true);
 }
 
-// Ask a player to type a value to finish a server-driven flow. The client shows a local box with
-// `prompt` (masked when `masked`), then sends "<prefix> <text>" back, which an existing command
-// handler processes. This keeps text entry client-side while the decision/action stay on the server.
+/* Ask a player to type a value to finish a server-driven flow. The client shows a local box with
+`prompt` (masked when `masked`), then sends "<prefix> <text>" back, which an existing command
+handler processes. This keeps text entry client-side while the decision/action stay on the server. */
 void ask_input(int peer, string prompt, string prefix, bool masked, bool confirm=false, string prefill="")
 {
 string mask = confirm ? "2" : (masked ? "1" : "0"); // "2" = masked plus a confirm-again box on the client (used when SETTING a private room password, not when joining)
-// Optional prefill (5th line): a value the client drops into the box for the player, who can just accept it.
-// Used to autofill a staff member's OWN private room password when they join it; empty for every other prompt.
+/* Optional prefill (5th line): a value the client drops into the box for the player, who can just accept it.
+Used to autofill a staff member's OWN private room password when they join it; empty for every other prompt. */
 send(peer, "askinput\n" + prompt + "\n" + prefix + "\n" + mask + "\n" + prefill, 0, true);
 }
 
-// A Yes/No confirmation menu. The id is "confirm:<command>"; on Yes the client relays that command back.
-// The client recognises the "confirm:" prefix and says "canceled" on No or escape.
+/* A Yes/No confirmation menu. The id is "confirm:<command>"; on Yes the client relays that command back.
+The client recognises the "confirm:" prefix and says "canceled" on No or escape. */
 void confirm_menu(int peer, string command, string title)
 {
 string[] opts;
@@ -43,8 +43,8 @@ opts.insert_last("No");
 send_menu(peer, "confirm:" + command, title, opts);
 }
 
-// Push the list of joinable rooms (public or private) to a player as a server menu, recording the room
-// ids behind the options in their menu_targets so the returned choice maps back to a room.
+/* Push the list of joinable rooms (public or private) to a player as a server menu, recording the room
+ids behind the options in their menu_targets so the returned choice maps back to a room. */
 void push_join_list(int index, bool priv)
 {
 int peer = players[index].peer_id;
@@ -66,9 +66,9 @@ return;
 send_menu(peer, priv ? "joinprivate" : "joinpublic", priv ? "Private rooms" : "Public rooms", opts);
 }
 
-// The top-level Actions menu (Enter in the lobby or a room). Two panels: the Account panel (personal,
-// account-persisted settings) and the Lobby/Room panel (the create/join or room-management menu for where you
-// are). The second item is named for where you are -- "Lobby panel" in the lobby, "Room panel" in a room.
+/* The top-level Actions menu (Enter in the lobby or a room). Two panels: the Account panel (personal,
+account-persisted settings) and the Lobby/Room panel (the create/join or room-management menu for where you
+are). The second item is named for where you are -- "Lobby panel" in the lobby, "Room panel" in a room. */
 void push_actions_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -77,9 +77,9 @@ opts.insert_last("Account panel\tControl plus A."); // 0: personal account setti
 opts.insert_last((players[index].room_id == 0 ? "Lobby panel" : "Room panel") + "\tControl plus H."); // 1: rooms/games (lobby) or room management (room); Ctrl+H jumps here
 send_menu(peer, "actions", "Actions menu", opts);
 }
-// The lobby menu: create or join a public/private room. Reached from the Actions menu's "Lobby panel" item, and
-// its menuresults are also sent directly by the Ctrl+C/J lobby hotkeys. The tab-tagged shortcut labels are shown
-// or stripped per the client's "Read keyboard shortcuts in menus" setting.
+/* The lobby menu: create or join a public/private room. Reached from the Actions menu's "Lobby panel" item, and
+its menuresults are also sent directly by the Ctrl+C/J lobby hotkeys. The tab-tagged shortcut labels are shown
+or stripped per the client's "Read keyboard shortcuts in menus" setting. */
 void push_lobby_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -90,9 +90,9 @@ opts.insert_last("Join a public room\tControl plus J.");
 opts.insert_last("Join a private room\tControl plus shift plus J.");
 send_menu(peer, "lobby", "Lobby panel", opts);
 }
-// The Account panel (from the Actions menu): personal, account-persisted settings. The first three items reuse
-// the same sub-menus /channel, /pronoun, and /ignored push; the three change items run on the client (which owns
-// the input boxes and the masked password form) via accountaction, reusing the /changemail, /nick, /changepass flows.
+/* The Account panel (from the Actions menu): personal, account-persisted settings. The first three items reuse
+the same sub-menus /channel, /pronoun, and /ignored push; the three change items run on the client (which owns
+the input boxes and the masked password form) via accountaction, reusing the /changemail, /nick, /changepass flows. */
 void push_account_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -107,8 +107,8 @@ else opts.insert_last("Change your email");
 opts.insert_last("Change your password"); // never reveal the current password
 send_menu(peer, "account", "Account panel", opts);
 }
-// The room menu (Enter while in a room). Heterogeneous, so each option's action key is recorded in
-// menu_actions. Password items appear only for a private room.
+/* The room menu (Enter while in a room). Heterogeneous, so each option's action key is recorded in
+menu_actions. Password items appear only for a private room. */
 void push_room_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -131,14 +131,14 @@ opts.insert_last("Delete room\tControl plus D."); players[index].menu_actions.in
 opts.insert_last("Leave room\tControl plus L."); players[index].menu_actions.insert_last("leave");
 send_menu(peer, "room", "Room panel", opts);
 }
-// Dispatch a room-menu action by its action key. Shared by the room menu (on_menu_result) and the Ctrl+<key> room
-// hotkeys, so both run identical logic; keyed by action NAME, not menu index, so it's immune to the private-only
-// Set/Retrieve password items shifting the menu positions. Each branch re-validates (host checks, etc.) itself.
+/* Dispatch a room-menu action by its action key. Shared by the room menu (on_menu_result) and the Ctrl+<key> room
+hotkeys, so both run identical logic; keyed by action NAME, not menu index, so it's immune to the private-only
+Set/Retrieve password items shifting the menu positions. Each branch re-validates (host checks, etc.) itself. */
 void do_room_action(int player_index, int peer, string act, bool silent=false)
 {
-// silent = true when a Ctrl+<key> hotkey called this rather than the menu. A hotkey pressed in the wrong context
-// (not the host, a public room, not alone in the room) just does nothing; the menu still explains why, since you
-// deliberately chose that item. So every "you can't..." message below is gated behind !silent.
+/* silent = true when a Ctrl+<key> hotkey called this rather than the menu. A hotkey pressed in the wrong context
+(not the host, a public room, not alone in the room) just does nothing; the menu still explains why, since you
+deliberately chose that item. So every "you can't..." message below is gated behind !silent. */
 if(act == "leave") send(peer, "runcommand leaveroom", 0, true);
 else if(act == "getpw")
 {
@@ -209,9 +209,9 @@ opts.insert_last(afk_prefix(index) + display_name_flagged(index));
 send_menu(peer, "kick", "Choose a player to kick from your room. " + players_count_phrase(opts.length(), "in your room"), opts);
 }
 
-// The list of players a room member can invite: everyone currently standing in the main lobby (room_id 0,
-// which already excludes anyone in another room or in a game), minus yourself. Their usernames go in
-// menu_targets so the returned choice maps back to a player; the actual invite is sent by do_invite.
+/* The list of players a room member can invite: everyone currently standing in the main lobby (room_id 0,
+which already excludes anyone in another room or in a game), minus yourself. Their usernames go in
+menu_targets so the returned choice maps back to a player; the actual invite is sent by do_invite. */
 void push_invite_list(int index)
 {
 int peer = players[index].peer_id;
@@ -231,9 +231,9 @@ return;
 }
 send_menu(peer, "invite", "Choose a player to invite to your room. " + players_count_phrase(opts.length(), "in the lobby"), opts);
 }
-// First step of a game invite: ask the host which area to pull a player from -- their room (the parent
-// office) or the main lobby. The chosen area then drives push_game_invite_list. Offered only for open games
-// (see push_game_menu); the full-game cap is reported here so the host needn't pick an area first.
+/* First step of a game invite: ask the host which area to pull a player from -- their room (the parent
+office) or the main lobby. The chosen area then drives push_game_invite_list. Offered only for open games
+(see push_game_menu); the full-game cap is reported here so the host needn't pick an area first. */
 void push_game_invite_area(int index)
 {
 int peer = players[index].peer_id;
@@ -245,10 +245,10 @@ opts.insert_last("Lobby");     // option 0
 opts.insert_last("Your room"); // option 1
 send_menu(peer, "gameinvitearea", "Where would you like to invite a player from?", opts);
 }
-// The list of players the game host can invite into their open game, from one area: when from_lobby is false,
-// everyone standing in the game's room (its parent office); when true, everyone in the main lobby. Either way
-// minus the host, and minus anyone already in a game (room_id only matches their plain office/lobby scope).
-// Usernames go in menu_targets; the actual invite is sent by do_game_invite.
+/* The list of players the game host can invite into their open game, from one area: when from_lobby is false,
+everyone standing in the game's room (its parent office); when true, everyone in the main lobby. Either way
+minus the host, and minus anyone already in a game (room_id only matches their plain office/lobby scope).
+Usernames go in menu_targets; the actual invite is sent by do_game_invite. */
 void push_game_invite_list(int index, bool from_lobby)
 {
 int peer = players[index].peer_id;
@@ -272,8 +272,8 @@ return;
 }
 send_menu(peer, "gameinvite", "Choose a player to invite to your game. " + players_count_phrase(opts.length(), from_lobby ? "in the lobby" : "in your room"), opts);
 }
-// The list of players the game host can kick out of their game (every member but the host). Usernames go in
-// menu_targets; the removal is done by the kickfromgame command.
+/* The list of players the game host can kick out of their game (every member but the host). Usernames go in
+menu_targets; the removal is done by the kickfromgame command. */
 void push_game_kick_list(int index)
 {
 int peer = players[index].peer_id;
@@ -294,9 +294,9 @@ players[index].menu_targets.insert_last(players[index].name);
 opts.insert_last(afk_prefix(index) + display_name_flagged(index));
 send_menu(peer, "gamekick", "Choose a player to kick from your game. " + players_count_phrase(opts.length(), "in your game"), opts);
 }
-// The list of games in the player's room for either joining or stopping. mode = "join" (skip full and
-// others' solo games) or "stop" (staff see all, others only their own). Game ids go in menu_targets;
-// the actual join/stop is enforced by the existing joingame/stopgame handlers.
+/* The list of games in the player's room for either joining or stopping. mode = "join" (skip full and
+others' solo games) or "stop" (staff see all, others only their own). Game ids go in menu_targets;
+the actual join/stop is enforced by the existing joingame/stopgame handlers. */
 void push_game_list(int index, string mode)
 {
 int peer = players[index].peer_id;
@@ -327,9 +327,9 @@ return;
 }
 send_menu(peer, (mode == "join") ? "joingame" : "stopgame", (mode == "join") ? "Choose a game to join" : "Choose a game to stop", opts);
 }
-// The list of games a player can WATCH: every game in their room, any mode (solo or open) and any phase
-// (idle through in-progress) -- unlike the Join list, which hides solo and started games. Game ids go in
-// menu_targets; do_spectate enforces the 4-watcher cap.
+/* The list of games a player can WATCH: every game in their room, any mode (solo or open) and any phase
+(idle through in-progress) -- unlike the Join list, which hides solo and started games. Game ids go in
+menu_targets; do_spectate enforces the 4-watcher cap. */
 void push_watch_list(int index)
 {
 int peer = players[index].peer_id;
@@ -358,9 +358,9 @@ return;
 send_menu(peer, "watchgame", "Choose a game to watch", opts);
 }
 
-// The in-game round-control menu (Enter while in a game). The host gets "Begin round" (idle) or, if
-// also staff, "Skip build phase" (build); the title carries the round status. If there's nothing to do
-// (e.g. a non-host), we just speak the status instead of an empty menu.
+/* The in-game round-control menu (Enter while in a game). The host gets "Begin round" (idle) or, if
+also staff, "Skip build phase" (build); the title carries the round status. If there's nothing to do
+(e.g. a non-host), we just speak the status instead of an empty menu. */
 void push_game_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -389,8 +389,8 @@ opts.insert_last("Choose your side\tControl plus C."); players[index].menu_actio
 if(host) { opts.insert_last("Assign players to sides\tControl plus A."); players[index].menu_actions.insert_last("pvpassign"); }
 if(games[gi].members.length() > 1) { opts.insert_last("Watch instead\tControl plus W."); players[index].menu_actions.insert_last("pvpwatch"); } // step aside to a deck so an odd count can go even; pointless when you're the only one
 }
-// Invite/kick are open-game host options (a solo game has only the host). Invite shows while the game is still
-// joinable and has a free slot; kick shows whenever there's someone other than the host to remove.
+/* Invite/kick are open-game host options (a solo game has only the host). Invite shows while the game is still
+joinable and has a free slot; kick shows whenever there's someone other than the host to remove. */
 if(host and !games[gi].solo)
 {
 if(phase == "idle" or phase == "build") { opts.insert_last("Invite to game\tControl plus I."); players[index].menu_actions.insert_last("gameinvite"); } // full games still show it, to report the cap when chosen
@@ -399,9 +399,9 @@ opts.insert_last("Kick from game\tControl plus K."); players[index].menu_actions
 if(opts.length() == 0) return; // nothing actionable: stay silent and let Tab report the round status
 send_menu(peer, "game", "Round menu. " + status, opts);
 }
-// Dispatch a round-menu action by its action key. Shared by the round menu (on_menu_result) and the Ctrl+<key> game
-// hotkeys, so both run identical logic; keyed by action NAME, not menu index. beginround/skipbuild ride through the
-// client to their own command handlers, which re-validate host/phase/staff; the pickers gate host inside themselves.
+/* Dispatch a round-menu action by its action key. Shared by the round menu (on_menu_result) and the Ctrl+<key> game
+hotkeys, so both run identical logic; keyed by action NAME, not menu index. beginround/skipbuild ride through the
+client to their own command handlers, which re-validate host/phase/staff; the pickers gate host inside themselves. */
 void do_game_action(int player_index, int peer, string act)
 {
 if(act == "beginround") send(peer, "runcommand beginround", 0, true);
@@ -410,8 +410,8 @@ else if(act == "gameinvite") push_game_invite_area(player_index); // pick an are
 else if(act == "gamekick") push_game_kick_list(player_index);
 else if(act == "pvpside" or act == "pvpwatch" or act == "pvpassign")
 {
-// PVP staging choosers -- pre-round only. The menu offers them just in the idle phase; guard here too so a
-// hotkey can't pop a chooser mid-round (the actual side/watch changes are validated where they apply as well).
+/* PVP staging choosers -- pre-round only. The menu offers them just in the idle phase; guard here too so a
+hotkey can't pop a chooser mid-round (the actual side/watch changes are validated where they apply as well). */
 int gi = get_game_index(players[player_index].room_id);
 if(gi < 0 or games[gi].mode != "pvp" or games[gi].phase != "idle") return;
 if(act == "pvpside") push_pvp_side_menu(player_index);         // open the attack/defend chooser for yourself
@@ -454,8 +454,8 @@ opts.insert_last(display_name_flagged(pi) + sidelabel);
 }
 send_menu(peer, "pvpassignpick", "Assign which player to a side?", opts);
 }
-// PVP: set target_index's side (attack/defend), validating it's still an idle PVP game, and tell the target and the
-// rest of the game. actor_index is who did it (the player themselves, or the host assigning them).
+/* PVP: set target_index's side (attack/defend), validating it's still an idle PVP game, and tell the target and the
+rest of the game. actor_index is who did it (the player themselves, or the host assigning them). */
 void apply_pvp_side(int actor_index, int target_index, string side)
 {
 int gi = get_game_index(players[target_index].room_id);
@@ -471,9 +471,9 @@ else send(players[target_index].peer_id, "misc "+display_name_flagged(actor_inde
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id == games[gi].id and int(i) != target_index) send(players[i].peer_id, "misc "+display_name_flagged(target_index)+" is now on "+sidename+".", 0, true);
 }
-// The host's pause menu (Escape during a running round): Resume, Leave game, Stop game. Showing it
-// freezes the whole game for everyone (see the openpausemenu handler); Resume or escape unfreezes. The
-// host can always stop their own game. Leave/Stop confirm before acting.
+/* The host's pause menu (Escape during a running round): Resume, Leave game, Stop game. Showing it
+freezes the whole game for everyone (see the openpausemenu handler); Resume or escape unfreezes. The
+host can always stop their own game. Leave/Stop confirm before acting. */
 void push_pause_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -486,8 +486,8 @@ opts.insert_last("Leave game"); players[index].menu_actions.insert_last("leave")
 opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stop");
 send_menu(peer, "pause", "Game paused", opts);
 }
-// The escape menu for anyone who can't pause (non-hosts, and the host when no round is running): just
-// Leave game, plus Stop game for the host or staff. Opening this does NOT pause the shared simulation.
+/* The escape menu for anyone who can't pause (non-hosts, and the host when no round is running): just
+Leave game, plus Stop game for the host or staff. Opening this does NOT pause the shared simulation. */
 void push_leave_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -501,8 +501,8 @@ if(canstop) { opts.insert_last("Stop game"); players[index].menu_actions.insert_
 send_menu(peer, "leavemenu", "Game menu", opts);
 }
 
-// Start-game cascade, step 1: pick the gameplay mode. The choice (evp/pve) is stored in pending_mode and
-// carried through the rest of the cascade to the startgame command. EVP is listed first.
+/* Start-game cascade, step 1: pick the gameplay mode. The choice (evp/pve) is stored in pending_mode and
+carried through the rest of the cascade to the startgame command. EVP is listed first. */
 void push_start_gamemode(int index)
 {
 string[] opts;
@@ -528,8 +528,8 @@ opts.insert_last("Big, 75 by 75");
 opts.insert_last("Large, 100 by 100");
 send_menu(players[index].peer_id, "startsize", "Choose the map size", opts);
 }
-// Start-game cascade (PVE/PVP only): pick how far players may reinforce a wall past its full strength. 200% is the
-// first item and the default; the last option removes the cap. Maps to the startgame reinforce argument (2/4/8/0).
+/* Start-game cascade (PVE/PVP only): pick how far players may reinforce a wall past its full strength. 200% is the
+first item and the default; the last option removes the cap. Maps to the startgame reinforce argument (2/4/8/0). */
 void push_start_reinforce(int index)
 {
 string[] opts;
@@ -539,8 +539,8 @@ opts.insert_last("800 percent"); // 2 -> 8
 opts.insert_last("No limit");    // 3 -> 0
 send_menu(players[index].peer_id, "startreinforce", "Choose a wall reinforce limit", opts);
 }
-// Start-game cascade (PVE only): ask whether a fallen wall's bots pile onto the walls still standing. Yes is the
-// first item and the default (the old swarm behavior); No leaves the current behavior where those bots just leave.
+/* Start-game cascade (PVE only): ask whether a fallen wall's bots pile onto the walls still standing. Yes is the
+first item and the default (the old swarm behavior); No leaves the current behavior where those bots just leave. */
 void push_start_pileup(int index)
 {
 string[] opts;
@@ -549,15 +549,15 @@ opts.insert_last("No");  // 1 -> leave the round
 send_menu(players[index].peer_id, "startpileup", "Should enemy bots pile onto the remaining walls when a wall is destroyed?", opts);
 }
 
-// Called when a player answers a server menu. player_index is their roster index, id is the menu's
-// id, choice is the 0-based option index they picked (or -1 if they cancelled). This is the hook
-// feature code fills in — e.g. tally a poll, apply a choice, etc. Empty for now.
-// Read the configured language channels (one per line, "English (Native)") from data/preffs/languages.svr,
-// skipping blanks. Read fresh each time so a host can edit the list without restarting.
-// These small hand-editable .svr lists are read on many events but change only when a host edits the file, so
-// each loader caches its parsed result and re-reads only when the file's modified time changes. A host's edit
-// takes effect on the very next call (no restart); an unchanged file costs just a stat, not a full read+parse.
-// (file_get_date_modified throws on a missing file, so it's only called after file_exists; mtime -1 = missing.)
+/* Called when a player answers a server menu. player_index is their roster index, id is the menu's
+id, choice is the 0-based option index they picked (or -1 if they cancelled). This is the hook
+feature code fills in — e.g. tally a poll, apply a choice, etc. Empty for now.
+Read the configured language channels (one per line, "English (Native)") from data/preffs/languages.svr,
+skipping blanks. Read fresh each time so a host can edit the list without restarting.
+These small hand-editable .svr lists are read on many events but change only when a host edits the file, so
+each loader caches its parsed result and re-reads only when the file's modified time changes. A host's edit
+takes effect on the very next call (no restart); an unchanged file costs just a stat, not a full read+parse.
+(file_get_date_modified throws on a missing file, so it's only called after file_exists; mtime -1 = missing.) */
 string[] cached_languages; int64 languages_mtime = -1; bool language_cache_ready = false;
 string[] load_language_channels()
 {
@@ -585,16 +585,16 @@ languages_mtime = mt;
 language_cache_ready = true;
 return langs;
 }
-// The bare English name of a channel line ("English (English)" -> "English"). The parenthetical native
-// name is purely for the menu display so players hear what it sounds like.
+/* The bare English name of a channel line ("English (English)" -> "English"). The parenthetical native
+name is purely for the menu display so players hear what it sounds like. */
 string language_bare(string line)
 {
 int paren = string_contains(line, " (", 1);
 if(paren > 0) return string_left(line, paren);
 return line;
 }
-// Is `name` (a bare English language name) one of the configured channels? Case-insensitive. Used to
-// validate a hand-edited language.usr so an invalid one can fall back to English.
+/* Is `name` (a bare English language name) one of the configured channels? Case-insensitive. Used to
+validate a hand-edited language.usr so an invalid one can fall back to English. */
 bool is_valid_language(string name)
 {
 string[] langs = load_language_channels();
@@ -610,9 +610,9 @@ for(uint i=0; i<players.length(); i++)
 if(string_to_lower_case(players[i].language) == string_to_lower_case(bare)) n++;
 return n;
 }
-// The /channel chooser: list every configured language channel for the player to pick from. The raw lines go
-// in menu_targets so the returned choice maps back to one; the DISPLAY appends how many players are on each
-// channel right now, e.g. "English (English) 26 players in this channel." Available to everyone.
+/* The /channel chooser: list every configured language channel for the player to pick from. The raw lines go
+in menu_targets so the returned choice maps back to one; the DISPLAY appends how many players are on each
+channel right now, e.g. "English (English) 26 players in this channel." Available to everyone. */
 void push_language_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -630,9 +630,9 @@ opts.insert_last(label);
 }
 send_menu(peer, "channel", "Select a language channel to use.", opts);
 }
-// Read the configured pronoun options (one per line, "masculine (he/him/his/his/himself)") from
-// data/preffs/pronouns.svr, skipping blanks. Cached and re-read only when the file's modified time changes (see
-// load_language_channels), so a host can still edit the list without restarting.
+/* Read the configured pronoun options (one per line, "masculine (he/him/his/his/himself)") from
+data/preffs/pronouns.svr, skipping blanks. Cached and re-read only when the file's modified time changes (see
+load_language_channels), so a host can still edit the list without restarting. */
 string[] cached_pronouns; int64 pronouns_mtime = -1; bool pronoun_cache_ready = false;
 string[] load_pronoun_options()
 {
@@ -660,16 +660,16 @@ pronouns_mtime = mt;
 pronoun_cache_ready = true;
 return opts;
 }
-// The bare key of a pronoun line ("masculine (he/him/...)" -> "masculine"). The parenthetical lists the
-// grammatical forms (or "name only") and is parsed by pronoun_forms.
+/* The bare key of a pronoun line ("masculine (he/him/...)" -> "masculine"). The parenthetical lists the
+grammatical forms (or "name only") and is parsed by pronoun_forms. */
 string pronoun_bare(string line)
 {
 int paren = string_contains(line, " (", 1);
 if(paren > 0) return string_left(line, paren);
 return line;
 }
-// Is `key` one of the configured pronoun options? Case-insensitive on the bare key. Validates a hand-edited
-// pronoun.usr so an invalid one falls back to none at spawn.
+/* Is `key` one of the configured pronoun options? Case-insensitive on the bare key. Validates a hand-edited
+pronoun.usr so an invalid one falls back to none at spawn. */
 bool is_valid_pronoun(string key)
 {
 string[] opts = load_pronoun_options();
@@ -677,9 +677,9 @@ for(uint i=0; i<opts.length(); i++)
 if(string_to_lower_case(pronoun_bare(opts[i])) == string_to_lower_case(key)) return true;
 return false;
 }
-// The five grammatical forms for a pronoun key, parsed from its pronouns.svr line (the slash-separated list
-// inside the parentheses): subject, object, possessive determiner, possessive pronoun, reflexive -- e.g.
-// he/him/his/his/himself. Returns an empty array for an unknown key or a non-five-form entry like "name only".
+/* The five grammatical forms for a pronoun key, parsed from its pronouns.svr line (the slash-separated list
+inside the parentheses): subject, object, possessive determiner, possessive pronoun, reflexive -- e.g.
+he/him/his/his/himself. Returns an empty array for an unknown key or a non-five-form entry like "name only". */
 string[] pronoun_forms(string key)
 {
 string[] forms;
@@ -699,9 +699,9 @@ break;
 }
 return forms;
 }
-// The right pronoun word for `key` and `form` ("subject", "object", "possessive", "possessivepronoun",
-// "reflexive"). For a name-only entry (e.g. "none") there are no forms, so it falls back to `displayname` --
-// with "'s" for either possessive -- so a sentence reads with the player's name in place of a pronoun.
+/* The right pronoun word for `key` and `form` ("subject", "object", "possessive", "possessivepronoun",
+"reflexive"). For a name-only entry (e.g. "none") there are no forms, so it falls back to `displayname` --
+with "'s" for either possessive -- so a sentence reads with the player's name in place of a pronoun. */
 string pronoun_word(string key, string form, string displayname)
 {
 string[] f = pronoun_forms(key);
@@ -716,10 +716,10 @@ if(form == "reflexive") return f[4];
 if(form == "possessive" or form == "possessivepronoun") return displayname + "'s";
 return displayname;
 }
-// The pronoun key new accounts get, and that a missing or invalid one falls back to at spawn: the configured
-// option whose SUBJECT form is "they" (the neutral singular they) -- found by its grammar, so it survives the
-// host renaming the key (e.g. "Singular" -> "Singular/they"). If there's no they/them option it uses the first
-// configured one, or "None" if the list is empty.
+/* The pronoun key new accounts get, and that a missing or invalid one falls back to at spawn: the configured
+option whose SUBJECT form is "they" (the neutral singular they) -- found by its grammar, so it survives the
+host renaming the key (e.g. "Singular" -> "Singular/they"). If there's no they/them option it uses the first
+configured one, or "None" if the list is empty. */
 string default_pronoun()
 {
 string[] opts = load_pronoun_options();
@@ -731,8 +731,8 @@ if(f.length() == 5 and string_to_lower_case(f[0]) == "they") return pronoun_bare
 if(opts.length() > 0) return pronoun_bare(opts[0]);
 return "None";
 }
-// The /pronoun chooser: list every configured pronoun option for the player to pick from. The full lines go
-// in menu_targets so the returned choice maps back to one. Available to everyone.
+/* The /pronoun chooser: list every configured pronoun option for the player to pick from. The full lines go
+in menu_targets so the returned choice maps back to one. Available to everyone. */
 void push_pronoun_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -749,11 +749,11 @@ display.insert_last(label);
 }
 send_menu(peer, "pronoun", "Select the pronouns used to refer to you in messages.", display);
 }
-// The F6 player list: every connected player, server-wide (the same set F1/who reports), as a navigable
-// menu. Each label mirrors /who -- the AFK prefix, the rank-prefixed name, and "(username)" when the
-// nickname differs so the real account stays readable -- then appends "(<channel> channel)" so you can see
-// which language channel each player is on. Usernames go in menu_targets so the returned choice maps back
-// to a player, leaving room for a future per-player action menu.
+/* The F6 player list: every connected player, server-wide (the same set F1/who reports), as a navigable
+menu. Each label mirrors /who -- the AFK prefix, the rank-prefixed name, and "(username)" when the
+nickname differs so the real account stays readable -- then appends "(<channel> channel)" so you can see
+which language channel each player is on. Usernames go in menu_targets so the returned choice maps back
+to a player, leaving room for a future per-player action menu. */
 void push_player_list(int index)
 {
 int peer = players[index].peer_id;
@@ -770,15 +770,15 @@ opts.insert_last(label);
 }
 send_menu(peer, "playerlist", "Players menu. " + players_count_phrase(opts.length(), "on the server"), opts);
 }
-// The display name for a personal-ignore entry: the nickname if that account is online, otherwise the bare
-// username (the ignore list stores usernames, and some may be offline).
+/* The display name for a personal-ignore entry: the nickname if that account is online, otherwise the bare
+username (the ignore list stores usernames, and some may be offline). */
 string personal_target_name(string username)
 {
 int oi = get_online_index(username);
 return (oi > -1) ? display_name(oi) : username;
 }
-// /ignore: pick an ONLINE player to personally mute (add to your ignore list). Lists everyone online except
-// yourself and anyone you already ignore. Usernames go in menu_targets; on_menu_result adds the choice.
+/* /ignore: pick an ONLINE player to personally mute (add to your ignore list). Lists everyone online except
+yourself and anyone you already ignore. Usernames go in menu_targets; on_menu_result adds the choice. */
 void push_ignore_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -798,8 +798,8 @@ opts.insert_last(label);
 if(opts.length() == 0) { send(peer, "misc There is no one for you to personally mute.", 0, true); return; }
 send_menu(peer, "ignoreadd", "Choose a player to personally mute. " + players_count_phrase(opts.length(), "you can mute"), opts);
 }
-// /ignored: review your personal ignore list. Lists every username on it (online or offline); on_menu_result
-// removes the chosen one and tells only you. Usernames go in menu_targets.
+/* /ignored: review your personal ignore list. Lists every username on it (online or offline); on_menu_result
+removes the chosen one and tells only you. Usernames go in menu_targets. */
 void push_ignored_menu(int index)
 {
 int peer = players[index].peer_id;
@@ -817,9 +817,9 @@ opts.insert_last(label);
 if(opts.length() == 0) { send(peer, "misc You haven't personally muted anyone.", 0, true); return; }
 send_menu(peer, "ignoredremove", "Choose a player to stop muting. " + players_count_phrase(opts.length(), "you are muting"), opts);
 }
-// Where a player currently is, for the F6 info viewer: the lobby, a room (named by its host), or a game
-// (named by its host and mode) -- and "Watching" instead of "In" for a spectator. room_id is 0 in the
-// lobby, a room id in a room office, or a game id in a game (the same field is reused for all three).
+/* Where a player currently is, for the F6 info viewer: the lobby, a room (named by its host), or a game
+(named by its host and mode) -- and "Watching" instead of "In" for a spectator. room_id is 0 in the
+lobby, a room id in a room office, or a game id in a game (the same field is reused for all three). */
 string player_location_phrase(int ti)
 {
 int rid = players[ti].room_id;
@@ -830,9 +830,9 @@ int gi = get_game_index(rid);
 if(gi > -1) return (players[ti].spectating ? "Watching " : "In ") + display_name_flagged_for(games[gi].host) + "'s " + mode_tag(games[gi].mode) + " game.";
 return "Unknown.";
 }
-// A lowercase location clause for a report line -- where the reporter currently is (the scene of the report):
-// "the lobby", "<host>'s room", or "<host>'s <mode> game". Mirrors player_location_phrase but reads as a clause
-// inside a sentence ("...in the lobby: ...") rather than a standalone line.
+/* A lowercase location clause for a report line -- where the reporter currently is (the scene of the report):
+"the lobby", "<host>'s room", or "<host>'s <mode> game". Mirrors player_location_phrase but reads as a clause
+inside a sentence ("...in the lobby: ...") rather than a standalone line. */
 string report_location_phrase(int idx)
 {
 int rid = players[idx].room_id;
@@ -855,9 +855,9 @@ if(ch.length() == 0) return "Not muted.";
 if(ch.length() == 4) return "Muted in all channels.";
 return "Muted in " + oxford_join(ch) + ".";
 }
-// Build and send the F6 read-only info card for one player to the viewer. viewer_index decides whether the
-// staff-only moderation lines (mute/ban/warnings) are included. The client renders it in an inline read-only
-// box. Title and body are joined by a single newline; the body's own lines are CRLF-separated for the box.
+/* Build and send the F6 read-only info card for one player to the viewer. viewer_index decides whether the
+staff-only moderation lines (mute/ban/warnings) are included. The client renders it in an inline read-only
+box. Title and body are joined by a single newline; the body's own lines are CRLF-separated for the box. */
 void push_player_info(int viewer_index, int ti)
 {
 int peer = players[viewer_index].peer_id;
@@ -873,8 +873,8 @@ body += "AFK: " + (players[ti].afk ? "Yes" : "No") + "\r\n";
 body += "Agreed to rules: " + (players[ti].agreed ? "Yes" : "No") + "\r\n"; // rules-agreement status; shown to everyone since you can't invite an unagreed player anyway
 body += "Location: " + (player_ignores(ti, players[viewer_index].name) ? "Private." : player_location_phrase(ti)) + "\r\n"; // hidden when this player has personally muted the viewer, matching /where (staff viewers are exempt via player_ignores)
 body += "Client version: " + format_float(players[ti].version, "", 0, 1); // fixed one decimal so 3.0 reads "3.0" not "3", and the float->double precision tail (2.9000000954) is rounded off too
-// Public records, shown to everyone (a little profile): the PVP lifetime tally, the PVE personal-best round, and
-// the warning count. Warnings used to be staff-only; they're now visible to all so a player can see their own too.
+/* Public records, shown to everyone (a little profile): the PVP lifetime tally, the PVE personal-best round, and
+the warning count. Warnings used to be staff-only; they're now visible to all so a player can see their own too. */
 int wins = get_wins(players[ti].name);
 int losses = get_losses(players[ti].name);
 body += "\r\nPVP record: " + wins + (wins==1 ? " win" : " wins") + ", " + losses + (losses==1 ? " loss" : " losses");
@@ -883,15 +883,15 @@ body += "\r\nEVP best round: " + get_evp_best_round(players[ti].name);
 body += "\r\nWarnings: " + warning_count(players[ti].name);
 if(is_staff(players[viewer_index].rank))
 {
-// No ban line here: a banned player is dropped from the roster at once, so a card can never be opened on
-// one and it would always read "not banned". Staff check bans with /bans, which reads the account offline.
+/* No ban line here: a banned player is dropped from the roster at once, so a card can never be opened on
+one and it would always read "not banned". Staff check bans with /bans, which reads the account offline. */
 body += "\r\nMute status: " + player_mute_phrase(ti);
 }
-// Header lines for the client's interactive controls: the target's canonical username (for the mute/PM/staff
-// actions), whether the viewer already ignores them (the checkbox's starting state), whether this is the
-// viewer's own card (so the client hides the action controls -- you can't act on yourself), the staff-button
-// flags, and the rank lists the viewer may promote/demote the target to. The slash commands the buttons route
-// through re-validate everything; these just decide which controls to show, mirroring the command gating.
+/* Header lines for the client's interactive controls: the target's canonical username (for the mute/PM/staff
+actions), whether the viewer already ignores them (the checkbox's starting state), whether this is the
+viewer's own card (so the client hides the action controls -- you can't act on yourself), the staff-button
+flags, and the rank lists the viewer may promote/demote the target to. The slash commands the buttons route
+through re-validate everything; these just decide which controls to show, mirroring the command gating. */
 int ign = player_ignores(viewer_index, players[ti].name) ? 1 : 0;
 int self = (viewer_index == ti) ? 1 : 0;
 int vlevel = rank_level(players[viewer_index].rank);
@@ -918,9 +918,9 @@ if(player_index < 0 or player_index >= int(players.length())) return;
 int peer = players[player_index].peer_id;
 if(id == "lobby")
 {
-// Rules gate: normally the lobby menu is only pushed after agreement (openmenu gates it), but the Ctrl+C/J lobby
-// hotkeys send this menuresult directly, bypassing openmenu -- so re-check here, or an unagreed player could
-// create or join a room through a hotkey. Same message the openmenu lobby path shows.
+/* Rules gate: normally the lobby menu is only pushed after agreement (openmenu gates it), but the Ctrl+C/J lobby
+hotkeys send this menuresult directly, bypassing openmenu -- so re-check here, or an unagreed player could
+create or join a room through a hotkey. Same message the openmenu lobby path shows. */
 if(!players[player_index].agreed) { send(peer, "misc You must read the server rules before you can play. Type /rules to read them, then /rules agree to continue, or /rules disagree to leave.", 0,true); return; }
 if(choice == 0) do_create_room(player_index, peer, false, ""); // Create a public room
 else if(choice == 1) ask_input(peer, "Enter a password for your room (at least 6 characters). Others will need it to join.", "createroom private", true, true);
@@ -929,8 +929,8 @@ else if(choice == 3) push_join_list(player_index, true);  // Join a private room
 }
 else if(id == "actions")
 {
-// Top-level Actions menu: 0 = Account panel, 1 = the Lobby/Room panel for where you are. Only reachable via
-// openmenu (Enter), which already gated agreement, so no rules re-check is needed to descend into a panel.
+/* Top-level Actions menu: 0 = Account panel, 1 = the Lobby/Room panel for where you are. Only reachable via
+openmenu (Enter), which already gated agreement, so no rules re-check is needed to descend into a panel. */
 if(choice < 0) return; // cancelled
 if(choice == 0) push_account_menu(player_index);
 else if(choice == 1)
@@ -941,8 +941,8 @@ else if(get_room_index(players[player_index].room_id) > -1) push_room_menu(playe
 }
 else if(id == "account")
 {
-// Account panel: the first three reuse existing server sub-menus; the last three are run on the client, which
-// owns the input boxes (email, nickname) and the masked change-password form.
+/* Account panel: the first three reuse existing server sub-menus; the last three are run on the client, which
+owns the input boxes (email, nickname) and the masked change-password form. */
 if(choice < 0) return; // cancelled
 if(choice == 0) push_language_menu(player_index);
 else if(choice == 1) push_pronoun_menu(player_index);
@@ -997,10 +997,10 @@ string rid = players[player_index].menu_targets[choice];
 if(id == "joinpublic") do_join_room(player_index, peer, int(string_to_number(rid)), "");
 else
 {
-// Private room: ask for the password, then joinroom <id> <pw>. Convenience for staff joining THEIR OWN room:
-// prefill the box with that room's password (the server holds it in plain text) so they can just accept it.
-// Never prefilled for anyone else's room -- ownership, not rank, is the gate -- so a dev joining another
-// staffer's room still types it. The prefill stays empty for non-staff and for rooms they don't own.
+/* Private room: ask for the password, then joinroom <id> <pw>. Convenience for staff joining THEIR OWN room:
+prefill the box with that room's password (the server holds it in plain text) so they can just accept it.
+Never prefilled for anyone else's room -- ownership, not rank, is the gate -- so a dev joining another
+staffer's room still types it. The prefill stays empty for non-staff and for rooms they don't own. */
 int jri = get_room_index(int(string_to_number(rid)));
 string prefill = "";
 if(jri > -1 and is_staff(players[player_index].rank) and string_to_lower_case(rooms[jri].host) == string_to_lower_case(players[player_index].name)) prefill = rooms[jri].password;

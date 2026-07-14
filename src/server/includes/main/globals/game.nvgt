@@ -1,10 +1,10 @@
-// A game is a defense round running inside a room — the cavern where the Wallbreaker gameplay happens.
-// Games are SPACES in the same id namespace as rooms (they draw ids from next_room_id), so a player's
-// room_id can point at a game exactly like it points at a room, and all of Section 5's scoping
-// (position, local chat, voice, footsteps) plus the wall system work on a game with no extra code.
-// Each game remembers its parent_room so leaving returns the player to that office. Capacity is up to
-// 4 (one defender per wall); Solo games are private/unjoinable, Open games anyone in the room can join.
-// The build phase, wood, and bots come in later sub-sections (6b-6d); this file is the space + lifecycle.
+/* A game is a defense round running inside a room — the cavern where the Wallbreaker gameplay happens.
+Games are SPACES in the same id namespace as rooms (they draw ids from next_room_id), so a player's
+room_id can point at a game exactly like it points at a room, and all of Section 5's scoping
+(position, local chat, voice, footsteps) plus the wall system work on a game with no extra code.
+Each game remembers its parent_room so leaving returns the player to that office. Capacity is up to
+4 (one defender per wall); Solo games are private/unjoinable, Open games anyone in the room can join.
+The build phase, wood, and bots come in later sub-sections (6b-6d); this file is the space + lifecycle. */
 game@[] games;
 bool world_frozen=false; // developer world-stop (/freeze): true = the whole server is halted -- every game's sim is frozen and every client is locked out of moving, acting, and chatting. gametick returns early while set; see freeze_world/unfreeze_world below.
 class game
@@ -58,8 +58,8 @@ for(uint i=0; i<games.length(); i++)
 if(games[i].id==id) return i;
 return -1;
 }
-// How many of a game's members are LIVE (online, not on a reconnect hold). A held member still occupies its
-// slot but can't act or answer, so emptiness and host migration are decided by this, not members.length().
+/* How many of a game's members are LIVE (online, not on a reconnect hold). A held member still occupies its
+slot but can't act or answer, so emptiness and host migration are decided by this, not members.length(). */
 int online_member_count(int gi)
 {
 if(gi<0 or gi>=int(games.length())) return 0;
@@ -71,11 +71,11 @@ if(p>-1 and !players[p].held) n++;
 }
 return n;
 }
-// The PVP forfeit grace, in seconds: if a whole side has no live player for this long during a match, that side
-// forfeits and the other wins. Matches the reconnect hold, so a dropped player's own grace and this align.
+/* The PVP forfeit grace, in seconds: if a whole side has no live player for this long during a match, that side
+forfeits and the other wins. Matches the reconnect hold, so a dropped player's own grace and this align. */
 const int pvp_forfeit_seconds=45;
-// How many of a PVP game's members are LIVE (online, not held) on a given side ("attack"/"defend"). A side with
-// zero live players is deserted: the match pauses and, if it stays empty through the grace, that side forfeits.
+/* How many of a PVP game's members are LIVE (online, not held) on a given side ("attack"/"defend"). A side with
+zero live players is deserted: the match pauses and, if it stays empty through the grace, that side forfeits. */
 int pvp_side_active_count(int gi, string side)
 {
 if(gi<0 or gi>=int(games.length())) return 0;
@@ -87,8 +87,8 @@ if(p>-1 and !players[p].held and players[p].team==side) n++;
 }
 return n;
 }
-// PVP staging gate: "" if the game may begin (an even 2 or 4 members, everyone assigned a side, and the two sides
-// equal -- 1v1 or 2v2), otherwise a one-sentence message naming what's missing. Checked at Begin round.
+/* PVP staging gate: "" if the game may begin (an even 2 or 4 members, everyone assigned a side, and the two sides
+equal -- 1v1 or 2v2), otherwise a one-sentence message naming what's missing. Checked at Begin round. */
 string pvp_start_problem(int gi)
 {
 if(gi < 0 or gi >= int(games.length())) return "This game no longer exists.";
@@ -107,8 +107,8 @@ if(un > 0) return "Everyone must choose a side first, and " + un + (un == 1 ? " 
 if(atk != def) return "The sides aren't even yet, with " + atk + " attacking and " + def + " defending.";
 return "";
 }
-// The peer id of the first live (online, not held) member of a game, or -1 if none. Host migration uses this so
-// the host never migrates onto a held (offline) slot.
+/* The peer id of the first live (online, not held) member of a game, or -1 if none. Host migration uses this so
+the host never migrates onto a held (offline) slot. */
 int first_live_member(int gi)
 {
 if(gi<0 or gi>=int(games.length())) return -1;
@@ -129,17 +129,17 @@ for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==gameid and players[i].spectating) n++;
 return n;
 }
-// Send a message (channel 0) to EVERYONE present in a game's space -- its members AND any spectators, since
-// both share the game's room_id. Use this for audio/event broadcasts (wall hits, wave announcements, phase,
-// pause, wood drops) so spectators hear them too; gameplay-control messages (roundover, wood counts) stay
-// members-only and are sent by looping members directly.
+/* Send a message (channel 0) to EVERYONE present in a game's space -- its members AND any spectators, since
+both share the game's room_id. Use this for audio/event broadcasts (wall hits, wave announcements, phase,
+pause, wood drops) so spectators hear them too; gameplay-control messages (roundover, wood counts) stay
+members-only and are sent by looping members directly. */
 void send_to_game(int gameid, string msg)
 {
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==gameid) send(players[i].peer_id, msg, 0, true);
 }
-// Eject every spectator watching a game (when the game is removed): return them to the room they came from
-// (the lobby if that's gone), clear their spectator state, and tell their client to leave the watch.
+/* Eject every spectator watching a game (when the game is removed): return them to the room they came from
+(the lobby if that's gone), clear their spectator state, and tell their client to leave the watch. */
 void eject_spectators(int gameid)
 {
 int gi = get_game_index(gameid);
@@ -154,8 +154,8 @@ send(players[i].peer_id, "watchleft\n"+hostdisp, 0, true);
 set_room_scope(int(i), back);
 }
 }
-// Create a game inside a room and return its id. Uses the shared room_id namespace so a player's
-// room_id can point at a game just like a room, and spawns the four destroyable cavern walls.
+/* Create a game inside a room and return its id. Uses the shared room_id namespace so a player's
+room_id can point at a game just like a room, and spawns the four destroyable cavern walls. */
 int create_game(int parent_room, string hostname, int hostpeer, int size, bool solo, string mode, double reinforce_cap=0, bool bots_pileup=false)
 {
 int gid=next_room_id;
@@ -168,10 +168,10 @@ if(mode=="pvp") spawn_ring_walls(gid, size, 400, 400); // PVP: the four destruct
 else spawn_border_walls(gid, size, 400, 400, true); // PVE/EVP: the four destroyable walls are the cavern border (max health 400)
 return gid;
 }
-// Send a player already set up as a spectator (spectating=true, room_id=the game) the full watch scope: the deck
-// (via the outside flag, remembered on spectate_outside so a reconnect restores it), the other players' positions,
-// the ground wood, the builders, the walls, and the current phase. Shared by do_spectate (watch from the room)
-// and become_watcher (a PVP member steps aside).
+/* Send a player already set up as a spectator (spectating=true, room_id=the game) the full watch scope: the deck
+(via the outside flag, remembered on spectate_outside so a reconnect restores it), the other players' positions,
+the ground wood, the builders, the walls, and the current phase. Shared by do_spectate (watch from the room)
+and become_watcher (a PVP member steps aside). */
 void send_watch_scope(int index, int gi, bool outside)
 {
 int peer = players[index].peer_id;
@@ -187,10 +187,10 @@ send(peer, wall_strength_msg(gameid), 0, true);
 send_game_phase_to(peer, gi); // remaining round time + rest-window sync for a mid-round watcher
 if(games[gi].paused) send(peer, "gamepaused", 0, true);
 }
-// Start watching a game from the overhead deck. Validates (in a room, game exists in that room, watch
-// slots free), then moves the player into the game's scope as a SPECTATOR (room_id = game id, spectating
-// true) without adding them to members -- so they hear everything but take no part. Sends them the cavern,
-// the players' positions, ground wood, walls, and current phase, and quietly tells the game someone joined.
+/* Start watching a game from the overhead deck. Validates (in a room, game exists in that room, watch
+slots free), then moves the player into the game's scope as a SPECTATOR (room_id = game id, spectating
+true) without adding them to members -- so they hear everything but take no part. Sends them the cavern,
+the players' positions, ground wood, walls, and current phase, and quietly tells the game someone joined. */
 void do_spectate(int index, int gameid, bool pvp_outside=false)
 {
 int peer = players[index].peer_id;
@@ -217,8 +217,8 @@ string wn = display_name_flagged(index)+" is now watching.";
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==gameid and i!=uint(index)) send(players[i].peer_id, "misc "+wn, 0, true);
 }
-// Stop watching: tell the game the watcher left, clear the spectator state, and return them to their office
-// (the lobby if it's gone). set_room_scope re-spawns them normally there (spectating is already cleared).
+/* Stop watching: tell the game the watcher left, clear the spectator state, and return them to their office
+(the lobby if it's gone). set_room_scope re-spawns them normally there (spectating is already cleared). */
 void leave_watch(int index)
 {
 if(!players[index].spectating) return;
@@ -234,10 +234,10 @@ players[index].spectate_room=0;
 send(players[index].peer_id, "watchleft\n"+hostdisp, 0, true);
 set_room_scope(index, back);
 }
-// A PVP game member steps aside to become a WATCHER (the odd-count staging tool): remove them from the players,
-// migrate the host if they hosted, and set them up as a spectator on their chosen deck. Only before a PVP round
-// starts, and only if at least one other LIVE player remains (you can't watch a game with no players -- leave it
-// instead). Frees their team slot so an odd count (e.g. 3) can go even (2 players plus a watcher).
+/* A PVP game member steps aside to become a WATCHER (the odd-count staging tool): remove them from the players,
+migrate the host if they hosted, and set them up as a spectator on their chosen deck. Only before a PVP round
+starts, and only if at least one other LIVE player remains (you can't watch a game with no players -- leave it
+instead). Frees their team slot so an odd count (e.g. 3) can go even (2 players plus a watcher). */
 void become_watcher(int index, bool outside)
 {
 int peer = players[index].peer_id;
@@ -266,9 +266,9 @@ string wn = wname + " stepped aside to watch.";
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==games[gi].id and i!=uint(index)) send(players[i].peer_id, "misc "+wn, 0, true);
 }
-// End a game for everyone: return each member to where they came from (a room member to the office, a
-// lobby invitee to the lobby), drop the cavern walls, and remove the game. Used by Stop game and when the
-// last player leaves.
+/* End a game for everyone: return each member to where they came from (a room member to the office, a
+lobby invitee to the lobby), drop the cavern walls, and remove the game. Used by Stop game and when the
+last player leaves. */
 void end_game(int gindex)
 {
 if(gindex<0 or gindex>=int(games.length())) return;
@@ -281,9 +281,9 @@ send(games[gindex].members[i], "gameleft", 0, true);
 set_room_scope(pi, players[pi].pregame_room);
 }
 eject_spectators(gid); // send any watchers back to their room before the game disappears
-// Safety net: return anyone STILL scoped to this game (room_id == gid) that the members loop and eject_spectators
-// above didn't catch -- so Stop game can never leave a player stranded inside a game that no longer exists. (Both
-// passes above move the players they handle out of the game's scope, so this only ever picks up stragglers.)
+/* Safety net: return anyone STILL scoped to this game (room_id == gid) that the members loop and eject_spectators
+above didn't catch -- so Stop game can never leave a player stranded inside a game that no longer exists. (Both
+passes above move the players they handle out of the game's scope, so this only ever picks up stragglers.) */
 for(int i=int(players.length())-1; i>=0; i--)
 if(players[i].room_id==gid) { send(players[i].peer_id, "gameleft", 0, true); set_room_scope(int(i), players[i].pregame_room); }
 clear_walls(gid);
@@ -292,8 +292,8 @@ clear_enemies(gid);
 clear_builders(gid);
 games.remove_at(gindex);
 }
-// One player leaves a game while it continues for others: solo or last-out ends it; if the host leaves
-// an Open game with others still inside, the host migrates to another player.
+/* One player leaves a game while it continues for others: solo or last-out ends it; if the host leaves
+an Open game with others still inside, the host migrates to another player. */
 void leave_game(int peer)
 {
 int gi=-1, mi=-1;
@@ -305,10 +305,10 @@ int pi=get_player_index(peer);
 games[gi].members.remove_at(mi);
 if(online_member_count(gi)==0)
 {
-// No LIVE players remain (only held slots, if any). An idle game stays open in its room so it can be
-// rejoined later, like a room does; it closes only on Stop or when the room closes. A started game closes:
-// end_game routes any remaining HELD members back to their pregame_room, so a reconnect lands in the
-// room/lobby rather than a vanished game.
+/* No LIVE players remain (only held slots, if any). An idle game stays open in its room so it can be
+rejoined later, like a room does; it closes only on Stop or when the room closes. A started game closes:
+end_game routes any remaining HELD members back to their pregame_room, so a reconnect lands in the
+room/lobby rather than a vanished game. */
 if(games[gi].members.length()==0)
 {
 if(games[gi].phase != "idle")
@@ -340,9 +340,9 @@ send(peer, "gameleft", 0, true);
 set_room_scope(pi, players[pi].pregame_room); // back to where they came from: a room member to the room, a lobby invitee to the lobby
 }
 }
-// Perform the actual join of player `index` into games[gi] (caller has already validated): add them as a
-// member, tell their client, scope them into the cavern, and cue the members already inside. Shared by the
-// joingame command and an accepted game invite.
+/* Perform the actual join of player `index` into games[gi] (caller has already validated): add them as a
+member, tell their client, scope them into the cavern, and cue the members already inside. Shared by the
+joingame command and an accepted game invite. */
 void join_game_now(int index, int gi)
 {
 int peer = players[index].peer_id;
@@ -359,11 +359,11 @@ if(games[gi].members[mj]==peer) continue;
 send(games[gi].members[mj], "playerjoinedgame "+display_name_flagged(index), 0,true);
 }
 }
-// The game host invites a player (standing in the game's room OR in the main lobby) into their open game.
-// Re-validates, stores the pending invite on the target (a newer invite replaces any older one of either
-// kind), and alerts them with the invite sound. The prompt reuses the roominvite client message, so /accept
-// and /reject answer it. A lobby invitee accepting jumps straight into the cavern, bypassing the room (and a
-// private room's password); leaving the game later returns them to the lobby (see pregame_room).
+/* The game host invites a player (standing in the game's room OR in the main lobby) into their open game.
+Re-validates, stores the pending invite on the target (a newer invite replaces any older one of either
+kind), and alerts them with the invite sound. The prompt reuses the roominvite client message, so /accept
+and /reject answer it. A lobby invitee accepting jumps straight into the cavern, bypassing the room (and a
+private room's password); leaving the game later returns them to the lobby (see pregame_room). */
 void do_game_invite(int inviter_index, string target_name)
 {
 int peer = players[inviter_index].peer_id;
@@ -384,8 +384,8 @@ string msg = display_name_flagged(inviter_index) + " has invited you to " + gpos
 send(players[ti].peer_id, "roominvite\n" + msg, 0, true);
 send(peer, "misc Invitation sent to " + display_name_flagged(ti) + ".", 0, true);
 }
-// The invited player typed /accept on a pending GAME invite: re-validate (still in the room, game still open,
-// not full, round not yet underway) and drop them in, then tell the host. Clears the invite on any outcome.
+/* The invited player typed /accept on a pending GAME invite: re-validate (still in the room, game still open,
+not full, round not yet underway) and drop them in, then tell the host. Clears the invite on any outcome. */
 void accept_game_invite(int index)
 {
 int peer = players[index].peer_id;
@@ -412,9 +412,9 @@ int hi = get_online_index(inviter);
 if(hi > -1) send(players[hi].peer_id, "misc " + display_name_flagged(index) + " has declined your game invite.", 0, true);
 send(peer, "misc You declined the game invitation.", 0, true);
 }
-// Called when a peer disconnects: drop them from any game they were in, ending it if they were the
-// last player or migrating the host if they hosted an Open game with others still inside. (Remaining
-// members keep their game scope, so no rescoping is needed here.)
+/* Called when a peer disconnects: drop them from any game they were in, ending it if they were the
+last player or migrating the host if they hosted an Open game with others still inside. (Remaining
+members keep their game scope, so no rescoping is needed here.) */
 void handle_disconnect_games(int peer)
 {
 for(int i=int(games.length())-1; i>=0; i--)
@@ -426,8 +426,8 @@ if(mi<0) continue;
 games[i].members.remove_at(mi);
 if(online_member_count(int(i))==0)
 {
-// No live players left. Nobody at all: an idle game persists (rejoinable), a started game closes. Only held
-// members left in a started game: end it and route them home (end_game -> set_room_scope to pregame_room).
+/* No live players left. Nobody at all: an idle game persists (rejoinable), a started game closes. Only held
+members left in a started game: end it and route them home (end_game -> set_room_scope to pregame_room). */
 if(games[i].members.length()==0)
 {
 if(games[i].phase != "idle")
@@ -464,20 +464,20 @@ if(size==25) return 45;
 if(size==100) return 120;
 return 75;
 }
-// EVP round timer (seconds the attackers have to bring all four walls down once the wave starts), by map
-// size. Constant per size -- the escalation comes from the defenders (more builders each round), not a
-// shrinking clock. Tunable.
+/* EVP round timer (seconds the attackers have to bring all four walls down once the wave starts), by map
+size. Constant per size -- the escalation comes from the defenders (more builders each round), not a
+shrinking clock. Tunable. */
 int evp_round_seconds(int size) { if(size<=25) return 75; if(size<=50) return 120; return 180; }
-// PVP round timer: the budget of actual ATTACKING seconds the attackers have to bring all four walls down.
-// Like EVP's clock it FREEZES during build windows (so rest downtime never burns the limit), and it's a
-// single decisive round (no escalation -- fixed human headcount, no bots to ramp). Scaled by map size, tunable.
+/* PVP round timer: the budget of actual ATTACKING seconds the attackers have to bring all four walls down.
+Like EVP's clock it FREEZES during build windows (so rest downtime never burns the limit), and it's a
+single decisive round (no escalation -- fixed human headcount, no bots to ramp). Scaled by map size, tunable. */
 int pvp_round_seconds(int size) { if(size<=25) return 90; if(size<=50) return 150; return 240; }
-// PVP: set up the build/prep phase for a starting round. Each member is placed by their chosen side --
-// defenders at the interior center (with a starting wood stockpile to shore up the walls) and attackers
-// together at a shared entry point out in the west exterior band -- and told their side (yourside) so the
-// client spawns and arms to match. Attackers hold a weapon from build start but can't damage yet (that
-// arrives with the attack window). No bots: humans defend. The client repositions its own `me` on the
-// yourside message with this same geometry, since the server never moves a player's own view via pos.
+/* PVP: set up the build/prep phase for a starting round. Each member is placed by their chosen side --
+defenders at the interior center (with a starting wood stockpile to shore up the walls) and attackers
+together at a shared entry point out in the west exterior band -- and told their side (yourside) so the
+client spawns and arms to match. Attackers hold a weapon from build start but can't damage yet (that
+arrives with the attack window). No bots: humans defend. The client repositions its own `me` on the
+yourside message with this same geometry, since the server never moves a player's own view via pos. */
 void pvp_build_setup(int gi)
 {
 games[gi].pvp_deserted = false; // clear any leftover desertion state from a previous round
@@ -507,8 +507,8 @@ send(players[pi].peer_id, "yourside attack", 0, true);
 broadcast_pos(pi); // sync the new spawn to the others in the game (their tracker/beacons); the mover's own client repositions on yourside
 }
 }
-// Set a game's round phase and tell everyone in it, so their clients announce the change and run the
-// build countdown. The seconds value is the build duration when entering build, 0 otherwise.
+/* Set a game's round phase and tell everyone in it, so their clients announce the change and run the
+build countdown. The seconds value is the build duration when entering build, 0 otherwise. */
 void set_game_phase(int gindex, string phase)
 {
 if(gindex<0 or gindex>=int(games.length())) return;
@@ -519,8 +519,8 @@ games[gindex].phasetimer.restart();
 games[gindex].warned=false; // arm the heads-up for the first wave
 if(games[gindex].mode=="evp")
 {
-// EVP: the bots defend. Spawn the wall-builders now (more each round cleared -- the escalation) -- they
-// reinforce through the build phase and keep repairing through the wave. Players carry no wood in EVP.
+/* EVP: the bots defend. Spawn the wall-builders now (more each round cleared -- the escalation) -- they
+reinforce through the build phase and keep repairing through the wave. Players carry no wood in EVP. */
 spawn_builders(games[gindex].id, evp_builders_for_round(games[gindex].evp_rounds_cleared));
 }
 else if(games[gindex].mode=="pvp")
@@ -530,8 +530,8 @@ pvp_build_setup(gindex);
 }
 else
 {
-// PVE: hand each defender a random starting stockpile (10-20 wood) so they can immediately shore up a
-// weak wall before gathering ramps up. The inventory was cleared between rounds, so this is a clean grant.
+/* PVE: hand each defender a random starting stockpile (10-20 wood) so they can immediately shore up a
+weak wall before gathering ramps up. The inventory was cleared between rounds, so this is a clean grant. */
 for(uint i=0; i<games[gindex].members.length(); i++)
 {
 int pi=get_player_index(games[gindex].members[i]);
@@ -553,12 +553,12 @@ if(phase=="wave")
 games[gindex].wavetimer.restart(); // the survival clock starts now
 if(games[gindex].mode=="evp")
 {
-// EVP: the wave alternates attack and rest segments like PVE, but with the roles reversed -- during an attack
-// segment players smash the walls (and the builders gather wood but hold off repairing); during a rest segment
-// players are locked out (their swings only ricochet) while the builders place wood and repair. The wave opens
-// on an attack segment. The round number is the current EVP round and stays fixed across the round's segments
-// (escalation is per round cleared -- more builders -- not per segment). Start the round timer too (wavetimer
-// counts against evp_round_secs).
+/* EVP: the wave alternates attack and rest segments like PVE, but with the roles reversed -- during an attack
+segment players smash the walls (and the builders gather wood but hold off repairing); during a rest segment
+players are locked out (their swings only ricochet) while the builders place wood and repair. The wave opens
+on an attack segment. The round number is the current EVP round and stays fixed across the round's segments
+(escalation is per round cleared -- more builders -- not per segment). Start the round timer too (wavetimer
+counts against evp_round_secs). */
 games[gindex].wave_number = games[gindex].evp_rounds_cleared + 1; // 1-based current round
 games[gindex].evp_round_secs = evp_round_seconds(games[gindex].size) + games[gindex].evp_rounds_cleared * 10; // +10s per round already cleared, so escalation lives in the bot count, not a shrinking clock
 games[gindex].wave_attacking = true;
@@ -567,11 +567,11 @@ games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
 }
 else if(games[gindex].mode=="pvp")
 {
-// PVP: the attack phase alternates attack and build windows, game-wide and mutually exclusive -- during an
-// attack window the attackers damage walls (defenders can only gather); during a build window the defenders
-// place/repair (the attackers' swings only ricochet). It opens on an attack window. Single decisive round, so
-// the round number is fixed at 1 (no escalation). The clock is a budget of real attacking seconds that freezes
-// during build windows (mirrors EVP), carried in evp_round_secs; the window length is half the build phase.
+/* PVP: the attack phase alternates attack and build windows, game-wide and mutually exclusive -- during an
+attack window the attackers damage walls (defenders can only gather); during a build window the defenders
+place/repair (the attackers' swings only ricochet). It opens on an attack window. Single decisive round, so
+the round number is fixed at 1 (no escalation). The clock is a budget of real attacking seconds that freezes
+during build windows (mirrors EVP), carried in evp_round_secs; the window length is half the build phase. */
 games[gindex].wave_number = 1;
 games[gindex].evp_round_secs = pvp_round_seconds(games[gindex].size);
 games[gindex].wave_attacking = true;
@@ -580,13 +580,13 @@ games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
 }
 else
 {
-// PVE: the wave alternates attack and rest segments, each half the build phase (so bots hammer, then back
-// off to let players rebuild). The wave opens with an attack segment.
+/* PVE: the wave alternates attack and rest segments, each half the build phase (so bots hammer, then back
+off to let players rebuild). The wave opens with an attack segment. */
 games[gindex].wave_attacking = true;
 games[gindex].wave_cycletimer.restart();
 games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
-// First attack burst: one bot per standing wall. The per-wall count grows by 1 on each later flip back
-// to attacking, with no ceiling -- every round adds one more bot per wall.
+/* First attack burst: one bot per standing wall. The per-wall count grows by 1 on each later flip back
+to attacking, with no ceiling -- every round adds one more bot per wall. */
 games[gindex].wave_bot_target = 1;
 // First attack burst is round 1; the counter climbs by 1 on each later flip back to attacking (uncapped).
 games[gindex].wave_number = 1;
@@ -597,11 +597,11 @@ fill_walls_to(games[gindex].id, games[gindex].size, games[gindex].wave_bot_targe
 int secs = (phase=="build") ? games[gindex].buildduration : (((games[gindex].mode=="evp" or games[gindex].mode=="pvp") and phase=="wave") ? games[gindex].evp_round_secs : 0);
 send_to_game(games[gindex].id, "gamephase "+phase+" "+secs+" "+games[gindex].wave_number); // members + spectators
 }
-// Host-only shared pause: freeze a game's entire simulation for everyone. The phase/wood/wave timers
-// and every bot's attack timer all pause where they are, so nothing advances until the host
-// resumes; gametick skips paused games. Open games auto-resume after 90s (timed off pausetimer in
-// gametick); Solo games stay paused until the host acts. Tells everyone in the game so their clients
-// freeze input and audio.
+/* Host-only shared pause: freeze a game's entire simulation for everyone. The phase/wood/wave timers
+and every bot's attack timer all pause where they are, so nothing advances until the host
+resumes; gametick skips paused games. Open games auto-resume after 90s (timed off pausetimer in
+gametick); Solo games stay paused until the host acts. Tells everyone in the game so their clients
+freeze input and audio. */
 void pause_game(int gi)
 {
 if(gi<0 or gi>=int(games.length()) or games[gi].paused) return;
@@ -617,8 +617,8 @@ for(uint i=0; i<builders.length(); i++)
 if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.pause();
 send_to_game(games[gi].id, "gamepaused"); // members + spectators freeze together
 }
-// Unfreeze a paused game: resume every timer where it left off (so a half-elapsed build phase keeps its
-// remaining time) and tell everyone in the game. No-op if the game isn't paused.
+/* Unfreeze a paused game: resume every timer where it left off (so a half-elapsed build phase keeps its
+remaining time) and tell everyone in the game. No-op if the game isn't paused. */
 void resume_game(int gi)
 {
 if(gi<0 or gi>=int(games.length()) or !games[gi].paused) return;
@@ -633,14 +633,14 @@ for(uint i=0; i<builders.length(); i++)
 if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.resume();
 send_to_game(games[gi].id, "gameresumed"); // members + spectators unfreeze together
 }
-// Developer world-stop. freeze_world halts the entire server as one true pause: every game's simulation is
-// frozen where it stands and every client is locked out (the client enforces the input/chat lockout on the
-// worldfreeze message; the netloop drops non-developer traffic while world_frozen). Each game not already
-// host-paused has its sim timers and bots paused exactly the way pause_game does, and is marked world_paused so
-// unfreeze_world resumes only those. A game already paused underneath (by its host, or a PVP desertion) keeps
-// that pause; we only stop its meta-timers -- the 90s auto-resume clock and the desertion grace -- so they
-// don't advance real time through the freeze. gametick returns early while world_frozen, so no round logic runs
-// at all. The announcement and gamestop/gamestart sound are sent by the /freeze and /unfreeze handlers.
+/* Developer world-stop. freeze_world halts the entire server as one true pause: every game's simulation is
+frozen where it stands and every client is locked out (the client enforces the input/chat lockout on the
+worldfreeze message; the netloop drops non-developer traffic while world_frozen). Each game not already
+host-paused has its sim timers and bots paused exactly the way pause_game does, and is marked world_paused so
+unfreeze_world resumes only those. A game already paused underneath (by its host, or a PVP desertion) keeps
+that pause; we only stop its meta-timers -- the 90s auto-resume clock and the desertion grace -- so they
+don't advance real time through the freeze. gametick returns early while world_frozen, so no round logic runs
+at all. The announcement and gamestop/gamestart sound are sent by the /freeze and /unfreeze handlers. */
 void freeze_world()
 {
 if(world_frozen) return;
@@ -649,8 +649,8 @@ for(uint gi=0; gi<games.length(); gi++)
 {
 if(games[gi].paused)
 {
-// already frozen (host pause or desertion): leave its sim alone, just stop the meta-timers that would
-// otherwise keep counting real time through the freeze.
+/* already frozen (host pause or desertion): leave its sim alone, just stop the meta-timers that would
+otherwise keep counting real time through the freeze. */
 games[gi].pausetimer.pause();
 if(games[gi].pvp_deserted) games[gi].pvp_desert_timer.pause();
 continue;
@@ -666,8 +666,8 @@ for(uint i=0; i<builders.length(); i++)
 if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.pause();
 }
 }
-// Lift a world-stop: resume the sim of every game freeze_world paused, and restart the meta-timers on games that
-// stayed paused underneath. Host-paused and deserted games remain paused, exactly as they were.
+/* Lift a world-stop: resume the sim of every game freeze_world paused, and restart the meta-timers on games that
+stayed paused underneath. Host-paused and deserted games remain paused, exactly as they were. */
 void unfreeze_world()
 {
 if(!world_frozen) return;
@@ -692,11 +692,11 @@ for(uint i=0; i<builders.length(); i++)
 if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.resume();
 }
 }
-// PVP: the match is decided. winner is "attack" (all four ring walls were brought down) or "defend" (the clock
-// ran out with at least one wall still standing). Drop into the "over" phase, clear the ground wood, and give
-// every member the results + play-again prompt (pvpresult); watchers just get a notice. The cavern resets to a
-// fresh staging (idle) round -- with the sides cleared for re-picking -- once everyone has answered, via the
-// shared play-again flow (reset_for_new_round, which is PVP-aware).
+/* PVP: the match is decided. winner is "attack" (all four ring walls were brought down) or "defend" (the clock
+ran out with at least one wall still standing). Drop into the "over" phase, clear the ground wood, and give
+every member the results + play-again prompt (pvpresult); watchers just get a notice. The cavern resets to a
+fresh staging (idle) round -- with the sides cleared for re-picking -- once everyone has answered, via the
+shared play-again flow (reset_for_new_round, which is PVP-aware). */
 void end_pvp_match(int gi, string winner)
 {
 if(gi<0 or gi>=int(games.length())) return;
@@ -716,8 +716,8 @@ int stat = (players[pi].team=="attack") ? players[pi].pvp_damage : players[pi].p
 // pvpresult <winner> <walls-destroyed> <your-side> <your-stat>; kept so a reconnect during the results screen can re-show it
 players[pi].pending_results = "pvpresult "+winner+" "+down+" "+players[pi].team+" "+stat;
 send(games[gi].members[m], players[pi].pending_results, 0, true);
-// Persistent per-account tally: the winning side each gain a win, the losing side a loss (watchers, who
-// aren't members, get nothing). Counted once here, at the decisive end of the match.
+/* Persistent per-account tally: the winning side each gain a win, the losing side a loss (watchers, who
+aren't members, get nothing). Counted once here, at the decisive end of the match. */
 if(players[pi].team == winner) set_wins(players[pi].name, get_wins(players[pi].name) + 1);
 else set_losses(players[pi].name, get_losses(players[pi].name) + 1);
 }
@@ -725,9 +725,9 @@ string wname = (winner=="attack") ? "attackers" : "defenders";
 for(uint s=0; s<players.length(); s++)
 if(players[s].room_id==gameid and players[s].spectating) send(players[s].peer_id, "misc The "+wname+" won the match.", 0, true);
 }
-// A PVP desertion grace ran out: the empty side forfeits. Unfreeze first (the match was paused while a side was
-// empty), then hand the win to whichever side still has live players -- or, if BOTH sides emptied in the
-// meantime, just close the game with no winner.
+/* A PVP desertion grace ran out: the empty side forfeits. Unfreeze first (the match was paused while a side was
+empty), then hand the win to whichever side still has live players -- or, if BOTH sides emptied in the
+meantime, just close the game with no winner. */
 void resolve_pvp_forfeit(int gi)
 {
 if(gi<0 or gi>=int(games.length())) return;
@@ -744,9 +744,9 @@ void gametick()
 if(world_frozen) return; // developer world-stop: no round logic advances until /unfreeze
 for(uint i=0; i<games.length(); i++)
 {
-// PVP desertion watch (runs even while paused, so a deserted-and-frozen match can still refill, count down, or
-// forfeit): during a live match, if one whole side has no live player, pause and open the forfeit grace; if it
-// refills, resume; if the grace expires still empty, the empty side forfeits (both empty -> the game just ends).
+/* PVP desertion watch (runs even while paused, so a deserted-and-frozen match can still refill, count down, or
+forfeit): during a live match, if one whole side has no live player, pause and open the forfeit grace; if it
+refills, resume; if the grace expires still empty, the empty side forfeits (both empty -> the game just ends). */
 if(games[i].mode=="pvp" and (games[i].phase=="build" or games[i].phase=="wave"))
 {
 int atk = pvp_side_active_count(int(i), "attack");
@@ -776,8 +776,8 @@ if(remaining <= 5 and remaining < games[i].pvp_desert_count) { games[i].pvp_dese
 }
 if(games[i].paused)
 {
-// Frozen by the host (or by a PVP desertion): nothing advances. Open games auto-resume after 90s; Solo waits
-// for the host; a desertion pause is never auto-resumed here -- its forfeit grace above decides it instead.
+/* Frozen by the host (or by a PVP desertion): nothing advances. Open games auto-resume after 90s; Solo waits
+for the host; a desertion pause is never auto-resumed here -- its forfeit grace above decides it instead. */
 if(!games[i].solo and !games[i].pvp_deserted and games[i].pausetimer.elapsed >= 90000) resume_game(int(i));
 continue;
 }
@@ -814,26 +814,26 @@ int iid = spawn_item(games[i].id, wx, wy, wt);
 send_to_game(games[i].id, "spawnitem "+iid+" "+wt+" "+wx+" "+wy); // send the SAME size to the client so its sounds and the D readout match
 }
 }
-// Flip between attacking and resting every half-build-phase. In PVE the bots hammer, then back off so players
-// rebuild; in EVP the roles are reversed -- players smash during attack, the builders repair during rest.
+/* Flip between attacking and resting every half-build-phase. In PVE the bots hammer, then back off so players
+rebuild; in EVP the roles are reversed -- players smash during attack, the builders repair during rest. */
 if(games[i].phase=="wave" and games[i].wave_cycletimer.elapsed >= games[i].wave_cycle)
 {
 games[i].wave_cycletimer.restart();
 games[i].wave_attacking = !games[i].wave_attacking;
 if(games[i].mode=="evp" or games[i].mode=="pvp")
 {
-// EVP and PVP: just flip the window. No bot escalation (that's an EVP-per-round thing) and the round number
-// is fixed, so neither climbs here. The attack handler / the two sides gate their actions on wave_attacking.
-// The round clock only runs while attacking is possible: freeze it during the build/rest window (the attacker
-// is locked out -- swings only ricochet) and resume it when the attack window reopens, so build downtime never
-// burns the limit. evp_round_secs is therefore a budget of real attacking seconds, not wall-clock, for both modes.
+/* EVP and PVP: just flip the window. No bot escalation (that's an EVP-per-round thing) and the round number
+is fixed, so neither climbs here. The attack handler / the two sides gate their actions on wave_attacking.
+The round clock only runs while attacking is possible: freeze it during the build/rest window (the attacker
+is locked out -- swings only ricochet) and resume it when the attack window reopens, so build downtime never
+burns the limit. evp_round_secs is therefore a budget of real attacking seconds, not wall-clock, for both modes. */
 if(games[i].wave_attacking) games[i].wavetimer.resume();
 else games[i].wavetimer.pause();
 }
 else
 {
-// PVE: the round number climbs every attack burst, but the per-wall bot count only grows every 2 rounds
-// (ceil(round/2), no ceiling) -- a gentler ramp so a run doesn't hit a brick wall as early.
+/* PVE: the round number climbs every attack burst, but the per-wall bot count only grows every 2 rounds
+(ceil(round/2), no ceiling) -- a gentler ramp so a run doesn't hit a brick wall as early. */
 if(games[i].wave_attacking)
 {
 games[i].wave_number++;
@@ -848,13 +848,13 @@ send_to_game(games[i].id, "waveseg "+(games[i].wave_attacking?"1":"0")+" "+games
 }
 enemy_attacks(); // process every bot's attack timer across all games (breaches a wall when it hits 0)
 builder_tick(); // process every EVP builder's repair timer (feeds ground wood into the weakest standing wall)
-// Separate pass (not inside the bot loop, since the reset clears bots/walls): in PVE, all walls down is the
-// loss. (EVP is the reverse -- all walls down is a WIN; that resolution, and EVP's own loss conditions, are
-// handled in the scoring pass, so EVP is skipped here.)
+/* Separate pass (not inside the bot loop, since the reset clears bots/walls): in PVE, all walls down is the
+loss. (EVP is the reverse -- all walls down is a WIN; that resolution, and EVP's own loss conditions, are
+handled in the scoring pass, so EVP is skipped here.) */
 for(uint i=0; i<games.length(); i++)
 if(games[i].mode=="pve" and !games[i].paused and games[i].phase=="wave" and all_walls_destroyed(games[i].id, games[i].size)) end_round_loss(int(i));
-// EVP round resolution (separate pass, same reason): during a wave, all walls down = round CLEARED (advance to
-// the next, tougher round); the round timer running out = a LOSS that ends the game with the results screen.
+/* EVP round resolution (separate pass, same reason): during a wave, all walls down = round CLEARED (advance to
+the next, tougher round); the round timer running out = a LOSS that ends the game with the results screen. */
 for(uint i=0; i<games.length(); i++)
 {
 if(games[i].mode!="evp" or games[i].paused or games[i].phase!="wave") continue;
@@ -862,9 +862,9 @@ int gid = games[i].id; double size = games[i].size;
 if(all_walls_destroyed(gid, size)) { evp_clear_round(int(i)); continue; } // win -> next round
 if(games[i].wavetimer.elapsed >= games[i].evp_round_secs*1000) { end_evp_loss(int(i)); continue; } // round timer expired -> loss
 }
-// PVP resolution: all four ring walls down = the ATTACKERS win; the attacking-seconds clock running out with at
-// least one wall still standing = the DEFENDERS win. (Damage only happens during attack windows, and the clock
-// only advances then, so both checks live in the wave phase.) The results + play-again then follow.
+/* PVP resolution: all four ring walls down = the ATTACKERS win; the attacking-seconds clock running out with at
+least one wall still standing = the DEFENDERS win. (Damage only happens during attack windows, and the clock
+only advances then, so both checks live in the wave phase.) The results + play-again then follow. */
 for(uint i=0; i<games.length(); i++)
 {
 if(games[i].mode!="pvp" or games[i].paused or games[i].phase!="wave") continue;
@@ -883,17 +883,17 @@ if(wi>-1 and walls[wi].health>0) return false;
 }
 return true;
 }
-// A wall just hit 0: tell clients to breach it and move its bots onto walls still standing. (The
-// all-walls-down game over is checked in gametick, not here, so we never reset mid bot-loop.)
+/* A wall just hit 0: tell clients to breach it and move its bots onto walls still standing. (The
+all-walls-down game over is checked in gametick, not here, so we never reset mid bot-loop.) */
 void on_wall_destroyed(int gameid, int gi, string dir)
 {
 send_to_game(games[gi].id, "walldestroyed "+dir); // members + spectators hear the breach
 if(games[gi].bots_pileup) redistribute_bots_on_wall(gameid, dir, games[gi].size); // pile-up option (PVE): the fallen wall's bots move onto the walls still standing (the old swarm)
 else remove_bots_on_wall(gameid, dir); // default: the fallen wall's bots leave the round
 }
-// All walls down: end the round. Clear the bots and wood, drop into the "over" phase, and ask every
-// member how they did and whether to play again (roundover). The cavern is NOT reset yet — we wait until
-// everyone has answered (players who say no leave to the office; the rest stay), then reset_for_new_round.
+/* All walls down: end the round. Clear the bots and wood, drop into the "over" phase, and ask every
+member how they did and whether to play again (roundover). The cavern is NOT reset yet — we wait until
+everyone has answered (players who say no leave to the office; the rest stay), then reset_for_new_round. */
 void end_round_loss(int gi)
 {
 int gameid = games[gi].id;
@@ -909,8 +909,8 @@ int pi = get_player_index(games[gi].members[m]);
 if(pi < 0) continue;
 players[pi].playagain_answered = false; // start everyone "awaiting an answer"
 int collected = players[pi].wood_collected;
-// Milestone: beating your personal-best round grants a one-time 20-40 wood bonus (added to next round's
-// starting stockpile) and updates the record. Matching or falling short of your best grants nothing.
+/* Milestone: beating your personal-best round grants a one-time 20-40 wood bonus (added to next round's
+starting stockpile) and updates the record. Matching or falling short of your best grants nothing. */
 int bonus = 0, milestone = 0;
 string bonussize = "none"; // the single random size the bonus will be granted as; rolled now so the results message can name it
 if(rounds > get_pve_best_round(players[pi].name))
@@ -930,8 +930,8 @@ send(games[gi].members[m], players[pi].pending_results, 0, true);
 for(uint s=0; s<players.length(); s++)
 if(players[s].room_id==gameid and players[s].spectating) send(players[s].peer_id, "misc The defenders lost the round after "+rounds+(rounds==1?" round":" rounds")+".", 0, true);
 }
-// True once every member still in the game has answered the play-again prompt (the no's have already left
-// via leave_game, so this means the remaining players all chose to stay). False for an empty game.
+/* True once every member still in the game has answered the play-again prompt (the no's have already left
+via leave_game, so this means the remaining players all chose to stay). False for an empty game. */
 bool all_answered_playagain(int gi)
 {
 if(gi<0 or gi>=int(games.length()) or games[gi].members.length()==0) return false;
@@ -942,12 +942,12 @@ if(pi>-1 and !players[pi].held and !players[pi].playagain_answered) return false
 }
 return true;
 }
-// Everyone who stayed has answered: rebuild a fresh idle cavern for the next round. The host then begins
-// it manually with Begin round (gated to the idle phase, which is what enforces "wait for all answers").
-// Snap every member of a game back to the cavern centre on the SERVER, matching where the client re-centres
-// `me` after a "gamereset" redraw (draw_map centres the player). Without this the server keeps each player's
-// stale position from the previous round -- the client suppresses its move report right after a reset -- so
-// position-based reach checks (notably the EVP attack handler's wall_in_reach) would fire from the wrong spot.
+/* Everyone who stayed has answered: rebuild a fresh idle cavern for the next round. The host then begins
+it manually with Begin round (gated to the idle phase, which is what enforces "wait for all answers").
+Snap every member of a game back to the cavern centre on the SERVER, matching where the client re-centres
+`me` after a "gamereset" redraw (draw_map centres the player). Without this the server keeps each player's
+stale position from the previous round -- the client suppresses its move report right after a reset -- so
+position-based reach checks (notably the EVP attack handler's wall_in_reach) would fire from the wrong spot. */
 void recenter_game_members(int gi)
 {
 int center = int(games[gi].size / 2);
@@ -984,10 +984,10 @@ recenter_game_members(gi); // server position must match the client's re-centred
 send_to_game(gameid, "gamephase idle 0 0"); // uniform 3-field gamephase (no active round, so wave 0)
 broadcast_wall_strength(gameid);
 }
-// EVP: the attackers brought all four walls down -- the round is CLEARED. Bump the score, announce it, then
-// rebuild a fresh (tougher: more builders next round) cavern and drop back into a build phase. There is no
-// results screen on a clear -- an EVP game only ends on a loss (the round timer running out). The build phase re-fortifies the
-// new walls before the next wave. Players keep their weapon across rounds (no idle/over in between).
+/* EVP: the attackers brought all four walls down -- the round is CLEARED. Bump the score, announce it, then
+rebuild a fresh (tougher: more builders next round) cavern and drop back into a build phase. There is no
+results screen on a clear -- an EVP game only ends on a loss (the round timer running out). The build phase re-fortifies the
+new walls before the next wave. Players keep their weapon across rounds (no idle/over in between). */
 void evp_clear_round(int gi)
 {
 int gameid = games[gi].id;
@@ -1002,9 +1002,9 @@ recenter_game_members(gi); // server position must match the client's re-centred
 broadcast_wall_strength(gameid);
 set_game_phase(gi, "build"); // next round's build phase spawns the escalated builder count and re-fortifies
 }
-// EVP: the attackers failed -- they ran out of time before bringing the walls down. End the game with the
-// results screen and the play-again prompt, the same flow as a PVE loss; the score is the rounds cleared.
-// Spectators get a notice. The cavern resets once everyone has answered.
+/* EVP: the attackers failed -- they ran out of time before bringing the walls down. End the game with the
+results screen and the play-again prompt, the same flow as a PVE loss; the score is the rounds cleared.
+Spectators get a notice. The cavern resets once everyone has answered. */
 void end_evp_loss(int gi)
 {
 int gameid = games[gi].id;

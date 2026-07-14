@@ -1,18 +1,18 @@
-// Chat and input filters, kept apart from the networking code.
-//   - filter_crash(): the SCREEN-READER CRASH-STRING filter. Blocks text known to crash TTS engines (Eloquence
-//                     / IBMTTS under NVDA, etc.) when spoken. ALWAYS ON, applied to EVERY text chat channel
-//                     (global on any language including Unfiltered, local, and staff) because crashing other
-//                     players is an attack, not a language preference. Hardcoded on purpose -- DO NOT remove or
-//                     make skippable, and do NOT move these into chatfilter.svr (a host could delete them).
-//   - filter_chat() : the host WORD filter (profanity etc.). Rules live in the hand-editable
-//                     data/preffs/chatfilter.svr (see load_filter_rules), read fresh each call -- no restart.
-//                     The Unfiltered language channel skips it for global chat; local chat is always filtered.
-//   - filterchar()  : the CHARACTER filter for identifiers (usernames, nicknames) -- unrelated to the above.
+/* Chat and input filters, kept apart from the networking code.
+  - filter_crash(): the SCREEN-READER CRASH-STRING filter. Blocks text known to crash TTS engines (Eloquence
+                    / IBMTTS under NVDA, etc.) when spoken. ALWAYS ON, applied to EVERY text chat channel
+                    (global on any language including Unfiltered, local, and staff) because crashing other
+                    players is an attack, not a language preference. Hardcoded on purpose -- DO NOT remove or
+                    make skippable, and do NOT move these into chatfilter.svr (a host could delete them).
+  - filter_chat() : the host WORD filter (profanity etc.). Rules live in the hand-editable
+                    data/preffs/chatfilter.svr (see load_filter_rules), read fresh each call -- no restart.
+                    The Unfiltered language channel skips it for global chat; local chat is always filtered.
+  - filterchar()  : the CHARACTER filter for identifiers (usernames, nicknames) -- unrelated to the above. */
 
 int filterstuff=1; // host word-filter switch: 1 = on, 0 = off (filter_chat() returns false when off). Does NOT affect filter_crash, which is always on.
 
-// True if `message` contains a known screen-reader crash string. Hardcoded and always applied (see header).
-// message is lowercased; each pattern is matched ANYWHERE via a .*(...).* wrap (regexp.match is whole-string).
+/* True if `message` contains a known screen-reader crash string. Hardcoded and always applied (see header).
+message is lowercased; each pattern is matched ANYWHERE via a .*(...).* wrap (regexp.match is whole-string). */
 bool filter_crash(string message)
 {
 message=string_to_lower_case(message);
@@ -29,9 +29,9 @@ if(regex(message, ".*(" + crash[i] + ").*")) return true;
 return false;
 }
 
-// Read the chat word-filter rules from data/preffs/chatfilter.svr, one per line, skipping blank lines and #
-// comments. Read fresh each call so a host can edit the list without restarting. Each rule is "re=<pattern>"
-// (regex) or a plain lowercase substring -- interpreted by filter_chat().
+/* Read the chat word-filter rules from data/preffs/chatfilter.svr, one per line, skipping blank lines and #
+comments. Read fresh each call so a host can edit the list without restarting. Each rule is "re=<pattern>"
+(regex) or a plain lowercase substring -- interpreted by filter_chat(). */
 string[] load_filter_rules()
 {
 string[] rules;
@@ -50,8 +50,8 @@ rules.insert_last(ln);
 return rules;
 }
 
-// True if the message trips the word filter -- a forbidden word or pattern. Each rule is either a plain
-// lowercase substring (literal match, e.g. "badword") or an "re=" PCRE pattern. Add rules to the array.
+/* True if the message trips the word filter -- a forbidden word or pattern. Each rule is either a plain
+lowercase substring (literal match, e.g. "badword") or an "re=" PCRE pattern. Add rules to the array. */
 bool filter_chat(string message)
 {
 if(filterstuff==0) return false;
@@ -62,8 +62,8 @@ for(uint counter=0; counter<filter.length(); counter++)
 string banned=filter[counter];
 if(string_left(banned, 3)=="re=")
 {
-// Regex rule: strip the "re=" marker and match as a PCRE pattern. regex()/regexp.match() is a whole-string
-// match, so wrap the rule in .*(...).* to search for it ANYWHERE in the message, not only as the whole message.
+/* Regex rule: strip the "re=" marker and match as a PCRE pattern. regex()/regexp.match() is a whole-string
+match, so wrap the rule in .*(...).* to search for it ANYWHERE in the message, not only as the whole message. */
 banned=string_trim_left(banned, 3);
 if(regex(message, ".*(" + banned + ").*")) return true;
 }
@@ -75,9 +75,9 @@ return true;
 }
 return false;
 }
-// True if `message` contains a character NOT in the allowed set. !strict allows general printable text; strict
-// allows only letters, numbers, hyphen and underscore (for usernames/nicknames). `additional` extends the set.
-// This is the CHARACTER filter for identifiers, unrelated to the word filter above.
+/* True if `message` contains a character NOT in the allowed set. !strict allows general printable text; strict
+allows only letters, numbers, hyphen and underscore (for usernames/nicknames). `additional` extends the set.
+This is the CHARACTER filter for identifiers, unrelated to the word filter above. */
 bool filterchar(string message,bool strict=false,string additional="")
 {
 string filter;

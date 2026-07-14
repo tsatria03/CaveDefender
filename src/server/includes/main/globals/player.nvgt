@@ -1,7 +1,7 @@
 player@[] players;
-// Sentinel peer ids for held (disconnected-but-holding) sessions. On hold a player's peer_id is swapped to
-// one of these unique NEGATIVES so a recycled enet peer id can never collide with a held slot; it's rebound to
-// the real new peer id on reconnect. Starts at -2 (-1 is get_player_index's "not found"; 0/positive are real).
+/* Sentinel peer ids for held (disconnected-but-holding) sessions. On hold a player's peer_id is swapped to
+one of these unique NEGATIVES so a recycled enet peer id can never collide with a held slot; it's rebound to
+the real new peer id on reconnect. Starts at -2 (-1 is get_player_index's "not found"; 0/positive are real). */
 int next_held_id=-2;
 class player
 {
@@ -64,8 +64,8 @@ void spawn_player(int id, string name, double version)
 player p1(id, name, version);
 players.insert_last(p1);
 }
-// Does the recipient at roster index recipient_index have sender_name on their personal ignore list? Used to
-// drop chat/voice from an ignored player before it reaches them. Case-insensitive, keyed by username.
+/* Does the recipient at roster index recipient_index have sender_name on their personal ignore list? Used to
+drop chat/voice from an ignored player before it reaches them. Case-insensitive, keyed by username. */
 bool player_ignores(int recipient_index, string sender_name)
 {
 if(recipient_index<0 or recipient_index>=int(players.length())) return false;
@@ -76,8 +76,8 @@ for(uint k=0; k<players[recipient_index].ignored.length(); k++)
 if(string_to_lower_case(players[recipient_index].ignored[k]) == s) return true;
 return false;
 }
-// Remove a (renamed-away or deleted) username from every ONLINE player's in-memory ignore list, so a stale personal
-// mute doesn't linger this session; the on-disk lists are fixed separately by delete_account / rename_account.
+/* Remove a (renamed-away or deleted) username from every ONLINE player's in-memory ignore list, so a stale personal
+mute doesn't linger this session; the on-disk lists are fixed separately by delete_account / rename_account. */
 void remove_from_online_ignores(string name)
 {
 string low = string_to_lower_case(name);
@@ -115,8 +115,8 @@ else if(ch=="local") players[pi].mute_local=v;
 else if(ch=="voice") players[pi].mute_voice=v;
 else if(ch=="team") players[pi].mute_team=v;
 }
-// Is this player muted in this channel right now? (>0 epochs that have passed read as not muted; the
-// netloop poll clears and announces them shortly after.)
+/* Is this player muted in this channel right now? (>0 epochs that have passed read as not muted; the
+netloop poll clears and announces them shortly after.) */
 bool is_muted_now(int pi, string ch)
 {
 int64 u = get_player_mute(pi, ch);
@@ -124,9 +124,9 @@ if(u < 0) return false;
 if(u == 0) return true;
 return now_epoch() < u;
 }
-// The specific "you're muted here" reply shown when a muted player tries to send in a text channel (global/
-// local/team). Names the channel, and for a timed mute the remaining time (whole seconds under a minute, else
-// whole minutes). Assumes the caller already confirmed the player is muted in this channel.
+/* The specific "you're muted here" reply shown when a muted player tries to send in a text channel (global/
+local/team). Names the channel, and for a timed mute the remaining time (whole seconds under a minute, else
+whole minutes). Assumes the caller already confirmed the player is muted in this channel. */
 string muted_chat_message(int pi, string channel)
 {
 string base = "You cannot send messages in this " + channel + " chat channel";
@@ -139,16 +139,16 @@ if(rem < 60) t = rem + (rem == 1 ? " more second" : " more seconds");
 else { int64 mins = rem / 60; t = mins + (mins == 1 ? " more minute" : " more minutes"); }
 return base + " for " + t + ".";
 }
-// Tell the target (sound + first-person alert) about a channel mute change. rem = remaining seconds for
-// a mute (0 = indefinite); ignored for an unmute.
+/* Tell the target (sound + first-person alert) about a channel mute change. rem = remaining seconds for
+a mute (0 = indefinite); ignored for an unmute. */
 void notify_target_mute(int ti, string channel, bool muting, int rem)
 {
 if(ti < 0 or ti >= int(players.length())) return;
 if(muting) send(players[ti].peer_id, "muted "+channel+" "+rem, 0, true);
 else send(players[ti].peer_id, "unmuted "+channel, 0, true);
 }
-// Announce a channel mute change to everyone EXCEPT the target (who gets notify_target_mute instead),
-// into the alerts buffer, using the rank-aware display name. tpeer = the target's peer id (-1 if offline).
+/* Announce a channel mute change to everyone EXCEPT the target (who gets notify_target_mute instead),
+into the alerts buffer, using the rank-aware display name. tpeer = the target's peer id (-1 if offline). */
 void announce_mute_to_others(string disp, int tpeer, string channel, bool muting)
 {
 string verb = muting ? "muted" : "unmuted";
@@ -162,12 +162,12 @@ if(int(players[i].peer_id) == tpeer) continue;
 send(players[i].peer_id, "alert "+text, 0, true);
 }
 }
-// Anti-spam: record one global-chat message from this player and, if they've now sent spamcount messages within
-// the last spamtime milliseconds, auto-mute them in global for spamdir seconds (0 = indefinite) and report it.
-// The mute goes through the same machinery a staff /mute uses (on-disk field + in-memory state), so it persists,
-// times itself out, shows in /mutes, and can be lifted early with /unmute. Staff are exempt and spamguard=0 turns
-// the whole thing off; both cases record nothing and return false. Returns true if the guard tripped, in which
-// case the caller must NOT relay the offending message (it, and its penalty, are the trip).
+/* Anti-spam: record one global-chat message from this player and, if they've now sent spamcount messages within
+the last spamtime milliseconds, auto-mute them in global for spamdir seconds (0 = indefinite) and report it.
+The mute goes through the same machinery a staff /mute uses (on-disk field + in-memory state), so it persists,
+times itself out, shows in /mutes, and can be lifted early with /unmute. Staff are exempt and spamguard=0 turns
+the whole thing off; both cases record nothing and return false. Returns true if the guard tripped, in which
+case the caller must NOT relay the offending message (it, and its penalty, are the trip). */
 bool spam_check_global(int index)
 {
 if(spamguard != 1) return false; // feature disabled by the host
@@ -189,24 +189,24 @@ send(players[index].peer_id, "misc You have been automatically muted in global c
 notify_staff_audit(display_name(index) + " was automatically muted in global chat for spamming.", -1); // quiet staff-only note
 return true;
 }
-// An "afk " prefix for a player who is away, or "" otherwise. Prepended in every informational user
-// listing (who, /staff, the R/L/G readouts) so an away player reads as "afk bob" / "afk moderator bob".
+/* An "afk " prefix for a player who is away, or "" otherwise. Prepended in every informational user
+listing (who, /staff, the R/L/G readouts) so an away player reads as "afk bob" / "afk moderator bob". */
 string afk_prefix(int index)
 {
 if(index<0 or index>=int(players.length())) return "";
 return players[index].afk ? "AFK " : "";
 }
-// The name as other players should see it: staff (moderator/administrator/developer) get their
-// rank prefixed (e.g. "administrator bob"); regular players show just their name.
+/* The name as other players should see it: staff (moderator/administrator/developer) get their
+rank prefixed (e.g. "administrator bob"); regular players show just their name. */
 string display_name(int index)
 {
 if(index<0 or index>=int(players.length())) return "";
 if(is_staff(players[index].rank)) return players[index].rank+" "+players[index].nickname;
 return players[index].nickname;
 }
-// Rank-aware display name from a NAME (not an index): uses the live rank/nickname if the player is online,
-// else the on-disk values. For places we only have a username, e.g. a room/game host. The displayed part is
-// the nickname, never the raw username.
+/* Rank-aware display name from a NAME (not an index): uses the live rank/nickname if the player is online,
+else the on-disk values. For places we only have a username, e.g. a room/game host. The displayed part is
+the nickname, never the raw username. */
 string display_name_for(string name)
 {
 int pi = get_online_index(name);
@@ -216,18 +216,18 @@ string nick = get_nickname(name);
 if(is_staff(r)) return r + " " + nick;
 return nick;
 }
-// Flag-aware display name: rank is shown ONLY if the staff member has their attention flag on; otherwise
-// (and for non-staff) just the plain name. Used everywhere regular players see a name and the flag should
-// let staff stay incognito (chat, rosters, join notices, host labels). Always-visible spots (/who,
-// online/offline, /staff, staff-only contexts) keep using display_name instead.
+/* Flag-aware display name: rank is shown ONLY if the staff member has their attention flag on; otherwise
+(and for non-staff) just the plain name. Used everywhere regular players see a name and the flag should
+let staff stay incognito (chat, rosters, join notices, host labels). Always-visible spots (/who,
+online/offline, /staff, staff-only contexts) keep using display_name instead. */
 string display_name_flagged(int index)
 {
 if(index<0 or index>=int(players.length())) return "";
 if(is_staff(players[index].rank) and players[index].flagged) return players[index].rank+" "+players[index].nickname;
 return players[index].nickname;
 }
-// Flag-aware display name from a NAME (online or offline) — for hosts. Uses the live flag/nickname if
-// connected, else the saved values from disk. The displayed part is always the nickname.
+/* Flag-aware display name from a NAME (online or offline) — for hosts. Uses the live flag/nickname if
+connected, else the saved values from disk. The displayed part is always the nickname. */
 string display_name_flagged_for(string name)
 {
 int pi = get_online_index(name);

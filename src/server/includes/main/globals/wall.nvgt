@@ -1,12 +1,12 @@
-// Walls are rectangular regions with health — the breakable backbone of the four-wall defense game.
-// They exist in EVERY space (the lobby, each office, and later each game cavern). Because every space
-// shares the same 0..50 coordinate grid, each wall is tagged with the room_id of the space it belongs
-// to (0 = lobby), so a lookup never confuses one space's wall for another's. The `destroyable` flag is
-// the single rule for "can this wall be hurt?": structural lobby/office borders are destroyable=false
-// and shrug off all damage, while a game's four cavern walls are destroyable=true — they take damage
-// from bots and are repaired with wood. Health is authoritative here on the server; the client only
-// renders the tiles and plays the hurt/death sounds. Mirrors SimpleFighter's wall idea, rebuilt lean
-// (no 3D/z, no transparency, no debris platforms, no map-builder form, no .sif IO).
+/* Walls are rectangular regions with health — the breakable backbone of the four-wall defense game.
+They exist in EVERY space (the lobby, each office, and later each game cavern). Because every space
+shares the same 0..50 coordinate grid, each wall is tagged with the room_id of the space it belongs
+to (0 = lobby), so a lookup never confuses one space's wall for another's. The `destroyable` flag is
+the single rule for "can this wall be hurt?": structural lobby/office borders are destroyable=false
+and shrug off all damage, while a game's four cavern walls are destroyable=true — they take damage
+from bots and are repaired with wood. Health is authoritative here on the server; the client only
+renders the tiles and plays the hurt/death sounds. Mirrors SimpleFighter's wall idea, rebuilt lean
+(no 3D/z, no transparency, no debris platforms, no map-builder form, no .sif IO). */
 wall@[] walls;
 class wall
 {
@@ -35,17 +35,17 @@ wall w(room_id, minx, maxx, miny, maxy, health, maxhealth, destroyable);
 walls.insert_last(w);
 return walls.length()-1;
 }
-// A wall's starting strength: a structural (indestructible) wall uses the given health, but a
-// destroyable cavern wall begins at an independent random 50-100% of its max, so every wall and every
-// round differs and the build phase becomes a real assessment of which walls to reinforce first.
+/* A wall's starting strength: a structural (indestructible) wall uses the given health, but a
+destroyable cavern wall begins at an independent random 50-100% of its max, so every wall and every
+round differs and the build phase becomes a real assessment of which walls to reinforce first. */
 double wall_start_health(double health, double maxhealth, bool destroyable)
 {
 if(!destroyable) return health;
 return random(int(maxhealth*0.5), int(maxhealth));
 }
-// Spawn the four edge walls (west, east, north, south) bordering a `size` x `size` space. Pass
-// destroyable=false for a structural lobby/office border, true for a game cavern. Cavern walls each roll
-// their own starting strength (wall_start_health is called per wall, so the four are independent).
+/* Spawn the four edge walls (west, east, north, south) bordering a `size` x `size` space. Pass
+destroyable=false for a structural lobby/office border, true for a game cavern. Cavern walls each roll
+their own starting strength (wall_start_health is called per wall, so the four are independent). */
 void spawn_border_walls(int room_id, double size, double health, double maxhealth, bool destroyable)
 {
 spawn_wall(room_id, 0, 0, 0, size, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable);       // west  (x = 0)
@@ -53,10 +53,10 @@ spawn_wall(room_id, size, size, 0, size, wall_start_health(health, maxhealth, de
 spawn_wall(room_id, 0, size, size, size, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable); // north (y = size)
 spawn_wall(room_id, 0, size, 0, 0, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable);       // south (y = 0)
 }
-// PVP: the four destructible walls form a MIDDLE ring -- a square inset by size/4 -- so the space has a walkable
-// INTERIOR inside them (defenders) and a walkable EXTERIOR band around them (attackers), all in one grid. Uses the
-// SAME wmin/wmax the client's draw_map("pvparena") uses, so the server's reach/audio positions line up with the
-// rendered ring. Always destroyable; each wall rolls its own 50-100% starting strength like the other modes.
+/* PVP: the four destructible walls form a MIDDLE ring -- a square inset by size/4 -- so the space has a walkable
+INTERIOR inside them (defenders) and a walkable EXTERIOR band around them (attackers), all in one grid. Uses the
+SAME wmin/wmax the client's draw_map("pvparena") uses, so the server's reach/audio positions line up with the
+rendered ring. Always destroyable; each wall rolls its own 50-100% starting strength like the other modes. */
 void spawn_ring_walls(int room_id, double size, double health, double maxhealth)
 {
 double wmin = int(size)/4;
@@ -85,12 +85,12 @@ if(!walls[id].destroyable) return;
 walls[id].health-=amount;
 if(walls[id].health<0) walls[id].health=0;
 }
-// How far a wall may be over-built WHEN the cap applies: 4.0 = up to 400% of its max health. This now governs
-// only the EVP builder bots' fortifying (otherwise unbounded during the build phase). PLAYER reinforcing passes
-// cap=false, so players can stockpile a buffer of any size -- the over-build limit was removed for them.
+/* How far a wall may be over-built WHEN the cap applies: 4.0 = up to 400% of its max health. This now governs
+only the EVP builder bots' fortifying (otherwise unbounded during the build phase). PLAYER reinforcing passes
+cap=false, so players can stockpile a buffer of any size -- the over-build limit was removed for them. */
 const double wall_overbuild_cap = 4.0;
-// Reinforce a wall with wood. Player reinforcing is uncapped (cap=false); the EVP builders keep the default so
-// their fortifying is still clamped to wall_overbuild_cap x max health.
+/* Reinforce a wall with wood. Player reinforcing is uncapped (cap=false); the EVP builders keep the default so
+their fortifying is still clamped to wall_overbuild_cap x max health. */
 void repair_wall(int id, double amount, bool cap=true, double capmult=-1)
 {
 if(id<0 or id>=int(walls.length()) or @walls[id]==null) return;
@@ -102,9 +102,9 @@ double climit = walls[id].maxhealth * m;
 if(walls[id].health > climit) walls[id].health = climit;
 }
 }
-// EVP damage ratchet: how much of each player hit is PERMANENT -- it lowers the wall's repair ceiling (floor)
-// so the builders can never restore a wall above the damage the attackers have already done. The remaining
-// share is repairable, so the bots clawing back during a rest window still matters. Tunable (0..1).
+/* EVP damage ratchet: how much of each player hit is PERMANENT -- it lowers the wall's repair ceiling (floor)
+so the builders can never restore a wall above the damage the attackers have already done. The remaining
+share is repairable, so the bots clawing back during a rest window still matters. Tunable (0..1). */
 const double evp_permanent_fraction = 0.5;
 // EVP: lower a wall's repair ceiling by `amount` (the permanent part of a player's hit), never below 0.
 void lower_wall_floor(int id, double amount)
@@ -122,11 +122,11 @@ if(dir=="north") return wall_at(room_id, size/2, size);
 if(dir=="south") return wall_at(room_id, size/2, 0);
 return -1;
 }
-// The cavern wall a player at (px,py) is closest to, or "" if no wall is within wall_reach. You needn't
-// lean on a wall to reinforce it: standing up to wall_reach tiles out counts, in ANY direction. This is
-// position-based (nearest of the four borders), so reinforcing no longer depends on which way you happen
-// to be facing -- that facing dependence is what made backing away from a wall fail. Ties favour the
-// nearer border; the border ring sits at 0 and size, so distance to each is just px / size-px / py / size-py.
+/* The cavern wall a player at (px,py) is closest to, or "" if no wall is within wall_reach. You needn't
+lean on a wall to reinforce it: standing up to wall_reach tiles out counts, in ANY direction. This is
+position-based (nearest of the four borders), so reinforcing no longer depends on which way you happen
+to be facing -- that facing dependence is what made backing away from a wall fail. Ties favour the
+nearer border; the border ring sits at 0 and size, so distance to each is just px / size-px / py / size-py. */
 const int wall_reach=5;
 string wall_in_reach(int px, int py, double size)
 {
@@ -138,9 +138,9 @@ if(s-py < bd) { best="north"; bd=s-py; }// north wall (y=size)
 if(bd > wall_reach) return "";
 return best;
 }
-// The walls[] index of a PVP ring wall in a compass direction. Mirrors border_wall but for the inset ring
-// spawn_ring_walls builds (x=wmin/wmax, y=wmin/wmax, inset by size/4). Each wall spans its whole side, so the
-// midpoint cell finds it.
+/* The walls[] index of a PVP ring wall in a compass direction. Mirrors border_wall but for the inset ring
+spawn_ring_walls builds (x=wmin/wmax, y=wmin/wmax, inset by size/4). Each wall spans its whole side, so the
+midpoint cell finds it. */
 int ring_wall(int room_id, string dir, double size)
 {
 double wmin = int(size)/4, wmax = size - wmin;
@@ -150,9 +150,9 @@ if(dir=="north") return wall_at(room_id, size/2, wmax);
 if(dir=="south") return wall_at(room_id, size/2, wmin);
 return -1;
 }
-// The PVP ring wall an attacker at (px,py) out in the exterior band is closest to, or "" if none is within
-// wall_reach. The ring sits inset by size/4; an attacker is always OUTSIDE it, so the reach is the distance
-// past whichever side they are beyond, nearest side wins (the mirror of wall_in_reach for the ring geometry).
+/* The PVP ring wall an attacker at (px,py) out in the exterior band is closest to, or "" if none is within
+wall_reach. The ring sits inset by size/4; an attacker is always OUTSIDE it, so the reach is the distance
+past whichever side they are beyond, nearest side wins (the mirror of wall_in_reach for the ring geometry). */
 string ring_wall_in_reach(int px, int py, double size)
 {
 int wmin = int(size)/4, wmax = int(size)-wmin;
@@ -163,9 +163,9 @@ int ds = wmin - py; if(ds>=0 and ds<bd) { best="south"; bd=ds; }  // south ring 
 int dn = py - wmax; if(dn>=0 and dn<bd) { best="north"; bd=dn; }  // north ring wall (y=wmax)
 return best;
 }
-// The PVP ring wall a defender at (px,py) INSIDE the interior is closest to, or "" if none within wall_reach.
-// The mirror of ring_wall_in_reach: a defender is always INSIDE the ring, so the reach is the distance from
-// the wall inward (px-wmin for the west wall, etc.). Lets defenders reinforce the ring from the interior side.
+/* The PVP ring wall a defender at (px,py) INSIDE the interior is closest to, or "" if none within wall_reach.
+The mirror of ring_wall_in_reach: a defender is always INSIDE the ring, so the reach is the distance from
+the wall inward (px-wmin for the west wall, etc.). Lets defenders reinforce the ring from the interior side. */
 string ring_wall_in_reach_inside(int px, int py, double size)
 {
 int wmin = int(size)/4, wmax = int(size)-wmin;
@@ -176,9 +176,9 @@ int ds = py - wmin; if(ds>=0 and ds<bd) { best="south"; bd=ds; }  // south ring 
 int dn = wmax - py; if(dn>=0 and dn<bd) { best="north"; bd=dn; }  // north ring wall (y=wmax)
 return best;
 }
-// The walls[] index of a game's wall in a compass direction, mode-aware: a PVP game's walls are the inset
-// ring, every other space uses the outer border. Use this anywhere that must work in ALL modes (the strength
-// readout, PVP attacks); the bot code stays on border_wall directly since bots are PVE/EVP-only.
+/* The walls[] index of a game's wall in a compass direction, mode-aware: a PVP game's walls are the inset
+ring, every other space uses the outer border. Use this anywhere that must work in ALL modes (the strength
+readout, PVP attacks); the bot code stays on border_wall directly since bots are PVE/EVP-only. */
 int wall_in_dir(int room_id, string dir, double size)
 {
 int gi = get_game_index(room_id);
