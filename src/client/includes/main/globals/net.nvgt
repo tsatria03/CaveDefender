@@ -1,28 +1,6 @@
 int port=25562;
 string ip="localhost";
-// Saved server presets, managed from Preferences > General > Select a server. Loading one fills ip/port.
-class serverpreset
-{
-	string sname;
-	string sip;
-	int sport;
-	serverpreset(){}
-	serverpreset(string n, string i, int p){ sname=n; sip=i; sport=p; }
-}
-serverpreset[] servers;
 bool server_custom=false; // true = on a manually entered (non-preset) server; forces the label to "Custom" even if ip/port happen to match a preset
-// Saved account presets, managed from the connection menu's Account storage. Selecting one fills name/password
-// (the active account). Passwords are stored locally in the encrypted settings.cvf -- obfuscation-grade local
-// convenience, the same place the last-used account is already cached.
-class accountpreset
-{
-	string uname;
-	string pword;
-	accountpreset(){}
-	accountpreset(string u, string p){ uname=u; pword=p; }
-}
-accountpreset[] accounts;
-
 bool encrypting=true, connected, registering, pinging, connection_dropped, kicked, justregistered, reconnect_aborted, reconnecting, reconnected;
 
 timer connectiontimer, pingtimer, reconnect_overall, reconnect_attempt;
@@ -34,115 +12,6 @@ uint64 serverpeer=0;
 network net;
 network_event event;
 
-bool send(int peer_id,string packet,int channel,bool reliable)
-{
-if(encrypting)
-{
-packet=string_encrypt(packet,"rscs123");
-}
-if(reliable)
-{
-return net.send_reliable(peer_id,packet,channel);
-}
-else
-{
-return net.send_unreliable(peer_id,packet,channel);
-}
-}
-string get_event_message()
-{
-if(encrypting) return string_decrypt(event.message, "rscs123");
-else return event.message;
-}
-
-// A mid-session drop (server closed/restarted, or the link blipped) no longer blocks: it enters a
-// background reconnect that is driven a frame at a time from netloop() while the game loop keeps
-// running, so audio, escape, and even a ping timeout still work meanwhile. start_reconnect() kicks it
-// off, begin_reconnect_attempt() opens one fresh connection, and reconnect_tick() (one net.request per
-// frame) advances the handshake: connect, re-login, then either resume (reconnected) or, after
-// reconnecttime, give up (connection_dropped). Like the ping timeout, it waits before declaring defeat.
-// True when this client is the server's own host machine (connected to localhost). Used to keep the
-// connection-status chatter (lost/reconnected) for the hoster only; remote players reconnect silently.
-bool is_hoster()
-{
-return ip == "localhost" or ip == "127.0.0.1";
-}
-void begin_reconnect_attempt()
-{
-net.disconnect_peer_forcefully(serverpeer); // drop any stale/half-open peer before retrying
-serverpeer=net.connect(ip, port);
-reconnect_attempt.restart();
-reconnect_phase=0;
-}
-void start_reconnect()
-{
-reconnecting=true;
-reconnected=false;
-reconnect_aborted=false;
-connected=false;
-reconnect_overall.restart();
-if(is_hoster())
-{
-speak("Connection lost. Trying to reconnect. Press escape to give up.");
-add_buffer_item("connections", "Connection lost. Trying to reconnect.");
-}
-begin_reconnect_attempt();
-}
-void reconnect_tick()
-{
-if(reconnect_overall.elapsed>=reconnecttime) // ran out of time; give up and report offline
-{
-reconnecting=false;
-connection_dropped=true;
-return;
-}
-event=net.request();
-if(reconnect_phase==0) // waiting for the connection to come up
-{
-if(event.type==event_connect)
-{
-connected=true;
-registering=false;
-justregistered=false;
-send(0, "login "+name+" "+password+" "+version, 0,true);
-reconnect_attempt.restart();
-reconnect_phase=1;
-}
-else if(event.type==event_disconnect or reconnect_attempt.elapsed>=connectingtime)
-{
-begin_reconnect_attempt(); // this attempt stalled; start another
-}
-}
-else // phase 1: connected, waiting for the re-login to finish
-{
-if(event.type==event_receive)
-{
-string m=get_event_message();
-if(m=="done")
-{
-save_last_account();
-reconnecting=false;
-reconnected=true; // login() resumes the session; game() respawns us in the lobby
-return;
-}
-if(string_contains(m, "error:", 1)>-1)
-{
-dlgmessage(m);
-net.disconnect_peer_forcefully(serverpeer);
-connected=false;
-reconnecting=false;
-reconnect_aborted=true; // a specific error was shown; suppress the generic offline message
-connection_dropped=true;
-return;
-}
-}
-else if(event.type==event_disconnect or reconnect_attempt.elapsed>=connectingtime)
-{
-connected=false;
-begin_reconnect_attempt(); // lost it again; start another attempt
-}
-}
-}
 bool login()
 {
 justregistered=false;
@@ -251,6 +120,88 @@ return false;
 }
 return false;
 }
+/* A mid-session drop (server closed/restarted, or the link blipped) no longer blocks: it enters a
+background reconnect that is driven a frame at a time from netloop() while the game loop keeps
+running, so audio, escape, and even a ping timeout still work meanwhile. start_reconnect() kicks it
+off, begin_reconnect_attempt() opens one fresh connection, and reconnect_tick() (one net.request per
+frame) advances the handshake: connect, re-login, then either resume (reconnected) or, after
+reconnecttime, give up (connection_dropped). Like the ping timeout, it waits before declaring defeat. */
+void begin_reconnect_attempt()
+{
+net.disconnect_peer_forcefully(serverpeer); // drop any stale/half-open peer before retrying
+serverpeer=net.connect(ip, port);
+reconnect_attempt.restart();
+reconnect_phase=0;
+}
+void start_reconnect()
+{
+reconnecting=true;
+reconnected=false;
+reconnect_aborted=false;
+connected=false;
+reconnect_overall.restart();
+if(is_hoster())
+{
+speak("Connection lost. Trying to reconnect. Press escape to give up.");
+add_buffer_item("connections", "Connection lost. Trying to reconnect.");
+}
+begin_reconnect_attempt();
+}
+void reconnect_tick()
+{
+if(reconnect_overall.elapsed>=reconnecttime) // ran out of time; give up and report offline
+{
+reconnecting=false;
+connection_dropped=true;
+return;
+}
+event=net.request();
+if(reconnect_phase==0) // waiting for the connection to come up
+{
+if(event.type==event_connect)
+{
+connected=true;
+registering=false;
+justregistered=false;
+send(0, "login "+name+" "+password+" "+version, 0,true);
+reconnect_attempt.restart();
+reconnect_phase=1;
+}
+else if(event.type==event_disconnect or reconnect_attempt.elapsed>=connectingtime)
+{
+begin_reconnect_attempt(); // this attempt stalled; start another
+}
+}
+else // phase 1: connected, waiting for the re-login to finish
+{
+if(event.type==event_receive)
+{
+string m=get_event_message();
+if(m=="done")
+{
+save_last_account();
+reconnecting=false;
+reconnected=true; // login() resumes the session; game() respawns us in the lobby
+return;
+}
+if(string_contains(m, "error:", 1)>-1)
+{
+dlgmessage(m);
+net.disconnect_peer_forcefully(serverpeer);
+connected=false;
+reconnecting=false;
+reconnect_aborted=true; // a specific error was shown; suppress the generic offline message
+connection_dropped=true;
+return;
+}
+}
+else if(event.type==event_disconnect or reconnect_attempt.elapsed>=connectingtime)
+{
+connected=false;
+begin_reconnect_attempt(); // lost it again; start another attempt
+}
+}
+}
 void leave_server()
 {
 send(0, "disconnect", 0, true);
@@ -266,15 +217,15 @@ wait(5);
 net.disconnect_peer_forcefully(serverpeer);
 connected=false;
 }
-// --- Network keepalive during blocking UI ---
-// Blocking menus/dialogs (form_menu.run, dlg, the virtual_dialogs boxes) suspend the main game loop, so
-// net.request() stops being called and enet times the connection out (the engine sets a 10s min / 35s max
-// unresponsive window). To prevent that, those loops pump net_keepalive() every tick, which services the
-// network by running netloop() so ACKs/pings keep flowing and messages are handled live. Because netloop()
-// can itself open a blocking UI (a server menu, the play-again prompt, an input box), the pumped calls are
-// re-entrant: netloop_depth tracks the nesting, and any message that would open ANOTHER blocking UI while
-// one is already up is deferred (queued) and run after the current one closes, so the shared globals (the
-// menu m, the dialog pools) are never used by two modals at once.
+/* --- Network keepalive during blocking UI ---
+Blocking menus/dialogs (form_menu.run, dlg, the virtual_dialogs boxes) suspend the main game loop, so
+net.request() stops being called and enet times the connection out (the engine sets a 10s min / 35s max
+unresponsive window). To prevent that, those loops pump net_keepalive() every tick, which services the
+network by running netloop() so ACKs/pings keep flowing and messages are handled live. Because netloop()
+can itself open a blocking UI (a server menu, the play-again prompt, an input box), the pumped calls are
+re-entrant: netloop_depth tracks the nesting, and any message that would open ANOTHER blocking UI while
+one is already up is deferred (queued) and run after the current one closes, so the shared globals (the
+menu m, the dialog pools) are never used by two modals at once. */
 int netloop_depth=0;
 string[] net_deferred; // blocking-UI messages held until the open modal closes (drained by the wrapper)
 void netloop()
@@ -293,8 +244,8 @@ void netloop()
 	}
 	netloop_depth--;
 }
-// Pumped every tick by the blocking UI loops. Gated so it does nothing before we're connected (the pre-login
-// menus and the connect/login handshake have their own request loops and must not have events stolen).
+/* Pumped every tick by the blocking UI loops. Gated so it does nothing before we're connected (the pre-login
+menus and the connect/login handshake have their own request loops and must not have events stolen). */
 void net_keepalive()
 {
 	if(connected or reconnecting) netloop();
@@ -304,10 +255,10 @@ void net_keepalive_cb(form_menu@ mm, string data)
 {
 	if(connected or reconnecting) netloop();
 }
-// The server relays an Account-panel choice that needs a client-side input flow: "accountaction <which>".
-// We reuse the existing slash-command flows so validation and the wire messages stay in one place -- comparse
-// opens the masked change-password form directly, and for email/nickname we collect the value here first (the
-// server never sees passwords and can't type for you), then hand it to the same command.
+/* The server relays an Account-panel choice that needs a client-side input flow: "accountaction <which>".
+We reuse the existing slash-command flows so validation and the wire messages stay in one place -- comparse
+opens the masked change-password form directly, and for email/nickname we collect the value here first (the
+server never sees passwords and can't type for you), then hand it to the same command. */
 void handle_accountaction(string message)
 {
 	string[] parsed = string_split(message, " ", true);
@@ -345,9 +296,9 @@ void dispatch_modal(string message)
 	else if(parsed[0]=="askinput") handle_askinput(message);
 	else if(parsed[0]=="accountaction") handle_accountaction(message);
 }
-// The round ended (all walls fell): "roundover <seconds> <collected> <rounds> <bonus> <milestone>". Show the
-// results dialog (and a milestone-reward dialog if we earned bonus wood), then ask whether to play again or
-// leave; the reply goes back as playagain yes/no and the server waits until everyone has answered.
+/* The round ended (all walls fell): "roundover <seconds> <collected> <rounds> <bonus> <milestone>". Show the
+results dialog (and a milestone-reward dialog if we earned bonus wood), then ask whether to play again or
+leave; the reply goes back as playagain yes/no and the server waits until everyone has answered. */
 void handle_roundover(string message)
 {
 	string[] parsed = string_split(message, " ", true);
@@ -378,9 +329,9 @@ void handle_roundover(string message)
 	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting for the next round to begin."); }
 	else send(0, "playagain no", 0, true);
 }
-// PVP match over: "pvpresult <winner> <walls-destroyed> <your-side>". Show the results (winning side plus the
-// per-role headline -- attackers see walls destroyed, defenders see walls left standing), then the play-again
-// prompt. Play again -> back to staging with the sides cleared (the host re-picks and begins); no -> leave.
+/* PVP match over: "pvpresult <winner> <walls-destroyed> <your-side>". Show the results (winning side plus the
+per-role headline -- attackers see walls destroyed, defenders see walls left standing), then the play-again
+prompt. Play again -> back to staging with the sides cleared (the host re-picks and begins); no -> leave. */
 void handle_pvp_result(string message)
 {
 	string[] parsed = string_split(message, " ", true);
@@ -409,9 +360,9 @@ void handle_pvp_result(string message)
 	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting to pick sides again."); }
 	else send(0, "playagain no", 0, true);
 }
-// EVP game over (a loss): "evpover <rounds-cleared>". The only loss is the round timer running out. Show the
-// results and the play-again prompt, mirroring handle_roundover; the score is rounds cleared. Play again -> a
-// fresh round-1 game the host begins; no -> leave to the room.
+/* EVP game over (a loss): "evpover <rounds-cleared>". The only loss is the round timer running out. Show the
+results and the play-again prompt, mirroring handle_roundover; the score is rounds cleared. Play again -> a
+fresh round-1 game the host begins; no -> leave to the room. */
 void handle_evp_over(string message)
 {
 	string[] parsed = string_split(message, " ", true);
@@ -456,8 +407,8 @@ void handle_warnstext(string message)
 		dockread("Warnings for " + who, content);
 	}
 }
-// Server-sent read-only staff view keyed by a player name: "<verb> <name>\n<content>" -> open it in the doc reader
-// under the given title prefix. Shared by the /bans and /mutes viewers, which mirror /warnings.
+/* Server-sent read-only staff view keyed by a player name: "<verb> <name>\n<content>" -> open it in the doc reader
+under the given title prefix. Shared by the /bans and /mutes viewers, which mirror /warnings. */
 void handle_doctext(string message, string title_prefix)
 {
 	int nl = string_contains(message, "\n", 1);
@@ -469,15 +420,15 @@ void handle_doctext(string message, string title_prefix)
 		dockread(title_prefix + who, content);
 	}
 }
-// Server-sent reports log (staff only): "reportstext\n<content>" -> open it in the doc reader. Unlike the
-// warnings/bans/mutes viewers, this one is keyed to no player, so there's no name in the header line.
+/* Server-sent reports log (staff only): "reportstext\n<content>" -> open it in the doc reader. Unlike the
+warnings/bans/mutes viewers, this one is keyed to no player, so there's no name in the header line. */
 void handle_reportstext(string message)
 {
 	int nl = string_contains(message, "\n", 1);
 	if(nl > 0) dockread("Reports", message.substr(nl + 1));
 }
-// Server-sent list of every banned account (developer /bansall): "bansalltext\n<content>" -> open it in the doc
-// reader. Like the reports viewer it's keyed to no player, so there's no name in the header.
+/* Server-sent list of every banned account (developer /bansall): "bansalltext\n<content>" -> open it in the doc
+reader. Like the reports viewer it's keyed to no player, so there's no name in the header. */
 void handle_bansalltext(string message)
 {
 	int nl = string_contains(message, "\n", 1);
@@ -518,14 +469,14 @@ void card_rank_command(string question, string prefix, string ranklist)
 	if(c < 0 or c >= int(ranks.length())) { speak("canceled"); return; }
 	comparse(prefix + ranks[c]);
 }
-// The F6 player info card. Wire format:
-//   "playerinfo\n<username>\n<ignored>\n<is_self>\n<kick ban warn notify mute pm>\n<promote ranks>\n<demote ranks>\n<title>\n<body>"
-// Shown inline in a read-only, multiline input box (the same widget dockread builds, but with our own title).
-// Unless it's your own card it also gets a Mute checkbox (Alt+M, a personal ignore of their chat and voice), a
-// Private message button (Alt+P), and -- for staff, only the ones the server says you may use on this target --
-// Kick (Alt+K), Ban/Unban (Alt+B/U), Promote (Alt+R), Demote (Alt+D), and Warn (Alt+W). Every action routes
-// through comparse to the existing slash command, which re-validates. The loop pumps net_keepalive() so the
-// connection survives while it's open; it's deferral-gated at the call site so it never stacks on another modal.
+/* The F6 player info card. Wire format:
+  "playerinfo\n<username>\n<ignored>\n<is_self>\n<kick ban warn notify mute pm>\n<promote ranks>\n<demote ranks>\n<title>\n<body>"
+Shown inline in a read-only, multiline input box (the same widget dockread builds, but with our own title).
+Unless it's your own card it also gets a Mute checkbox (Alt+M, a personal ignore of their chat and voice), a
+Private message button (Alt+P), and -- for staff, only the ones the server says you may use on this target --
+Kick (Alt+K), Ban/Unban (Alt+B/U), Promote (Alt+R), Demote (Alt+D), and Warn (Alt+W). Every action routes
+through comparse to the existing slash command, which re-validates. The loop pumps net_keepalive() so the
+connection survives while it's open; it's deferral-gated at the call site so it never stacks on another modal. */
 void handle_playerinfo(string message)
 {
 	int p1 = string_contains(message, "\n", 1); if(p1 < 0) return;
@@ -605,8 +556,8 @@ void handle_playerinfo(string message)
 	}
 	else if(action == "kick")
 	{
-		// Same shape as the ban flow, without the length: ask whether to add a reason, then kick. Canceling the
-		// menu or the reason box abandons the kick.
+		/* Same shape as the ban flow, without the length: ask whether to add a reason, then kick. Canceling the
+		menu or the reason box abandons the kick. */
 		setupmenu();
 		m.add_item("No reason");
 		m.add_item("Add a reason");
@@ -623,8 +574,8 @@ void handle_playerinfo(string message)
 	}
 	else if(action == "ban")
 	{
-		// Length first (permanent, or a time in seconds), then an optional reason. Canceling any step
-		// abandons the ban. Routes to /ban for permanent or /tempban for timed, which re-validate.
+		/* Length first (permanent, or a time in seconds), then an optional reason. Canceling any step
+		abandons the ban. Routes to /ban for permanent or /tempban for timed, which re-validate. */
 		setupmenu();
 		m.add_item("Permanent");
 		m.add_item("For a set time");
@@ -679,8 +630,8 @@ void handle_playerinfo(string message)
 		}
 	}
 }
-// A server-driven flow needs a typed value. Format: askinput\n<prompt>\n<command prefix>\n<mask>. We show a
-// local box (masked when <mask> is 1) and send "<prefix> <text>"; the server command handler does the work.
+/* A server-driven flow needs a typed value. Format: askinput\n<prompt>\n<command prefix>\n<mask>. We show a
+local box (masked when <mask> is 1) and send "<prefix> <text>"; the server command handler does the work. */
 void handle_askinput(string message)
 {
 	string[] alines = string_split(message, "\n", true);
@@ -690,8 +641,8 @@ void handle_askinput(string message)
 		string aprefill = (alines.length() > 4) ? alines[4] : ""; // optional value the server pre-drops into the box (staff joining their own private room); empty for every other prompt
 		if (amaskval == "2")
 		{
-			// Two fields (password + confirm) -> a real form the player can tab through, per our multi-field input
-			// convention (a single field would be a virtual dialog). Re-prompt on a mismatch without sending.
+			/* Two fields (password + confirm) -> a real form the player can tab through, per our multi-field input
+			convention (a single field would be a virtual dialog). Re-prompt on a mismatch without sending. */
 			string[] fields = {"*" + alines[1], "*Confirm password"};
 			while (true)
 			{
@@ -711,16 +662,16 @@ void handle_askinput(string message)
 }
 void netloop_impl()
 {
-	// While reconnecting, hand the whole frame to the background reconnect handshake; normal message
-	// processing is paused (we're not logged in) until it resumes or gives up.
+	/* While reconnecting, hand the whole frame to the background reconnect handshake; normal message
+	processing is paused (we're not logged in) until it resumes or gives up. */
 	if (reconnecting)
 	{
 		reconnect_tick();
 		return;
 	}
 	event = net.request();
-	// The server dropped us (it shut down/restarted, or the link was lost). Instead of bailing out
-	// immediately, start a background reconnect; the game loop keeps running while we try to get back on.
+	/* The server dropped us (it shut down/restarted, or the link was lost). Instead of bailing out
+	immediately, start a background reconnect; the game loop keeps running while we try to get back on. */
 	if (event.type == event_disconnect)
 	{
 		start_reconnect();
@@ -730,9 +681,9 @@ void netloop_impl()
 	if (event.type == event_receive and event.channel == 0)
 	{
 		string message = get_event_message();
-		// Dispatch on the first word of the FIRST line. Multi-line payloads (e.g. scopememberlist) put no
-		// space after the command word, so splitting the whole message on spaces would glue the
-		// command to the next line's first field ("scopememberlist\nAlice" instead of "scopememberlist").
+		/* Dispatch on the first word of the FIRST line. Multi-line payloads (e.g. scopememberlist) put no
+		space after the command word, so splitting the whole message on spaces would glue the
+		command to the next line's first field ("scopememberlist\nAlice" instead of "scopememberlist"). */
 		string[] firstline = string_split(message, "\n", true);
 		if (firstline.length() == 0) return; // empty/malformed packet: bail before firstline[0]/parsed[0] index past the end
 		string[] parsed = string_split(firstline[0], " ", true);
@@ -758,15 +709,15 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "playerjoinedgame" and message.length() > parsed[0].length()+1)
 		{
-			// Someone else joined the game you're in: play the join cue and note who (rank-aware) in the player
-			// events buffer. The name may contain a space (rank prefix), so take everything after the command.
+			/* Someone else joined the game you're in: play the join cue and note who (rank-aware) in the player
+			events buffer. The name may contain a space (rank prefix), so take everything after the command. */
 			p.play_stationary("sounds/ui/misc/joingame.ogg", false);
 			add_buffer_item("player events", message.substr(parsed[0].length()+1) + " joined the game.");
 		}
 		else if (parsed[0] == "event" and message.length() > parsed[0].length()+1)
 		{
-			// A third-person lifecycle notice about another player (room/game created, left, stopped, kicked,
-			// etc.), pre-built by the server with the rank-aware name. Lands in the player events buffer.
+			/* A third-person lifecycle notice about another player (room/game created, left, stopped, kicked,
+			etc.), pre-built by the server with the rank-aware name. Lands in the player events buffer. */
 			add_buffer_item("player events", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "offline" and parsed.length() > 1)
@@ -780,8 +731,8 @@ void netloop_impl()
 		else if (parsed[0] == "kicked")
 		{
 			p.play_stationary("sounds/ui/misc/kick.ogg", false);
-			// "kicked" or "kicked <reason>": the reason, when present, is spoken along with the notice (staff-only text,
-			// never in the public "was kicked" announcement).
+			/* "kicked" or "kicked <reason>": the reason, when present, is spoken along with the notice (staff-only text,
+			never in the public "was kicked" announcement). */
 			string kreason = (message.length() > parsed[0].length()+1) ? message.substr(parsed[0].length()+1) : "";
 			speak(kreason == "" ? "You have been kicked from the server." : "You have been kicked from the server: " + kreason, true);
 			kicked = true;
@@ -802,8 +753,8 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "passchanged")
 			{
-				// Self /changepass succeeded: the server changed our password and logged us out. We know the new
-				// password (pendingpass), so update the saved account, then return to the connection menu to sign in with it.
+				/* Self /changepass succeeded: the server changed our password and logged us out. We know the new
+				password (pendingpass), so update the saved account, then return to the connection menu to sign in with it. */
 				password = pendingpass;
 				pendingpass = "";
 				save_last_account();
@@ -819,8 +770,8 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "passreset")
 			{
-				// An administrator reset our password: we don't know the new one, so we're logged out and the saved
-				// password is left as-is; staff tell us the new password to sign in with.
+				/* An administrator reset our password: we don't know the new one, so we're logged out and the saved
+				password is left as-is; staff tell us the new password to sign in with. */
 				p.play_stationary("sounds/ui/misc/kick.ogg", false);
 				speak("Your password has been reset by staff, so you have been returned to the connection menu.", true);
 				kicked = true;
@@ -828,8 +779,8 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "renamed" and parsed.length() > 1)
 			{
-				// An administrator renamed our account. The password is unchanged; we sign back in under the new name,
-				// updating (or re-adding) our saved account with it. We're returned to the connection menu like a kick.
+				/* An administrator renamed our account. The password is unchanged; we sign back in under the new name,
+				updating (or re-adding) our saved account with it. We're returned to the connection menu like a kick. */
 				p.play_stationary("sounds/ui/misc/kick.ogg", false);
 				speak("You have been renamed to " + parsed[1] + ", so you have been returned to the connection menu to sign in again with your new name.", true);
 				kicked = true;
@@ -837,8 +788,8 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "delchardone")
 			{
-				// Our own /delchar succeeded: the account is gone. Forget it locally (so it can't be re-selected) and
-				// return to the connection menu.
+				/* Our own /delchar succeeded: the account is gone. Forget it locally (so it can't be re-selected) and
+				return to the connection menu. */
 				clear_last_account();
 				p.play_stationary("sounds/ui/misc/kick.ogg", false);
 				speak("Your account has been deleted, so you have been returned to the connection menu.", true);
@@ -856,8 +807,8 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "chardeleted" and message.length() > parsed[0].length()+1)
 			{
-				// Someone's account was deleted (their own or by staff): play the offline cue and note the pre-built,
-				// flag/AFK/nickname-aware sentence in the alerts buffer, mirroring the new-account notice.
+				/* Someone's account was deleted (their own or by staff): play the offline cue and note the pre-built,
+				flag/AFK/nickname-aware sentence in the alerts buffer, mirroring the new-account notice. */
 				p.play_stationary("sounds/ui/misc/offline.ogg", false);
 				add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 			}
@@ -913,21 +864,21 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "alert" and message.length() > parsed[0].length()+1)
 		{
-			// Generic server announcement → alerts buffer, with the standard alert cue (used by alerts that
-			// don't carry their own dedicated sound, e.g. mute notices and nickname changes).
+			/* Generic server announcement → alerts buffer, with the standard alert cue (used by alerts that
+			don't carry their own dedicated sound, e.g. mute notices and nickname changes). */
 			p.play_stationary("sounds/ui/misc/alert.ogg", false);
 			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "alertsilent" and message.length() > parsed[0].length()+1)
 		{
-			// Like "alert" but with no cue of its own: a notice into the alerts buffer when a shared sound has
-			// already been played for everyone (e.g. the MOTD change, where newmotd.ogg is the common cue).
+			/* Like "alert" but with no cue of its own: a notice into the alerts buffer when a shared sound has
+			already been played for everyone (e.g. the MOTD change, where newmotd.ogg is the common cue). */
 			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "flagswitch" and parsed.length() > 1)
 		{
-			// A staff member flipped their attention flag: everyone hears the sound and gets the alert.
-			// Format: "flagswitch <0|1>\n<alert text>".
+			/* A staff member flipped their attention flag: everyone hears the sound and gets the alert.
+			Format: "flagswitch <0|1>\n<alert text>". */
 			bool fon = (parsed[1] == "1");
 			p.play_stationary(fon ? "sounds/ui/misc/flagon.ogg" : "sounds/ui/misc/flagoff.ogg", false);
 			int fnl = string_contains(message, "\n", 1);
@@ -935,8 +886,8 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "afkself" and parsed.length() > 1)
 		{
-			// You went away or came back: set the state, play the cue, and note it first-person in misc. Going
-			// away may carry your optional reason on the next line: "afkself 1\n<reason>".
+			/* You went away or came back: set the state, play the cue, and note it first-person in misc. Going
+			away may carry your optional reason on the next line: "afkself 1\n<reason>". */
 			afk_counting = false;
 			afk = (parsed[1] == "1");
 			if(afk)
@@ -950,9 +901,9 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "afkannounce" and parsed.length() > 1)
 		{
-			// Another player went away or came back. Format: "afkannounce <1|0>\n<rank-aware name>", and when
-			// going away with a reason, "afkannounce 1\n<name>\n<reason>". Everyone else hears the cue and gets a
-			// third-person note in the player events buffer.
+			/* Another player went away or came back. Format: "afkannounce <1|0>\n<rank-aware name>", and when
+			going away with a reason, "afkannounce 1\n<name>\n<reason>". Everyone else hears the cue and gets a
+			third-person note in the player events buffer. */
 			string[] alines = string_split(message, "\n", true);
 			string adisp = (alines.length() > 1) ? alines[1] : "";
 			string areason = (alines.length() > 2) ? alines[2] : "";
@@ -969,8 +920,8 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "warn" and parsed.length() > 1)
 		{
-			// A staff warning aimed at you. Format: "warn <level>\n<rank-aware staff name>\n<reason>".
-			// Play the matching warning sound and show who warned you and why in the alerts buffer.
+			/* A staff warning aimed at you. Format: "warn <level>\n<rank-aware staff name>\n<reason>".
+			Play the matching warning sound and show who warned you and why in the alerts buffer. */
 			string[] wlines = string_split(message, "\n", true);
 			if(wlines.length() >= 3)
 			{
@@ -1017,11 +968,11 @@ void netloop_impl()
 		{
 			int fx = string_to_number(parsed[2]);
 			int fy = string_to_number(parsed[3]);
-			// Wood take/place is a cave-interior item sound: play it on objpool, which reverbs by the source side, so
-			// bot wood (and a defender's placements) echo from inside the cave. Everything else (footsteps, wall bumps) stays on p.
-			// PVP routes instead by which SIDE of the wall ring the source sits on, relative to you: a sound from the far
-			// side plays on crosspool (muffled through the wall, and reverberant too when the far side is the interior);
-			// a same-side sound plays on p, which the interior reverb zone makes wet inside and dry out on the exterior.
+			/* Wood take/place is a cave-interior item sound: play it on objpool, which reverbs by the source side, so
+			bot wood (and a defender's placements) echo from inside the cave. Everything else (footsteps, wall bumps) stays on p.
+			PVP routes instead by which SIDE of the wall ring the source sits on, relative to you: a sound from the far
+			side plays on crosspool (muffled through the wall, and reverberant too when the far side is the interior);
+			a same-side sound plays on p, which the interior reverb zone makes wet inside and dry out on the exterior. */
 			if(game_mode == "pvp")
 			{
 				if(pvp_crosswall(fx, fy)) crosspool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
@@ -1034,9 +985,9 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "voicecue" and parsed.length() > 4)
 			{
-				// A player keyed their mic on or off in LIVE mode: play their von/voff cue in 3D at their spot, so you
-				// hear nearby players start and stop talking, not just their voice. (Message mode instead wraps the cues
-				// around the recorded clip's playback, receiver-side in recfuncts, so no live cue arrives for it.)
+				/* A player keyed their mic on or off in LIVE mode: play their von/voff cue in 3D at their spot, so you
+				hear nearby players start and stop talking, not just their voice. (Message mode instead wraps the cues
+				around the recorded clip's playback, receiver-side in recfuncts, so no live cue arrives for it.) */
 				if(parsed[1] != name) play_voice_cue_at(string_to_number(parsed[2]), string_to_number(parsed[3]), parsed[4]);
 			}
 			else if (parsed[0] == "botspawn" and parsed.length() > 3)
@@ -1099,8 +1050,8 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "wallrico" and parsed.length() > 2)
 		{
-			// EVP build phase: your swing connected with a wall that can't be hurt yet, so play the weapon's
-			// hit clip as a ricochet (no wall creak, no damage) -- feedback that you're on a wall.
+			/* EVP build phase: your swing connected with a wall that can't be hurt yet, so play the weapon's
+			hit clip as a ricochet (no wall creak, no damage) -- feedback that you're on a wall. */
 			play_wall_rico(parsed[1], string_to_number(parsed[2]));
 		}
 		else if (parsed[0] == "walldestroyed" and parsed.length() > 1)
@@ -1110,9 +1061,9 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "wallbreach" and parsed.length() > 1)
 		{
-			// A wall that was ALREADY broken before we (re)arrived: "wallbreach <direction>". Re-tile the breach to
-			// a walkable woodpile SILENTLY (no death boom -- nothing just broke), so on reconnect we don't bump into
-			// a gap the fresh cavern re-drew as solid.
+			/* A wall that was ALREADY broken before we (re)arrived: "wallbreach <direction>". Re-tile the breach to
+			a walkable woodpile SILENTLY (no death boom -- nothing just broke), so on reconnect we don't bump into
+			a gap the fresh cavern re-drew as solid. */
 			destroy_wall_client(parsed[1], true);
 		}
 		else if (parsed[0] == "roundover" and parsed.length() > 1)
@@ -1123,8 +1074,8 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "evpcleared" and parsed.length() > 1)
 		{
-			// EVP: you brought all four walls down -- round cleared! "evpcleared <round-number>". The build
-			// phase for the next (tougher) round follows right after.
+			/* EVP: you brought all four walls down -- round cleared! "evpcleared <round-number>". The build
+			phase for the next (tougher) round follows right after. */
 			int n = string_to_number(parsed[1]);
 			p.play_stationary("sounds/ui/misc/roundcleared.ogg", false); // add this cue; missing = silent until then
 			add_buffer_item("alerts", "Round " + n + " cleared! The bots rebuild, tougher.");
@@ -1143,8 +1094,8 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "gamereset" and parsed.length() > 1)
 		{
-			// The round reset to a fresh idle cavern: "gamereset <size>". Redraw the cavern; the server
-			// re-sends the fresh wall strengths and wood count right after.
+			/* The round reset to a fresh idle cavern: "gamereset <size>". Redraw the cavern; the server
+			re-sends the fresh wall strengths and wood count right after. */
 			int gs = string_to_number(parsed[1]);
 			cavern_size = gs;
 			if (game_mode == "pvp") { my_side = ""; current_weapon = ""; draw_map("pvparena", 0, gs, 0, gs); } // PVP resets to staging: sides re-picked, unarmed, the concentric arena redrawn intact
@@ -1236,8 +1187,8 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "runcommand")
 		{
-			// The server relays one of its own commands back through us to run (a menu choice that needs no
-			// typed input). Keeps the decision server-side while reusing the existing command handlers.
+			/* The server relays one of its own commands back through us to run (a menu choice that needs no
+			typed input). Keeps the decision server-side while reusing the existing command handlers. */
 			if (message.length() > parsed[0].length()+1) send(0, message.substr(parsed[0].length()+1), 0, true);
 		}
 		else if (parsed[0] == "restartnotice" and message.length() > parsed[0].length()+1)
@@ -1252,17 +1203,17 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "report" and message.length() > parsed[0].length()+1)
 		{
-			// A player filed a report; only online staff receive this live heads-up. Its own dedicated cue sets it
-			// apart from ordinary alerts, and the full log is always available to staff with /reports.
+			/* A player filed a report; only online staff receive this live heads-up. Its own dedicated cue sets it
+			apart from ordinary alerts, and the full log is always available to staff with /reports. */
 			p.play_stationary("sounds/ui/misc/report.ogg", false);
 			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "offlinepm")
 		{
-			// A private message left for us while we were offline, delivered at login. Format:
-			// "offlinepm <sender username>\nOffline PM from <display>: <message>". Show it in the private chats
-			// buffer with the PM sound, like a live PM, and point /reply at the sender's username so it reaches
-			// them even if they're still offline (turning into another offline PM).
+			/* A private message left for us while we were offline, delivered at login. Format:
+			"offlinepm <sender username>\nOffline PM from <display>: <message>". Show it in the private chats
+			buffer with the PM sound, like a live PM, and point /reply at the sender's username so it reaches
+			them even if they're still offline (turning into another offline PM). */
 			int nl = string_contains(message, "\n", 1);
 			if(nl > parsed[0].length())
 			{
@@ -1349,10 +1300,10 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "yourside" and parsed.length() > 1)
 		{
-			// The server assigned our PVP side for this round. Attackers spawn out at the shared entry point in
-			// the exterior band and draw a weapon; defenders hold the interior center. We place our own `me` with
-			// the same geometry the server used for its roster (it never moves our own view via pos), then make
-			// the server authoritative for the spot with a move so later movement stays in step.
+			/* The server assigned our PVP side for this round. Attackers spawn out at the shared entry point in
+			the exterior band and draw a weapon; defenders hold the interior center. We place our own `me` with
+			the same geometry the server used for its roster (it never moves our own view via pos), then make
+			the server authoritative for the spot with a move so later movement stays in step. */
 			my_side = parsed[1];
 			if (my_side == "attack")
 			{
@@ -1475,12 +1426,12 @@ void netloop_impl()
 				else if (game_outside) add_buffer_item("alerts", "Round " + wave_number + ", tear down the walls!");
 				else add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
 			}
-			// PVP: the attacker draws a weapon at build start (and keeps it across build->wave); defenders reinforce
-			// with wood and never auto-arm. Unarmed-only so a re-sent phase during the round doesn't re-draw.
+			/* PVP: the attacker draws a weapon at build start (and keeps it across build->wave); defenders reinforce
+			with wood and never auto-arm. Unarmed-only so a re-sent phase during the round doesn't re-draw. */
 			if (game_mode == "pvp" and my_side == "attack" and (game_phase == "build" or game_phase == "wave")) { if (current_weapon == "") equip_weapon("axe"); }
-			// EVP: you have no weapon until a round is underway. Arm with the axe when a round is active (build or
-			// wave -- covers both the round starting and a mid-round join), disarm between rounds (idle/over). The
-			// guard keeps a build->wave transition from re-drawing.
+			/* EVP: you have no weapon until a round is underway. Arm with the axe when a round is active (build or
+			wave -- covers both the round starting and a mid-round join), disarm between rounds (idle/over). The
+			guard keeps a build->wave transition from re-drawing. */
 			if (game_outside)
 			{
 				if (game_phase == "build" or game_phase == "wave") { if (current_weapon == "") equip_weapon("axe"); }
@@ -1489,18 +1440,18 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "equipweapon" and parsed.length() > 1)
 			{
-				// The server is restoring, on reconnect, the EVP weapon we had drawn before we dropped. Equip it
-				// directly; it's sent before the gamephase message so that handler's unarmed-only auto-axe leaves it be.
+				/* The server is restoring, on reconnect, the EVP weapon we had drawn before we dropped. Equip it
+				directly; it's sent before the gamephase message so that handler's unarmed-only auto-axe leaves it be. */
 				equip_weapon(parsed[1]);
 			}
 			else if (parsed[0] == "waveseg" and parsed.length() > 1)
 		{
-			// The wave swung between an attack window and a rest window. PVE: the bots resume hammering, then pull
-			// back so you can rebuild. EVP (reversed): an attack window is your turn to smash, a rest window locks
-			// you out (your swings only ricochet) while the builders repair.
+			/* The wave swung between an attack window and a rest window. PVE: the bots resume hammering, then pull
+			back so you can rebuild. EVP (reversed): an attack window is your turn to smash, a rest window locks
+			you out (your swings only ricochet) while the builders repair. */
 			wave_attacking = (parsed[1] == "1");
-			// EVP: the server only runs the round clock during attack windows now, so keep our local countdown
-			// (used by the Tab readout) in step -- pause it during a rest window, resume it when attack reopens.
+			/* EVP: the server only runs the round clock during attack windows now, so keep our local countdown
+			(used by the Tab readout) in step -- pause it during a rest window, resume it when attack reopens. */
 			if (game_outside or game_mode == "pvp") { if (wave_attacking) game_phasetimer.resume(); else game_phasetimer.pause(); }
 			if (parsed[1] == "1")
 			{
@@ -1520,15 +1471,15 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "wavewarning" and parsed.length() > 1)
 		{
-			// A heads-up that the next wave lands soon: a single cue and alert, the same number of seconds
-			// before every wave (build phase or rest segment). Everyone in the game hears it.
+			/* A heads-up that the next wave lands soon: a single cue and alert, the same number of seconds
+			before every wave (build phase or rest segment). Everyone in the game hears it. */
 			p.play_stationary("sounds/ui/misc/alert.ogg", false);
 			add_buffer_item("alerts", "The enemies will attack in " + parsed[1] + " seconds.");
 		}
 		else if (parsed[0] == "gamepaused")
 		{
-			// The host paused the round: freeze the whole game for everyone. Suspend local audio and,
-			// in the game loop, all gameplay input except Escape (to leave). Server is the authority.
+			/* The host paused the round: freeze the whole game for everyone. Suspend local audio and,
+			in the game loop, all gameplay input except Escape (to leave). Server is the authority. */
 			game_paused = true;
 			pause_pools();
 			p.play_stationary("sounds/ui/misc/pause.ogg", false);
@@ -1544,9 +1495,9 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "worldfreeze")
 		{
-			// A developer froze the whole server. Lock everything (the game loop's world_frozen branch), suspend
-			// local audio so the wood and bots go quiet, drop any in-progress mic capture, and play the stop cue
-			// with the alert riding in the alerts buffer -- like the staff-flag flip. Format: "worldfreeze\n<alert>".
+			/* A developer froze the whole server. Lock everything (the game loop's world_frozen branch), suspend
+			local audio so the wood and bots go quiet, drop any in-progress mic capture, and play the stop cue
+			with the alert riding in the alerts buffer -- like the staff-flag flip. Format: "worldfreeze\n<alert>". */
 			world_frozen = true;
 			pause_pools();
 			recording = false;
@@ -1557,8 +1508,8 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "worldunfreeze")
 		{
-			// The developer lifted the freeze: unlock input and audio and play the start cue. Don't un-suspend a
-			// game the host still has paused underneath (game_paused stays authoritative for that).
+			/* The developer lifted the freeze: unlock input and audio and play the start cue. Don't un-suspend a
+			game the host still has paused underneath (game_paused stays authoritative for that). */
 			world_frozen = false;
 			int wfnl = string_contains(message, "\n", 1);
 			if(wfnl > -1) add_buffer_item("alerts", message.substr(wfnl + 1));
@@ -1567,8 +1518,8 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "pvpdesert" and parsed.length() > 2)
 			{
-				// A PVP side emptied: the match freezes (a gamepaused arrives alongside this) and a forfeit grace opens.
-				// "pvpdesert <empty-side> <seconds>". If nobody on that side returns before the countdown ends, it forfeits.
+				/* A PVP side emptied: the match freezes (a gamepaused arrives alongside this) and a forfeit grace opens.
+				"pvpdesert <empty-side> <seconds>". If nobody on that side returns before the countdown ends, it forfeits. */
 				string es = (parsed[1] == "attack") ? "attackers" : "defenders";
 				add_buffer_item("alerts", "The " + es + " have no players; they forfeit in " + parsed[2] + " seconds unless someone returns.");
 			}
@@ -1672,9 +1623,9 @@ void netloop_impl()
 		string message = get_event_message();
 		add_buffer_item("private chats", message);
 		p.play_stationary("sounds/ui/misc/privchat.ogg", false);
-		// Remember who PM'd us so /reply (/r) can answer them. The message reads
-		// "PM from <display name>: ..."; the real username is the last word of the display name
-		// (staff carry a rank prefix). Our own sent copies start with "PM to " and are ignored.
+		/* Remember who PM'd us so /reply (/r) can answer them. The message reads
+		"PM from <display name>: ..."; the real username is the last word of the display name
+		(staff carry a rank prefix). Our own sent copies start with "PM to " and are ignored. */
 		if(string_left(message, 8) == "PM from ")
 		{
 			int colon = string_contains(message, ":", 1);
@@ -1686,7 +1637,7 @@ void netloop_impl()
 			}
 		}
 	}
-	// Channel 3: incoming voice (header "name x y\n" then the ogg bytes). Handled in recfuncts.nvgt,
-	// which plays it in 3D at the speaker's position so you can move around them.
+	/* Channel 3: incoming voice (header "name x y\n" then the ogg bytes). Handled in recfuncts.nvgt,
+	which plays it in 3D at the speaker's position so you can move around them. */
 	if (event.type == event_receive and event.channel == 3) play_remote_voice(get_event_message());
 }

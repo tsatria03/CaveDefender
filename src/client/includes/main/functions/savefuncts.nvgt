@@ -152,8 +152,8 @@ if(f.length()<3) continue;
 servers.insert_last(serverpreset(f[0], f[1], string_to_number(f[2])));
 }
 }
-// Account presets are stored as one string: each entry is username, password joined by a tab, entries by newlines.
-// (Usernames/passwords can't contain spaces, and a typed password won't contain a tab/newline, so those are safe delimiters.)
+/* Account presets are stored as one string: each entry is username, password joined by a tab, entries by newlines.
+(Usernames/passwords can't contain spaces, and a typed password won't contain a tab/newline, so those are safe delimiters.) */
 string serialize_accounts()
 {
 string serialized="";
@@ -211,8 +211,8 @@ st.add("name", name);
 st.add("password", password);
 st.save();
 }
-// After the player's account is deleted, forget the cached active account and drop it from saved account storage,
-// so the connection menu no longer offers a dead account. Called when the server confirms a /delchar.
+/* After the player's account is deleted, forget the cached active account and drop it from saved account storage,
+so the connection menu no longer offers a dead account. Called when the server confirms a /delchar. */
 void clear_last_account()
 {
 for(uint i=0; i<accounts.length(); i++)

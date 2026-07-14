@@ -1,10 +1,10 @@
-// Client-side mirror of the walls in the player's CURRENT space, used purely for audio and tiles —
-// the server owns the authoritative health (see the server's globals/wall.nvgt). When the game loop
-// and enemies land, the server will sync each wall's health into this mirror; this module turns those
-// health changes into sound: a hurt clip at the wall when it's damaged, and the death clip plus a
-// re-tile to floor when it breaks. Modeled on SimpleFighter's wall destruction (wallcheck), rebuilt
-// lean and WITHOUT the optional debris platforms. Wall hurt/death play through the `p` pool (see the
-// path-conventions memory). Nothing populates this list yet — it's the foundation the game wires up.
+/* Client-side mirror of the walls in the player's CURRENT space, used purely for audio and tiles —
+the server owns the authoritative health (see the server's globals/wall.nvgt). When the game loop
+and enemies land, the server will sync each wall's health into this mirror; this module turns those
+health changes into sound: a hurt clip at the wall when it's damaged, and the death clip plus a
+re-tile to floor when it breaks. Modeled on SimpleFighter's wall destruction (wallcheck), rebuilt
+lean and WITHOUT the optional debris platforms. Wall hurt/death play through the `p` pool (see the
+path-conventions memory). Nothing populates this list yet — it's the foundation the game wires up. */
 wall@[] walls;
 class wall
 {
@@ -48,8 +48,8 @@ void clear_walls()
 {
 walls.resize(0);
 }
-// Build the local mirror of a cavern's four destroyable walls (for hurt/death audio) from its size.
-// Called on entering a game; the server stays authoritative on their health.
+/* Build the local mirror of a cavern's four destroyable walls (for hurt/death audio) from its size.
+Called on entering a game; the server stays authoritative on their health. */
 void setup_cavern_walls(double size)
 {
 clear_walls();
@@ -58,9 +58,9 @@ spawn_wall(size, size, 0, size, 100, 100, "wallwood", "concrete"); // east  (x =
 spawn_wall(0, size, size, size, 100, 100, "wallwood", "concrete"); // north (y = size)
 spawn_wall(0, size, 0, 0, 100, 100, "wallwood", "concrete");       // south (y = 0)
 }
-// Play a hurt clip over a wall that just took damage, emanating across the whole wall span in 3D.
-// (Volume/pitch could later scale to walls[index].health/maxhealth for a "weakening" feel — left
-// neutral for now so the curve is a deliberate tuning choice, not an accidental default.)
+/* Play a hurt clip over a wall that just took damage, emanating across the whole wall span in 3D.
+(Volume/pitch could later scale to walls[index].health/maxhealth for a "weakening" feel — left
+neutral for now so the curve is a deliberate tuning choice, not an accidental default.) */
 void play_wall_hurt(int index)
 {
 if(index<0 or index>=int(walls.length()) or @walls[index]==null) return;
@@ -77,9 +77,9 @@ if(dir=="south") return wall_south;
 if(dir=="west") return wall_west;
 return 0;
 }
-// Volume (pool units) for a wall-strike sound, scaled by the wall's strength: a full wall's strikes are
-// quiet (-30) and rise toward full volume (0) as it is battered down, so a weakening wall sounds louder
-// and more urgent (Sammy's danger cue). Over-reinforced walls stay at the quiet -30 floor.
+/* Volume (pool units) for a wall-strike sound, scaled by the wall's strength: a full wall's strikes are
+quiet (-30) and rise toward full volume (0) as it is battered down, so a weakening wall sounds louder
+and more urgent (Sammy's danger cue). Over-reinforced walls stay at the quiet -30 floor. */
 int wall_strike_volume(int pct)
 {
 int vol = -(pct*30/100); // 100% -> -30, 0% -> 0
@@ -87,11 +87,11 @@ if(vol < -30) vol = -30;
 if(vol > 0) vol = 0;
 return vol;
 }
-// Play a hit on a wall in real 3D, positioned across that wall's span (like play_wall_hurt), with the
-// weapon's hit sound AND the wall's own hurt creak. Inside (PVE) both are scaled to the wall's remaining
-// strength as a danger cue (a healthy wall's strikes are quiet, a weakening wall's get loud); outside (EVP)
-// they play at constant full volume. Called from the wallhit message. The chosen volume is re-asserted
-// after the position updates so they don't stomp it.
+/* Play a hit on a wall in real 3D, positioned across that wall's span (like play_wall_hurt), with the
+weapon's hit sound AND the wall's own hurt creak. Inside (PVE) both are scaled to the wall's remaining
+strength as a danger cue (a healthy wall's strikes are quiet, a weakening wall's get loud); outside (EVP)
+they play at constant full volume. Called from the wallhit message. The chosen volume is re-asserted
+after the position updates so they don't stomp it. */
 void play_wall_hit(string dir, int weapon)
 {
 double s = cavern_size;
@@ -110,32 +110,32 @@ else if(dir=="east") { minx=s; maxx=s; miny=0; maxy=s; }
 else if(dir=="north") { minx=0; maxx=s; miny=s; maxy=s; }
 else if(dir=="south") { minx=0; maxx=s; miny=0; maxy=0; }
 else return;
-// Pick the weapon's hit sound by weapon id (1 axe, 2 crowbar, 3 hammer, 4 bat). Explicit branches rather
-// than a nested ternary so the mapping is unmistakable and a stray value can't silently fall through.
-// Every weapon has hit1-3, so one of the three plays at random.
+/* Pick the weapon's hit sound by weapon id (1 axe, 2 crowbar, 3 hammer, 4 bat). Explicit branches rather
+than a nested ternary so the mapping is unmistakable and a stray value can't silently fall through.
+Every weapon has hit1-3, so one of the three plays at random. */
 string wname;
 if(weapon==1) wname = "axe";
 else if(weapon==2) wname = "crowbar";
 else if(weapon==4) wname = "bat";
 else wname = "hammer";
 string snd = "weapons/"+wname+"/hit"+random(1,3);
-// PVE (inside) scales the strike by the wall's strength as a danger cue; EVP (outside) has no such cue —
-// you're the attacker, so strikes play at a constant full volume regardless of how battered the wall is.
+/* PVE (inside) scales the strike by the wall's strength as a danger cue; EVP (outside) has no such cue —
+you're the attacker, so strikes play at a constant full volume regardless of how battered the wall is. */
 int vol = (game_outside or game_mode=="pvp") ? 0 : wall_strike_volume(wall_percent_for(dir)); // -30 at full strength up to 0 as it falls (PVE inside only); the attacker-facing modes play at constant full volume
 int h = p.play_extended_3d("sounds/"+snd+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, vol, 100, false);
 p.update_sound_3d(h, minx, miny, 0);
 p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
 p.update_sound_start_values(h, 0, vol, 100); // re-assert the damage-scaled volume after the position updates
-// The wall itself reacts to every strike: a wood hurt creak across the same span, at the same
-// damage-scaled volume as the weapon swing so the whole strike swells as the wall weakens.
+/* The wall itself reacts to every strike: a wood hurt creak across the same span, at the same
+damage-scaled volume as the weapon swing so the whole strike swells as the wall weakens. */
 int hh = p.play_extended_3d("sounds/objects/walls/wallwood/hurt"+random(1,3)+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, vol, 100, false);
 p.update_sound_3d(hh, minx, miny, 0);
 p.update_sound_range_3d(hh, 0, maxx-minx, 0, maxy-miny, 0, 0);
 p.update_sound_start_values(hh, 0, vol, 100); // same damage-scaled volume for the wall's own creak
 }
-// Play the weapon's dedicated RICOCHET clip at a wall: the swing connected but the wall took no damage (EVP
-// build phase -- it "isn't being hurt yet"). No wall creak, no re-tile, constant volume. Lets the swinger
-// hear they're on a wall before the wave makes hits count. dir/weapon as in play_wall_hit.
+/* Play the weapon's dedicated RICOCHET clip at a wall: the swing connected but the wall took no damage (EVP
+build phase -- it "isn't being hurt yet"). No wall creak, no re-tile, constant volume. Lets the swinger
+hear they're on a wall before the wave makes hits count. dir/weapon as in play_wall_hit. */
 void play_wall_rico(string dir, int weapon)
 {
 double s = cavern_size;
@@ -163,9 +163,9 @@ int h = p.play_extended_3d("sounds/weapons/"+wname+"/rico.ogg", me.x, me.y, me.z
 p.update_sound_3d(h, minx, miny, 0);
 p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
 }
-// Server-driven wall destruction (the "walldestroyed <dir>" message). Plays the death clip across the
-// wall span and re-tiles the breach to a wood floor, so you HEAR a breach as you walk over it. Walls are
-// server-authoritative, so this is event-driven, not a health poll.
+/* Server-driven wall destruction (the "walldestroyed <dir>" message). Plays the death clip across the
+wall span and re-tiles the breach to a wood floor, so you HEAR a breach as you walk over it. Walls are
+server-authoritative, so this is event-driven, not a health poll. */
 void destroy_wall_client(string dir, bool silent=false)
 {
 double s = cavern_size;
@@ -192,10 +192,10 @@ p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
 }
 if(!watching)
 {
-// PVP: a downed wall leaves IMPASSABLE debris -- attackers still can't cross into the interior. We reuse
-// wallwoodpile (a pile of wall wood -- the arena's outer boundary tile): its name contains "wall", so the
-// movement collision keeps blocking it, and its existing bump plays as you walk into the rubble. PVE/EVP
-// instead open a WALKABLE woodpile breach. (A spectator's deck border never breaks either way.)
+/* PVP: a downed wall leaves IMPASSABLE debris -- attackers still can't cross into the interior. We reuse
+wallwoodpile (a pile of wall wood -- the arena's outer boundary tile): its name contains "wall", so the
+movement collision keeps blocking it, and its existing bump plays as you walk into the rubble. PVE/EVP
+instead open a WALKABLE woodpile breach. (A spectator's deck border never breaks either way.) */
 if(game_mode == "pvp") spawn_platform(minx, maxx, miny, maxy, "wallwoodpile");
 else spawn_platform(minx, maxx, miny, maxy, "woodpile");
 }

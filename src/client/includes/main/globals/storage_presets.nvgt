@@ -1,0 +1,21 @@
+class serverpreset
+{
+	string sname;
+	string sip;
+	int sport;
+	serverpreset(){}
+	serverpreset(string n, string i, int p){ sname=n; sip=i; sport=p; }
+}
+serverpreset[] servers;
+
+/* Saved account presets, managed from the connection menu's Account storage. Selecting one fills name/password
+(the active account). Passwords are stored locally in the encrypted settings.cvf -- obfuscation-grade local
+convenience, the same place the last-used account is already cached. */
+class accountpreset
+{
+	string uname;
+	string pword;
+	accountpreset(){}
+	accountpreset(string u, string p){ uname=u; pword=p; }
+}
+accountpreset[] accounts;

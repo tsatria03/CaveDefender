@@ -84,10 +84,10 @@ name="";
 password="";
 }
 
-// Restart the client. Compiled: relaunch the exe (appid) from the bundle. Uncompiled: relaunch the pinned
-// engine on the source script. The launcher runs with cwd = cf/client, so the script path is cwd-relative
-// (../../src/client/cfc.nvgt), the same way the engine DLL and sounds resolve; nvgtw.exe is the windowless
-// variant so no console flashes.
+/* Restart the client. Compiled: relaunch the exe (appid) from the bundle. Uncompiled: relaunch the pinned
+engine on the source script. The launcher runs with cwd = cf/client, so the script path is cwd-relative
+(../../src/client/cfc.nvgt), the same way the engine DLL and sounds resolve; nvgtw.exe is the windowless
+variant so no console flashes. */
 void restart(string appid, string scriptid="../../src/client/cfc.nvgt")
 {
 if(SCRIPT_COMPILED)

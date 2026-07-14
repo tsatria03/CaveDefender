@@ -1,6 +1,7 @@
 bool encryption=true;
 int maxvoicebytes=262144; // ~256 KB; the server drops voice packets larger than this (anti-flood).
 int writetime=10000;
+dictionary verified_logins;
 timer writetimer;
 bool restart_pending=false; // a /restart countdown is in progress
 int restart_delay=0;        // how long (ms) the countdown runs before relaunch
@@ -8,27 +9,6 @@ timer restart_timer;
 network net;
 network_event event;
 
-bool send(int peer_id,string packet,int channel,bool reliable)
-{
-if(peer_id<0) return false; // a held (disconnected-but-holding) session carries a negative sentinel peer id; never hand that to enet -- their outgoing traffic is simply dropped while held, so every broadcast loop stays inert toward them with no per-loop guard
-if(encryption)
-{
-packet=string_encrypt(packet,"rscs123");
-}
-if(reliable)
-{
-return net.send_reliable(peer_id,packet,channel);
-}
-else
-{
-return net.send_unreliable(peer_id,packet,channel);
-}
-}
-string get_event_message()
-{
-if(encryption) return string_decrypt(event.message, "rscs123");
-else return event.message;
-}
 // The standard "target not found" reply for a player-targeting command that requires an ONLINE target: a
 // registered-but-offline account gets "not online", an unknown name gets "does not exist". (/unban is the one
 // exception -- it's offline-capable, so it sends only the "does not exist" half directly.)
@@ -233,7 +213,6 @@ return -1;
 // Maps a peer id -> the username it successfully authenticated as in login(). spawn_player seats a peer ONLY
 // as its verified name, so a peer can't log in as one account and spawn as another, and can't spawn without
 // logging in at all. The entry is removed when the peer disconnects.
-dictionary verified_logins;
 void login(string name, string password, string ver)
 {
 if(ver != version)

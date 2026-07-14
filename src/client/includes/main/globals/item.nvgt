@@ -1,8 +1,8 @@
-// Client mirror of the wood (and later other items) lying in a game's cavern. The server is
-// authoritative (see the server's item.nvgt); here we only hold each item's id and play its audio on
-// objpool: a one-shot drop sound when it appears, and a positional loop at its tile while it sits there,
-// stopped when it's picked up or the game is left. update_sound_pools() moves the listener for objpool,
-// so the loops pan and fade as you walk around them.
+/* Client mirror of the wood (and later other items) lying in a game's cavern. The server is
+authoritative (see the server's item.nvgt); here we only hold each item's id and play its audio on
+objpool: a one-shot drop sound when it appears, and a positional loop at its tile while it sits there,
+stopped when it's picked up or the game is left. update_sound_pools() moves the listener for objpool,
+so the loops pan and fade as you walk around them. */
 clientitem@[] clientitems(0);
 class clientitem
 {
@@ -14,8 +14,8 @@ clientitem(int iid, int ix, int iy, string ty)
 {
 id = iid; x = ix; y = iy; type = ty;
 objpool.play_3d("sounds/objects/items/" + type + "/drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
-// Not every size has an ambient ground loop (small_wood has none); only start one when the file exists,
-// leaving loophandle at -1 otherwise so cleanup is a no-op.
+/* Not every size has an ambient ground loop (small_wood has none); only start one when the file exists,
+leaving loophandle at -1 otherwise so cleanup is a no-op. */
 if(file_exists("sounds/objects/items/" + type + "/loop.ogg"))
 loophandle = objpool.play_3d("sounds/objects/items/" + type + "/loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), true);
 }
@@ -46,8 +46,8 @@ void clear_clientitems()
 for(uint i = 0; i < clientitems.length(); i++) if(clientitems[i].loophandle != -1) objpool.destroy_sound(clientitems[i].loophandle);
 clientitems.resize(0);
 }
-// Pause / resume only the object pool (the ground-item sounds, e.g. the looping wood). Used to silence the
-// wood loops while an in-game menu or dialog is open, without touching ambience, music, or the UI pool.
+/* Pause / resume only the object pool (the ground-item sounds, e.g. the looping wood). Used to silence the
+wood loops while an in-game menu or dialog is open, without touching ambience, music, or the UI pool. */
 void pause_objects()
 {
 for(uint i = 0; i < objpool.items.length(); i++)

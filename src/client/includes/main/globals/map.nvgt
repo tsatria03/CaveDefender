@@ -13,12 +13,12 @@ int runtime=100, walktime=200;
 timer movetimer;
 vector me;
 
-// Draws one of the named maps at any size. The bounds (minx..maxx, miny..maxy) set the overall
-// grid: the outer ring is the wall border, and the floor is laid one tile inside it. The player
-// spawns at the center, so the same call works for a 25x25, 50x50, or 100x100 map.
-// `outside` switches the cavern from its inside look (concrete floor, cavern_int ambience) to the EVP
-// outdoor look (gravel floor, cavern_ext ambience); the wallwood border and cavern music are unchanged.
-// Ignored by the non-cavern maps.
+/* Draws one of the named maps at any size. The bounds (minx..maxx, miny..maxy) set the overall
+grid: the outer ring is the wall border, and the floor is laid one tile inside it. The player
+spawns at the center, so the same call works for a 25x25, 50x50, or 100x100 map.
+`outside` switches the cavern from its inside look (concrete floor, cavern_int ambience) to the EVP
+outdoor look (gravel floor, cavern_ext ambience); the wallwood border and cavern music are unchanged.
+Ignored by the non-cavern maps. */
 void draw_map(string mapname, double minx=0, double maxx=50, double miny=0, double maxy=50, bool outside=false)
 {
 clear_map(); // wipe the previous map first so switching spaces (lobby <-> office) doesn't stack tiles.
@@ -29,8 +29,8 @@ clear_clientbots(); // and the EVP builder-bot roster from the previous space.
 destroy_all_effect_spaces(); // drop the previous space's audio-effect zones (e.g. cave reverb) before laying the new one.
 in_cavern = (mapname=="cavern" or mapname=="cavern2"); // in a cavern arena or watcher deck: the cave sound SOURCES (bots, wood) carry reverb even when you listen from outside.
 listener_outside = outside; // on the EVP gravel exterior (or outdoor deck): the cave sources are also lowpass-muffled, as if heard through the wall.
-// Stop a footstep or wall-bump still ringing from the space we're leaving. These overlap during normal
-// play (each step/bump is a fresh untracked-by-replay sound); only a space change cuts the last one.
+/* Stop a footstep or wall-bump still ringing from the space we're leaving. These overlap during normal
+play (each step/bump is a fresh untracked-by-replay sound); only a space change cuts the last one. */
 p.destroy_sound(wallslot);
 p.destroy_sound(tileslot);
 voice_msgs_clear(); // stop any voice-message clips still playing from the space we're leaving
@@ -60,10 +60,10 @@ if(!outside) spawn_cave_reverb(minx, maxx, miny, maxy); // the enclosed interior
 }
 if(mapname=="pvparena")
 {
-// PVP concentric arena, all in ONE space: an indestructible outer boundary (reusing the outdoor wallwoodpile
-// border tile and its bump sound), a walkable EXTERIOR gravel band (attackers), the four destructible wallwood
-// walls as a MIDDLE ring, and a walkable INTERIOR concrete floor (defenders). Painted outer-to-inner; a later
-// platform overwrites earlier cells, so each pass carves out the next region. wmin/wmax match spawn_ring_walls.
+/* PVP concentric arena, all in ONE space: an indestructible outer boundary (reusing the outdoor wallwoodpile
+border tile and its bump sound), a walkable EXTERIOR gravel band (attackers), the four destructible wallwood
+walls as a MIDDLE ring, and a walkable INTERIOR concrete floor (defenders). Painted outer-to-inner; a later
+platform overwrites earlier cells, so each pass carves out the next region. wmin/wmax match spawn_ring_walls. */
 int wmin = int(maxx)/4;
 int wmax = int(maxx) - wmin;
 spawn_platform(minx, maxx, miny, maxy, "wallwoodpile");         // indestructible outer boundary
@@ -71,10 +71,10 @@ spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "gravel");       // exterior band
 spawn_platform(wmin, wmax, wmin, wmax, "wallwood");             // the four destructible walls (a solid square...)
 spawn_platform(wmin+1, wmax-1, wmin+1, wmax-1, "concrete");     // ...carved to a 1-tile ring around the interior floor
 spawn_cave_reverb(wmin, wmax, wmin, wmax);                       // the interior concrete carries cave reverb; the exterior band stays dry (a listener zone, so it follows whichever side you're on)
-// Ambience split by region to match the reverb: the enclosed cave bed inside the ring (each bed pauses itself
-// when you leave its rectangle), and the open-air bed out in the exterior band -- laid as four strips that tile
-// the frame around the ring WITHOUT ever covering the interior, so you hear the cave inside and open air outside,
-// never both at once.
+/* Ambience split by region to match the reverb: the enclosed cave bed inside the ring (each bed pauses itself
+when you leave its rectangle), and the open-air bed out in the exterior band -- laid as four strips that tile
+the frame around the ring WITHOUT ever covering the interior, so you hear the cave inside and open air outside,
+never both at once. */
 spawn_ambience(wmin, wmax, wmin, wmax, "cavern_int", ambvolume);   // interior: the enclosed cave
 spawn_ambience(minx, maxx, wmax, maxy, "cavern_ext", ambvolume);   // exterior north strip (above the ring)
 spawn_ambience(minx, maxx, miny, wmin, "cavern_ext", ambvolume);   // exterior south strip (below the ring)
@@ -84,10 +84,10 @@ spawn_music(minx, maxx, miny, maxy, "cavern", musvolume);
 }
 if(mapname=="cavern2")
 {
-// The spectator deck: the same floor and ambience as the cavern it watches, but its four border walls are
-// indestructible (so a watcher roaming above is fenced in and they never break like the defenders' do). The
-// destructible walls and the fight play out below on the cavern plane. EVP (outside) uses the gravel floor,
-// outdoor ambience, and a wallwoodpile border to match the outdoor arena; PVE (inside) the cave look.
+/* The spectator deck: the same floor and ambience as the cavern it watches, but its four border walls are
+indestructible (so a watcher roaming above is fenced in and they never break like the defenders' do). The
+destructible walls and the fight play out below on the cavern plane. EVP (outside) uses the gravel floor,
+outdoor ambience, and a wallwoodpile border to match the outdoor arena; PVE (inside) the cave look. */
 spawn_platform(minx, maxx, miny, maxy, outside ? "wallwoodpile" : "wallcrate"); // indestructible deck border
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, outside ? "gravel" : "concrete"); // deck floor matches the mode's arena
 spawn_ambience(minx, maxx, miny, maxy, outside ? "cavern_ext" : "cavern_int", ambvolume);
@@ -105,8 +105,8 @@ return;
 if (string_contains(gmt(),"wall",1)>-1)
 {
 string subpath="objects/walls/"+gmt()+"/bump";
-// Play the bump in 3D at the wall tile. me is standing on it until bounce() runs, so once we step back
-// the listener hears the bump coming from the wall, the way SimpleFighter's playstep does it.
+/* Play the bump in 3D at the wall tile. me is standing on it until bounce() runs, so once we step back
+the listener hears the bump coming from the wall, the way SimpleFighter's playstep does it. */
 wallslot = p.play_3d("sounds/"+subpath+".ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step "+subpath+" "+int(me.x)+" "+int(me.y), 0, true); // before bounce(), so it plays at the wall tile.
 bounce();

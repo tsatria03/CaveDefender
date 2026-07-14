@@ -117,8 +117,8 @@ string normalized = string_replace(content, "\r\n", "\n", true);
 normalized = string_replace(normalized, "\r", "\n", true);
 return string_split(normalized, "\n", true);
 }
-// Format a whole number of seconds as a spoken duration: 92 -> "1 minute and 32 seconds",
-// 45 -> "45 seconds", 60 -> "1 minute". Singular/plural handled; under a minute reads as seconds only.
+/* Format a whole number of seconds as a spoken duration: 92 -> "1 minute and 32 seconds",
+45 -> "45 seconds", 60 -> "1 minute". Singular/plural handled; under a minute reads as seconds only. */
 string format_duration(int seconds)
 {
 if(seconds < 0) seconds = 0;

@@ -1,5 +1,5 @@
-// The spoken name of a facing direction (the Left/Right/Forward/Backward consts from map.nvgt),
-// so readouts say "left" instead of "1".
+/* The spoken name of a facing direction (the Left/Right/Forward/Backward consts from map.nvgt),
+so readouts say "left" instead of "1". */
 string facing_name(int f)
 {
 if(f==Left) return "left";
@@ -13,22 +13,22 @@ string gmt()
 {
 return get_tile_at(me.x,me.y);
 }
-// A single cavern wall's strength spoken in full (the N/E/S/W keys). A wall at 0 reads as destroyed
-// rather than "0 percent strength".
+/* A single cavern wall's strength spoken in full (the N/E/S/W keys). A wall at 0 reads as destroyed
+rather than "0 percent strength". */
 string wall_phrase_full(string dir, int pct)
 {
 if(pct<=0) return "the "+dir+" wall has been destroyed.";
 return "the "+dir+" wall has "+pct+" percent strength.";
 }
-// A single wall's strength in the short form used by the T summary ("north 26 percent", or
-// "north destroyed" when it's down).
+/* A single wall's strength in the short form used by the T summary ("north 26 percent", or
+"north destroyed" when it's down). */
 string wall_phrase_short(string dir, int pct)
 {
 if(pct<=0) return dir+" destroyed";
 return dir+" "+pct+" percent";
 }
-// The compass heading (degrees, 0 = north, clockwise) for a facing const, so the relative-direction
-// helpers in rotation.nvgt can describe where something is compared to the way you're facing.
+/* The compass heading (degrees, 0 = north, clockwise) for a facing const, so the relative-direction
+helpers in rotation.nvgt can describe where something is compared to the way you're facing. */
 double facing_degrees(int f)
 {
 if(f==Right) return 90;
@@ -36,13 +36,13 @@ if(f==Backward) return 180;
 if(f==Left) return 270;
 return 0; // Forward / north
 }
-// Read out every other player in your current space, nearest first, as a direction relative to the way
-// you're facing plus a rough distance (the P key). Mirrors the nearby-players readout in WeldrynWars.
+/* Read out every other player in your current space, nearest first, as a direction relative to the way
+you're facing plus a rough distance (the P key). Mirrors the nearby-players readout in WeldrynWars. */
 void track_players()
 {
 if(players.length()==0) { speak("No players nearby."); return; }
-// Gather (distance, line) for each player, then sort nearest-first with a simple selection sort (the
-// roster in one space is small).
+/* Gather (distance, line) for each player, then sort nearest-first with a simple selection sort (the
+roster in one space is small). */
 double[] dists;
 string[] lines;
 for(uint i=0; i<players.length(); i++)
@@ -51,8 +51,8 @@ if(!players[i].tracked) continue; // voice-only entries (e.g. a spectator) aren'
 double d = get_2d_distance(me.x, me.y, players[i].x, players[i].y);
 double ang = calculate_x_y_angle(me.x, me.y, players[i].x, players[i].y, facing_degrees(facing));
 int td = int(d + 0.5);
-// Match the listings: an away player reads "AFK ...", a flagged staff member shows their rank, and the
-// name shown is the nickname (falling back to the username key if the nickname hasn't synced yet).
+/* Match the listings: an away player reads "AFK ...", a flagged staff member shows their rank, and the
+name shown is the nickname (falling back to the username key if the nickname hasn't synced yet). */
 string pdisp = (players[i].nickname != "") ? players[i].nickname : players[i].name;
 string disp = (players[i].afk ? "AFK " : "") + (players[i].vrank != "player" and players[i].vrank != "" ? players[i].vrank + " " : "") + pdisp;
 string line = disp + " is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away.");
@@ -74,8 +74,8 @@ string spoken;
 for(uint i=0; i<lines.length(); i++) spoken += (i>0 ? " " : "") + lines[i];
 speak(spoken);
 }
-// Read out every EVP builder bot in the cavern, nearest first, as a direction relative to the way you're
-// facing plus a rough distance (the B key). Same idea as track_players, for the builder bots (no names).
+/* Read out every EVP builder bot in the cavern, nearest first, as a direction relative to the way you're
+facing plus a rough distance (the B key). Same idea as track_players, for the builder bots (no names). */
 void track_bots()
 {
 if(clientbots.length()==0) { speak("No bots nearby."); return; }
@@ -103,8 +103,8 @@ string spoken;
 for(uint i=0; i<lines.length(); i++) spoken += (i>0 ? " " : "") + lines[i];
 speak(spoken);
 }
-// Read out every piece of ground wood in the cavern, nearest first, as a direction relative to the way
-// you're facing plus a rough distance (the D key). Same idea as track_players, for the wood instead.
+/* Read out every piece of ground wood in the cavern, nearest first, as a direction relative to the way
+you're facing plus a rough distance (the D key). Same idea as track_players, for the wood instead. */
 void track_wood()
 {
 if(clientitems.length()==0) { speak("No wood nearby."); return; }
@@ -132,8 +132,8 @@ string spoken;
 for(uint i=0; i<lines.length(); i++) spoken += (i>0 ? " " : "") + lines[i];
 speak(spoken);
 }
-// The I-key inventory readout: your wood broken down by size, e.g. "You have 14 small pieces of wood, 5 medium
-// pieces of wood, and 22 large pieces of wood." Sizes you have none of are left out; no wood at all reads plainly.
+/* The I-key inventory readout: your wood broken down by size, e.g. "You have 14 small pieces of wood, 5 medium
+pieces of wood, and 22 large pieces of wood." Sizes you have none of are left out; no wood at all reads plainly. */
 string wood_readout()
 {
 string[] parts;

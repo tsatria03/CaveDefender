@@ -1,6 +1,6 @@
-// The in-game menus are now server-authoritative. In a game, Enter sends "openmenu" (the server pushes
-// the round-control menu: Begin round / Skip build phase, plus a status line) and Escape sends
-// "openpausemenu" (the server pushes Resume / Leave game / Stop game). The client renders them via
-// show_server_menu (menu_parser.nvgt). The old client-rendered game_menu() / pause_menu() and the
-// start/join/stop game flows were removed; the server handles them in menu.nvgt + net.nvgt. The pause
-// menu's local audio pause lives in show_server_menu (it pauses the pools while the "pause" menu is open).
+/* The in-game menus are now server-authoritative. In a game, Enter sends "openmenu" (the server pushes
+the round-control menu: Begin round / Skip build phase, plus a status line) and Escape sends
+"openpausemenu" (the server pushes Resume / Leave game / Stop game). The client renders them via
+show_server_menu (menu_parser.nvgt). The old client-rendered game_menu() / pause_menu() and the
+start/join/stop game flows were removed; the server handles them in menu.nvgt + net.nvgt. The pause
+menu's local audio pause lives in show_server_menu (it pauses the pools while the "pause" menu is open). */

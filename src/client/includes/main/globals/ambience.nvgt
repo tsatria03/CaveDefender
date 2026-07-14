@@ -1,7 +1,7 @@
-// Map ambience: a looping sound bed that fills a rectangular area of the map, tied to each space
-// (lobby/office/cavern). draw_map() spawns the matching one across the whole map. Modeled on
-// SimpleFighter's ambsource: the sound plays at the min corner with its range spanning to the max
-// corner, and pauses while the listener is outside the rectangle. Plays on its own ambpool.
+/* Map ambience: a looping sound bed that fills a rectangular area of the map, tied to each space
+(lobby/office/cavern). draw_map() spawns the matching one across the whole map. Modeled on
+SimpleFighter's ambsource: the sound plays at the min corner with its range spanning to the max
+corner, and pauses while the listener is outside the rectangle. Plays on its own ambpool. */
 ambience@[] ambiences(0);
 class ambience
 {
@@ -26,8 +26,8 @@ if(in_range and !is_playing) { ambpool.resume_sound(handle); is_playing = true; 
 else if(!in_range and is_playing) { ambpool.pause_sound(handle); is_playing = false; }
 }
 }
-// Spawn an ambience over a rectangle. Pass the source type without ".ogg" (the class adds it), e.g.
-// spawn_ambience(0, 100, 0, 100, "lobby", -10).
+/* Spawn an ambience over a rectangle. Pass the source type without ".ogg" (the class adds it), e.g.
+spawn_ambience(0, 100, 0, 100, "lobby", -10). */
 void spawn_ambience(double x1, double x2, double y1, double y2, string src, double vol)
 {
 ambience a(x1, x2, y1, y2, src, vol);
@@ -37,9 +37,9 @@ void update_ambiences(double lx, double ly)
 {
 for(uint i = 0; i < ambiences.length(); i++) ambiences[i].update(lx, ly);
 }
-// Set the volume of every live ambience bed and remember it as the in-world ambience volume, so newly
-// drawn maps spawn at the same level. Updates each sound's start volume (the pool keeps subtracting
-// distance attenuation from that base, so the new level sticks frame to frame).
+/* Set the volume of every live ambience bed and remember it as the in-world ambience volume, so newly
+drawn maps spawn at the same level. Updates each sound's start volume (the pool keeps subtracting
+distance attenuation from that base, so the new level sticks frame to frame). */
 void set_ambience_volume(double vol)
 {
 ambvolume = vol;

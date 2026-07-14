@@ -250,9 +250,9 @@ string server_list_text(uint i)
 {
 	return servers[i].sname + ". IP: " + servers[i].sip + ". Port: " + servers[i].sport;
 }
-// Index of a saved server at this address (IP + port), or -1 if none. The address is the identity of a server
-// (the name is just a label), so two presets pointing at the same IP and port are the same server and can't both
-// be saved. IP is compared case-insensitively (hostnames like localhost); the port must match exactly.
+/* Index of a saved server at this address (IP + port), or -1 if none. The address is the identity of a server
+(the name is just a label), so two presets pointing at the same IP and port are the same server and can't both
+be saved. IP is compared case-insensitively (hostnames like localhost); the port must match exactly. */
 int server_stored_index(string ipv, int pnum)
 {
 	string key=string_to_lower_case(ipv);
@@ -260,8 +260,8 @@ int server_stored_index(string ipv, int pnum)
 		if(string_to_lower_case(servers[i].sip)==key and servers[i].sport==pnum) return int(i);
 	return -1;
 }
-// Index of a saved server with this name, or -1 if none. Names are compared case-insensitively so the list
-// stays unambiguous -- two presets can't share a name even if they point at different addresses.
+/* Index of a saved server with this name, or -1 if none. Names are compared case-insensitively so the list
+stays unambiguous -- two presets can't share a name even if they point at different addresses. */
 int server_name_index(string nm)
 {
 	string key=string_to_lower_case(nm);
@@ -269,8 +269,8 @@ int server_name_index(string nm)
 		if(string_to_lower_case(servers[i].sname)==key) return int(i);
 	return -1;
 }
-// The name of the saved server currently in use, or "Custom" if you're on a manually entered one. The
-// explicit custom flag wins, so picking Custom reads as Custom even when ip/port still match a preset.
+/* The name of the saved server currently in use, or "Custom" if you're on a manually entered one. The
+explicit custom flag wins, so picking Custom reads as Custom even when ip/port still match a preset. */
 string current_server_label()
 {
 	if(!server_custom)
@@ -278,10 +278,10 @@ string current_server_label()
 			if(servers[i].sip==ip and servers[i].sport==port) return servers[i].sname;
 	return "Custom";
 }
-// Server presets are added/edited/removed from the connection menu's Server storage submenu and chosen from its
-// Select a server option. Loading one fills in ip/port so the connection menu connects to it; saved in settings.cvf.
-// Add/edit use a form with Name, IP, and Port fields (like the account form), not sequential dialogs.
-// Add a server preset via a Name/IP/Port form.
+/* Server presets are added/edited/removed from the connection menu's Server storage submenu and chosen from its
+Select a server option. Loading one fills in ip/port so the connection menu connects to it; saved in settings.cvf.
+Add/edit use a form with Name, IP, and Port fields (like the account form), not sequential dialogs.
+Add a server preset via a Name/IP/Port form. */
 void addserver()
 {
 	form.reset();
@@ -315,8 +315,8 @@ void addserver()
 		}
 	}
 }
-// Load a server preset into ip/port so the connection menu connects to it (it does not connect by itself).
-// The default top entry is Custom: it keeps whatever ip/port are set (a manually entered, non-preset server).
+/* Load a server preset into ip/port so the connection menu connects to it (it does not connect by itself).
+The default top entry is Custom: it keeps whatever ip/port are set (a manually entered, non-preset server). */
 void loadservermenu()
 {
 	setupmenu(false);
@@ -421,8 +421,8 @@ void editserverdetails(int idx)
 		}
 	}
 }
-// The connection menu's Server storage submenu: select which server to use, and add, edit, or remove saved
-// server presets (add/edit use a Name/IP/Port form). Loops until you back out, so several changes fit in one visit.
+/* The connection menu's Server storage submenu: select which server to use, and add, edit, or remove saved
+server presets (add/edit use a Name/IP/Port form). Loops until you back out, so several changes fit in one visit. */
 void serverstoragemenu()
 {
 	while(true)
@@ -454,8 +454,8 @@ string current_account_label()
 {
 	return name!="" ? name : "none";
 }
-// Pick a saved account to make active (fills name/password). It does NOT sign in -- you then use "Sign in as
-// <username>". The choice is saved as the last/active account so it sticks across sessions. Mirrors loadservermenu.
+/* Pick a saved account to make active (fills name/password). It does NOT sign in -- you then use "Sign in as
+<username>". The choice is saved as the last/active account so it sticks across sessions. Mirrors loadservermenu. */
 void loadaccountmenu()
 {
 	if(accounts.length()==0) { dlgmessage("There are no saved accounts to use. Press enter to continue."); return; }
@@ -474,8 +474,8 @@ void loadaccountmenu()
 	save_last_account(); // the selected account becomes the active/last account
 	dlgmessage("Account changed to " + name + ". Press enter to continue.");
 }
-// Index of a saved account with this username, or -1 if none. Case-insensitive, since a username is a
-// case-insensitive identity on the server, so "Bob" and "bob" are the same account and can't both be stored.
+/* Index of a saved account with this username, or -1 if none. Case-insensitive, since a username is a
+case-insensitive identity on the server, so "Bob" and "bob" are the same account and can't both be stored. */
 int account_stored_index(string u)
 {
 	string key=string_to_lower_case(u);
@@ -491,8 +491,8 @@ bool add_account_to_storage(string u, string p)
 	writepreffs();
 	return true;
 }
-// Ask whether to save the given account into account storage; on yes, store it. Used after Set up an existing
-// account and after New account. The account is already the active one either way; this only affects storage.
+/* Ask whether to save the given account into account storage; on yes, store it. Used after Set up an existing
+account and after New account. The account is already the active one either way; this only affects storage. */
 void offer_save_account(string u, string p)
 {
 	setupmenu();
@@ -506,8 +506,8 @@ void offer_save_account(string u, string p)
 	}
 	else speak("canceled");
 }
-// Add an account preset via a form with username and masked password fields (modeled on the sign-in-as form),
-// not sequential dialogs -- credentials read better as one form. Spaces are disallowed, like the sign-in form.
+/* Add an account preset via a form with username and masked password fields (modeled on the sign-in-as form),
+not sequential dialogs -- credentials read better as one form. Spaces are disallowed, like the sign-in form. */
 void addaccount()
 {
 	form.reset();
@@ -538,8 +538,8 @@ void addaccount()
 		}
 	}
 }
-// Edit the chosen account via a form pre-filled with its username and password (the password field is pre-filled
-// too, masked, so leaving it as-is keeps the current password). Blank username or password cancels.
+/* Edit the chosen account via a form pre-filled with its username and password (the password field is pre-filled
+too, masked, so leaving it as-is keeps the current password). Blank username or password cancels. */
 void editaccountdetails(int idx)
 {
 	form.reset();
@@ -618,8 +618,8 @@ void removeaccountmenu()
 	writepreffs();
 	dlgmessage(removed + " removed. Press enter to continue.");
 }
-// The connection menu's Account storage submenu: select which saved account to use, and add, edit, or remove
-// saved account presets (add/edit use a username+password form; remove is a menu). Loops until you back out.
+/* The connection menu's Account storage submenu: select which saved account to use, and add, edit, or remove
+saved account presets (add/edit use a username+password form; remove is a menu). Loops until you back out. */
 void accountstoragemenu()
 {
 	while(true)

@@ -1,17 +1,17 @@
-// Live voice chat over the opus codec. Replaces the old record-a-clip + oggenc2 path entirely: while you
-// hold (or toggle) O, the mic streams 10ms float frames that are opus-encoded and sent on channel 3; the
-// server prepends a "name x y" header and relays them to everyone sharing your space. Incoming packets are
-// opus-decoded and played per-speaker through a positioned push stream that follows the speaker around the
-// map. The in-game loop just calls recordcheck() (capture/send) and voiceloop() (position/cleanup) each frame.
-// Requires the opus plugin (loaded via #pragma plugin opus in includes.nvgt); microphone is a built-in engine type.
+/* Live voice chat over the opus codec. Replaces the old record-a-clip + oggenc2 path entirely: while you
+hold (or toggle) O, the mic streams 10ms float frames that are opus-encoded and sent on channel 3; the
+server prepends a "name x y" header and relays them to everyone sharing your space. Incoming packets are
+opus-decoded and played per-speaker through a positioned push stream that follows the speaker around the
+map. The in-game loop just calls recordcheck() (capture/send) and voiceloop() (position/cleanup) each frame.
+Requires the opus plugin (loaded via #pragma plugin opus in includes.nvgt); microphone is a built-in engine type. */
 
-// Channel-3 wire format (voicemode picks which one the client sends; both play in 3D for every listener in the room):
-//   Live streaming  -> "l" + <one opus packet>          (unreliable; a dropped 20ms frame is inaudible)
-//   Voice message   -> "m" + <framed blob>              (reliable; must arrive intact)
-// where <framed blob> is a back-to-back sequence of [uint16 big-endian length][opus packet] for every frame
-// of the recording. The server prepends "name x y\n" to whatever the client sent and relays the tag+data
-// verbatim, choosing reliability from the tag. The receiver reads the tag after the header and decodes
-// accordingly. voice_frame_pack()/voice_blob_split() below are the framing helpers.
+/* Channel-3 wire format (voicemode picks which one the client sends; both play in 3D for every listener in the room):
+  Live streaming  -> "l" + <one opus packet>          (unreliable; a dropped 20ms frame is inaudible)
+  Voice message   -> "m" + <framed blob>              (reliable; must arrive intact)
+where <framed blob> is a back-to-back sequence of [uint16 big-endian length][opus packet] for every frame
+of the recording. The server prepends "name x y\n" to whatever the client sent and relays the tag+data
+verbatim, choosing reliability from the tag. The receiver reads the tag after the header and decodes
+accordingly. voice_frame_pack()/voice_blob_split() below are the framing helpers. */
 const int VOICE_RATE = 48000;   // capture/codec sample rate
 const int VOICE_FRAME = 960;    // samples per channel per opus frame = 20ms at 48000 Hz (halves the packet rate vs 10ms)
 const int VOICE_GAP_MS = 800;   // after this much silence a speaker's stream is reset/closed
@@ -25,9 +25,9 @@ sound voice_monitor;            // local centered playback of our own voice (the
 string voice_msg_blob = "";     // voicemode 1: framed opus accumulated for the in-progress message, sent as one reliable "m" blob on release
 string voice_msg_pcm = "";      // voicemode 1: raw pcm of the in-progress message, replayed locally after release if "hear your voice after recording" is on
 
-// Framing helpers for a voice message (see the wire-format note above). pack prefixes one opus packet with its
-// uint16 big-endian length; split walks a blob back into its packets, stopping cleanly on any truncation so a
-// garbled tail can never read past the end. Opus packets are always well under 65535 bytes, so 2 bytes suffice.
+/* Framing helpers for a voice message (see the wire-format note above). pack prefixes one opus packet with its
+uint16 big-endian length; split walks a blob back into its packets, stopping cleanly on any truncation so a
+garbled tail can never read past the end. Opus packets are always well under 65535 bytes, so 2 bytes suffice. */
 string voice_frame_pack(string pkt)
 {
 	uint n = pkt.length();
@@ -54,8 +54,8 @@ void voice_msg_reset()
 	voice_msg_blob = "";
 	voice_msg_pcm = "";
 }
-// Drain every buffered frame into the message: encode and append to the blob, and keep the raw pcm too (only
-// while monitoring) for the local "after recording" playback.
+/* Drain every buffered frame into the message: encode and append to the blob, and keep the raw pcm too (only
+while monitoring) for the local "after recording" playback. */
 void voice_msg_capture()
 {
 	while(voice_mic.available_frames >= uint(VOICE_FRAME))
@@ -67,12 +67,12 @@ void voice_msg_capture()
 		if(hearvoice) voice_msg_pcm += pcm;
 	}
 }
-// On release (or cap): send the whole recording as one reliable "m" message, then -- if monitoring -- play your
-// own clip back at your position. Clears the buffer either way.
+/* On release (or cap): send the whole recording as one reliable "m" message, then -- if monitoring -- play your
+own clip back at your position. Clears the buffer either way. */
 void voice_msg_send()
 {
-	// Too short to be real -- an accidental tap: silently cancel without sending (300ms floor, matching the old
-	// record-then-send system). rectimer was restarted at record start, so its elapsed is the take length.
+	/* Too short to be real -- an accidental tap: silently cancel without sending (300ms floor, matching the old
+	record-then-send system). rectimer was restarted at record start, so its elapsed is the take length. */
 	if(rectimer.elapsed < 300) { voice_msg_reset(); return; }
 	if(voice_msg_blob != "") send(0, "m" + voice_msg_blob, 3, true); // reliable: a voice message must arrive intact, not frame-by-frame
 	if(hearvoice and voice_msg_pcm != "")
@@ -135,12 +135,12 @@ void recordcheck()
 		want = voice_toggle_on;
 	}
 
-	// Start/stop transitions, rate-limited to spamtime in BOTH modes so mashing the key can't spam the cue
-	// or the stream: a state change only lands once spamtime has passed since the last one. (Previously only
-	// toggle mode was throttled, on its intent flip; push-to-talk could be spammed freely.)
-	// Voice-muted by staff: never open the mic or stream a packet. Warn once the moment they try to talk
-	// (once per press, latched), then bail -- the server would just drop the stream anyway. A mid-talk mute
-	// (recording already on) is stopped here too; that case is already announced by the live muted-voice notice.
+	/* Start/stop transitions, rate-limited to spamtime in BOTH modes so mashing the key can't spam the cue
+	or the stream: a state change only lands once spamtime has passed since the last one. (Previously only
+	toggle mode was throttled, on its intent flip; push-to-talk could be spammed freely.) */
+	/* Voice-muted by staff: never open the mic or stream a packet. Warn once the moment they try to talk
+	(once per press, latched), then bail -- the server would just drop the stream anyway. A mid-talk mute
+	(recording already on) is stopped here too; that case is already announced by the live muted-voice notice. */
 	if(voice_muted)
 	{
 		if(want and !voice_mute_warned)
@@ -198,9 +198,9 @@ void recordcheck()
 	}
 }
 
-// A playing voice message: a finite positioned clip anchored at (sx,sy) where the speaker released the key.
-// Unlike live voice it does NOT follow the speaker (it's a recording), but it is still re-panned against the
-// listener as they move, and it is dropped once it finishes playing. Several can play at once.
+/* A playing voice message: a finite positioned clip anchored at (sx,sy) where the speaker released the key.
+Unlike live voice it does NOT follow the speaker (it's a recording), but it is still re-panned against the
+listener as they move, and it is dropped once it finishes playing. Several can play at once. */
 class playing_voice_message
 {
 	sound@ snd;
@@ -210,9 +210,9 @@ class playing_voice_message
 playing_voice_message@[] voice_msgs;
 const uint VOICE_MSG_MAX = 8; // safety cap on concurrent message clips; the oldest is dropped past this
 
-// Play a von/voff cue one-shot in 3D at (cx,cy), routed like footsteps: through crosspool (muffled through the
-// wall) for a cross-wall PVP source, otherwise p. Shared by the LIVE voicecue handler (net.nvgt, keyed off the
-// speaker's record start/stop) and the MESSAGE-mode cues that wrap a recorded message's playback below.
+/* Play a von/voff cue one-shot in 3D at (cx,cy), routed like footsteps: through crosspool (muffled through the
+wall) for a cross-wall PVP source, otherwise p. Shared by the LIVE voicecue handler (net.nvgt, keyed off the
+speaker's record start/stop) and the MESSAGE-mode cues that wrap a recorded message's playback below. */
 void play_voice_cue_at(double cx, double cy, string onoff)
 {
 	string cuefile = (onoff == "on") ? "ui/misc/von" : "ui/misc/voff";
@@ -260,10 +260,10 @@ void voice_msgs_clear()
 	voice_msgs.resize(0);
 }
 
-// Handle an incoming voice packet. Format: "name x y\n<tag><data>" where tag is "l" (live frame) or "m" (a whole
-// voice message). A message is handed to play_remote_message() as its own fixed-position clip. For a live frame, a
-// fresh decoder/stream is started for a speaker we haven't heard recently (gap reset), otherwise the packet is
-// decoded and appended to their existing positioned push stream that voiceloop keeps following.
+/* Handle an incoming voice packet. Format: "name x y\n<tag><data>" where tag is "l" (live frame) or "m" (a whole
+voice message). A message is handed to play_remote_message() as its own fixed-position clip. For a live frame, a
+fresh decoder/stream is started for a speaker we haven't heard recently (gap reset), otherwise the packet is
+decoded and appended to their existing positioned push stream that voiceloop keeps following. */
 void play_remote_voice(string msg)
 {
 	int nl = string_contains(msg, "\n", 1);
@@ -289,10 +289,10 @@ void play_remote_voice(string msg)
 	{
 		if(@players[vi].voice_snd != null) players[vi].voice_snd.close();
 		@players[vi].voice_snd = sound();
-		// Cave reverb/lowpass for this voice by the speaker's position: reverb when they're in a cave interior,
-		// lowpassed "through the wall" when they're across the PVP ring from you (see apply_voice_fx). Applied once
-		// per stream -- nobody crosses inside<->outside mid-burst, so the effect stays fixed for the whole burst.
-		// Voice bypasses the pools, so it's set on the sound directly.
+		/* Cave reverb/lowpass for this voice by the speaker's position: reverb when they're in a cave interior,
+		lowpassed "through the wall" when they're across the PVP ring from you (see apply_voice_fx). Applied once
+		per stream -- nobody crosses inside<->outside mid-burst, so the effect stays fixed for the whole burst.
+		Voice bypasses the pools, so it's set on the sound directly. */
 		apply_voice_fx(players[vi].voice_snd, vx, vy);
 		if(@players[vi].voice_dec == null) @players[vi].voice_dec = opus_decoder(VOICE_RATE, 1);
 		else players[vi].voice_dec.reset_state();
@@ -311,10 +311,10 @@ void play_remote_voice(string msg)
 	}
 }
 
-// Each frame: keep every active voice stream positioned at its speaker (and re-panned as you move), close a
-// stream once its speaker has been silent past the gap so finished voices don't linger, and drop voice-only
-// roster entries (a speaker we never got a pos for, e.g. a spectator) once they stop talking. Iterates
-// backwards so a removal is index-safe.
+/* Each frame: keep every active voice stream positioned at its speaker (and re-panned as you move), close a
+stream once its speaker has been silent past the gap so finished voices don't linger, and drop voice-only
+roster entries (a speaker we never got a pos for, e.g. a spectator) once they stop talking. Iterates
+backwards so a removal is index-safe. */
 void voiceloop()
 {
 	for(int i=int(players.length())-1; i>=0; i--)
@@ -327,17 +327,17 @@ void voiceloop()
 		}
 		if(@players[i].voice_snd == null)
 		{
-			// A voice-only entry (tracked==false: no pos ever arrived) has no reason to stay once its voice
-			// stops -- drop it so a missed or never-sent "offline" can't leave a stale entry with a frozen
-			// position forever. A tracked cavern player keeps their entry (beacons/pos need it) while silent.
+			/* A voice-only entry (tracked==false: no pos ever arrived) has no reason to stay once its voice
+			stops -- drop it so a missed or never-sent "offline" can't leave a stale entry with a frozen
+			position forever. A tracked cavern player keeps their entry (beacons/pos need it) while silent. */
 			if(!players[i].tracked and players[i].voice_rxtimer.elapsed > VOICE_GAP_MS) remove_player(players[i].name);
 			continue;
 		}
 		players[i].voice_snd.set_position(me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), vpool.pan_step, vpool.volume_step);
 	}
 
-	// Voice messages: finite clips fixed at their send position. Re-pan each against the listener as they move,
-	// and drop each once it has finished playing. Iterate backwards so a removal is index-safe.
+	/* Voice messages: finite clips fixed at their send position. Re-pan each against the listener as they move,
+	and drop each once it has finished playing. Iterate backwards so a removal is index-safe. */
 	for(int i = int(voice_msgs.length()) - 1; i >= 0; i--)
 	{
 		if(@voice_msgs[i].snd == null or !voice_msgs[i].snd.playing)

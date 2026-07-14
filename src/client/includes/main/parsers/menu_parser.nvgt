@@ -1,8 +1,8 @@
-// Renders a server-pushed menu. The server broadcasts, on channel 0:
-//   showmenu <id>\n<title>\n<option>\n<option>...
-// We build the menu, run it, and reply "menuresult <id> <choice>", where choice is the 0-based
-// index of the option the player picked, or -1 if they cancelled. Called from netloop on "showmenu".
-// Note: this is modal — it pauses the game loop until the player answers, the same as any menu.
+/* Renders a server-pushed menu. The server broadcasts, on channel 0:
+  showmenu <id>\n<title>\n<option>\n<option>...
+We build the menu, run it, and reply "menuresult <id> <choice>", where choice is the 0-based
+index of the option the player picked, or -1 if they cancelled. Called from netloop on "showmenu".
+Note: this is modal — it pauses the game loop until the player answers, the same as any menu. */
 void show_server_menu(string message)
 {
 	string[] lines = string_split(message, "\n", true);
@@ -12,23 +12,23 @@ void show_server_menu(string message)
 	setupmenu();
 	for(uint i = 2; i < lines.length(); i++)
 	{
-		// A menu item may carry its keyboard shortcut after a tab: "<label>\t<shortcut>". Re-attach it as
-		// ". <shortcut>" only when the player wants shortcuts shown; otherwise show the label alone. Items with
-		// no tab (menus that have no hotkeys) pass straight through.
+		/* A menu item may carry its keyboard shortcut after a tab: "<label>\t<shortcut>". Re-attach it as
+		". <shortcut>" only when the player wants shortcuts shown; otherwise show the label alone. Items with
+		no tab (menus that have no hotkeys) pass straight through. */
 		string[] parts = string_split(lines[i], "\t", true);
 		string opt = parts[0];
 		if(parts.length() > 1 and menushortcuts)
 		{
-			// Format the shortcut as " (Control plus C)": drop the trailing period and wrap it in parentheses after
-			// the label -- e.g. "Create a public room (Control plus C)".
+			/* Format the shortcut as " (Control plus C)": drop the trailing period and wrap it in parentheses after
+			the label -- e.g. "Create a public room (Control plus C)". */
 			string sc = string_replace(parts[1], ".", "", true);
 			opt += " (" + sc + ")";
 		}
 		m.add_item(opt);
 	}
 	m.intro_text = lines[1];
-	// Silence the looping ground-item sounds (wood) while an in-game menu is up, unless the game is already
-	// frozen by the host's shared pause (which paused every pool, so leave that ownership alone).
+	/* Silence the looping ground-item sounds (wood) while an in-game menu is up, unless the game is already
+	frozen by the host's shared pause (which paused every pool, so leave that ownership alone). */
 	bool suspend = (in_game and !game_paused);
 	if(suspend) pause_objects();
 	int choice = m.run();

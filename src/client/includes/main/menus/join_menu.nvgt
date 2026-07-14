@@ -1,4 +1,4 @@
-// The join-room flow is now server-authoritative. When you choose "Join a public/private room" from the
-// server-pushed lobby menu, the server pushes the room list (and, for private rooms, asks for the
-// password via the askinput directive); the client just renders and replies. The old client-rendered
-// join_room_menu() / get_room_list() were removed; see menu.nvgt (push_join_list) + net.nvgt on the server.
+/* The join-room flow is now server-authoritative. When you choose "Join a public/private room" from the
+server-pushed lobby menu, the server pushes the room list (and, for private rooms, asks for the
+password via the askinput directive); the client just renders and replies. The old client-rendered
+join_room_menu() / get_room_list() were removed; see menu.nvgt (push_join_list) + net.nvgt on the server. */

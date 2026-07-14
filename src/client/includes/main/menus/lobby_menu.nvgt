@@ -1,4 +1,4 @@
-// The lobby menu is now server-authoritative. Pressing Enter in the lobby sends "openmenu" to the
-// server (see game.nvgt), which builds and pushes the menu; the client renders it via show_server_menu
-// (menu_parser.nvgt) and replies "menuresult". The old client-rendered lobby_menu() / join_room_menu()
-// were removed; the server handles create/join in menu.nvgt + net.nvgt.
+/* The lobby menu is now server-authoritative. Pressing Enter in the lobby sends "openmenu" to the
+server (see game.nvgt), which builds and pushes the menu; the client renders it via show_server_menu
+(menu_parser.nvgt) and replies "menuresult". The old client-rendered lobby_menu() / join_room_menu()
+were removed; the server handles create/join in menu.nvgt + net.nvgt. */

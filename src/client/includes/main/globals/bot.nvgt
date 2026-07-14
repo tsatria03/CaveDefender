@@ -1,7 +1,7 @@
-// Client-side roster of the EVP builder bots in the game we're in, kept so the B key can locate them (and so
-// a bot's step can carry a position). The server is authoritative; we just track id -> position from the
-// botspawn / botstep / botclear messages. Mirrors the clientitem roster in item.nvgt. Only EVP games populate
-// this; it's cleared on botclear and whenever we switch maps (draw_map).
+/* Client-side roster of the EVP builder bots in the game we're in, kept so the B key can locate them (and so
+a bot's step can carry a position). The server is authoritative; we just track id -> position from the
+botspawn / botstep / botclear messages. Mirrors the clientitem roster in item.nvgt. Only EVP games populate
+this; it's cleared on botclear and whenever we switch maps (draw_map). */
 clientbot@[] clientbots;
 class clientbot
 {

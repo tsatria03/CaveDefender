@@ -1,6 +1,6 @@
-// Audio effect zones: rectangular areas that apply an NVGT mixer effect (reverb, lowpass, ...) to a sound pool
-// while the listener stands inside them. Ported from SimpleFighter's effect_space and trimmed to what
-// CaveDefender uses (the map-builder preset UI was dropped). Currently drives the cave-interior reverb.
+/* Audio effect zones: rectangular areas that apply an NVGT mixer effect (reverb, lowpass, ...) to a sound pool
+while the listener stands inside them. Ported from SimpleFighter's effect_space and trimmed to what
+CaveDefender uses (the map-builder preset UI was dropped). Currently drives the cave-interior reverb. */
 class effect_zone
 {
 double minx, maxx, miny, maxy;
@@ -25,10 +25,10 @@ clear_tag = ctag;
 
 effect_zone@[] effect_spaces(0);
 
-// Guard: remember the last effect signature we pushed to each pool (keyed by a caller-supplied pool key) so we
-// only call set_fx when the set of effects for the listener's position actually CHANGES, not every frame.
-// Re-sending the same fx each frame can retrigger the effect (cutting a reverb tail) and is wasted work. An
-// empty poolkey disables the guard (always apply).
+/* Guard: remember the last effect signature we pushed to each pool (keyed by a caller-supplied pool key) so we
+only call set_fx when the set of effects for the listener's position actually CHANGES, not every frame.
+Re-sending the same fx each frame can retrigger the effect (cutting a reverb tail) and is wasted work. An
+empty poolkey disables the guard (always apply). */
 dictionary pool_fx_signatures;
 void apply_all_effects(double x, double y, sound_pool@ pool, double z=0, string poolkey="")
 {
@@ -59,27 +59,27 @@ pool_fx_signatures.set(poolkey, sig);
 for (uint t = 0; t < tags.length(); t++) pool.mixer.set_fx(desired[t]);
 }
 
-// Cave-interior reverb preset (freeverb: dry, wet, room size, damping, width). Tuned by ear for an enclosed
-// stone cavern; adjust these to taste. Applied to the cavern/inside-deck interior in every game mode.
+/* Cave-interior reverb preset (freeverb: dry, wet, room size, damping, width). Tuned by ear for an enclosed
+stone cavern; adjust these to taste. Applied to the cavern/inside-deck interior in every game mode. */
 const string cave_reverb_fx = "$reverb:freeverb:1.0:1.0:0.5:0.5:1.0";
-// Register a reverb zone over a rectangular interior (the cave floor or the inside watcher deck). Cleared on
-// the next map draw via destroy_all_effect_spaces().
+/* Register a reverb zone over a rectangular interior (the cave floor or the inside watcher deck). Cleared on
+the next map draw via destroy_all_effect_spaces(). */
 void spawn_cave_reverb(double minx, double maxx, double miny, double maxy)
 {
 spawn_effect_space(minx, maxx, miny, maxy, "cave_reverb", cave_reverb_fx, "$reverb");
 }
-// True while the local player is in a cavern game space (the arena or a watcher deck). The cave-interior sound
-// SOURCES -- the EVP builder bots and the ground wood -- are always inside the cave, so they carry the cave
-// reverb whenever this is set, even when you're listening from the outside (EVP exterior or the outdoor deck).
-// Set by draw_map.
+/* True while the local player is in a cavern game space (the arena or a watcher deck). The cave-interior sound
+SOURCES -- the EVP builder bots and the ground wood -- are always inside the cave, so they carry the cave
+reverb whenever this is set, even when you're listening from the outside (EVP exterior or the outdoor deck).
+Set by draw_map. */
 bool in_cavern = false;      // in a cavern arena or watcher deck (set by draw_map): the cave SOURCES carry reverb.
 bool listener_outside = false; // the local player is on the exterior (EVP gravel arena, or the outdoor deck): the cave sources are ALSO lowpass-muffled, as if heard through the wall.
-// Lowpass "through stone" muffle for cave sounds heard from outside the wall (frequency cutoff / bandwidth /
-// quality). Tune the cutoff (first number) by ear -- lower = more muffled. First brought in for EVP; PVP reuses it.
+/* Lowpass "through stone" muffle for cave sounds heard from outside the wall (frequency cutoff / bandwidth /
+quality). Tune the cutoff (first number) by ear -- lower = more muffled. First brought in for EVP; PVP reuses it. */
 const string cave_lowpass_fx = "$lowpass:lowpass:1500:5:0.5";
-// Set the cave effects on a cave-SOURCE pool (bots, ground wood), guarded on the combined state so we only touch
-// the mixer on a change. reverb_on = the source sits inside the cave; lowpass_on = the listener is on the OTHER
-// side of the wall (outside), so the source is muffled. The mixer runs both named slots ($reverb, $lowpass) at once.
+/* Set the cave effects on a cave-SOURCE pool (bots, ground wood), guarded on the combined state so we only touch
+the mixer on a change. reverb_on = the source sits inside the cave; lowpass_on = the listener is on the OTHER
+side of the wall (outside), so the source is muffled. The mixer runs both named slots ($reverb, $lowpass) at once. */
 void set_cave_source_fx(sound_pool@ pool, string poolkey, bool reverb_on, bool lowpass_on)
 {
 if(@pool == null or @pool.mixer == null) return;
@@ -93,9 +93,9 @@ pool_fx_signatures.set(poolkey, sig);
 pool.mixer.set_fx(rv);
 pool.mixer.set_fx(lp);
 }
-// PVP cross-wall audio geometry. The wall ring is inset by cavern_size/4; a point is INSIDE (the defenders'
-// interior) when it's within that ring, else OUTSIDE (the attackers' band). A sound is "cross-wall" -- and so
-// muffled through the ring -- when its source sits on the opposite side of the walls from the local listener.
+/* PVP cross-wall audio geometry. The wall ring is inset by cavern_size/4; a point is INSIDE (the defenders'
+interior) when it's within that ring, else OUTSIDE (the attackers' band). A sound is "cross-wall" -- and so
+muffled through the ring -- when its source sits on the opposite side of the walls from the local listener. */
 bool pvp_inside_ring(double x, double y)
 {
 int wmin = cavern_size/4, wmax = cavern_size - wmin;
@@ -106,13 +106,13 @@ bool pvp_crosswall(double sx, double sy)
 if(game_mode != "pvp") return false;
 return pvp_inside_ring(sx, sy) != pvp_inside_ring(me.x, me.y);
 }
-// Apply the cave reverb/lowpass to a bare voice sound. Voice streams bypass the pools (they play through standalone
-// push_memory sounds, not a sound_pool mixer), so the pool-based effect system can't reach them -- the effect is set on
-// the sound directly, here. Generalizes the old PVP-only path to every mode, reusing the same source-side model as the
-// bots/wood: reverb when the speaker sits in a cave interior, lowpass when they're across the PVP wall ring from you.
-// Dry outside any cavern (lobby, rooms, and the EVP gravel, where everyone is already outside). For your own voice pass
-// me's position, so it reverbs when YOU are inside and never lowpasses (you're right there). Set once per stream/talk,
-// not per frame: nobody crosses inside<->outside mid-burst (PVP sides are fixed, PVE all-interior, EVP all-exterior).
+/* Apply the cave reverb/lowpass to a bare voice sound. Voice streams bypass the pools (they play through standalone
+push_memory sounds, not a sound_pool mixer), so the pool-based effect system can't reach them -- the effect is set on
+the sound directly, here. Generalizes the old PVP-only path to every mode, reusing the same source-side model as the
+bots/wood: reverb when the speaker sits in a cave interior, lowpass when they're across the PVP wall ring from you.
+Dry outside any cavern (lobby, rooms, and the EVP gravel, where everyone is already outside). For your own voice pass
+me's position, so it reverbs when YOU are inside and never lowpasses (you're right there). Set once per stream/talk,
+not per frame: nobody crosses inside<->outside mid-burst (PVP sides are fixed, PVE all-interior, EVP all-exterior). */
 void apply_voice_fx(sound@ snd, double sx, double sy)
 {
 if(@snd == null) return;
@@ -125,13 +125,13 @@ else rev = !listener_outside; // shared interior (PVE / inside deck) reverbs; EV
 snd.set_fx(rev ? cave_reverb_fx : "$reverb"); // the bare tag clears that slot
 snd.set_fx(lp ? cave_lowpass_fx : "$lowpass");
 }
-// Apply the effect zones each frame.
-// - The local player's OWN listening pools follow the LISTENER via the effect zones (spawned only for the inside
-//   cavern/deck): wet inside, dry on the exterior. No lowpass on your own sounds -- you're right there.
-// - The cave-interior SOURCES (bots on botpool; ground wood + wood take/place on objpool) reverb by their own
-//   location (always inside the cave), AND are lowpass-muffled when YOU are outside the wall -- so from the EVP
-//   exterior you hear the bots and wood echoey AND muffled, while your own sounds stay clear. (This is the same
-//   source-side muffle PVP will use across the walls.)
+/* Apply the effect zones each frame.
+- The local player's OWN listening pools follow the LISTENER via the effect zones (spawned only for the inside
+  cavern/deck): wet inside, dry on the exterior. No lowpass on your own sounds -- you're right there.
+- The cave-interior SOURCES (bots on botpool; ground wood + wood take/place on objpool) reverb by their own
+  location (always inside the cave), AND are lowpass-muffled when YOU are outside the wall -- so from the EVP
+  exterior you hear the bots and wood echoey AND muffled, while your own sounds stay clear. (This is the same
+  source-side muffle PVP will use across the walls.) */
 void apply_effect_pools()
 {
 apply_all_effects(me.x, me.y, p, me.z, "p");
@@ -142,8 +142,8 @@ apply_all_effects(me.x, me.y, musicpool, me.z, "musicpool");
 bool muffle = in_cavern and listener_outside;
 set_cave_source_fx(botpool, "botpool", in_cavern, muffle);
 set_cave_source_fx(objpool, "objpool", in_cavern, muffle);
-// PVP cross-wall pool: relayed sounds whose source is on the far side of the ring play here. Lowpass always on
-// (through the wall); reverb on only when the far side is the cave interior -- i.e. when the listener is OUTSIDE.
+/* PVP cross-wall pool: relayed sounds whose source is on the far side of the ring play here. Lowpass always on
+(through the wall); reverb on only when the far side is the cave interior -- i.e. when the listener is OUTSIDE. */
 if(game_mode == "pvp") set_cave_source_fx(crosspool, "crosspool", !pvp_inside_ring(me.x, me.y), true);
 }
 void spawn_effect_space(double x1, double x2, double y1, double y2, string id, string fx, string ctag, double mnz=0, double mxz=0)
