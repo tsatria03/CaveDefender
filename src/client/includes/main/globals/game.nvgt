@@ -1,6 +1,6 @@
-// While the server is frozen, a developer can still open the normal chat boxes (same titles/prompts as usual)
-// to type a gamestop or gamestart command; any other command or a plain chat message is refused, since nothing
-// but starting or stopping the game works while it's frozen.
+/* While the server is frozen, a developer can still open the normal chat boxes (same titles/prompts as usual)
+to type a gamestop or gamestart command; any other command or a plain chat message is refused, since nothing
+but starting or stopping the game works while it's frozen. */
 void frozen_chat_input(string title, string prompt)
 {
 	string msg=vd.input_box(title, prompt, "");
@@ -47,11 +47,11 @@ buffercheck();
 		}
 		if(world_frozen)
 		{
-			// A developer has the whole server frozen. Buffer review still works (buffercheck at the top of the
-			// loop), but movement, menus, voice, and chat are all dead everywhere. A developer can still open the
-			// normal chat boxes -- same titles and prompts as usual -- to type a gamestop or gamestart command;
-			// anything else is refused. Each chat key is read once so none leaks onto the moment we unfreeze; a
-			// non-developer's keys do nothing. Everything else is skipped by the continue below.
+			/* A developer has the whole server frozen. Buffer review still works (buffercheck at the top of the
+			loop), but movement, menus, voice, and chat are all dead everywhere. A developer can still open the
+			normal chat boxes -- same titles and prompts as usual -- to type a gamestop or gamestart command;
+			anything else is refused. Each chat key is read once so none leaks onto the moment we unfreeze; a
+			non-developer's keys do nothing. Everything else is skipped by the continue below. */
 			bool dev = (my_rank_level() >= 3);
 			if(key_pressed(KEY_SLASH)) { if(dev) frozen_chat_input("Global chat", "Type a global message, or a slash command."); continue; }
 			if(key_pressed(KEY_APOSTROPHE)) { if(dev) frozen_chat_input("Staff chat", "Type a staff message, or a slash command."); continue; }
@@ -59,10 +59,10 @@ buffercheck();
 			if(key_pressed(KEY_SEMICOLON)) { if(dev and in_game and !watching and game_mode == "pvp") frozen_chat_input("Team chat", "Type a team message, or a slash command."); continue; }
 			if(key_pressed(KEY_ESCAPE))
 			{
-				// Escape stays live for everyone while frozen so no one is trapped: it offers the usual exit to the
-				// connection menu (the same confirm as leaving from the lobby). Leaving a game back to its room isn't
-				// possible mid-freeze -- the server ignores that -- so escape quits the session instead. The disconnect
-				// itself is handled outside the frozen dispatch, so it always goes through.
+				/* Escape stays live for everyone while frozen so no one is trapped: it offers the usual exit to the
+				connection menu (the same confirm as leaving from the lobby). Leaving a game back to its room isn't
+				possible mid-freeze -- the server ignores that -- so escape quits the session instead. The disconnect
+				itself is handled outside the frozen dispatch, so it always goes through. */
 				bool doexit=true;
 				if(gamxit==1)
 				{
@@ -79,10 +79,10 @@ buffercheck();
 		}
 		if(in_game and game_paused)
 		{
-			// The host has the game paused. Gameplay, movement, and voice stay frozen, but players who aren't
-			// shown a menu can still communicate and review messages while they wait: the chat keys work here,
-			// and the buffer navigation keys are already handled by buffercheck() at the top of the loop. Audio
-			// was suspended on the gamepaused message, so everything else is skipped by the continue below.
+			/* The host has the game paused. Gameplay, movement, and voice stay frozen, but players who aren't
+			shown a menu can still communicate and review messages while they wait: the chat keys work here,
+			and the buffer navigation keys are already handled by buffercheck() at the top of the loop. Audio
+			was suspended on the gamepaused message, so everything else is skipped by the continue below. */
 			if(key_pressed(KEY_SLASH))
 			{
 				string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "");
@@ -120,8 +120,8 @@ buffercheck();
 		voiceloop();
 		update_ambiences(me.x, me.y);
 		update_musics(me.x, me.y);
-		// AFK: during the countdown any key cancels it; once away, any key wakes us. Handled before the
-		// normal key checks so the waking press only brings us back rather than also acting.
+		/* AFK: during the countdown any key cancels it; once away, any key wakes us. Handled before the
+		normal key checks so the waking press only brings us back rather than also acting. */
 		if(afk_counting)
 		{
 			if(afk_wake_key_pressed())
@@ -149,8 +149,8 @@ buffercheck();
 		}
 		else if(afk)
 		{
-			// While away, the chat keys still open chat without waking you (backslash only when shift isn't
-			// held, since shift+backslash is the buffer export combo).
+			/* While away, the chat keys still open chat without waking you (backslash only when shift isn't
+			held, since shift+backslash is the buffer export combo). */
 			if(key_pressed(KEY_SLASH))
 			{
 				string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "");
@@ -181,16 +181,16 @@ buffercheck();
 			}
 			if(afk_wake_key_pressed())
 			{
-				// A non-exempt key woke you: come back and swallow that press so it does nothing else. The
-				// afkoff cue comes from the afkannounce broadcast everyone receives.
+				/* A non-exempt key woke you: come back and swallow that press so it does nothing else. The
+				afkoff cue comes from the afkannounce broadcast everyone receives. */
 				afk=false;
 				send(0, "afkreturn", 0, true);
 				continue;
 			}
 			// No wake key this frame: fall through so the exempt keys (buffers, F1-F5, G/L/R, escape) work.
 		}
-		// Auto-running (toggle with Alt+R): when on you run by default and holding a modifier walks; when
-		// off it's the reverse (walk by default, modifier runs). Mirrors how SimpleFighter inverts with alt.
+		/* Auto-running (toggle with Alt+R): when on you run by default and holding a modifier walks; when
+		off it's the reverse (walk by default, modifier runs). Mirrors how SimpleFighter inverts with alt. */
 		bool running = autorun;
 		if (alt_is_down()) running = !running;
 		movetime = running ? runtime : walktime;
@@ -198,9 +198,9 @@ buffercheck();
 		{
 			speak(me.x+", "+me.y+" on "+gmt()+". Facing "+facing_name(facing)+".");
 		}
-		// Lobby quick-actions: Ctrl+C creates a public room, Ctrl+Shift+C a private one; Ctrl+J joins a public room,
-			// Ctrl+Shift+J a private one. Lobby only. Each key is read once and branched on Shift (one-shot keys), and
-			// sends the exact menuresult the matching lobby menu item sends (0-3), so the server does the identical work.
+		/* Lobby quick-actions: Ctrl+C creates a public room, Ctrl+Shift+C a private one; Ctrl+J joins a public room,
+			Ctrl+Shift+J a private one. Lobby only. Each key is read once and branched on Shift (one-shot keys), and
+			sends the exact menuresult the matching lobby menu item sends (0-3), so the server does the identical work. */
 			if (current_room==0 and !in_game and control_is_down())
 			{
 				if (key_pressed(KEY_C)) send(0, shift_is_down() ? "menuresult lobby 1" : "menuresult lobby 0", 0, true); // create private / public room
@@ -208,9 +208,9 @@ buffercheck();
 				if (key_pressed(KEY_A)) send(0, "openpanel account", 0, true); // Ctrl+A: jump to the Account panel
 				if (key_pressed(KEY_H)) send(0, "openpanel lobby", 0, true);   // Ctrl+H: jump to the Lobby panel (the location panel while in the lobby)
 			}
-			// Room quick-actions (in a room, not a game): Ctrl+<key> runs the matching room-menu action without opening the
-			// menu. Each key read once; Ctrl+S start and Ctrl+Shift+S stop share S. Sent by action name (roomaction <act>),
-			// which the server dispatches through the same do_room_action the menu uses (host/private checks re-validated there).
+			/* Room quick-actions (in a room, not a game): Ctrl+<key> runs the matching room-menu action without opening the
+			menu. Each key read once; Ctrl+S start and Ctrl+Shift+S stop share S. Sent by action name (roomaction <act>),
+			which the server dispatches through the same do_room_action the menu uses (host/private checks re-validated there). */
 			if (current_room!=0 and !in_game and control_is_down())
 			{
 				if (key_pressed(KEY_S)) send(0, shift_is_down() ? "roomaction stopgame" : "roomaction startgame", 0, true); // stop / start game
@@ -225,9 +225,9 @@ buffercheck();
 				if (key_pressed(KEY_A)) send(0, "openpanel account", 0, true); // Ctrl+A: jump to the Account panel
 				if (key_pressed(KEY_H)) send(0, "openpanel room", 0, true);    // Ctrl+H: jump to the Room panel (the location panel while in a room)
 			}
-			// PVE/EVP round hotkeys (host only, in a PVE or EVP game): Ctrl+B begins the round, Ctrl+S skips the build phase
-			// (staff), Ctrl+I invites, Ctrl+K kicks. Each key read once, sent by action name via do_game_action, which
-			// re-validates host/phase/staff server-side. PVP shares this menu but adds side options, so it gets its own block.
+			/* PVE/EVP round hotkeys (host only, in a PVE or EVP game): Ctrl+B begins the round, Ctrl+S skips the build phase
+			(staff), Ctrl+I invites, Ctrl+K kicks. Each key read once, sent by action name via do_game_action, which
+			re-validates host/phase/staff server-side. PVP shares this menu but adds side options, so it gets its own block. */
 			if (in_game and (game_mode=="pve" or game_mode=="evp") and current_game_host==name and control_is_down())
 			{
 				if (game_phase=="idle" and key_pressed(KEY_B)) send(0, "gameaction beginround", 0, true); // only before the round starts, so a wrong-phase press is silent
@@ -235,9 +235,9 @@ buffercheck();
 				if (key_pressed(KEY_I)) send(0, "gameaction gameinvite", 0, true);
 				if (key_pressed(KEY_K)) send(0, "gameaction gamekick", 0, true);
 			}
-			// PVP round hotkeys (in a PVP game): everyone can Ctrl+C choose a side and Ctrl+W watch instead; the host also gets
-			// Ctrl+B begin, Ctrl+S skip build, Ctrl+I invite, Ctrl+K kick, Ctrl+A assign. Each key read once, sent by action
-			// name via do_game_action, which re-validates phase/host/staff (side/watch changes only apply pre-round).
+			/* PVP round hotkeys (in a PVP game): everyone can Ctrl+C choose a side and Ctrl+W watch instead; the host also gets
+			Ctrl+B begin, Ctrl+S skip build, Ctrl+I invite, Ctrl+K kick, Ctrl+A assign. Each key read once, sent by action
+			name via do_game_action, which re-validates phase/host/staff (side/watch changes only apply pre-round). */
 			if (in_game and game_mode=="pvp" and control_is_down())
 			{
 				if (key_pressed(KEY_C)) send(0, "gameaction pvpside", 0, true);  // choose your side (everyone)
@@ -289,8 +289,8 @@ buffercheck();
 		if (in_game and !control_is_down() and key_pressed(KEY_W)) speak(wall_phrase_full("west", wall_west)); // !control frees Ctrl+W for the PVP watch-instead hotkey
 		if (in_game and key_pressed(KEY_T)) speak("wall strengths. " + wall_phrase_short("north", wall_north) + ". " + wall_phrase_short("east", wall_east) + ". " + wall_phrase_short("south", wall_south) + ". " + wall_phrase_short("west", wall_west) + ".");
 		if (in_game and !watching and !game_outside and !(game_mode=="pvp" and my_side=="attack") and key_pressed(KEY_D)) track_wood(); // gatherers only: spectators and EVP players don't gather, and neither do PVP attackers (only the defenders do)
-		// EVP weapon selection: the number row draws one of the four weapons (1 axe, 2 bat, 3 crowbar, 4 hammer).
-		// Each is its own key, so the one-shot key_pressed reads don't collide. PVE players never draw a weapon.
+		/* EVP weapon selection: the number row draws one of the four weapons (1 axe, 2 bat, 3 crowbar, 4 hammer).
+		Each is its own key, so the one-shot key_pressed reads don't collide. PVE players never draw a weapon. */
 		swingloop(); // EVP: drive the held-Space swing and set the `swinging` lock used by the keys below
 		// Switching weapons only works while armed (current_weapon != "") -- i.e. during a round; before the round starts you have none. Allowed mid-swing (the in-flight swing keeps its own weapon).
 		if (in_game and !watching and (game_outside or (game_mode == "pvp" and my_side == "attack")) and current_weapon != "" and key_pressed(KEY_1)) draw_weapon(1);
@@ -376,8 +376,8 @@ buffercheck();
 		{
 			send(0, "playerlist", 0, true); // open the server-pushed player roster menu (like F1's who, but viewable)
 		}
-		// Live world-volume keys: Page up/down adjust music, Home/End adjust ambience. Stepped by 2 and
-		// clamped to -100..0 on a 50 ms repeat (so holding ramps smoothly), saved only when it changes.
+		/* Live world-volume keys: Page up/down adjust music, Home/End adjust ambience. Stepped by 2 and
+		clamped to -100..0 on a 50 ms repeat (so holding ramps smoothly), saved only when it changes. */
 		if(worldvoltimer.elapsed>=50)
 		{
 			bool volchanged=false;
@@ -418,8 +418,8 @@ buffercheck();
 			{
 				if(shift_is_down() and !watching and !game_outside and !(game_mode=="pvp" and my_side=="attack")) // spectators can't reinforce; EVP players and PVP attackers don't reinforce (they attack) -- only defenders build
 				{
-					// Shift+Enter reinforces the nearest wall in reach; the server picks it from your position, so the
-// direction sent here is just a legacy hint it ignores (facing no longer matters).
+					/* Shift+Enter reinforces the nearest wall in reach; the server picks it from your position, so the
+direction sent here is just a legacy hint it ignores (facing no longer matters). */
 					string dir = (facing==Left) ? "west" : (facing==Right) ? "east" : (facing==Forward) ? "north" : "south";
 					send(0, "reinforce "+dir, 0, true);
 				}
@@ -453,8 +453,8 @@ buffercheck();
 		}
 }
 }
-// Escape while watching: confirm before stopping (mirrors the lobby exit confirm, gated by the same gamxit
-// preference), then send leavewatch. Says "canceled" on No or escape.
+/* Escape while watching: confirm before stopping (mirrors the lobby exit confirm, gated by the same gamxit
+preference), then send leavewatch. Says "canceled" on No or escape. */
 void stop_watching_prompt()
 {
 	bool doleave=true;
@@ -468,8 +468,8 @@ void stop_watching_prompt()
 	}
 	if(doleave) send(0, "leavewatch", 0, true);
 }
-// Tab in a game: speak the current round status. Enter now opens the game menu, so Tab is free to read
-// out where the round stands -- the build countdown, or whether the enemies are attacking or resting.
+/* Tab in a game: speak the current round status. Enter now opens the game menu, so Tab is free to read
+out where the round stands -- the build countdown, or whether the enemies are attacking or resting. */
 void speak_game_status()
 {
 	if(game_phase == "build")

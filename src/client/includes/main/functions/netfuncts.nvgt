@@ -1,0 +1,27 @@
+bool send(int peer_id,string packet,int channel,bool reliable)
+{
+if(encrypting)
+{
+packet=string_encrypt(packet,"rscs123");
+}
+if(reliable)
+{
+return net.send_reliable(peer_id,packet,channel);
+}
+else
+{
+return net.send_unreliable(peer_id,packet,channel);
+}
+}
+string get_event_message()
+{
+if(encrypting) return string_decrypt(event.message, "rscs123");
+else return event.message;
+}
+
+/* True when this client is the server's own host machine (connected to localhost). Used to keep the
+connection-status chatter (lost/reconnected) for the hoster only; remote players reconnect silently. */
+bool is_hoster()
+{
+return ip == "localhost" or ip == "127.0.0.1";
+}

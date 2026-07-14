@@ -1,0 +1,21 @@
+bool send(int peer_id,string packet,int channel,bool reliable)
+{
+if(peer_id<0) return false; // a held (disconnected-but-holding) session carries a negative sentinel peer id; never hand that to enet -- their outgoing traffic is simply dropped while held, so every broadcast loop stays inert toward them with no per-loop guard
+if(encryption)
+{
+packet=string_encrypt(packet,"rscs123");
+}
+if(reliable)
+{
+return net.send_reliable(peer_id,packet,channel);
+}
+else
+{
+return net.send_unreliable(peer_id,packet,channel);
+}
+}
+string get_event_message()
+{
+if(encryption) return string_decrypt(event.message, "rscs123");
+else return event.message;
+}

@@ -1,10 +1,10 @@
-// Client-side slash-command router for the in-chat input.
-// CaveDefender is online, so authoritative commands run on the SERVER. Unlike SimpleFighter's
-// offline comparse(), this parser does not execute commands locally — it only decides how typed
-// text leaves the client: plain text is public chat, and each recognised slash command is
-// forwarded to the server on the channel its handler expects (0 = control, 1 = chat).
-// Each command validates its own argument count first and reports usage via syntax_error() when
-// it's wrong, the same way SimpleFighter's commands do. New commands should follow that pattern.
+/* Client-side slash-command router for the in-chat input.
+CaveDefender is online, so authoritative commands run on the SERVER. Unlike SimpleFighter's
+offline comparse(), this parser does not execute commands locally — it only decides how typed
+text leaves the client: plain text is public chat, and each recognised slash command is
+forwarded to the server on the channel its handler expects (0 = control, 1 = chat).
+Each command validates its own argument count first and reports usage via syntax_error() when
+it's wrong, the same way SimpleFighter's commands do. New commands should follow that pattern. */
 void syntax_error(string usage)
 {
 	add_buffer_item("misc", "Invalid command syntax. Usage: " + usage + ".");
@@ -17,8 +17,8 @@ int my_rank_level()
 	if(myrank == "moderator") return 1;
 	return 0;
 }
-// Reports a command we can't use as unknown, exactly like one that doesn't exist, so staff-only
-// commands stay hidden from players who aren't allowed to use them.
+/* Reports a command we can't use as unknown, exactly like one that doesn't exist, so staff-only
+commands stay hidden from players who aren't allowed to use them. */
 void unknown_command(string cmd)
 {
 	add_buffer_item("misc", "Unknown command: " + cmd);
@@ -51,12 +51,12 @@ void comparse(string text, string channel = "global")
 	}
 	string[] parsed = string_split(text, " ", true);
 	string base = string_to_lower_case(parsed[0]);
-	// The who list, message of the day, and server uptime are no longer slash commands -- press F1 (or F6 for the
-	// menu), F2, and F4 respectively; the server still answers those same requests, just triggered by the keys.
+	/* The who list, message of the day, and server uptime are no longer slash commands -- press F1 (or F6 for the
+	menu), F2, and F4 respectively; the server still answers those same requests, just triggered by the keys. */
 	if(base == "/help")
 	{
-		// Everyone types /help to go straight to the player help. Staff can additionally open the staff
-		// page with /help staff, and /help player still works too.
+		/* Everyone types /help to go straight to the player help. Staff can additionally open the staff
+		page with /help staff, and /help player still works too. */
 		if(my_rank_level() < 1)
 		{
 			if(parsed.length() != 1) { syntax_error("/help"); return; }
@@ -71,10 +71,10 @@ void comparse(string text, string channel = "global")
 	}
 	else if(base == "/rules")
 	{
-		// Anyone can read either page: plain /rules gives the player rules; /rules player or /rules staff picks
-		// one. Unlike the staff help, the staff RULES are open to everyone, so players can see the standards
-		// staff are held to. "/rules agree" and "/rules disagree" are the rules-gate answers (server-validated),
-		// forwarded on the same channel as a page request.
+		/* Anyone can read either page: plain /rules gives the player rules; /rules player or /rules staff picks
+		one. Unlike the staff help, the staff RULES are open to everyone, so players can see the standards
+		staff are held to. "/rules agree" and "/rules disagree" are the rules-gate answers (server-validated),
+		forwarded on the same channel as a page request. */
 		if(parsed.length() == 1) send(0, "rules player", 0, true);
 		else if(parsed.length() == 2) send(0, "rules "+parsed[1], 0, true);
 		else { syntax_error("/rules, /rules player, /rules staff, /rules agree, or /rules disagree"); return; }
@@ -258,8 +258,8 @@ void comparse(string text, string channel = "global")
 			}
 		else if(base == "/report")
 			{
-				// Anyone can report a player to the staff. Requires a target and a reason; the server accepts an
-				// offline player by username too, so someone who just left can still be reported.
+				/* Anyone can report a player to the staff. Requires a target and a reason; the server accepts an
+				offline player by username too, so someone who just left can still be reported. */
 				if(parsed.length() < 3) { syntax_error("/report username reason"); return; }
 				send(0, text, 1, true);
 			}
@@ -279,9 +279,9 @@ void comparse(string text, string channel = "global")
 		}
 		else if(base == "/afk")
 	{
-		// Go AFK yourself via the local countdown (any key cancels it). Self-only -- staff can no longer put
-		// another player AFK; going away is always your own choice. Anything after /afk is your optional reason,
-		// captured now and sent when the countdown finishes; it's announced once and stored nowhere.
+		/* Go AFK yourself via the local countdown (any key cancels it). Self-only -- staff can no longer put
+		another player AFK; going away is always your own choice. Anything after /afk is your optional reason,
+		captured now and sent when the countdown finishes; it's announced once and stored nowhere. */
 		if(afk) // already away: typing /afk (with or without a reason) brings you back; the afkoff cue comes from the broadcast
 		{
 			afk=false;
@@ -306,8 +306,8 @@ void comparse(string text, string channel = "global")
 	}
 	else if(base == "/changemail")
 		{
-			// Self: /changemail <email> (anyone). Admin: /changemail <username> <email> (administrator+). Email is
-			// cosmetic and space-free, so it rides on the chat line; the server sets it and no logout happens.
+			/* Self: /changemail <email> (anyone). Admin: /changemail <username> <email> (administrator+). Email is
+			cosmetic and space-free, so it rides on the chat line; the server sets it and no logout happens. */
 			if(parsed.length() == 2)
 			{
 				if(string_contains(parsed[1], "@", 1) < 0) { add_buffer_item("misc", "Please enter a valid email address."); return; }
@@ -328,9 +328,9 @@ void comparse(string text, string channel = "global")
 		}
 		else if(base == "/changepass")
 	{
-		// Passwords are NEVER typed on the chat line -- they're entered in a masked FORM (more than one field, so a
-		// form and not a dialog). Self: /changepass (no args) collects current, new, and confirm. Admin (administrator+):
-		// /changepass <username> resets another player's, collecting new and confirm. Both send a distinct control message.
+		/* Passwords are NEVER typed on the chat line -- they're entered in a masked FORM (more than one field, so a
+		form and not a dialog). Self: /changepass (no args) collects current, new, and confirm. Admin (administrator+):
+		/changepass <username> resets another player's, collecting new and confirm. Both send a distinct control message. */
 		if(parsed.length() == 1)
 		{
 			string[] fields = {"*Current password", "*New password", "*Confirm new password"};
@@ -368,16 +368,16 @@ void comparse(string text, string channel = "global")
 	}
 		else if(base == "/changename")
 	{
-		// Administrator+ renames a player's account: /changename <playername> <newname> (both space-free identifiers,
-		// so they ride the chat line). The server validates and renames; the target is logged out to sign in anew.
+		/* Administrator+ renames a player's account: /changename <playername> <newname> (both space-free identifiers,
+		so they ride the chat line). The server validates and renames; the target is logged out to sign in anew. */
 		if(my_rank_level() < 2) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 3) { syntax_error("/changename playername newname"); return; }
 		send(0, text, 1, true);
 	}
 		else if(base == "/delchar")
 	{
-		// Self: /delchar (no args) deletes YOUR account -- warn, then confirm with your password. Admin (administrator+):
-		// /delchar <username> deletes another online player's after a warning. The server does the deletion and logout.
+		/* Self: /delchar (no args) deletes YOUR account -- warn, then confirm with your password. Admin (administrator+):
+		/delchar <username> deletes another online player's after a warning. The server does the deletion and logout. */
 		if(parsed.length() == 1)
 		{
 			setupmenu();
@@ -408,8 +408,8 @@ void comparse(string text, string channel = "global")
 	}
 		else if(base == "/nickname" or base == "/nick")
 	{
-		// One argument: set your own nickname (or "default" to revert). Two: staff set another player's
-		// nickname by username (all staff). Anything else is bad syntax.
+		/* One argument: set your own nickname (or "default" to revert). Two: staff set another player's
+		nickname by username (all staff). Anything else is bad syntax. */
 		if(parsed.length() == 2) { send(0, text, 1, true); }
 		else if(parsed.length() == 3)
 		{

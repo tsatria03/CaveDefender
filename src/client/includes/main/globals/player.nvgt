@@ -1,8 +1,8 @@
-// Client-side roster of OTHER players we can currently hear. The local player stays as `me`
-// (map.nvgt) plus the identity globals (name); this class is only for the remote players
-// the server tells us about. Each carries a position so we can place their sounds (footsteps, a
-// locator beacon) in 3D relative to `me`, plus a beacon timer/handle so the beacon can pulse at
-// their spot — the same shape as SimpleFighter's checkpoint/item looping-sound objects.
+/* Client-side roster of OTHER players we can currently hear. The local player stays as `me`
+(map.nvgt) plus the identity globals (name); this class is only for the remote players
+the server tells us about. Each carries a position so we can place their sounds (footsteps, a
+locator beacon) in 3D relative to `me`, plus a beacon timer/handle so the beacon can pulse at
+their spot — the same shape as SimpleFighter's checkpoint/item looping-sound objects. */
 player@[] players;
 
 class player
@@ -39,8 +39,8 @@ if(players[i].name==pname) return i;
 return -1;
 }
 
-// Start tracking a remote player (ignored if we already are). The visible rank and AFK flag default to
-// ordinary; the pos handler sets the real values via set_player_position.
+/* Start tracking a remote player (ignored if we already are). The visible rank and AFK flag default to
+ordinary; the pos handler sets the real values via set_player_position. */
 void add_player(string pname, int px, int py, string pvrank="player", bool pafk=false)
 {
 if(get_player_index(pname)>-1) return;
@@ -50,10 +50,10 @@ p1.afk=pafk;
 players.insert_last(p1);
 }
 
-// Update a tracked player's position (and their visible rank / AFK state); the beacon/footsteps then play
-// at the new spot. The rank/afk default to ordinary so callers that don't know them (e.g. the voice header)
-// don't clobber a known value with bad data — those callers pass no extra args, but they only ADD a player,
-// they don't move an existing one, so the real pos updates keep the values current.
+/* Update a tracked player's position (and their visible rank / AFK state); the beacon/footsteps then play
+at the new spot. The rank/afk default to ordinary so callers that don't know them (e.g. the voice header)
+don't clobber a known value with bad data — those callers pass no extra args, but they only ADD a player,
+they don't move an existing one, so the real pos updates keep the values current. */
 void set_player_position(string pname, int px, int py, string pvrank="player", bool pafk=false)
 {
 int i=get_player_index(pname);
@@ -74,8 +74,8 @@ beaconpool.destroy_sound(players[i].beaconsound); // stop their last beacon puls
 players.remove_at(i);
 }
 
-// Drop the entire roster on a room change; the server then re-sends the new scope's occupants so we
-// only hear the players sharing our current space (lobby or room).
+/* Drop the entire roster on a room change; the server then re-sends the new scope's occupants so we
+only hear the players sharing our current space (lobby or room). */
 void clear_players()
 {
 for(uint i=0; i<players.length(); i++)
@@ -90,10 +90,10 @@ bool beacons_enabled=false; // off by default; toggled with F5; when false beaco
 int beacontime=1000;        // ms between a player's beacon pulses.
 int lastx=1, lasty=1;      // last position reported to the server, so we only send when we actually move.
 
-// Pulse a positional beacon at each tracked player's spot, relative to `me`, so you can hear where
-// everyone is. Re-fires per player on its own timer (same shape as SimpleFighter's cploop/objloop),
-// each at that player's own fixed pitch so individuals stay distinguishable but steady. Plays through beaconpool, whose listener update_sound_pools()
-// keeps anchored to `me`.
+/* Pulse a positional beacon at each tracked player's spot, relative to `me`, so you can hear where
+everyone is. Re-fires per player on its own timer (same shape as SimpleFighter's cploop/objloop),
+each at that player's own fixed pitch so individuals stay distinguishable but steady. Plays through beaconpool, whose listener update_sound_pools()
+keeps anchored to `me`. */
 void beaconloop()
 {
 if(!beacons_enabled) return;

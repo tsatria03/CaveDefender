@@ -1,7 +1,7 @@
-// Map music: a looping music track that fills a rectangular area of the map. Works exactly like the
-// ambience class (see ambience.nvgt) but plays from sounds/music/ on its own musicpool: the track
-// plays at the min corner with its range spanning to the max corner, and pauses while the listener is
-// outside the rectangle.
+/* Map music: a looping music track that fills a rectangular area of the map. Works exactly like the
+ambience class (see ambience.nvgt) but plays from sounds/music/ on its own musicpool: the track
+plays at the min corner with its range spanning to the max corner, and pauses while the listener is
+outside the rectangle. */
 music@[] musics(0);
 class music
 {
@@ -26,8 +26,8 @@ if(in_range and !is_playing) { musicpool.resume_sound(handle); is_playing = true
 else if(!in_range and is_playing) { musicpool.pause_sound(handle); is_playing = false; }
 }
 }
-// Spawn music over a rectangle. Pass the source type without ".ogg" (the class adds it), e.g.
-// spawn_music(0, 100, 0, 100, "lobby", -10).
+/* Spawn music over a rectangle. Pass the source type without ".ogg" (the class adds it), e.g.
+spawn_music(0, 100, 0, 100, "lobby", -10). */
 void spawn_music(double x1, double x2, double y1, double y2, string src, double vol)
 {
 music m(x1, x2, y1, y2, src, vol);
@@ -37,9 +37,9 @@ void update_musics(double lx, double ly)
 {
 for(uint i = 0; i < musics.length(); i++) musics[i].update(lx, ly);
 }
-// Set the volume of every live music track and remember it as the in-world music volume, so newly drawn
-// maps spawn at the same level. Updates each sound's start volume (the pool keeps subtracting distance
-// attenuation from that base, so the new level sticks frame to frame).
+/* Set the volume of every live music track and remember it as the in-world music volume, so newly drawn
+maps spawn at the same level. Updates each sound's start volume (the pool keeps subtracting distance
+attenuation from that base, so the new level sticks frame to frame). */
 void set_music_volume(double vol)
 {
 musvolume = vol;

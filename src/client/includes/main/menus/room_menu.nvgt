@@ -1,9 +1,9 @@
-// The room menu itself is now server-authoritative (Enter sends "openmenu"; the server builds and
-// pushes it — see server menu.nvgt / net.nvgt). What remains here are the R / L / G "glance" helpers,
-// which speak who/what is around (they are spoken announcements, not menus). Called from game.nvgt.
+/* The room menu itself is now server-authoritative (Enter sends "openmenu"; the server builds and
+pushes it — see server menu.nvgt / net.nvgt). What remains here are the R / L / G "glance" helpers,
+which speak who/what is around (they are spoken announcements, not menus). Called from game.nvgt. */
 
-// Ask the server for a roster (e.g. "scopemembers", "scopemembers 0") and wait for the reply, pumping
-// netloop meanwhile. Returns the raw "scopememberlist ..." payload, or "" on timeout / lost connection.
+/* Ask the server for a roster (e.g. "scopemembers", "scopemembers 0") and wait for the reply, pumping
+netloop meanwhile. Returns the raw "scopememberlist ..." payload, or "" on timeout / lost connection. */
 string get_members(string request)
 {
 scopemembers_received = false;
@@ -20,8 +20,8 @@ if(scopemembers_received) return pending_scopemembers;
 }
 return "";
 }
-// Speak a roster, e.g. "There are 2 players in this room: ..." The request is the server query to run
-// and `where` is the spoken phrase ("in this room", "in the lobby", ...).
+/* Speak a roster, e.g. "There are 2 players in this room: ..." The request is the server query to run
+and `where` is the spoken phrase ("in this room", "in the lobby", ...). */
 void announce_members(string request, string where)
 {
 string roster = get_members(request);
@@ -31,9 +31,9 @@ string[] names;
 for(uint i = 1; i < f.length(); i++) names.insert_last(f[i]);
 speak(roster_sentence(where, names));
 }
-// Ask the server for a games glance (request is "roomgamemembers" for this room or "allgamemembers" for
-// the whole server) and wait for the reply, pumping netloop meanwhile. Returns the raw
-// "roomgamelist <count> ..." payload, or "" on timeout.
+/* Ask the server for a games glance (request is "roomgamemembers" for this room or "allgamemembers" for
+the whole server) and wait for the reply, pumping netloop meanwhile. Returns the raw
+"roomgamelist <count> ..." payload, or "" on timeout. */
 string get_games(string request)
 {
 roomgames_received = false;
@@ -62,8 +62,8 @@ string[] names;
 for(uint i = 1; i < lines.length(); i++) names.insert_last(lines[i]);
 speak(games_sentence(where, gc, names));
 }
-// Ask the server for the rooms overview (count + office occupants) and wait for the reply, pumping
-// netloop meanwhile. Returns the raw "roomsoverviewlist <count> ..." payload, or "" on timeout.
+/* Ask the server for the rooms overview (count + office occupants) and wait for the reply, pumping
+netloop meanwhile. Returns the raw "roomsoverviewlist <count> ..." payload, or "" on timeout. */
 string get_rooms()
 {
 rooms_received = false;
