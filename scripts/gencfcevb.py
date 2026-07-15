@@ -40,6 +40,16 @@ LIB_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "opus.dll", "phonon.dll"]
 # Whole asset folders to embed (walked recursively).
 EMBED_FOLDERS = ["sounds", "docks"]
 
+# The DLL list is fixed (not discovered), so verify each one exists in lib/ before writing -- otherwise the
+# .evb would reference a file Enigma can't find and boxing would fail later. Abort with the missing names.
+_missing = [dll for dll in LIB_DLLS if not os.path.isfile(os.path.join(CLIENT_ASSETS, "lib", dll))]
+if _missing:
+    print(f"ERROR: {len(_missing)} required DLL(s) missing from {os.path.join(CLIENT_ASSETS, 'lib')}:")
+    for _dll in _missing:
+        print(f"  {_dll}")
+    print("Add them to lib/ and re-run. Nothing was written.")
+    raise SystemExit(1)
+
 def ind(n):
     return " " * n
 

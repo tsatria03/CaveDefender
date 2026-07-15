@@ -15,64 +15,142 @@
         <OverwriteAttributes>False</OverwriteAttributes>
         <HideFromDialogs>0</HideFromDialogs>
         <Files>
-          <File>
-            <Type>3</Type>
-            <Name>lib</Name>
-            <Action>0</Action>
-            <OverwriteDateTime>False</OverwriteDateTime>
-            <OverwriteAttributes>False</OverwriteAttributes>
-            <HideFromDialogs>0</HideFromDialogs>
-            <Files>
               <File>
-                <Type>2</Type>
-                <Name>bass.dll</Name>
-                <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\lib\bass.dll</File>
-                <ActiveX>False</ActiveX>
-                <ActiveXInstall>False</ActiveXInstall>
+                <Type>3</Type>
+                <Name>lib</Name>
                 <Action>0</Action>
                 <OverwriteDateTime>False</OverwriteDateTime>
                 <OverwriteAttributes>False</OverwriteAttributes>
-                <PassCommandLine>False</PassCommandLine>
                 <HideFromDialogs>0</HideFromDialogs>
+                <Files>
+                  <File>
+                    <Type>2</Type>
+                    <Name>bass.dll</Name>
+                    <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\lib\bass.dll</File>
+                    <ActiveX>False</ActiveX>
+                    <ActiveXInstall>False</ActiveXInstall>
+                    <Action>0</Action>
+                    <OverwriteDateTime>False</OverwriteDateTime>
+                    <OverwriteAttributes>False</OverwriteAttributes>
+                    <PassCommandLine>False</PassCommandLine>
+                    <HideFromDialogs>0</HideFromDialogs>
+                  </File>
+                  <File>
+                    <Type>2</Type>
+                    <Name>bassmix.dll</Name>
+                    <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\lib\bassmix.dll</File>
+                    <ActiveX>False</ActiveX>
+                    <ActiveXInstall>False</ActiveXInstall>
+                    <Action>0</Action>
+                    <OverwriteDateTime>False</OverwriteDateTime>
+                    <OverwriteAttributes>False</OverwriteAttributes>
+                    <PassCommandLine>False</PassCommandLine>
+                    <HideFromDialogs>0</HideFromDialogs>
+                  </File>
+                  <File>
+                    <Type>2</Type>
+                    <Name>bass_fx.dll</Name>
+                    <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\lib\bass_fx.dll</File>
+                    <ActiveX>False</ActiveX>
+                    <ActiveXInstall>False</ActiveXInstall>
+                    <Action>0</Action>
+                    <OverwriteDateTime>False</OverwriteDateTime>
+                    <OverwriteAttributes>False</OverwriteAttributes>
+                    <PassCommandLine>False</PassCommandLine>
+                    <HideFromDialogs>0</HideFromDialogs>
+                  </File>
+                  <File>
+                    <Type>2</Type>
+                    <Name>phonon.dll</Name>
+                    <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\lib\phonon.dll</File>
+                    <ActiveX>False</ActiveX>
+                    <ActiveXInstall>False</ActiveXInstall>
+                    <Action>0</Action>
+                    <OverwriteDateTime>False</OverwriteDateTime>
+                    <OverwriteAttributes>False</OverwriteAttributes>
+                    <PassCommandLine>False</PassCommandLine>
+                    <HideFromDialogs>0</HideFromDialogs>
+                  </File>
+                </Files>
               </File>
               <File>
-                <Type>2</Type>
-                <Name>bassmix.dll</Name>
-                <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\lib\bassmix.dll</File>
-                <ActiveX>False</ActiveX>
-                <ActiveXInstall>False</ActiveXInstall>
+                <Type>3</Type>
+                <Name>docks</Name>
                 <Action>0</Action>
                 <OverwriteDateTime>False</OverwriteDateTime>
                 <OverwriteAttributes>False</OverwriteAttributes>
-                <PassCommandLine>False</PassCommandLine>
                 <HideFromDialogs>0</HideFromDialogs>
+                <Files>
+                  <File>
+                    <Type>3</Type>
+                    <Name>help</Name>
+                    <Action>0</Action>
+                    <OverwriteDateTime>False</OverwriteDateTime>
+                    <OverwriteAttributes>False</OverwriteAttributes>
+                    <HideFromDialogs>0</HideFromDialogs>
+                    <Files>
+                      <File>
+                        <Type>2</Type>
+                        <Name>player.txt</Name>
+                        <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\docks\help\player.txt</File>
+                        <ActiveX>False</ActiveX>
+                        <ActiveXInstall>False</ActiveXInstall>
+                        <Action>0</Action>
+                        <OverwriteDateTime>False</OverwriteDateTime>
+                        <OverwriteAttributes>False</OverwriteAttributes>
+                        <PassCommandLine>False</PassCommandLine>
+                        <HideFromDialogs>0</HideFromDialogs>
+                      </File>
+                      <File>
+                        <Type>2</Type>
+                        <Name>staff.txt</Name>
+                        <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\docks\help\staff.txt</File>
+                        <ActiveX>False</ActiveX>
+                        <ActiveXInstall>False</ActiveXInstall>
+                        <Action>0</Action>
+                        <OverwriteDateTime>False</OverwriteDateTime>
+                        <OverwriteAttributes>False</OverwriteAttributes>
+                        <PassCommandLine>False</PassCommandLine>
+                        <HideFromDialogs>0</HideFromDialogs>
+                      </File>
+                    </Files>
+                  </File>
+                  <File>
+                    <Type>3</Type>
+                    <Name>rules</Name>
+                    <Action>0</Action>
+                    <OverwriteDateTime>False</OverwriteDateTime>
+                    <OverwriteAttributes>False</OverwriteAttributes>
+                    <HideFromDialogs>0</HideFromDialogs>
+                    <Files>
+                      <File>
+                        <Type>2</Type>
+                        <Name>player.txt</Name>
+                        <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\docks\rules\player.txt</File>
+                        <ActiveX>False</ActiveX>
+                        <ActiveXInstall>False</ActiveXInstall>
+                        <Action>0</Action>
+                        <OverwriteDateTime>False</OverwriteDateTime>
+                        <OverwriteAttributes>False</OverwriteAttributes>
+                        <PassCommandLine>False</PassCommandLine>
+                        <HideFromDialogs>0</HideFromDialogs>
+                      </File>
+                      <File>
+                        <Type>2</Type>
+                        <Name>staff.txt</Name>
+                        <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\docks\rules\staff.txt</File>
+                        <ActiveX>False</ActiveX>
+                        <ActiveXInstall>False</ActiveXInstall>
+                        <Action>0</Action>
+                        <OverwriteDateTime>False</OverwriteDateTime>
+                        <OverwriteAttributes>False</OverwriteAttributes>
+                        <PassCommandLine>False</PassCommandLine>
+                        <HideFromDialogs>0</HideFromDialogs>
+                      </File>
+                    </Files>
+                  </File>
+                </Files>
               </File>
-              <File>
-                <Type>2</Type>
-                <Name>bass_fx.dll</Name>
-                <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\lib\bass_fx.dll</File>
-                <ActiveX>False</ActiveX>
-                <ActiveXInstall>False</ActiveXInstall>
-                <Action>0</Action>
-                <OverwriteDateTime>False</OverwriteDateTime>
-                <OverwriteAttributes>False</OverwriteAttributes>
-                <PassCommandLine>False</PassCommandLine>
-                <HideFromDialogs>0</HideFromDialogs>
-              </File>
-              <File>
-                <Type>2</Type>
-                <Name>phonon.dll</Name>
-                <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\server\lib\phonon.dll</File>
-                <ActiveX>False</ActiveX>
-                <ActiveXInstall>False</ActiveXInstall>
-                <Action>0</Action>
-                <OverwriteDateTime>False</OverwriteDateTime>
-                <OverwriteAttributes>False</OverwriteAttributes>
-                <PassCommandLine>False</PassCommandLine>
-                <HideFromDialogs>0</HideFromDialogs>
-              </File>
-            </Files>
-          </File>
         </Files>
       </File>
     </Files>

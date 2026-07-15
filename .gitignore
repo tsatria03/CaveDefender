@@ -7,7 +7,7 @@ __pycache__/
 # Compiled release builds
 release/
 
-# Binary engine libraries (DLLs + bundled tools like oggenc2.exe)
+# Binary engine libraries (DLLs + bundled tools.
 cf/client/lib/
 cf/server/lib/
 
