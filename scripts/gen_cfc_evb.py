@@ -1,8 +1,8 @@
 """Regenerate src/client/cfc.evb — the Enigma Virtual Box project for the client.
 
 The .evb embeds, into cfc.exe: the 5 audio DLLs (bass, bassmix, bass_fx, opus, phonon) plus the ENTIRE
-sounds/ and docks/ asset folders. Screen-reader DLLs and the third-party GameEngine64.dll are deliberately
-left out so they stay real files in lib/. Enigma has no wildcard support, so every embedded file needs its
+sounds/ and docks/ asset folders. Screen-reader DLLs are deliberately left out so they stay real files in
+lib/. Enigma has no wildcard support, so every embedded file needs its
 own explicit entry; this script walks the real asset folders (cf/client) and writes them all out.
 
 Note: the .evb lives in src/client, but the assets it references stay in cf/client — an .evb's location is
@@ -35,7 +35,7 @@ CLIENT_FOLDER = f"{GAME}Client_password_is_{PASSWORD}"
 REL           = os.path.join(REPO_DIR, "release", "windows", CLIENT_FOLDER, CLIENT_OUT)
 OUT           = os.path.join(CLIENT_SRC, f"{CLIENT_OUT}.evb")
 
-# Only these DLLs get embedded; screen readers + GameEngine64 stay real files in lib/.
+# Only these DLLs get embedded; the screen-reader DLLs stay real files in lib/.
 LIB_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "opus.dll", "phonon.dll"]
 # Whole asset folders to embed (walked recursively).
 EMBED_FOLDERS = ["sounds", "docks"]

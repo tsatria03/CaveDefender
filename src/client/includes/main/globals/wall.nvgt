@@ -1,73 +1,9 @@
-/* Client-side mirror of the walls in the player's CURRENT space, used purely for audio and tiles —
-the server owns the authoritative health (see the server's globals/wall.nvgt). When the game loop
-and enemies land, the server will sync each wall's health into this mirror; this module turns those
-health changes into sound: a hurt clip at the wall when it's damaged, and the death clip plus a
-re-tile to floor when it breaks. Modeled on SimpleFighter's wall destruction (wallcheck), rebuilt
-lean and WITHOUT the optional debris platforms. Wall hurt/death play through the `p` pool (see the
-path-conventions memory). Nothing populates this list yet — it's the foundation the game wires up. */
-wall@[] walls;
-class wall
-{
-double minx, maxx, miny, maxy;
-double health, maxhealth;
-string type;        // wall tile name (e.g. "wallwood") -> sound folder objects/walls/<type>/
-string floor;       // tile the cell becomes when the wall breaks (the cavern floor); no debris
-int hurtsound=-1;   // handle of the most recent hurt clip, so death can stop it
-int deathsound=-1;  // handle of the death clip
-wall(double mnx, double mxx, double mny, double mxy, double hp, double maxhp, string ty, string fl)
-{
-minx=mnx;
-maxx=mxx;
-miny=mny;
-maxy=mxy;
-health=hp;
-maxhealth=maxhp;
-type=ty;
-floor=fl;
-}
-}
-// Add a wall to the local mirror and return its index.
-int spawn_wall(double minx, double maxx, double miny, double maxy, double health, double maxhealth, string type, string floor)
-{
-wall w(minx, maxx, miny, maxy, health, maxhealth, type, floor);
-walls.insert_last(w);
-return walls.length()-1;
-}
-// The mirror index of the wall covering this cell, or -1 if none.
-int wall_at(double x, double y)
-{
-for(uint i=0; i<walls.length(); i++)
-{
-if(@walls[i]==null) continue;
-if(x>=walls[i].minx and x<=walls[i].maxx and y>=walls[i].miny and y<=walls[i].maxy) return i;
-}
-return -1;
-}
-// Drop the local wall mirror (on leaving a space / game end).
-void clear_walls()
-{
-walls.resize(0);
-}
-/* Build the local mirror of a cavern's four destroyable walls (for hurt/death audio) from its size.
-Called on entering a game; the server stays authoritative on their health. */
-void setup_cavern_walls(double size)
-{
-clear_walls();
-spawn_wall(0, 0, 0, size, 100, 100, "wallwood", "concrete");       // west  (x = 0)
-spawn_wall(size, size, 0, size, 100, 100, "wallwood", "concrete"); // east  (x = size)
-spawn_wall(0, size, size, size, 100, 100, "wallwood", "concrete"); // north (y = size)
-spawn_wall(0, size, 0, 0, 100, 100, "wallwood", "concrete");       // south (y = 0)
-}
-/* Play a hurt clip over a wall that just took damage, emanating across the whole wall span in 3D.
-(Volume/pitch could later scale to walls[index].health/maxhealth for a "weakening" feel — left
-neutral for now so the curve is a deliberate tuning choice, not an accidental default.) */
-void play_wall_hurt(int index)
-{
-if(index<0 or index>=int(walls.length()) or @walls[index]==null) return;
-walls[index].hurtsound = p.play_extended_3d("sounds/objects/walls/"+walls[index].type+"/hurt"+random(1,3)+".ogg", me.x, me.y, me.z, walls[index].minx, walls[index].miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
-p.update_sound_3d(walls[index].hurtsound, walls[index].minx, walls[index].miny, 0);
-p.update_sound_range_3d(walls[index].hurtsound, 0, walls[index].maxx-walls[index].minx, 0, walls[index].maxy-walls[index].miny, 0, 0);
-}
+/* Wall AUDIO for the player's CURRENT space. Walls are server-authoritative (their health lives in the
+server's globals/wall.nvgt); this module just turns wall events into sound -- weapon strikes, the wall's
+own creak, ricochets, and the death boom -- and re-tiles a breach to a walkable floor. Each wall's span
+is computed on the fly from cavern_size + direction (matching draw_map / spawn_ring_walls), so there is
+no per-wall object to track here. Wall sounds play through the `p` pool (see the path-conventions memory).
+Modeled on SimpleFighter's wall destruction (wallcheck), rebuilt lean and WITHOUT the debris platforms. */
 // The synced strength percent for a wall direction (set by the wallstr message; can exceed 100).
 int wall_percent_for(string dir)
 {
@@ -87,7 +23,7 @@ if(vol < -30) vol = -30;
 if(vol > 0) vol = 0;
 return vol;
 }
-/* Play a hit on a wall in real 3D, positioned across that wall's span (like play_wall_hurt), with the
+/* Play a hit on a wall in real 3D, positioned across that wall's span, with the
 weapon's hit sound AND the wall's own hurt creak. Inside (PVE) both are scaled to the wall's remaining
 strength as a danger cue (a healthy wall's strikes are quiet, a weakening wall's get loud); outside (EVP)
 they play at constant full volume. Called from the wallhit message. The chosen volume is re-asserted

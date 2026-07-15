@@ -1100,7 +1100,6 @@ void netloop_impl()
 			cavern_size = gs;
 			if (game_mode == "pvp") { my_side = ""; current_weapon = ""; draw_map("pvparena", 0, gs, 0, gs); } // PVP resets to staging: sides re-picked, unarmed, the concentric arena redrawn intact
 				else draw_map("cavern", 0, gs, 0, gs, game_outside);
-			setup_cavern_walls(gs);
 			lastx = int(me.x);
 			lasty = int(me.y);
 		}
@@ -1293,7 +1292,6 @@ void netloop_impl()
 			add_buffer_item("misc", "You are now in " + ghost + "'s " + parsed[3] + " " + (parsed[4] == "evp" ? "EVP" : parsed[4] == "pvp" ? "PVP" : "PVE") + " game.");
 			if (parsed[4] == "pvp") draw_map("pvparena", 0, gsize, 0, gsize); // PVP concentric arena; per-side spawns come later
 				else draw_map("cavern", 0, gsize, 0, gsize, game_outside);
-			setup_cavern_walls(gsize);
 			// No weapon on entry: EVP players are unarmed until a round starts (handled in the gamephase handler).
 			lastx = int(me.x);
 			lasty = int(me.y);
@@ -1325,7 +1323,6 @@ void netloop_impl()
 		else if (parsed[0] == "gameleft")
 		{
 			clear_players();
-			clear_walls();
 			in_game = false;
 			game_phase = "idle";
 			game_paused = false;
@@ -1343,7 +1340,6 @@ void netloop_impl()
 		{
 			// The game host kicked you: like gameleft, but with the kick cue and back into the game's room.
 			clear_players();
-			clear_walls();
 			in_game = false;
 			game_phase = "idle";
 			game_paused = false;
@@ -1378,7 +1374,6 @@ void netloop_impl()
 			watch_host = shost; // remembered for the stop-watching confirmation
 			add_buffer_item("misc", "You are now watching " + shost + "'s " + (parsed[3] == "evp" ? "EVP" : parsed[3] == "pvp" ? "PVP" : "PVE") + " game.");
 			draw_map("cavern2", 0, gsize, 0, gsize, game_outside); // the deck (the outdoor gravel/wallwoodpile retheme is task #65)
-			setup_cavern_walls(gsize); // audio mirror for the defenders' walls below (hit/death volume)
 			me.z = spectate_height; // lift the listener onto the deck above the action (draw_map leaves z alone)
 			lastx = int(me.x);
 			lasty = int(me.y);
@@ -1387,7 +1382,6 @@ void netloop_impl()
 		{
 			// Stopped watching (we left, the game ended, or the room closed): return to the office.
 			clear_players();
-			clear_walls();
 			in_game = false;
 			watching = false;
 			game_phase = "idle";
