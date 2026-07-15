@@ -1988,6 +1988,23 @@ else if(parsed[0]=="joinroom" and index>-1 and parsed.length()>1)
 string pw = (parsed.length()>2) ? parsed[2] : "";
 do_join_room(index, event.peer_id, int(string_to_number(parsed[1])), pw);
 }
+else if(parsed[0]=="rejoinlast" and index>-1 and parsed.length()>1)
+{
+/* Lobby quick-rejoin (client Ctrl+J / Ctrl+Shift+J): jump straight back into the last room of this kind you
+joined this session. Public rejoins directly with no password; private reopens the password box prefilled with
+the password you last used, so you just confirm it (do_join_room re-validates it against the room's current
+password, so a changed password still fails). Tells you so if you haven't joined that kind of room yet. */
+if(parsed[1]=="private")
+{
+if(players[index].last_private_room==0) send(event.peer_id, "You haven't joined a private room this session yet.", 0, true);
+else ask_input(event.peer_id, "Enter the room's password.", "joinroom " + players[index].last_private_room, true, false, players[index].last_private_pw);
+}
+else
+{
+if(players[index].last_public_room==0) send(event.peer_id, "You haven't joined a public room this session yet.", 0, true);
+else do_join_room(index, event.peer_id, players[index].last_public_room, "");
+}
+}
 else if(parsed[0]=="scopemembers" and index>-1)
 {
 /* Everyone in a given space (room_id). With no argument it's the requester's own scope; with one it's

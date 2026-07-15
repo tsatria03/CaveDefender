@@ -82,6 +82,9 @@ return;
 bool already=false;
 for(uint k=0; k<rooms[ri].members.length(); k++) if(rooms[ri].members[k]==peer) already=true;
 if(!already) rooms[ri].members.insert_last(peer);
+// Remember this room for the lobby quick-rejoin keys (Ctrl+J public / Ctrl+Shift+J private); private also stores the password used, to prefill the rejoin box.
+if(rooms[ri].is_private) { players[index].last_private_room = rooms[ri].id; players[index].last_private_pw = password; }
+else players[index].last_public_room = rooms[ri].id;
 send(peer, "roomjoined "+rooms[ri].id+" "+(rooms[ri].is_private?"private":"public")+" "+rooms[ri].host+"\n"+display_name_flagged_for(rooms[ri].host), 0,true);
 set_room_scope(index, rooms[ri].id);
 // Tell everyone else (player events) that this player joined the room (the host's own room reads with their pronoun).
