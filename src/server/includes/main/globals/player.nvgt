@@ -17,6 +17,10 @@ int64 mute_global=-1, mute_local=-1, mute_voice=-1, mute_team=-1; // per channel
 int64[] global_msg_times; // anti-spam: svruptimer.elapsed (ms since boot) of this player's recent global-chat messages, newest appended last; entries older than spamtime are pruned each message, and the whole list is cleared when the spam guard trips. Transient, never persisted.
 int x=1, y=1; // map position; defaults to the client's spawn at (1,1) until a position update arrives.
 int room_id=0; // 0 = main lobby; otherwise the id of the room this player is currently in.
+/* Session memory for the lobby quick-rejoin keys (client game.nvgt Ctrl+J / Ctrl+Shift+J). last_public_room and last_private_room hold the id of the last public / private room this player joined this session (0 = none yet); last_private_pw is the password they used for last_private_room, prefilled back into the rejoin password box so they can just confirm it (re-validated fresh, so a changed password still fails). Transient, never persisted to the account. */
+int last_public_room=0;
+int last_private_room=0;
+string last_private_pw="";
 string team=""; // which side this player is on within their game (PVP: attack/defend); routes team chat. Empty in co-op games, so team chat reaches everyone in the game until PVP splits the sides.
 int pvp_damage=0; // PVP: total wall damage this attacker dealt this match (reset each round start); shown on the results screen.
 int pvp_wood_placed=0; // PVP: pieces of wood this defender placed to reinforce this match (reset each round start); shown on the results screen.

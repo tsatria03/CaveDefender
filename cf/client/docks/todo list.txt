@@ -1,14 +1,14 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Add some more weapons to the EVP and PVP game modes.
-**Unfinished. Fix major balancing issues in the environment versus player and player versus player modes.
-**Unfinished. Move the weapon and item values into data files the server reads instead of hardcoding them.
-**Unfinished. Replace the number row weapon keys with a menu for choosing your weapon.
-**Unfinished. Let control J in the lobby rejoin the last public room you chose this session, and control shift J the last private room with its password prefilled.
 **Unfinished. Add ranged weapons that fire traveling bullets at the walls, with an ammo and reload system.
+**Unfinished. Move the weapon and item values into data files the server reads instead of hardcoding them.
+**Unfinished. Add some more weapons to the EVP and PVP game modes.
+**Unfinished. Replace the number row weapon keys with a menu for choosing your weapon.
+**Unfinished. Fix major balancing issues in the environment versus player and player versus player modes.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Let control J in the lobby rejoin the last public room you chose this session, and control shift J the last private room with its password prefilled.
 **Finished. Auto-mute a non-staff player in global chat when they send too many messages too fast, with the trip rate and mute length set by the host in the server config.
 **Finished. Let the host pick a wall reinforce limit of 200, 400, or 800 percent or no limit when starting a PVE or PVP game, and in PVE choose whether enemy bots pile onto the remaining walls when one falls.
 **Finished. Add a developer /bansall command that lists every banned account on the server, read-only, with each ban's length and reason.

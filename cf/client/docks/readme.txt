@@ -174,12 +174,12 @@ Rooms.
 Control plus A. Open the account panel. Works in the lobby and any room.
 Control plus H. Open the panel for where you are: the lobby panel in the lobby, or the room panel in a room.
 
-The rest of these run individual lobby or room menu items directly. These first ones work only in the lobby, and do the same as the matching lobby menu items without opening the menu first.
+The rest of these run lobby or room actions directly without opening the menu first. These first ones work only in the lobby.
 
 Control plus C. Create a public room.
 Control plus shift plus C. Create a private room.
-Control plus J. Join a public room.
-Control plus shift plus J. Join a private room.
+Control plus J. Rejoin the last public room you joined this session.
+Control plus shift plus J. Rejoin the last private room you joined this session, with its password already filled in.
 
 While inside a room, these run the room menu's actions without opening it first.
 
