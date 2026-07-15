@@ -1,0 +1,9 @@
+damage=8,15
+melee=false
+fire mode=0
+spam time=900
+range=10
+bullet speed=30
+ammo type=gas
+max ammo=1
+status=burn:4000:500:3,7
