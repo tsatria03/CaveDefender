@@ -1,0 +1,8 @@
+damage=18,32
+melee=false
+fire mode=0
+spam time=1100
+range=10
+bullet speed=30
+ammo type=grenade
+max ammo=1

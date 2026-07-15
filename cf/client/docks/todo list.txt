@@ -2,6 +2,10 @@
 
 **Unfinished. Add some more weapons to the EVP and PVP game modes.
 **Unfinished. Fix major balancing issues in the environment versus player and player versus player modes.
+**Unfinished. Move the weapon and item values into data files the server reads instead of hardcoding them.
+**Unfinished. Replace the number row weapon keys with a menu for choosing your weapon.
+**Unfinished. Let control J in the lobby rejoin the last public room you chose this session, and control shift J the last private room with its password prefilled.
+**Unfinished. Add ranged weapons that fire traveling bullets at the walls, with an ammo and reload system.
 
 ##These are the things that are already finished from earlier versions of the game.
 
