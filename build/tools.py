@@ -52,17 +52,21 @@ SERVER_DEST   = os.path.join(REPO_DIR, "release", "windows", SERVER_FOLDER)
 CLIENT_BUILD  = os.path.join(CLIENT_DEST, CLIENT_OUT)   # the finished client bundle (cfc)
 SERVER_BUILD  = os.path.join(SERVER_DEST, SERVER_OUT)   # the finished server bundle (cfs)
 
-# Enigma boxing: each side's .evb (cf/<side>/cf?.evb) embeds its audio DLLs into the exe; afterward we strip
-# them from the shipped lib/ (screen-reader DLLs + the client's third-party GameEngine64.dll stay as real files).
-# The server has no opus (voice is client-only) and no GameEngine64. Disable with box_project = 0 under [game]
-# in tools.ini (defaults on; the old box_client key is still honored for back-compat).
+# Enigma boxing: each side's .evb (src/<side>/cf?.evb) embeds its audio DLLs and asset folders into the exe;
+# afterward we strip those from the shipped build -- the DLLs from lib/, the folders entirely -- since they now
+# live virtually inside the exe (screen-reader DLLs + the client's third-party GameEngine64.dll stay as real
+# files). The client embeds opus + sounds/docks; the server embeds no opus/GameEngine64 but does embed docks.
+# Disable with box_project = 0 under [game] in tools.ini (defaults on; the old box_client key is still honored).
 BOX_PROJECT   = _cfg["game"].get("box_project", _cfg["game"].get("box_client", "1")) == "1"
 CLIENT_EVB    = os.path.join(SRC_CLIENT, f"{CLIENT_OUT}.evb")   # src/client/cfc.evb
 SERVER_EVB    = os.path.join(SRC_SERVER, f"{SERVER_OUT}.evb")   # src/server/cfs.evb
 CLIENT_EMBEDDED_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "opus.dll", "phonon.dll"]
 SERVER_EMBEDDED_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "phonon.dll"]
-# The client .evb also embeds these whole asset folders, so strip them from the shipped build after boxing.
+# Each .evb also embeds these whole asset folders, so strip them from the shipped build after boxing (they
+# live virtually inside the exe). The client embeds sounds + docks; the server embeds docks (help/rules,
+# read-only), so no external docks folder ships with it either.
 CLIENT_EMBEDDED_FOLDERS = ["sounds", "docks"]
+SERVER_EMBEDDED_FOLDERS = ["docks"]
 
 # The server supervisor (downcheck) compiles to a single bare exe -- src/server/downcheck.properties sets
 # build.windows_bundle=0, so no folder and no lib/ are produced (it uses no sound/tts/plugin libraries). We
@@ -185,7 +189,7 @@ def box_side(label, out_name, evb, dlls, build_dir, strip_folders=None):
         if os.path.exists(p):
             os.remove(p)
             removed.append(dll)
-    # Remove any now-embedded asset folders (client: sounds/, docks/) from the shipped build.
+    # Remove any now-embedded asset folders (client: sounds/, docks/; server: docks/) from the shipped build.
     stripped = []
     for folder in (strip_folders or []):
         fp = os.path.join(build_dir, folder)
@@ -198,10 +202,10 @@ def box_side(label, out_name, evb, dlls, build_dir, strip_folders=None):
 
 def box_project():
     # Box both sides. Client embeds 5 audio DLLs (incl. opus) plus the sounds/docks folders; server embeds 4
-    # DLLs (no opus, no GameEngine64, no asset folders).
+    # DLLs (no opus, no GameEngine64) plus the docks folder -- so neither side ships an external docks folder.
     if not box_side("client", CLIENT_OUT, CLIENT_EVB, CLIENT_EMBEDDED_DLLS, CLIENT_BUILD, CLIENT_EMBEDDED_FOLDERS):
         return False
-    if not box_side("server", SERVER_OUT, SERVER_EVB, SERVER_EMBEDDED_DLLS, SERVER_BUILD):
+    if not box_side("server", SERVER_OUT, SERVER_EVB, SERVER_EMBEDDED_DLLS, SERVER_BUILD, SERVER_EMBEDDED_FOLDERS):
         return False
     return True
 

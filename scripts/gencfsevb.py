@@ -1,18 +1,19 @@
-"""Regenerate src/client/cfc.evb — the Enigma Virtual Box project for the client.
+"""Regenerate src/server/cfs.evb — the Enigma Virtual Box project for the server.
 
-The .evb embeds, into cfc.exe: the 5 audio DLLs (bass, bassmix, bass_fx, opus, phonon) plus the ENTIRE
-sounds/ and docks/ asset folders. Screen-reader DLLs and the third-party GameEngine64.dll are deliberately
-left out so they stay real files in lib/. Enigma has no wildcard support, so every embedded file needs its
-own explicit entry; this script walks the real asset folders (cf/client) and writes them all out.
+The .evb embeds, into cfs.exe: the 4 audio DLLs (bass, bassmix, bass_fx, phonon) plus the ENTIRE docks/
+folder (the read-only /help and /rules pages). No opus (voice is client-only) and no sounds folder.
+Screen-reader DLLs stay real files in lib/. Enigma has no wildcard support, so every embedded file needs
+its own explicit entry; this script walks the real asset folder (cf/server) and writes them all out. With
+docks embedded, no external docks folder ships beside cfs.exe -- the server reads them virtually.
 
-Note: the .evb lives in src/client, but the assets it references stay in cf/client — an .evb's location is
+Note: the .evb lives in src/server, but the assets it references stay in cf/server — an .evb's location is
 independent of the source paths inside it.
 
-Run it whenever the sounds or docks folders change:
-    python scripts/gencfcevb.py
-(or double-run through your normal Python). It reads build/tools.ini for the game name/password, so the
-release input/output paths stay correct even if the password changes. Paths are derived from this file's
-location, so it works as long as it lives in a folder directly under the repo root (e.g. scripts/).
+This is the server mirror of gencfcevb.py. Run it whenever the server docks folder changes:
+    python scripts/gencfsevb.py
+It reads build/tools.ini for the game name/password, so the release input/output paths stay correct even
+if the password changes. Paths are derived from this file's location, so it works as long as it lives in a
+folder directly under the repo root (e.g. scripts/).
 """
 
 import os
@@ -25,26 +26,26 @@ _cfg = configparser.ConfigParser()
 _cfg.read(os.path.join(REPO_DIR, "build", "tools.ini"))
 GAME       = _cfg["game"]["name"]
 PASSWORD   = _cfg["game"]["password"]
-CLIENT_OUT = os.path.splitext(_cfg["game"]["client_file"])[0]   # cfc
+SERVER_OUT = os.path.splitext(_cfg["game"]["server_file"])[0]   # cfs
 
-# Assets the .evb reads from live in cf/client; the .evb itself is written to src/client. The release build
+# Assets the .evb reads from live in cf/server; the .evb itself is written to src/server. The release build
 # is the GUI input/output (tools.py overrides these at run time).
-CLIENT_ASSETS = os.path.join(REPO_DIR, "cf", "client")
-CLIENT_SRC    = os.path.join(REPO_DIR, "src", "client")
-CLIENT_FOLDER = f"{GAME}Client_password_is_{PASSWORD}"
-REL           = os.path.join(REPO_DIR, "release", "windows", CLIENT_FOLDER, CLIENT_OUT)
-OUT           = os.path.join(CLIENT_SRC, f"{CLIENT_OUT}.evb")
+SERVER_ASSETS = os.path.join(REPO_DIR, "cf", "server")
+SERVER_SRC    = os.path.join(REPO_DIR, "src", "server")
+SERVER_FOLDER = f"{GAME}Server_password_is_{PASSWORD}"
+REL           = os.path.join(REPO_DIR, "release", "windows", SERVER_FOLDER, SERVER_OUT)
+OUT           = os.path.join(SERVER_SRC, f"{SERVER_OUT}.evb")
 
-# Only these DLLs get embedded; screen readers + GameEngine64 stay real files in lib/.
-LIB_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "opus.dll", "phonon.dll"]
-# Whole asset folders to embed (walked recursively).
-EMBED_FOLDERS = ["sounds", "docks"]
+# Only these DLLs get embedded; screen readers stay real files in lib/. No opus (voice is client-only).
+LIB_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "phonon.dll"]
+# Whole asset folders to embed (walked recursively). Server ships no sounds, only docks.
+EMBED_FOLDERS = ["docks"]
 
 # The DLL list is fixed (not discovered), so verify each one exists in lib/ before writing -- otherwise the
 # .evb would reference a file Enigma can't find and boxing would fail later. Abort with the missing names.
-_missing = [dll for dll in LIB_DLLS if not os.path.isfile(os.path.join(CLIENT_ASSETS, "lib", dll))]
+_missing = [dll for dll in LIB_DLLS if not os.path.isfile(os.path.join(SERVER_ASSETS, "lib", dll))]
 if _missing:
-    print(f"ERROR: {len(_missing)} required DLL(s) missing from {os.path.join(CLIENT_ASSETS, 'lib')}:")
+    print(f"ERROR: {len(_missing)} required DLL(s) missing from {os.path.join(SERVER_ASSETS, 'lib')}:")
     for _dll in _missing:
         print(f"  {_dll}")
     print("Add them to lib/ and re-run. Nothing was written.")
@@ -100,15 +101,15 @@ def build_tree(src_dir, depth):
 DEPTH = 14
 
 lib_folder = folder_entry("lib", "".join(
-    file_entry(dll, os.path.join(CLIENT_ASSETS, "lib", dll), DEPTH + 4) for dll in LIB_DLLS), DEPTH)
+    file_entry(dll, os.path.join(SERVER_ASSETS, "lib", dll), DEPTH + 4) for dll in LIB_DLLS), DEPTH)
 asset_folders = "".join(
-    folder_entry(f, build_tree(os.path.join(CLIENT_ASSETS, f), DEPTH + 4), DEPTH) for f in EMBED_FOLDERS)
+    folder_entry(f, build_tree(os.path.join(SERVER_ASSETS, f), DEPTH + 4), DEPTH) for f in EMBED_FOLDERS)
 default_children = lib_folder + asset_folders
 
 evb = f"""<?xml version="1.0" encoding="windows-1252"?>
 <>
-  <InputFile>{os.path.join(REL, f"{CLIENT_OUT}.exe")}</InputFile>
-  <OutputFile>{os.path.join(REL, f"{CLIENT_OUT}_boxed.exe")}</OutputFile>
+  <InputFile>{os.path.join(REL, f"{SERVER_OUT}.exe")}</InputFile>
+  <OutputFile>{os.path.join(REL, f"{SERVER_OUT}_boxed.exe")}</OutputFile>
   <Files>
     <Enabled>True</Enabled>
     <DeleteExtractedOnExit>False</DeleteExtractedOnExit>
@@ -195,7 +196,7 @@ evb = f"""<?xml version="1.0" encoding="windows-1252"?>
 with open(OUT, "w", encoding="windows-1252") as f:
     f.write(evb)
 
-counts = {f: sum(len(files) for _, _, files in os.walk(os.path.join(CLIENT_ASSETS, f))) for f in EMBED_FOLDERS}
+counts = {f: sum(len(files) for _, _, files in os.walk(os.path.join(SERVER_ASSETS, f))) for f in EMBED_FOLDERS}
 print(f"Wrote {OUT}")
 print(f"  lib DLLs embedded: {len(LIB_DLLS)}")
 for f, n in counts.items():

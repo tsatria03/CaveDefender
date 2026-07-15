@@ -1337,6 +1337,30 @@
                           </File>
                           <File>
                             <Type>2</Type>
+                            <Name>gamestart.ogg</Name>
+                            <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\sounds\ui\misc\gamestart.ogg</File>
+                            <ActiveX>False</ActiveX>
+                            <ActiveXInstall>False</ActiveXInstall>
+                            <Action>0</Action>
+                            <OverwriteDateTime>False</OverwriteDateTime>
+                            <OverwriteAttributes>False</OverwriteAttributes>
+                            <PassCommandLine>False</PassCommandLine>
+                            <HideFromDialogs>0</HideFromDialogs>
+                          </File>
+                          <File>
+                            <Type>2</Type>
+                            <Name>gamestop.ogg</Name>
+                            <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\sounds\ui\misc\gamestop.ogg</File>
+                            <ActiveX>False</ActiveX>
+                            <ActiveXInstall>False</ActiveXInstall>
+                            <Action>0</Action>
+                            <OverwriteDateTime>False</OverwriteDateTime>
+                            <OverwriteAttributes>False</OverwriteAttributes>
+                            <PassCommandLine>False</PassCommandLine>
+                            <HideFromDialogs>0</HideFromDialogs>
+                          </File>
+                          <File>
+                            <Type>2</Type>
                             <Name>globalchat.ogg</Name>
                             <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\sounds\ui\misc\globalchat.ogg</File>
                             <ActiveX>False</ActiveX>
