@@ -54,8 +54,8 @@ SERVER_BUILD  = os.path.join(SERVER_DEST, SERVER_OUT)   # the finished server bu
 
 # Enigma boxing: each side's .evb (src/<side>/cf?.evb) embeds its audio DLLs and asset folders into the exe;
 # afterward we strip those from the shipped build -- the DLLs from lib/, the folders entirely -- since they now
-# live virtually inside the exe (screen-reader DLLs + the client's third-party GameEngine64.dll stay as real
-# files). The client embeds opus + sounds/docks; the server embeds no opus/GameEngine64 but does embed docks.
+# live virtually inside the exe (the screen-reader DLLs stay as real files). The client embeds opus +
+# sounds/docks; the server embeds no opus but does embed docks.
 # Disable with box_project = 0 under [game] in tools.ini (defaults on; the old box_client key is still honored).
 BOX_PROJECT   = _cfg["game"].get("box_project", _cfg["game"].get("box_client", "1")) == "1"
 CLIENT_EVB    = os.path.join(SRC_CLIENT, f"{CLIENT_OUT}.evb")   # src/client/cfc.evb
@@ -154,8 +154,8 @@ def compile_downcheck():
 def box_side(label, out_name, evb, dlls, build_dir, strip_folders=None):
     # Wrap one compiled side with Enigma Virtual Box: embed its audio DLLs (and, on the client, the sounds/docks
     # asset folders) into <out>.exe per its .evb, replace the unboxed exe with the boxed one, then delete the
-    # now-embedded DLLs from lib/ and any embedded asset folders so they aren't shipped twice. Screen-reader DLLs
-    # (and the third-party GameEngine64.dll on the client) stay as real files in lib/.
+    # now-embedded DLLs from lib/ and any embedded asset folders so they aren't shipped twice. The screen-reader
+    # DLLs stay as real files in lib/.
     exe   = os.path.join(build_dir, f"{out_name}.exe")         # <out>.exe (unboxed input)
     boxed = os.path.join(build_dir, f"{out_name}_boxed.exe")   # <out>_boxed.exe (Enigma output)
     if not os.path.exists(ENIGMA):
@@ -202,7 +202,7 @@ def box_side(label, out_name, evb, dlls, build_dir, strip_folders=None):
 
 def box_project():
     # Box both sides. Client embeds 5 audio DLLs (incl. opus) plus the sounds/docks folders; server embeds 4
-    # DLLs (no opus, no GameEngine64) plus the docks folder -- so neither side ships an external docks folder.
+    # DLLs (no opus) plus the docks folder -- so neither side ships an external docks folder.
     if not box_side("client", CLIENT_OUT, CLIENT_EVB, CLIENT_EMBEDDED_DLLS, CLIENT_BUILD, CLIENT_EMBEDDED_FOLDERS):
         return False
     if not box_side("server", SERVER_OUT, SERVER_EVB, SERVER_EMBEDDED_DLLS, SERVER_BUILD, SERVER_EMBEDDED_FOLDERS):

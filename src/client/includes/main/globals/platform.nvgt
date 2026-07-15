@@ -1,0 +1,55 @@
+/* Native tile store -- the in-script replacement for the old PureBasic GameEngine64.dll map functions
+(spawn_platform2D / get_tile_at2D / clear_map). Map tiles are rectangular regions painted onto a shared
+grid; a cell's tile is the LAST platform painted over it (draw_map lays broad borders first, then the
+floor one tile inside, then any breach floor on top). This is handle-based, which the DLL never was: the
+DLL's only removal was clear_map (wipe everything) and spawn_platform returned nothing, so a single tile
+could never be destroyed or moved -- destroy_wall_client had to PAINT OVER a broken wall and leave dead
+tiles stacked underneath. Here spawn_platform returns an index, remove_platform nulls that one slot, and
+get_tile_at skips nulls, so one platform can be removed or replaced without rebuilding the whole map.
+No z, no zones, no volume/pitch -- CaveDefender doesn't need them. Mirrors SimpleFighter's platform.nvgt,
+rebuilt lean. */
+platform@[] platforms;
+class platform
+{
+double minx, maxx, miny, maxy;
+string tile; // tile name, e.g. "carpet" or "wallwood" -> sound folder objects/platforms|walls/<tile>/
+platform(double mnx, double mxx, double mny, double mxy, string ty)
+{
+minx=mnx;
+maxx=mxx;
+miny=mny;
+maxy=mxy;
+tile=ty;
+}
+}
+/* Paint a rectangle of one tile type and return its index in platforms[] -- the handle remove_platform
+takes. Later paints win: a cell covered by several platforms reads as the most recently spawned one. */
+int spawn_platform(int minx, int maxx, int miny, int maxy, string tile)
+{
+platform pl(minx, maxx, miny, maxy, tile);
+platforms.insert_last(pl);
+return platforms.length()-1;
+}
+/* The tile at a cell: the LAST-painted platform covering it, or "" if none. Scans back-to-front so the
+newest paint wins and removed (nulled) slots are skipped, which is also how a removed platform falls
+through to whatever was painted beneath it. */
+string get_tile_at(int x, int y)
+{
+for(int i=int(platforms.length())-1; i>=0; i--)
+{
+if(@platforms[i]==null) continue;
+if(x>=platforms[i].minx and x<=platforms[i].maxx and y>=platforms[i].miny and y<=platforms[i].maxy) return platforms[i].tile;
+}
+return "";
+}
+// Destroy one platform by its spawn_platform handle; its cells fall through to whatever is painted under it.
+void remove_platform(int id)
+{
+if(id<0 or id>=int(platforms.length()) or @platforms[id]==null) return;
+@platforms[id]=null;
+}
+// Wipe every tile (on changing spaces / redrawing a map), matching the old clear_map().
+void clear_map()
+{
+platforms.resize(0);
+}
