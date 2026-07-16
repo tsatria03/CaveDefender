@@ -103,21 +103,53 @@ string spoken;
 for(uint i=0; i<lines.length(); i++) spoken += (i>0 ? " " : "") + lines[i];
 speak(spoken);
 }
-/* Read out every piece of ground wood in the cavern, nearest first, as a direction relative to the way
-you're facing plus a rough distance (the D key). Same idea as track_players, for the wood instead. */
+/* Read out every piece of ground WOOD in the cavern, nearest first, as a direction relative to the way you're
+facing plus a rough distance (the D key). Ammo shares the client item list, so this filters to wood only; ammo is
+the A key (track_ammo). Same idea as track_players. */
 void track_wood()
 {
-if(clientitems.length()==0) { speak("No wood nearby."); return; }
 double[] dists;
 string[] lines;
 for(uint i=0; i<clientitems.length(); i++)
 {
+if(item_sound_category(clientitems[i].type) != "wood") continue; // wood only; ammo is tracked with the A key
 double d = get_2d_distance(me.x, me.y, clientitems[i].x, clientitems[i].y);
 double ang = calculate_x_y_angle(me.x, me.y, clientitems[i].x, clientitems[i].y, facing_degrees(facing));
 int td = int(d + 0.5);
 dists.insert_last(d);
 lines.insert_last(clientitems[i].type + " wood is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
 }
+if(lines.length()==0) { speak("No wood nearby."); return; }
+for(uint i=0; i<dists.length(); i++)
+{
+uint best=i;
+for(uint j=i+1; j<dists.length(); j++) if(dists[j]<dists[best]) best=j;
+if(best!=i)
+{
+double dt=dists[i]; dists[i]=dists[best]; dists[best]=dt;
+string lt=lines[i]; lines[i]=lines[best]; lines[best]=lt;
+}
+}
+string spoken;
+for(uint i=0; i<lines.length(); i++) spoken += (i>0 ? " " : "") + lines[i];
+speak(spoken);
+}
+/* Read out every piece of ground AMMO near you, nearest first (the A key, for attackers) -- the mirror of
+track_wood, filtered to ammo. */
+void track_ammo()
+{
+double[] dists;
+string[] lines;
+for(uint i=0; i<clientitems.length(); i++)
+{
+if(item_sound_category(clientitems[i].type) != "ammo") continue; // ammo only; wood is the D key
+double d = get_2d_distance(me.x, me.y, clientitems[i].x, clientitems[i].y);
+double ang = calculate_x_y_angle(me.x, me.y, clientitems[i].x, clientitems[i].y, facing_degrees(facing));
+int td = int(d + 0.5);
+dists.insert_last(d);
+lines.insert_last(clientitems[i].type + " ammo is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
+}
+if(lines.length()==0) { speak("No ammo nearby."); return; }
 for(uint i=0; i<dists.length(); i++)
 {
 uint best=i;
