@@ -161,6 +161,42 @@ string t = random_wood_type();
 inv.give(t, wood_starter_amount(t));
 return t;
 }
+/* --- Ammo: the ranged-weapon economy (task #9 foundation) ---
+Ammo comes in four types, one per ranged weapon (crossbow->arrow, cannon->powder, firebomb->gas, grenade->grenade).
+Like wood, ammo is gathered off the ground and pooled in the player's inventory under these type keys (the reserve is
+just inv.count(<type>)), then loaded into the equipped weapon at reload. Values come from the .amt data files
+(data/objects/items/ammo/<type>.amt, loaded into ammo_db by gamedata.nvgt). This is the FOUNDATION only -- the type
+list + amount accessors. The grant rule (the type you receive = your equipped ranged weapon's ammo type) and the
+ground pickups/consumption land with the ranged weapon system (#5), since ammo is only usable once ranged weapons exist. */
+string[] ammo_types()
+{
+string[] a;
+a.insert_last("arrow");
+a.insert_last("gas");
+a.insert_last("grenade");
+a.insert_last("powder");
+return a;
+}
+bool is_ammo(string type)
+{
+string[] a = ammo_types();
+return a.find(type) >= 0;
+}
+/* The starter / milestone-bonus reserve amounts for an ammo type, from its data file (data/objects/items/ammo/<type>.amt,
+loaded into ammo_db): roll_range over its starter / bonus min,max. Fallbacks match the recommended ranges (arrow
+8-12/10-15, the heavy single-shots 3-5/4-7) if the data is missing. */
+int ammo_starter_amount(string type)
+{
+ammo_data@ ad = get_ammo_data(type);
+if(ad !is null) return roll_range(ad.starter_lo, ad.starter_hi);
+return (type == "arrow") ? random(8, 12) : random(3, 5);
+}
+int ammo_bonus_amount(string type)
+{
+ammo_data@ ad = get_ammo_data(type);
+if(ad !is null) return roll_range(ad.bonus_lo, ad.bonus_hi);
+return (type == "arrow") ? random(10, 15) : random(4, 7);
+}
 // Count the wood currently on the ground in a space.
 int wood_count_in(int room_id)
 {
