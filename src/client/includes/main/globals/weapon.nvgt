@@ -119,14 +119,14 @@ send(0, "setweapon "+wname, 0, true); // tell the server which weapon we have dr
 add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
 }
 /* --- EVP attack (the swing) ---
-Holding Space swings the equipped weapon at the nearest wall in reach (the mirror of Shift+Enter reinforce).
+Pressing Space swings the equipped weapon at the nearest wall in reach -- ONE swing per tap (fire mode 0), the mirror of Shift+Enter reinforce.
 A swing has two phases timed by swingtimer: a per-weapon WINDUP (Space-press -> the hit lands), then a
 per-weapon RECOVERY (cooldown) before the next swing may begin. `swinging` does NOT block movement or weapon
 switching -- like SimpleFighter's is_swinging it only stops you starting ANOTHER swing until this one lands;
 you keep walking freely. The swing locks in its weapon at the start (swing_weapon) so switching mid-swing
 doesn't change the pending hit. The fire (swing) sound plays at the start; the impact + damage come from the
-server's wallhit broadcast once the hit is reported, so all players (and watchers) hear it. key_down + our
-own timer, not key_repeating, so the windup/cooldown alone pace the swing regardless of the OS repeat rate. */
+server's wallhit broadcast once the hit is reported, so all players (and watchers) hear it. key_pressed (one tap =
+one swing) + our own timer, not key_repeating, so the windup/cooldown alone pace the swing regardless of the OS repeat rate. */
 bool swinging=false; // true during a swing's windup; only blocks starting another swing (NOT movement/switching)
 timer swingtimer;    // while swinging: measures the windup; while idle: measures recovery since the last hit
 string swing_weapon=""; // the weapon the in-flight swing began with, so switching weapons mid-swing doesn't change the pending hit
@@ -134,7 +134,7 @@ string swing_weapon=""; // the weapon the in-flight swing began with, so switchi
 int swing_windup(string w) { if(w=="axe") return 300; if(w=="bat") return 375; if(w=="crowbar") return 450; return 600; } // hammer slowest
 // Per-weapon recovery (ms): the cooldown after a hit before another swing can start.
 int swing_recovery(string w) { if(w=="axe") return 200; if(w=="bat") return 250; if(w=="crowbar") return 325; return 450; } // hammer slowest
-/* Run every frame in an EVP game: drive the held-Space swing. When a windup completes, tells the server to
+/* Run every frame in an EVP game: drive the tap-to-swing melee. When a windup completes, tells the server to
 apply the hit. No-op for PVE, spectators, a paused game, or with no weapon in hand. */
 void swingloop()
 {
@@ -152,8 +152,8 @@ swingtimer.restart(); // now measures the recovery cooldown
 }
 return;
 }
-// Idle: start a new swing if Space is held and the recovery cooldown has elapsed.
-if(key_down(KEY_SPACE) and swingtimer.elapsed >= swing_recovery(current_weapon))
+// Idle: start a new swing on each Space PRESS (fire mode 0 = tap per swing), once the recovery cooldown has elapsed.
+if(key_pressed(KEY_SPACE) and swingtimer.elapsed >= swing_recovery(current_weapon))
 {
 swinging=true;
 swing_weapon=current_weapon; // lock in this swing's weapon
