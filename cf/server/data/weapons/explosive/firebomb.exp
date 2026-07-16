@@ -5,5 +5,5 @@ spam time=900
 range=10
 bullet speed=30
 ammo type=gas
-max ammo=1
+max ammo=5
 status=burn:4000:500:3,7
