@@ -1,8 +1,8 @@
-/* Client mirror of the wood (and later other items) lying in a game's cavern. The server is
-authoritative (see the server's item.nvgt); here we only hold each item's id and play its audio on
-objpool: a one-shot drop sound when it appears, and a positional loop at its tile while it sits there,
-stopped when it's picked up or the game is left. update_sound_pools() moves the listener for objpool,
-so the loops pan and fade as you walk around them. */
+/* Client mirror of the ground items (wood and ammo) lying in a game's cavern. The server is
+authoritative (see the server's item.nvgt); here we only hold each item's id and play its audio on the matching
+item pool (woodpool for wood, ammopool for ammo -- see item_pool_for): a one-shot drop sound when it appears, and
+a positional loop at its tile while it sits there, stopped when it's picked up or the game is left.
+update_sound_pools() moves the listener for both pools, so the loops pan and fade as you walk around them. */
 clientitem@[] clientitems(0);
 /* Which sound folder an item's type lives under: ground items are either WOOD (oak/maple/birch/pine ->
 objects/items/wood/<type>/) or AMMO (arrow/gas/grenade/powder -> objects/items/ammo/<type>/). The server sends
@@ -12,6 +12,10 @@ string item_sound_category(string type)
 if(type=="arrow" or type=="gas" or type=="grenade" or type=="powder") return "ammo";
 return "wood"; // oak/maple/birch/pine
 }
+/* Which sound pool an item plays on: AMMO -> ammopool (listener-following, stays clear outside), WOOD -> woodpool
+(a cave-interior source, lowpass-muffled when you're outside the wall). Keeps the attacker's own ammo from sounding
+"through the wall" like the cave's wood. */
+sound_pool@ item_pool_for(string type) { return item_sound_category(type)=="ammo" ? @ammopool : @woodpool; }
 class clientitem
 {
 int id;
@@ -22,11 +26,12 @@ clientitem(int iid, int ix, int iy, string ty)
 {
 id = iid; x = ix; y = iy; type = ty;
 string base = "sounds/objects/items/" + item_sound_category(type) + "/" + type + "/"; // wood/<species>/ or ammo/<type>/
-objpool.play_3d(base + "drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
+sound_pool@ pl = item_pool_for(type); // ammo -> ammopool (clear), wood -> woodpool (cave-muffled from outside)
+pl.play_3d(base + "drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
 /* Not every item type has an ambient ground loop; only start one when the file exists,
 leaving loophandle at -1 otherwise so cleanup is a no-op. */
 if(file_exists(base + "loop.ogg"))
-loophandle = objpool.play_3d(base + "loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), true);
+loophandle = pl.play_3d(base + "loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), true);
 }
 }
 int get_clientitem_index(int id)
@@ -46,27 +51,24 @@ void remove_clientitem(int id)
 {
 int i = get_clientitem_index(id);
 if(i < 0) return;
-if(clientitems[i].loophandle != -1) objpool.destroy_sound(clientitems[i].loophandle);
+if(clientitems[i].loophandle != -1) item_pool_for(clientitems[i].type).destroy_sound(clientitems[i].loophandle);
 clientitems.remove_at(i);
 }
 // Drop all item sounds (leaving a game / switching maps).
 void clear_clientitems()
 {
-for(uint i = 0; i < clientitems.length(); i++) if(clientitems[i].loophandle != -1) objpool.destroy_sound(clientitems[i].loophandle);
+for(uint i = 0; i < clientitems.length(); i++) if(clientitems[i].loophandle != -1) item_pool_for(clientitems[i].type).destroy_sound(clientitems[i].loophandle);
 clientitems.resize(0);
 }
-/* Pause / resume only the object pool (the ground-item sounds, e.g. the looping wood). Used to silence the
-wood loops while an in-game menu or dialog is open, without touching ambience, music, or the UI pool. */
+/* Pause / resume the ground-item pools (the looping wood AND ammo). Used to silence the item loops while an
+in-game menu or dialog is open, without touching ambience, music, or the UI pool. */
 void pause_objects()
 {
-for(uint i = 0; i < objpool.items.length(); i++)
-{
-if(@objpool.items[i].handle == null) continue;
-if(objpool.items[i].handle.playing == false) continue;
-objpool.pause_sound(i);
-}
+for(uint i = 0; i < woodpool.items.length(); i++) { if(@woodpool.items[i].handle == null) continue; if(woodpool.items[i].handle.playing == false) continue; woodpool.pause_sound(i); }
+for(uint i = 0; i < ammopool.items.length(); i++) { if(@ammopool.items[i].handle == null) continue; if(ammopool.items[i].handle.playing == false) continue; ammopool.pause_sound(i); }
 }
 void resume_objects()
 {
-for(uint i = 0; i < objpool.items.length(); i++) objpool.resume_sound(i);
+for(uint i = 0; i < woodpool.items.length(); i++) woodpool.resume_sound(i);
+for(uint i = 0; i < ammopool.items.length(); i++) ammopool.resume_sound(i);
 }
