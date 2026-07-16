@@ -11,7 +11,7 @@ class item
 int id;
 int room_id;
 int x, y;
-string type;   // the wood size: "small_wood" / "medium_wood" / "large_wood" (drives the client's sound folder)
+string type;   // the wood species: "oak" / "maple" / "birch" / "pine" (drives the client's sound folder and its reinforce strength)
 item(int iid, int rid, int ix, int iy, string ty)
 {
 id=iid;
@@ -68,54 +68,97 @@ if(size<=25) return 1;
 if(size<=50) return 2;
 return 4;
 }
-/* Ground wood comes in three sizes, each with its own sounds. To the economy they're all just "wood" (any
-size counts toward the cap and gathers into a wall the same); the size only varies the sound the client plays. */
-bool is_wood(string type) { return type=="small_wood" or type=="medium_wood" or type=="large_wood"; }
+/* Ground wood comes in four SPECIES (oak, maple, birch, pine), each with its own sounds. To the economy they're
+all just "wood" (any type counts toward the cap and gathers into a wall the same); the type varies the sound the
+client plays AND, through its data file, how much one piece reinforces (see wood_reinforce_value). */
+string[] wood_types()
+{
+string[] w;
+w.insert_last("oak");   // strongest
+w.insert_last("maple");
+w.insert_last("birch");
+w.insert_last("pine");  // weakest
+return w;
+}
+bool is_wood(string type)
+{
+string[] w = wood_types();
+return w.find(type) >= 0;
+}
 string random_wood_type()
 {
-int r=random(1,3);
-if(r==1) return "small_wood";
-if(r==2) return "medium_wood";
-return "large_wood";
+string[] w = wood_types();
+return w[random(0, int(w.length())-1)];
 }
-/* A player's wood is stored per size in their inventory (small_wood/medium_wood/large_wood). wood_total treats
-them as one pool for the "do you have any wood" checks; the size matters at reinforce time (see below). */
-int wood_total(inventory@ inv) { return inv.count("small_wood")+inv.count("medium_wood")+inv.count("large_wood"); }
-// Spend `amount` pieces of any size(s) the player has (order doesn't matter here). False if short.
+/* A player's wood is stored per type in their inventory (oak/maple/birch/pine). wood_total treats them as one
+pool for the "do you have any wood" checks; the type matters at reinforce time (each has its own strength). */
+int wood_total(inventory@ inv)
+{
+string[] w = wood_types();
+int n = 0;
+for(uint i=0; i<w.length(); i++) n += inv.count(w[i]);
+return n;
+}
+// Spend `amount` pieces of any type(s) the player has (order doesn't matter here). False if short.
 bool spend_wood(inventory@ inv, int amount)
 {
 if(wood_total(inv) < amount) return false;
+string[] w = wood_types();
 int left = amount;
-if(left>0 and inv.count("small_wood")>0) { int u=inv.count("small_wood"); if(u>left) u=left; inv.take("small_wood", u); left-=u; }
-if(left>0 and inv.count("medium_wood")>0) { int u=inv.count("medium_wood"); if(u>left) u=left; inv.take("medium_wood", u); left-=u; }
-if(left>0 and inv.count("large_wood")>0) { int u=inv.count("large_wood"); if(u>left) u=left; inv.take("large_wood", u); left-=u; }
+for(uint i=0; i<w.length() and left>0; i++)
+{
+int have = inv.count(w[i]);
+if(have <= 0) continue;
+int u = (have > left) ? left : have;
+inv.take(w[i], u);
+left -= u;
+}
 return true;
 }
-/* How much one piece reinforces a wall, by size. Mirrors enemy_damage's tiered random() model, scaled x5 to fit
-the 400-health walls: small maps to the axe range, medium to the bat range, large to the crowbar range, so
-repair and damage share the same shape. Medium (10-20) matches the old flat reinforce value. */
-int wood_reinforce_value(string size)
+/* How much one piece reinforces a wall, read from that wood type's data file (data/objects/items/wood/<type>.mtr,
+loaded into wood_db by gamedata.nvgt): roll_range over its reinforce min,max (oak strongest ... pine weakest).
+Falls back to a mid 10-20 if the data is missing, so a reinforce never breaks. */
+int wood_reinforce_value(string type)
 {
-if(size=="large_wood") return random(15, 30);  // crowbar 3-6 x5
-if(size=="small_wood") return random(5, 10);    // smallest tier
-return random(10, 20);                           // medium_wood: bat 2-4 x5 (also the fallback)
+wood_data@ wd = get_wood_data(type);
+if(wd !is null) return roll_range(wd.reinforce_lo, wd.reinforce_hi);
+return random(10, 20);
 }
-/* Spend exactly ONE piece of wood, taking the BIGGEST first (large -> medium -> small) so a reinforce uses your
-best wood, and return the size spent (or "" if the player has none) so the caller can score and sound it. */
+/* Spend exactly ONE piece of wood, of a RANDOM type the player currently holds -- NOT the strongest. Wood is no
+longer ranked by size, so there's no "best" piece to save: grants, ground drops, and spending are all a random
+type. Returns the type spent (or "" if the player has none) so the caller can score and sound it. */
 string spend_one_wood(inventory@ inv)
 {
-if(inv.count("large_wood")>0) { inv.take("large_wood", 1); return "large_wood"; }
-if(inv.count("medium_wood")>0) { inv.take("medium_wood", 1); return "medium_wood"; }
-if(inv.count("small_wood")>0) { inv.take("small_wood", 1); return "small_wood"; }
-return "";
+string[] w = wood_types();
+string[] held;
+for(uint i=0; i<w.length(); i++) if(inv.count(w[i]) > 0) held.insert_last(w[i]);
+if(held.length() == 0) return "";
+string t = held[random(0, int(held.length())-1)];
+inv.take(t, 1);
+return t;
 }
-/* Give `amount` pieces of wood, all of ONE randomly-chosen size (starting stockpile, milestone bonus), and
-return the size chosen so a caller can name it. The count range is the same whatever the size, so the size
-only varies the total strength (small<medium<large) around the same average the old even mix gave. */
-string give_wood_single(inventory@ inv, int amount)
+/* The starter / milestone-bonus wood amounts for a wood type, from its data file (data/objects/items/wood/<type>.mtr,
+loaded into wood_db): roll_range over its starter / bonus min,max. Currently uniform across the four species, so
+which type is chosen doesn't change the amount -- but each is tunable in its own file. Fallbacks match the old
+hardcoded ranges (starter 10-20, bonus 20-40) if the data is missing. */
+int wood_starter_amount(string type)
+{
+wood_data@ wd = get_wood_data(type);
+if(wd !is null) return roll_range(wd.starter_lo, wd.starter_hi);
+return random(10, 20);
+}
+int wood_bonus_amount(string type)
+{
+wood_data@ wd = get_wood_data(type);
+if(wd !is null) return roll_range(wd.bonus_lo, wd.bonus_hi);
+return random(20, 40);
+}
+/* Give a starting stockpile of wood: a random species in that type's data-driven starter amount, all one type
+(like the old single-size grant). Returns the type chosen so a caller can name it. */
+string give_wood_single(inventory@ inv)
 {
 string t = random_wood_type();
-inv.give(t, amount);
+inv.give(t, wood_starter_amount(t));
 return t;
 }
 // Count the wood currently on the ground in a space.

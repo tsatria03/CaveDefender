@@ -308,7 +308,7 @@ void handle_roundover(string message)
 	int rounds = (parsed.length() > 3) ? string_to_number(parsed[3]) : 0;
 	int bonus = (parsed.length() > 4) ? string_to_number(parsed[4]) : 0;
 	int milestone = (parsed.length() > 5) ? string_to_number(parsed[5]) : 0;
-	string bonussize = (parsed.length() > 6) ? string_replace(parsed[6], "_wood", "", true) : ""; // "large_wood" -> "large" for the message
+	string bonussize = (parsed.length() > 6) ? parsed[6] : ""; // the wood species for the message, e.g. "birch"
 	string dur = format_duration(secs);
 	add_buffer_item("alerts", "Game over! You completed " + rounds + (rounds == 1 ? " round" : " rounds") + " and survived " + dur + ".");
 	pause_objects(); // silence any lingering wood loops behind the results dialog and play-again prompt
@@ -319,7 +319,7 @@ void handle_roundover(string message)
 	results += (bonus > 0 ? "That's amazing. Keep going!" : "Better luck next time!") + " Press enter to continue.";
 	dlgmessage(results);
 	// Milestone: a fresh personal-best round earned bonus starting wood for the next round.
-	if(bonus > 0) dlgmessage("Congratulations! You just gained " + bonus + " " + bonussize + " starter wood for reaching round " + milestone + ". Great job! Press enter to continue.");
+	if(bonus > 0) dlgmessage("Congratulations! You just gained " + bonus + " " + bonussize + " wood for reaching round " + milestone + ". Great job! Press enter to continue.");
 	setupmenu();
 	m.add_item("Yes");
 	m.add_item("No");
@@ -1020,15 +1020,16 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "play_item" and parsed.length() > 2)
 		{
-			// A personal item sound for you, e.g. "play_item small_wood take" -> objects/items/small_wood/take.ogg.
-			p.play_stationary("sounds/objects/items/" + parsed[1] + "/" + parsed[2] + ".ogg", false);
+			// A personal item sound for you, e.g. "play_item oak take" -> objects/items/wood/oak/take.ogg (wood items only for now).
+			p.play_stationary("sounds/objects/items/wood/" + parsed[1] + "/" + parsed[2] + ".ogg", false);
 		}
-		else if (parsed[0] == "wood" and parsed.length() > 3)
+		else if (parsed[0] == "wood" and parsed.length() > 4)
 		{
-			// Your current wood by size, synced from the server (the I key reads it): "wood <small> <medium> <large>".
-			my_wood_small = string_to_number(parsed[1]);
-			my_wood_medium = string_to_number(parsed[2]);
-			my_wood_large = string_to_number(parsed[3]);
+			// Your current wood by species, synced from the server (the I key reads it): "wood <oak> <maple> <birch> <pine>".
+			my_wood_oak = string_to_number(parsed[1]);
+			my_wood_maple = string_to_number(parsed[2]);
+			my_wood_birch = string_to_number(parsed[3]);
+			my_wood_pine = string_to_number(parsed[4]);
 		}
 		else if (parsed[0] == "wallstr" and parsed.length() > 4)
 		{

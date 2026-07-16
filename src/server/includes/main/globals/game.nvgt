@@ -495,7 +495,7 @@ if(players[pi].team == "defend")
 {
 players[pi].x = center; players[pi].y = center;
 players[pi].inv.clear();
-give_wood_single(players[pi].inv, random(10, 20)); // a starting stockpile to immediately shore up a weak wall
+give_wood_single(players[pi].inv); // a starting stockpile (one random wood species, its data-driven starter amount) to immediately shore up a weak wall
 send_wood_count(pi);
 send(players[pi].peer_id, "yourside defend", 0, true);
 }
@@ -537,8 +537,8 @@ for(uint i=0; i<games[gindex].members.length(); i++)
 int pi=get_player_index(games[gindex].members[i]);
 if(pi<0) continue;
 players[pi].wood_collected=0; // start a fresh ground-pickup tally for this game run
-give_wood_single(players[pi].inv, random(10, 20)); // 10-20 pieces, all one random size (small/medium/large)
-if(players[pi].pending_bonus_wood>0) // milestone reward earned at the last game over: add it to the starting stockpile, as the size rolled then
+give_wood_single(players[pi].inv); // a starting stockpile: one random wood species, its data-driven starter amount
+if(players[pi].pending_bonus_wood>0) // milestone reward earned at the last game over: add it to the starting stockpile, as the species rolled then
 {
 players[pi].inv.give(players[pi].pending_bonus_size, players[pi].pending_bonus_wood);
 players[pi].pending_bonus_wood=0;
@@ -809,9 +809,9 @@ int wlo = 1, whi = games[i].size-1; // interior only; the 0 and size edges are w
 if(games[i].mode=="pvp") { int wm = games[i].size/4; wlo = wm+1; whi = games[i].size-wm-1; } // PVP: keep wood on the interior concrete, inside the wall ring (the defenders' ground supply)
 int wx = random(wlo, whi);
 int wy = random(wlo, whi);
-string wt = random_wood_type(); // a random size (small/medium/large), each with its own sounds
+string wt = random_wood_type(); // a random wood species (oak/maple/birch/pine), each with its own sounds
 int iid = spawn_item(games[i].id, wx, wy, wt);
-send_to_game(games[i].id, "spawnitem "+iid+" "+wt+" "+wx+" "+wy); // send the SAME size to the client so its sounds and the D readout match
+send_to_game(games[i].id, "spawnitem "+iid+" "+wt+" "+wx+" "+wy); // send the SAME species to the client so its sounds and the D readout match
 }
 }
 /* Flip between attacking and resting every half-build-phase. In PVE the bots hammer, then back off so players
@@ -912,11 +912,11 @@ int collected = players[pi].wood_collected;
 /* Milestone: beating your personal-best round grants a one-time 20-40 wood bonus (added to next round's
 starting stockpile) and updates the record. Matching or falling short of your best grants nothing. */
 int bonus = 0, milestone = 0;
-string bonussize = "none"; // the single random size the bonus will be granted as; rolled now so the results message can name it
+string bonussize = "none"; // the single random wood species the bonus will be granted as; rolled now so the results message can name it
 if(rounds > get_pve_best_round(players[pi].name))
 {
-bonus = random(20, 40);
 bonussize = random_wood_type();
+bonus = wood_bonus_amount(bonussize); // that species' data-driven bonus amount
 milestone = rounds;
 set_pve_best_round(players[pi].name, rounds);
 players[pi].pending_bonus_wood = bonus;

@@ -835,7 +835,7 @@ if(players[i].room_id==players[pindex].room_id) send(players[i].peer_id, pos_msg
 // Send a player their current wood count so their client's I key can report it.
 void send_wood_count(int pindex)
 {
-send(players[pindex].peer_id, "wood "+players[pindex].inv.count("small_wood")+" "+players[pindex].inv.count("medium_wood")+" "+players[pindex].inv.count("large_wood"), 0, true);
+send(players[pindex].peer_id, "wood "+players[pindex].inv.count("oak")+" "+players[pindex].inv.count("maple")+" "+players[pindex].inv.count("birch")+" "+players[pindex].inv.count("pine"), 0, true);
 }
 // The four cavern wall strengths (as percents) for a game, for the client's N/E/S/W/D keys.
 string wall_strength_msg(int gameid)
@@ -865,7 +865,7 @@ if(games[gi].phase != "build" and games[gi].phase != "wave") return;
 int px = players[pindex].x;
 int py = players[pindex].y;
 int got = 0;
-string picked_type = "medium_wood"; // the size of a picked piece, so the take sound matches (fallback never used when got>0)
+string picked_type = "oak"; // the species of a picked piece, so the take sound matches (fallback never used when got>0)
 for(int i=int(items.length())-1; i>=0; i--)
 {
 if(@items[i]==null) continue;
@@ -890,7 +890,7 @@ send(players[pindex].peer_id, "play_item "+picked_type+" take", 0, true);
 // Let others in the game hear the pickup in 3D at the gatherer's spot (reuses the positional footstep relay).
 for(uint wm=0; wm<players.length(); wm++)
 if(players[wm].room_id == rid and players[wm].peer_id != players[pindex].peer_id)
-send(players[wm].peer_id, "footstep objects/items/"+picked_type+"/take "+px+" "+py, 0, true);
+send(players[wm].peer_id, "footstep objects/items/wood/"+picked_type+"/take "+px+" "+py, 0, true);
 send_wood_count(pindex);
 }
 }
@@ -1211,7 +1211,7 @@ else if(dir=="south") placey = 0;
 else if(dir=="north") placey = games[gi].size;
 for(uint pm=0; pm<players.length(); pm++)
 if(players[pm].room_id == players[index].room_id)
-send(players[pm].peer_id, "footstep objects/items/"+place_type+"/place "+placex+" "+placey, 0, true);
+send(players[pm].peer_id, "footstep objects/items/wood/"+place_type+"/place "+placex+" "+placey, 0, true);
 send(event.peer_id, "reinforced "+dir+" "+gain, 0,true);
 broadcast_wall_strength(games[gi].id);
 }

@@ -116,7 +116,7 @@ double d = get_2d_distance(me.x, me.y, clientitems[i].x, clientitems[i].y);
 double ang = calculate_x_y_angle(me.x, me.y, clientitems[i].x, clientitems[i].y, facing_degrees(facing));
 int td = int(d + 0.5);
 dists.insert_last(d);
-lines.insert_last(string_replace(clientitems[i].type, "_", " ", true) + " is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
+lines.insert_last(clientitems[i].type + " wood is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
 }
 for(uint i=0; i<dists.length(); i++)
 {
@@ -132,18 +132,22 @@ string spoken;
 for(uint i=0; i<lines.length(); i++) spoken += (i>0 ? " " : "") + lines[i];
 speak(spoken);
 }
-/* The I-key inventory readout: your wood broken down by size, e.g. "You have 14 small pieces of wood, 5 medium
-pieces of wood, and 22 large pieces of wood." Sizes you have none of are left out; no wood at all reads plainly. */
+/* The I-key inventory readout: your wood broken down by species, e.g. "You have 14 oak wood, 5 birch wood, and
+22 pine wood." Species you have none of are left out; no wood at all reads plainly. */
 string wood_readout()
 {
 string[] parts;
-if(my_wood_small > 0) parts.insert_last(my_wood_small + (my_wood_small==1 ? " small piece of wood" : " small pieces of wood"));
-if(my_wood_medium > 0) parts.insert_last(my_wood_medium + (my_wood_medium==1 ? " medium piece of wood" : " medium pieces of wood"));
-if(my_wood_large > 0) parts.insert_last(my_wood_large + (my_wood_large==1 ? " large piece of wood" : " large pieces of wood"));
+if(my_wood_oak > 0) parts.insert_last(my_wood_oak + " oak wood");
+if(my_wood_maple > 0) parts.insert_last(my_wood_maple + " maple wood");
+if(my_wood_birch > 0) parts.insert_last(my_wood_birch + " birch wood");
+if(my_wood_pine > 0) parts.insert_last(my_wood_pine + " pine wood");
 if(parts.length() == 0) return "You have no wood.";
 string joined;
-if(parts.length() == 1) joined = parts[0];
-else if(parts.length() == 2) joined = parts[0] + " and " + parts[1];
-else joined = parts[0] + ", " + parts[1] + ", and " + parts[2];
+for(uint i=0; i<parts.length(); i++)
+{
+if(i == 0) joined = parts[0];
+else if(i == parts.length()-1) joined += (parts.length()==2 ? " and " : ", and ") + parts[i];
+else joined += ", " + parts[i];
+}
 return "You have " + joined + ".";
 }
