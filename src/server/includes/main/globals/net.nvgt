@@ -1241,18 +1241,73 @@ else send(players[index].peer_id, "weaponstats 1 "+wd.max_ammo+" "+wd.spam_time+
 }
 else if(parsed[0]=="fire" and index>-1)
 {
-/* An attacker fired their ranged weapon (client-optimistic: it already played the shot or dry-fire and decremented
-its own view of the magazine). Validate, consume one loaded round if any, and send back the authoritative magazine
-count so the client stays in sync. The traveling bullet + wall damage on arrival land in 5d. */
+/* An attacker fired their ranged weapon ("fire <facing>"; the client already played the shot and decremented its
+own view of the magazine optimistically). Ray-march from the shooter along their facing to the first wall within
+range, then LOCK the outcome (5d, the A-plus model): a shot in a wave attack window at a wall in range with a
+round chambered is DAMAGING -- spend one round and hold a bullet that hurts the wall on arrival; a shot during
+build, a rest window, or that finds no wall is a free RICOCHET (no ammo spent, no damage, just the bounce). So
+ammo is spent only when the shot can actually hurt the wall. resolve_bullets lands the hit/bounce when the travel
+timer elapses; the authoritative magazine count goes back either way so the client's optimistic view re-syncs. */
 int gi = get_game_index(players[index].room_id);
 weapon_data@ fwd = get_weapon_data(players[index].weapon);
 bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack"));
-bool can_fire = attacker and fwd !is null and !fwd.melee and fwd.ammo_type != "" and (games[gi].phase=="build" or games[gi].phase=="wave");
-if(can_fire)
+bool armed = attacker and fwd !is null and !fwd.melee and fwd.ammo_type != "" and (games[gi].phase=="build" or games[gi].phase=="wave");
+if(armed)
 {
-if(players[index].mag.count(fwd.ammo_type) > 0) players[index].mag.take(fwd.ammo_type, 1); // [5d: spawn the bullet, resolve wall damage on arrival]
-send(players[index].peer_id, "loaded "+players[index].mag.count(fwd.ammo_type), 0, true); // authoritative magazine count
+string face = (parsed.length()>1) ? parsed[1] : ""; // the direction the shooter faces: west/east/north/south
+/* Ray-march one tile at a time along the facing, up to the weapon's range, to the first wall line. Border walls
+(EVP/PVE) sit at 0 and size; the PVP ring sits at wmin/wmax and spans only wmin..wmax on its side, so a shot past
+a corner finds no wall. tdir/tdist = the wall hit and its distance in tiles, or "" if nothing lies that way. */
+int s = int(games[gi].size);
+bool pvp = (games[gi].mode == "pvp");
+int wmin = s/4, wmax = s - wmin;
+int dx=0, dy=0;
+if(face=="west") dx=-1; else if(face=="east") dx=1; else if(face=="north") dy=1; else if(face=="south") dy=-1;
+string tdir=""; int tdist=0;
+if(dx!=0 or dy!=0)
+{
+int cx=players[index].x, cy=players[index].y;
+for(int d=1; d<=fwd.range_hi; d++)
+{
+cx+=dx; cy+=dy;
+if(pvp)
+{
+if(dx<0 and cx==wmin and cy>=wmin and cy<=wmax) { tdir="west"; tdist=d; break; }
+if(dx>0 and cx==wmax and cy>=wmin and cy<=wmax) { tdir="east"; tdist=d; break; }
+if(dy>0 and cy==wmax and cx>=wmin and cx<=wmax) { tdir="north"; tdist=d; break; }
+if(dy<0 and cy==wmin and cx>=wmin and cx<=wmax) { tdir="south"; tdist=d; break; }
 }
+else
+{
+if(dx<0 and cx==0) { tdir="west"; tdist=d; break; }
+if(dx>0 and cx==s) { tdir="east"; tdist=d; break; }
+if(dy>0 and cy==s) { tdir="north"; tdist=d; break; }
+if(dy<0 and cy==0) { tdir="south"; tdist=d; break; }
+}
+}
+}
+bool window = (games[gi].phase=="wave" and games[gi].wave_attacking); // an attack window: a shot can hurt the wall
+bool damaging = (tdir != "") and window;
+if(damaging)
+{
+if(players[index].mag.count(fwd.ammo_type) > 0) players[index].mag.take(fwd.ammo_type, 1); // spend one loaded round -- only on a shot that can hurt the wall
+else damaging = false; // nothing chambered: it still flies, but as a harmless ricochet that spends nothing
+}
+if(tdir != "")
+{
+pending_bullet b;
+b.shooter = players[index].name;
+b.weapon = players[index].weapon;
+b.dir = tdir;
+b.damaging = damaging;
+b.dmg_lo = fwd.dmg_lo; b.dmg_hi = fwd.dmg_hi;
+b.flight_ms = tdist * fwd.bullet_speed; // distance to the wall (tiles) times the weapon's ms-per-tile speed
+b.flight.restart();
+games[gi].bullets.insert_last(b);
+send_to_game(games[gi].id, "bulletspawn "+players[index].x+" "+players[index].y+" "+tdir+" "+players[index].weapon+" "+b.flight_ms); // clients play the travelling loop from the shooter to the wall
+}
+}
+send(players[index].peer_id, "loaded "+((fwd is null) ? 0 : players[index].mag.count(fwd.ammo_type)), 0, true); // re-sync the magazine (unchanged for a free/whiffed shot, one less for a spent round)
 }
 else if(parsed[0]=="reload" and index>-1)
 {

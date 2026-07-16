@@ -1,5 +1,6 @@
 ####These are the things that need to be finished for future versions of the game.
 
+**Unfinished. Add a free play mode where you can collect wood, destroy walls, or even spawn bots to do 1 or both.
 **Unfinished. Add ranged weapons that fire traveling bullets at the walls, with an ammo and reload system.
 **Unfinished. Move the weapon and item values into data files the server reads instead of hardcoding them.
 **Unfinished. Add some more weapons to the EVP and PVP game modes.
