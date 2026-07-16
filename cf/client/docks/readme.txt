@@ -109,15 +109,23 @@ Environment versus player.
 
 Environment versus player, or EVP, flips the game around: instead of defending the walls, you attack them, and the bots defend. You play from the gravel outside the cave, and your job is to smash all four walls down while the bots build them back up. Choose EVP when you pick your game mode at the start.
 
-You fight with weapons, not wood. When a round starts you are handed all four weapons and one is drawn for you; press Alt plus W at any time to open the weapon menu and pick the axe, bat, crowbar, or hammer, and you hear which one you have drawn. Before the round begins you carry nothing and cannot attack.
+You fight with weapons, not wood. When a round starts you are handed all eight weapons and one is drawn for you; press Alt plus W at any time to open the weapon menu and pick any of them, with the one you have drawn marked. The menu is arranged in tabs, an All tab that lists every weapon and one tab each for the archery, explosive, and melee kinds, and it remembers the tab you were last on. Before the round begins you carry nothing and cannot attack.
 
-Walk up to a wall and press space to swing the weapon in your hand at the nearest wall, one swing per press, the same five tile reach as reinforcing. Each weapon takes a moment to wind up before the blow lands, and heavier weapons hit harder but swing slower, so the hammer does the most damage while the axe lands the fastest. You can keep moving and switch weapons freely while you swing.
+The four melee weapons, the axe, bat, crowbar, and hammer, are swung up close. Walk up to a wall and press space to swing the one in your hand at the nearest wall, one swing per press, the same five tile reach as reinforcing. Each takes a moment to wind up before the blow lands, and heavier weapons hit harder but swing slower, so the hammer does the most damage while the axe lands the fastest. You can keep moving and switch weapons freely while you swing.
+
+The four ranged weapons, the crossbow, cannon, firebomb, and grenade, are fired from a distance. Face the wall you want to hit and press space to fire; the shot flies across and strikes the wall you are facing from however far back you stand, up to that weapon's range. Ranged shots hit only the walls, never people, so a bullet passes harmlessly through anyone in its path. Each shot spends a round of that weapon's ammo, and pulling the trigger empty just clicks.
+
+Ammo is a resource you gather, the attacker's version of the defenders' wood. Four kinds drop on the ground in your area, arrows for the crossbow, powder for the cannon, gas for the firebomb, and grenades, and you pick each up by walking over it. Press x to hear the drawn weapon's ammo, how many rounds are loaded and how many wait in reserve, and press a to locate the nearest ammo on the ground, nearest first, the way d locates wood for the defenders.
+
+When a weapon runs low, press shift plus R to reload it, moving rounds from your reserve into it. The reload takes as long as its sound plays, blocking you from firing until it finishes, and a ping tells you the moment it is loaded and ready.
+
+The firebomb is special: on top of its hit, it sets the wall alight, and the fire keeps gnawing at the wall for a few seconds. Throw another at a wall already burning and the fire grows hotter and lasts longer. Like your swings, the fire only eats the wall while you can actually attack it, going quiet during the build phase and the rest windows and picking back up when the next attack window opens.
 
 The walls are defended by builder bots. They wander the cavern, pick up the wood that drops, carry it to whichever wall is weakest, and repair it, so you hear their footsteps moving around and the wood going onto the walls. Just as your own pieces do, some wood kinds mend a wall more than others when a bot places it. Out on the gravel you hear all of this from outside the walls, so the bots and the cave's wood reach you both muffled and reverberant, as if the inside of the cave is leaking out to you through the stone, while your own sounds on the exterior stay clear. You do not gather wood yourself in this mode; the bots do. Press b to hear where the bots are, nearest first, the same way p locates players, and the wall keys n, e, s, w, and t still tell you how the walls are holding up.
 
-Each round has two parts. First a build phase, where the bots reinforce the walls and you cannot hurt them yet; if you swing during this time your weapon only ricochets off the wall, so you know you are lined up, but no damage is done.
+Each round has two parts. First a build phase, where the bots reinforce the walls and you cannot hurt them yet; if you swing or fire during this time your weapon only ricochets off the wall, so you know you are lined up, but no damage is done, and a shot in the build phase spends no ammo.
 
-The wave alternates between attack windows and rest windows. During an attack window your hits finally count, so smash the walls while you can, and the bots roam the cavern gathering wood but hold off repairing. During a rest window your swings only ricochet again while the bots place that wood and repair the damage, so you cannot hurt the walls until the next attack window opens.
+The wave alternates between attack windows and rest windows. During an attack window your hits finally count, so smash the walls while you can, and the bots roam the cavern gathering wood but hold off repairing. During a rest window your swings and shots only ricochet again, and spend no ammo, while the bots place that wood and repair the damage, so you cannot hurt the walls until the next attack window opens.
 
 The bots can never rebuild a wall all the way back, though, because part of every hit you land is permanent, so you always gain ground over the round no matter how hard they work.
 
@@ -279,9 +287,15 @@ Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; ho
 
 B. Locate the builder bots, nearest first. EVP only.
 
-Alt plus W. Open the weapon menu to draw the axe, bat, crowbar, or hammer. For attackers, that is EVP and PVP.
+Alt plus W. Open the weapon menu to draw any of your eight weapons, in tabs by kind. For attackers, that is EVP and PVP.
 
-Spacebar. Swings your drawn weapon at the nearest wall in reach, once per press. For attackers, that is EVP and PVP.
+Spacebar. Swing a drawn melee weapon at the nearest wall, or fire a drawn ranged weapon at the wall you face, once per press. For attackers, that is EVP and PVP.
+
+Shift plus R. Reload the drawn ranged weapon from your reserve; a ping sounds when it is loaded. For attackers, that is EVP and PVP.
+
+X. Hear the drawn ranged weapon's ammo, how many rounds are loaded and how many are in reserve. For attackers, that is EVP and PVP.
+
+A. Locate the ammo lying around you, nearest first, with each one's kind. For attackers, that is EVP and PVP.
 
 Connection problems.
 
