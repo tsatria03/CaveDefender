@@ -66,9 +66,11 @@ void pause_objects()
 {
 for(uint i = 0; i < woodpool.items.length(); i++) { if(@woodpool.items[i].handle == null) continue; if(woodpool.items[i].handle.playing == false) continue; woodpool.pause_sound(i); }
 for(uint i = 0; i < ammopool.items.length(); i++) { if(@ammopool.items[i].handle == null) continue; if(ammopool.items[i].handle.playing == false) continue; ammopool.pause_sound(i); }
+for(uint i = 0; i < burnpool.items.length(); i++) { if(@burnpool.items[i].handle == null) continue; if(burnpool.items[i].handle.playing == false) continue; burnpool.pause_sound(i); } // the wall-fire loops too
 }
 void resume_objects()
 {
 for(uint i = 0; i < woodpool.items.length(); i++) woodpool.resume_sound(i);
 for(uint i = 0; i < ammopool.items.length(); i++) ammopool.resume_sound(i);
+for(uint i = 0; i < burnpool.items.length(); i++) burnpool.resume_sound(i);
 }

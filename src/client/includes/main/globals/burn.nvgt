@@ -1,0 +1,75 @@
+/* Client audio for firebomb wall fire (task 5e.2). The server owns the burn (globals/burn.nvgt: it ticks the
+damage and decides when a wall lights or goes out); here we only play the fire, driven by two messages:
+  "burnstart <dir>" -- sent on EVERY firebomb hit (the ignite AND each intensify). Play a short whoosh, and start
+     the wall's BURNING loop only if it isn't already alight -- one loop per wall, never a second stacked on a re-hit.
+  "burnstop <dir>"  -- sent once when the fire ends (burned out, wall fell, or round reset). Stop that wall's loop
+     and play the fire-out cue.
+So the whoosh reports every hit while the single sustained loop tells you the wall is on fire.
+
+Everything rides its OWN pool, burnpool (listener-following, like the wall-hit sounds): a defender inside the cave
+hears the fire reverberant, an attacker outside hears it dry. The clips live beside the other wall sounds under
+objects/walls/wallwood/ (burnstart / burning / burnstop). Positioned at the burning wall's midpoint. */
+
+class client_burn
+{
+string dir;    // which wall is on fire
+int slot = -1; // its sustained burning-loop handle on burnpool
+}
+client_burn@[] client_burns;
+
+int find_client_burn(string dir)
+{
+for(uint i=0; i<client_burns.length(); i++) if(client_burns[i].dir == dir) return int(i);
+return -1;
+}
+/* Play a wall-fire clip at the midpoint of the wall in `dir`, returning its handle (looping loops for the
+sustained burn). The midpoint follows the same geometry the wall-hit sounds use: border walls (EVP/PVE) at
+0/size, the PVP ring inset at wmin/wmax. */
+int play_wall_fire(string dir, string file, bool looping)
+{
+double s = cavern_size;
+double wmin = int(s)/4, wmax = s - wmin;
+double mx, my;
+if(game_mode == "pvp")
+{
+if(dir=="west") { mx=wmin; my=s/2; }
+else if(dir=="east") { mx=wmax; my=s/2; }
+else if(dir=="north") { mx=s/2; my=wmax; }
+else if(dir=="south") { mx=s/2; my=wmin; }
+else return -1;
+}
+else if(dir=="west") { mx=0; my=s/2; }
+else if(dir=="east") { mx=s; my=s/2; }
+else if(dir=="north") { mx=s/2; my=s; }
+else if(dir=="south") { mx=s/2; my=0; }
+else return -1;
+return burnpool.play_3d("sounds/objects/walls/wallwood/"+file, me.x, me.y, me.z, mx, my, 0, calculate_theta(me_rotation), looping);
+}
+/* "burnstart <dir>": every firebomb hit. Play the ignite/intensify whoosh, and start the burning loop only if this
+wall isn't already alight (a re-hit keeps the one loop -- the whoosh is the "hotter" feedback). */
+void start_wall_burn(string dir)
+{
+play_wall_fire(dir, "burnstart.ogg", false);
+if(find_client_burn(dir) >= 0) return; // already burning: don't stack a second loop
+client_burn cb;
+cb.dir = dir;
+cb.slot = play_wall_fire(dir, "burning.ogg", true);
+client_burns.insert_last(cb);
+}
+/* "burnstop <dir>": the fire ended. Stop this wall's burning loop (if any) and play the fire-out cue once. */
+void stop_wall_burn(string dir)
+{
+int i = find_client_burn(dir);
+if(i >= 0)
+{
+if(client_burns[i].slot != -1) burnpool.destroy_sound(client_burns[i].slot);
+client_burns.remove_at(i);
+}
+play_wall_fire(dir, "burnstop.ogg", false);
+}
+// Stop every wall fire (leaving a game / switching maps / round reset), so no burning loop leaks.
+void clear_client_burns()
+{
+for(uint i=0; i<client_burns.length(); i++) if(client_burns[i].slot != -1) burnpool.destroy_sound(client_burns[i].slot);
+client_burns.resize(0);
+}

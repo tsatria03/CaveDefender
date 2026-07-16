@@ -72,5 +72,5 @@ audio_form form;
 form_menu m;
 instance gamstence;
 kh keyhook;
-sound_pool p, pool, spool, temp, beaconpool, vpool, ambpool, musicpool, woodpool, ammopool, botpool, crosspool;
+sound_pool p, pool, spool, temp, beaconpool, vpool, ambpool, musicpool, woodpool, ammopool, botpool, crosspool, burnpool;
 virtual_dialogs vd;

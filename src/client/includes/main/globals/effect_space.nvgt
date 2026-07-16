@@ -141,6 +141,7 @@ apply_all_effects(me.x, me.y, vpool, me.z, "vpool");
 apply_all_effects(me.x, me.y, ambpool, me.z, "ambpool");
 apply_all_effects(me.x, me.y, musicpool, me.z, "musicpool");
 apply_all_effects(me.x, me.y, ammopool, me.z, "ammopool"); // ammo is the attacker's OWN resource, gathered outside -- it follows the listener (dry outside), NOT source-muffled like the cave wood
+apply_all_effects(me.x, me.y, burnpool, me.z, "burnpool"); // firebomb wall fire: follows the listener like the wall-hit sounds -- reverberant to a defender inside the cave, dry to an attacker outside
 bool muffle = in_cavern and listener_outside;
 set_cave_source_fx(botpool, "botpool", in_cavern, muffle);
 set_cave_source_fx(woodpool, "woodpool", in_cavern, muffle);
