@@ -9,7 +9,7 @@ Note: the .evb lives in src/client, but the assets it references stay in cf/clie
 independent of the source paths inside it.
 
 Run it whenever the sounds or docks folders change:
-    python scripts/gencfcevb.py
+    python scripts/gen_cfc_evb.py
 (or double-run through your normal Python). It reads build/tools.ini for the game name/password, so the
 release input/output paths stay correct even if the password changes. Paths are derived from this file's
 location, so it works as long as it lives in a folder directly under the repo root (e.g. scripts/).

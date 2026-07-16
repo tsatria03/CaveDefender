@@ -113,7 +113,7 @@ You fight with weapons, not wood. When a round starts you are handed all your we
 
 The melee weapons, the axe, bat, crowbar, hammer, and your own fists and feet, are swung up close. Walk up to a wall and press space to swing the one in your hand at the nearest wall, one swing per press, the same five tile reach as reinforcing. Each takes a moment to wind up before the blow lands, and heavier weapons hit harder but swing slower, so the hammer does the most damage while your bare fists land the fastest and hit the softest. You can keep moving and switch weapons freely while you swing.
 
-The ranged weapons, the crossbow, cannon, firebomb, grenade, pistol, and machine gun, are fired from a distance. Face the wall you want to hit and press space to fire; the shot flies across and strikes the wall you are facing from however far back you stand, up to that weapon's range. Ranged shots hit only the walls, never people, so a bullet passes harmlessly through anyone in its path. Each shot spends a round of that weapon's ammo, and pulling the trigger empty just clicks.
+The ranged weapons, the crossbow, cannon, firebomb, grenade, pistol, and machine gun, are fired from a distance. Face the wall you want to hit and press space to fire; the shot flies across and strikes the wall you are facing from however far back you stand, up to that weapon's range. Ranged shots hit only the walls, never people, so a bullet passes harmlessly through anyone in its path. Each shot spends a round of that weapon's ammo, and pulling the trigger empty just clicks. The machine gun is the one fully automatic weapon: hold space and it keeps firing on its own until you let go or the magazine runs dry.
 
 Ammo is a resource you gather, the attacker's version of the defenders' wood. Several kinds drop on the ground in your area, arrows for the crossbow, powder for the cannon, gas for the firebomb, grenades, and normal ammo shared by the pistol and machine gun, and you pick each up by walking over it. Press x to hear the drawn weapon's ammo, how many rounds are loaded and how many wait in reserve, and press a to locate the nearest ammo on the ground, nearest first, the way d locates wood for the defenders.
 
@@ -289,7 +289,7 @@ B. Locate the builder bots, nearest first. EVP only.
 
 Alt plus W. Open the weapon menu to draw any of your weapons, in tabs by kind. For attackers, that is EVP and PVP.
 
-Spacebar. Swing a drawn melee weapon at the nearest wall, or fire a drawn ranged weapon at the wall you face, once per press. For attackers, that is EVP and PVP.
+Spacebar. Swing a drawn melee weapon at the nearest wall, or fire a drawn ranged weapon at the wall you face, once per press; the machine gun instead fires continuously while it is held. For attackers, that is EVP and PVP.
 
 Shift plus R. Reload the drawn ranged weapon from your reserve; a ping sounds when it is loaded. For attackers, that is EVP and PVP.
 

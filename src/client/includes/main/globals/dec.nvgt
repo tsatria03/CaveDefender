@@ -48,7 +48,8 @@ string pending_rooms=""; // last rooms overview (room count + office occupants),
 bool rooms_received=false;
 int my_wood_oak=0, my_wood_maple=0, my_wood_birch=0, my_wood_pine=0; // wood you're carrying by species in the current game (synced from the server; read by the I key)
 int my_ammo_arrow=0, my_ammo_gas=0, my_ammo_grenade=0, my_ammo_powder=0, my_ammo_normal=0; // ammo reserve you're carrying by type in the current game (attackers; synced from the server, read by the X key)
-int my_weapon_maxammo=0, my_weapon_spamtime=0, my_loaded=0; // the equipped ranged weapon's magazine size, fire-cadence ms, and current loaded rounds -- synced from the server on equip (weaponstats) and each shot (loaded)
+int my_weapon_maxammo=0, my_weapon_spamtime=0, my_loaded=0; // the equipped ranged weapon's magazine size, tap-cadence ms, and current loaded rounds -- synced from the server on equip (weaponstats) and each shot (loaded)
+int my_weapon_firemode=0, my_weapon_repeattime=0; // ...and its fire mode (0 = one shot per press, 1 = auto: hold to stream) with the auto cadence ms, from the same weaponstats sync
 int wall_north=0, wall_east=0, wall_south=0, wall_west=0; // current cavern wall strengths as percents (synced; read by N/E/S/W/D)
 int cavern_size=0; // the current game's cavern grid size, for positioning wall-hit sounds
 string game_phase="idle"; // the current game's round phase (idle/build/wave), synced from the server

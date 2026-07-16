@@ -1243,9 +1243,9 @@ players[index].granted_mags.insert_last(w);
 }
 }
 }
-// Tell the client the equipped weapon's stats (fire cadence, magazine size, current loaded) for firing and the X readout.
-if(wd.melee) send(players[index].peer_id, "weaponstats 0 0 0 0", 0, true);
-else send(players[index].peer_id, "weaponstats 1 "+wd.max_ammo+" "+wd.spam_time+" "+players[index].mag.count(w), 0, true);
+// Tell the client the equipped weapon's stats (magazine size, tap cadence, current loaded, fire mode, auto cadence) for firing and the X readout.
+if(wd.melee) send(players[index].peer_id, "weaponstats 0 0 0 0 0 0", 0, true);
+else send(players[index].peer_id, "weaponstats 1 "+wd.max_ammo+" "+wd.spam_time+" "+players[index].mag.count(w)+" "+wd.fire_mode+" "+wd.repeat_time, 0, true);
 }
 }
 else if(parsed[0]=="fire" and index>-1)

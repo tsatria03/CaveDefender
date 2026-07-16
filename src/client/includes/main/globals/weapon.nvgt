@@ -175,30 +175,47 @@ p.play_3d("sounds/"+firepath+".ogg", me.x, me.y, me.z, me.x, me.y, me.z, calcula
 send(0, "step "+firepath+" "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the swing in 3D at our spot
 }
 }
-/* --- Ranged fire (the mirror of swingloop for the attack side, task 5c.2) ---
-Tap Space to fire the equipped RANGED weapon, paced by the weapon's spam_time (fire mode 0). A shot needs a loaded
-round (my_loaded>0): play the fire sound, drop my_loaded optimistically, relay the shot, and tell the server, which
-owns the magazine, re-syncs `loaded`, and (in 5d) spawns the traveling bullet + resolves wall damage on arrival. An
-empty magazine dry-fires the `empty` sound instead. No-op for melee (swingloop handles those), spectators, a paused
-game, PVE/defenders, or with no weapon -- and since it's gated to ranged while swingloop is gated to melee, only one
-of the two ever reads Space in a given frame. my_weapon_spamtime / my_loaded come from the server (weaponstats/loaded). */
-timer firetimer; // paces ranged fire at the weapon's spam_time
-void fireloop()
+/* --- Ranged fire (the mirror of swingloop for the attack side, tasks 5c.2 + full-auto) ---
+FIRE MODE 0 (manual -- most weapons): tap Space for one shot, paced by the weapon's spam_time. FIRE MODE 1 (auto --
+the machine gun): HOLD Space and it streams a shot every repeat_time on its own until you release or the magazine
+runs dry; an empty magazine clicks once per fresh press, never per tick. A shot plays the fire sound, drops
+my_loaded optimistically, relays the shot, and tells the server, which owns the magazine, re-syncs `loaded`, and
+resolves the traveling bullet on arrival. No-op for melee (swingloop handles those), spectators, a paused game,
+PVE/defenders, or with no weapon -- and since it's gated to ranged while swingloop is gated to melee, only one of
+the two ever reads Space in a given frame. All the stats come from the server (weaponstats/loaded). */
+timer firetimer; // paces ranged fire: spam_time between taps (mode 0) or repeat_time between auto rounds (mode 1)
+// Fire one round right now: the local shot audio, the optimistic magazine tick-down, the relay, and the server notice. Both fire modes land here.
+void fire_one_shot()
 {
-if((!game_outside and !(game_mode=="pvp" and my_side=="attack")) or !in_game or watching or game_paused or current_weapon=="" or is_melee_weapon(current_weapon)) return; // ranged weapons only
-if(!is_reloading and key_pressed(KEY_SPACE) and firetimer.elapsed >= my_weapon_spamtime)
-{
-firetimer.restart();
 string cls = weapon_class(current_weapon);
-if(my_loaded > 0)
-{
 my_loaded--; // optimistic; the server re-syncs via "loaded" (a build-phase or missed shot spends nothing, so it comes back)
 p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/fire.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step equipment/weapons/"+cls+"/"+current_weapon+"/fire "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the shot in 3D
 string fdir = (facing==Left) ? "west" : (facing==Right) ? "east" : (facing==Forward) ? "north" : "south"; // which wall the shot flies toward
 send(0, "fire "+fdir, 0, true); // the server ray-marches this facing to the target wall, spawns the bullet, and resolves the hit/ricochet on arrival
 }
-else p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/empty.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // dry-fire: out of loaded ammo
+void fireloop()
+{
+if((!game_outside and !(game_mode=="pvp" and my_side=="attack")) or !in_game or watching or game_paused or current_weapon=="" or is_melee_weapon(current_weapon)) return; // ranged weapons only
+if(is_reloading) return; // no firing mid-reload, in either mode
+if(my_weapon_firemode == 1)
+{
+/* AUTO: stream while Space is HELD, one round per repeat_time -- key_down (a state check), not key_pressed, so
+the OS key-repeat rate never matters and our own timer is the whole cadence. Running dry mid-stream just goes
+quiet; a fresh press on an empty magazine clicks once. */
+if(my_loaded > 0)
+{
+if(key_down(KEY_SPACE) and firetimer.elapsed >= my_weapon_repeattime) { firetimer.restart(); fire_one_shot(); }
+}
+else if(key_pressed(KEY_SPACE)) p.play_3d("sounds/equipment/weapons/"+weapon_class(current_weapon)+"/"+current_weapon+"/empty.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // dry-fire: once per press
+return;
+}
+// MANUAL (fire mode 0): one shot per Space press, paced by spam_time.
+if(key_pressed(KEY_SPACE) and firetimer.elapsed >= my_weapon_spamtime)
+{
+firetimer.restart();
+if(my_loaded > 0) fire_one_shot();
+else p.play_3d("sounds/equipment/weapons/"+weapon_class(current_weapon)+"/"+current_weapon+"/empty.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // dry-fire: out of loaded ammo
 }
 }
 /* --- Reload (Shift+R, task 5c.3) ---
