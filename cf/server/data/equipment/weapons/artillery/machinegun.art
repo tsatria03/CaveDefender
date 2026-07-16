@@ -1,8 +1,8 @@
-damage=35,55
+damage=6,12
 melee=false
 fire mode=1
 repeat time=100
 range=10
 bullet speed=30
 ammo type=normal
-max ammo=30
+max ammo=15

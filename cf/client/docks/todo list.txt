@@ -1,8 +1,9 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Add a free play mode where you can collect wood, destroy walls, or even spawn bots to do 1 or both.
-**Unfinished. Add some more weapons to the EVP and PVP game modes.
 **Unfinished. Add a way to report bugs and or feedback from other players on the server.
+**Unfinished. Add a free play mode where you can collect wood, destroy walls, or even spawn bots to do 1 or both.
+**Unfinished. Add some more items and weapons to the EVP and PVP game modes.
+**Unfinished. Add full-auto weapons that keep firing while you hold the space bar.
 **Unfinished. Fix major balancing issues in the environment versus player and player versus player modes.
 
 ##These are the things that are already finished from earlier versions of the game.
