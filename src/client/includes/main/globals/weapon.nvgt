@@ -1,9 +1,9 @@
 /* Client-side player weapon for the attack side (EVP outdoors, and the PVP attackers): the player carries all
 their weapons and draws (equips) one at a time from the Alt+W weapon menu (weapon_menu, below), a tabbed picker
-by class. Only meaningful for the attacking side; PVE and PVP defenders never wield a weapon. The selection here
-is local state + the draw sound; ranged FIRING (ammo, the traveling bullet) is wired in later #5 sections, so for
-now a ranged weapon can be drawn but does nothing on Space -- only melee swings (see swingloop's is_melee_weapon gate). */
-string current_weapon=""; // the equipped weapon's name (any of the 8), or "" when not armed.
+by class, or the number-row hotkeys (weapon_hotkey_loop, below). Only meaningful for the attacking side; PVE and
+PVP defenders never wield a weapon. The selection here is local state + the draw sound; melee swinging and ranged
+firing live in swingloop/fireloop below. */
+string current_weapon=""; // the equipped weapon's name (any of the 12), or "" when not armed.
 /* The weapon roster, grouped by class. weapon_classes() is the tab order (archery, artillery, explosive, melee); each
 class's weapons are listed alphabetically (matching SimpleFighter). available_weapons() is all of them alphabetically
 for the menu's "All" tab. These also drive the class segment of every weapon sound path (sounds/equipment/weapons/<class>/<name>/). */
@@ -115,6 +115,24 @@ if(mres < 0) { speak("canceled"); return; } // escaped
 string sel = m.selected_item_id;
 if(sel == current_weapon) { speak("This weapon is already equipped."); return; } // picked the one already in hand -- say so instead of silently doing nothing
 draw_weapon(sel);
+}
+/* The number-row weapon hotkeys, the quick alternative to the Alt+W menu: 1 through 0 then dash and equals
+draw the twelve weapons in alphabetical order -- the same order as the menu's All tab, so 1=axe, 2=bat,
+3=cannon, 4=crossbow, 5=crowbar, 6=feet, 7=firebomb, 8=fist, 9=grenade, 0=hammer, dash=machinegun,
+equals=pistol. Same gating as the menu (an armed EVP player or PVP attacker, never a watcher), and a held Alt
+means the press belongs to an Alt-combo, so the row is ignored then. draw_weapon already refuses the weapon
+in hand, so re-pressing your current weapon's key is a silent no-op (no stacked draws). Called every frame
+from the in-game key loop. */
+void weapon_hotkey_loop()
+{
+if(!in_game or watching or !(game_outside or (game_mode=="pvp" and my_side=="attack")) or current_weapon=="") return;
+if(alt_is_down()) return;
+uint[] keys = {KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_EQUALS};
+string[] all = available_weapons();
+for(uint i=0; i<keys.length() and i<all.length(); i++)
+{
+if(key_pressed(keys[i])) { draw_weapon(all[i]); return; }
+}
 }
 /* Force-equip a weapon and ALWAYS play its draw sound, even if it's already current. Used to arm the player
 when a round starts. The "x equipped" notice always goes to the misc buffer (speaks + logs). */

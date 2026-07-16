@@ -109,7 +109,7 @@ Environment versus player.
 
 Environment versus player, or EVP, flips the game around: instead of defending the walls, you attack them, and the bots defend. You play from the gravel outside the cave, and your job is to smash all four walls down while the bots build them back up. Choose EVP when you pick your game mode at the start.
 
-You fight with weapons, not wood. When a round starts you are handed all your weapons and one is drawn for you; press Alt plus W at any time to open the weapon menu and pick any of them, with the one you have drawn marked. The menu is arranged in tabs, an All tab that lists every weapon and one tab each for the archery, artillery, explosive, and melee kinds, and it remembers the tab you were last on. Before the round begins you carry nothing and cannot attack.
+You fight with weapons, not wood. When a round starts you are handed all your weapons and one is drawn for you; press Alt plus W at any time to open the weapon menu and pick any of them, with the one you have drawn marked. The menu is arranged in tabs, an All tab that lists every weapon and one tab each for the archery, artillery, explosive, and melee kinds, and it remembers the tab you were last on. The number row works too, drawing the weapons in alphabetical order, the same order as the All tab: 1 through 0 then dash and equals. Before the round begins you carry nothing and cannot attack.
 
 The melee weapons, the axe, bat, crowbar, hammer, and your own fists and feet, are swung up close. Walk up to a wall and press space to swing the one in your hand at the nearest wall, one swing per press, the same five tile reach as reinforcing. Each takes a moment to wind up before the blow lands, and heavier weapons hit harder but swing slower, so the hammer does the most damage while your bare fists land the fastest and hit the softest. You can keep moving and switch weapons freely while you swing.
 
@@ -288,6 +288,7 @@ Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; ho
 B. Locate the builder bots, nearest first. EVP only.
 
 Alt plus W. Open the weapon menu to draw any of your weapons, in tabs by kind. For attackers, that is EVP and PVP.
+Number row, 1 through 0 then dash and equals. Draw a weapon directly, in alphabetical order matching the weapon menu's All tab. For attackers only, the same as Alt plus W.
 
 Spacebar. Swing a drawn melee weapon at the nearest wall, or fire a drawn ranged weapon at the wall you face, once per press; the machine gun instead fires continuously while it is held. For attackers, that is EVP and PVP.
 
