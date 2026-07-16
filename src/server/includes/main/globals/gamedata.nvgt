@@ -190,6 +190,8 @@ load_weapon_file("melee", "axe", "mel");
 load_weapon_file("melee", "bat", "mel");
 load_weapon_file("melee", "crowbar", "mel");
 load_weapon_file("melee", "hammer", "mel");
+load_weapon_file("melee", "fist", "mel");
+load_weapon_file("melee", "feet", "mel");
 load_weapon_file("archery", "crossbow", "arc");
 load_weapon_file("explosive", "cannon", "exp");
 load_weapon_file("explosive", "firebomb", "exp");
