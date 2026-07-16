@@ -1,19 +1,62 @@
-/* Client-side player weapon for the attack side (EVP outdoors, and the PVP attackers): the player carries their
-weapons and draws (equips) one at a time from the Alt+W weapon menu (weapon_menu, below). Only meaningful for
-the attacking side; PVE and PVP defenders never wield a weapon. The selection here is purely local state + the
-draw sound — the actual attack (windup, damage, fire/hit sounds) is wired in a later sub-section. */
-string current_weapon=""; // the equipped weapon's name ("axe"/"bat"/"crowbar"/"hammer"), or "" when not armed.
-/* The weapons the player can draw, in menu order. Single source of truth for the Alt+W menu; the ranged weapons
-(task #5) will extend this list once they exist. For now it's the four melee weapons. */
+/* Client-side player weapon for the attack side (EVP outdoors, and the PVP attackers): the player carries all
+their weapons and draws (equips) one at a time from the Alt+W weapon menu (weapon_menu, below), a tabbed picker
+by class. Only meaningful for the attacking side; PVE and PVP defenders never wield a weapon. The selection here
+is local state + the draw sound; ranged FIRING (ammo, the traveling bullet) is wired in later #5 sections, so for
+now a ranged weapon can be drawn but does nothing on Space -- only melee swings (see swingloop's is_melee_weapon gate). */
+string current_weapon=""; // the equipped weapon's name (any of the 8), or "" when not armed.
+/* The weapon roster, grouped by class. weapon_classes() is the tab order (archery, explosive, melee); each class's
+weapons are listed alphabetically (matching SimpleFighter). available_weapons() is all 8 alphabetically for the
+menu's "All" tab. These also drive the class segment of every weapon sound path (sounds/weapons/<class>/<name>/). */
+string[] weapon_classes()
+{
+string[] c;
+c.insert_last("archery");
+c.insert_last("explosive");
+c.insert_last("melee");
+return c;
+}
+string[] weapons_of_class(string clas)
+{
+string[] w;
+if(clas=="archery") { w.insert_last("crossbow"); }
+else if(clas=="explosive") { w.insert_last("cannon"); w.insert_last("firebomb"); w.insert_last("grenade"); }
+else if(clas=="melee") { w.insert_last("axe"); w.insert_last("bat"); w.insert_last("crowbar"); w.insert_last("hammer"); }
+return w;
+}
+// The class folder a weapon lives in (archery/explosive/melee), for its sound path and its menu tab. Melee if unknown.
+string weapon_class(string name)
+{
+string[] classes = weapon_classes();
+for(uint c=0; c<classes.length(); c++) { string[] ws = weapons_of_class(classes[c]); if(ws.find(name) >= 0) return classes[c]; }
+return "melee";
+}
+// True for the four melee weapons (the only ones that swing; ranged firing isn't wired yet).
+bool is_melee_weapon(string name) { return weapon_class(name) == "melee"; }
+// The display (tab) name for a weapon class: capitalized.
+string class_display_name(string clas)
+{
+if(clas=="archery") return "Archery";
+if(clas=="explosive") return "Explosive";
+if(clas=="melee") return "Melee";
+return clas;
+}
+// A weapon's menu label: its name, marked when it's the one you currently hold.
+string weapon_menu_label(string name) { return name + (name==current_weapon ? ". Currently active." : ""); }
+// All 8 weapons alphabetically -- the "All" tab of the weapon menu.
 string[] available_weapons()
 {
 string[] w;
 w.insert_last("axe");
 w.insert_last("bat");
+w.insert_last("cannon");
+w.insert_last("crossbow");
 w.insert_last("crowbar");
+w.insert_last("firebomb");
+w.insert_last("grenade");
 w.insert_last("hammer");
 return w;
 }
+int weapon_menu_last_tab=0; // which weapon-menu tab to reopen on (0=All, 1=Archery, 2=Explosive, 3=Melee), remembered across opens
 /* Draw (equip) a weapon by name, playing its draw sound. Does nothing if that weapon is already the one in hand
 (no pointless redraw) or the name is empty. */
 void draw_weapon(string wname)
@@ -21,28 +64,37 @@ void draw_weapon(string wname)
 if(wname=="" or wname==current_weapon) return; // unknown, or already drawn
 current_weapon = wname;
 p.destroy_sound(wepslot); // cut off the previous DRAW still ringing so switching weapons doesn't stack draws
-wepslot = p.play_3d("sounds/weapons/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
-send(0, "step weapons/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
+wepslot = p.play_3d("sounds/weapons/"+weapon_class(wname)+"/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+send(0, "step weapons/"+weapon_class(wname)+"/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
 send(0, "setweapon "+wname, 0, true); // tell the server which weapon we have drawn, so a reconnect restores the same one
 add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
 }
-/* Alt+W in an EVP or PVP-attack game (the West-wall key branches here when Alt is held): a local pop-up to pick
-which weapon to draw, replacing the old number-row keys. Lists the weapons you can carry (available_weapons),
-marks the one in hand as currently active, and equips your choice via draw_weapon (a no-op if you pick the one
-you already hold). Purely local plus the same setweapon/step notices the number keys sent; canceling leaves your
-weapon unchanged. Pumps the network while open so the modal doesn't time the connection out. */
+/* Alt+W in an EVP or PVP-attack game (the West-wall key branches here when Alt is held): a TABBED pop-up to pick
+which weapon to draw. Tabs are the weapon classes -- All (every weapon), then Archery, Explosive, Melee -- with
+the weapons listed alphabetically in each and the one in hand marked. Equips your choice via draw_weapon (a no-op
+if you pick the one you already hold), and remembers the tab you were on for next time. Purely local plus the same
+setweapon/step notices; canceling leaves your weapon unchanged. Pumps the network so the modal doesn't time out. */
 void weapon_menu()
 {
-string[] weps = available_weapons();
-if(weps.length()==0) return;
 m.reset();
-m.intro_text = "Weapon menu. Choose a weapon to draw.";
+m.intro_text = "Weapon menu";
+m.tab_caption = "Category";
 @m.background_callback = @net_keepalive_cb; // pump the network each tick so the open menu doesn't time us out
-for(uint i=0; i<weps.length(); i++)
-m.add_item(weps[i] + (weps[i]==current_weapon ? ". Currently active." : "")); // mark the weapon in hand
-int choice = m.run();
-if(choice < 0 or choice >= int(weps.length())) { speak("canceled"); return; } // escaped or out of range
-draw_weapon(weps[choice]);
+int allt = m.add_tab("All"); // tab 0: every weapon, alphabetically
+string[] all = available_weapons();
+for(uint i=0; i<all.length(); i++) m.add_item_to_tab(allt, weapon_menu_label(all[i]), all[i]);
+string[] classes = weapon_classes(); // then one tab per class, alphabetical within
+for(uint c=0; c<classes.length(); c++)
+{
+int t = m.add_tab(class_display_name(classes[c]));
+string[] ws = weapons_of_class(classes[c]);
+for(uint i=0; i<ws.length(); i++) m.add_item_to_tab(t, weapon_menu_label(ws[i]), ws[i]);
+}
+if(weapon_menu_last_tab >= 0 and weapon_menu_last_tab <= int(classes.length())) m.set_active_tab_silent(weapon_menu_last_tab);
+int mres = m.run(-1, true, false);
+if(m.active_tab >= 0) weapon_menu_last_tab = m.active_tab; // remember the tab (valid right after run, before the next reset)
+if(mres < 0) { speak("canceled"); return; } // escaped
+draw_weapon(m.selected_item_id);
 }
 /* Force-equip a weapon and ALWAYS play its draw sound, even if it's already current. Used to arm the player
 when a round starts. The "x equipped" notice always goes to the misc buffer (speaks + logs). */
@@ -50,8 +102,8 @@ void equip_weapon(string wname)
 {
 current_weapon = wname;
 p.destroy_sound(wepslot);
-wepslot = p.play_3d("sounds/weapons/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
-send(0, "step weapons/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
+wepslot = p.play_3d("sounds/weapons/"+weapon_class(wname)+"/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+send(0, "step weapons/"+weapon_class(wname)+"/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
 send(0, "setweapon "+wname, 0, true); // tell the server which weapon we have drawn, so a reconnect restores the same one
 add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
 }
@@ -75,7 +127,7 @@ int swing_recovery(string w) { if(w=="axe") return 200; if(w=="bat") return 250;
 apply the hit. No-op for PVE, spectators, a paused game, or with no weapon in hand. */
 void swingloop()
 {
-if((!game_outside and !(game_mode=="pvp" and my_side=="attack")) or !in_game or watching or game_paused or current_weapon=="") { swinging=false; return; } // EVP, or a PVP attacker: the two sides that swing weapons
+if((!game_outside and !(game_mode=="pvp" and my_side=="attack")) or !in_game or watching or game_paused or current_weapon=="" or !is_melee_weapon(current_weapon)) { swinging=false; return; } // EVP, or a PVP attacker: the two sides that swing weapons -- and only MELEE weapons swing here; a drawn ranged weapon is inert until #5 wires firing
 if(swinging)
 {
 if(swingtimer.elapsed >= swing_windup(swing_weapon))
@@ -95,7 +147,7 @@ if(key_down(KEY_SPACE) and swingtimer.elapsed >= swing_recovery(current_weapon))
 swinging=true;
 swing_weapon=current_weapon; // lock in this swing's weapon
 swingtimer.restart();
-string firepath = "weapons/"+swing_weapon+"/fire"+random(1,3); // pick the variant once so our local cue and the relayed one match
+string firepath = "weapons/"+weapon_class(swing_weapon)+"/"+swing_weapon+"/fire"+random(1,3); // pick the variant once so our local cue and the relayed one match
 /* Play the swing in 3D at our spot, UNTRACKED (no wepslot): so consecutive swings overlap and, crucially, a
 new swing never destroys a still-ringing hit clip (which the pool may have given a recycled slot). */
 p.play_3d("sounds/"+firepath+".ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);

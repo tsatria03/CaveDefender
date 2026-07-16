@@ -1996,12 +1996,12 @@ the password you last used, so you just confirm it (do_join_room re-validates it
 password, so a changed password still fails). Tells you so if you haven't joined that kind of room yet. */
 if(parsed[1]=="private")
 {
-if(players[index].last_private_room==0) send(event.peer_id, "You haven't joined a private room this session yet.", 0, true);
+if(players[index].last_private_room==0) send(event.peer_id, "You haven't joined a private room this session.", 0, true);
 else ask_input(event.peer_id, "Enter the room's password.", "joinroom " + players[index].last_private_room, true, false, players[index].last_private_pw);
 }
 else
 {
-if(players[index].last_public_room==0) send(event.peer_id, "You haven't joined a public room this session yet.", 0, true);
+if(players[index].last_public_room==0) send(event.peer_id, "You haven't joined a public room this session.", 0, true);
 else do_join_room(index, event.peer_id, players[index].last_public_room, "");
 }
 }
