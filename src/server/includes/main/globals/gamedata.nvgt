@@ -1,0 +1,205 @@
+/* Server-side data-file loader (task #6, the foundation of the data-driven weapon/item system). Reads the
+weapon and item data files under data/ at boot into lookup tables the rest of the server queries by name:
+  data/weapons/melee/*.mel, data/weapons/explosive/*.exp, data/weapons/archery/*.arc
+  data/objects/items/wood/*.mtr, data/objects/items/ammo/*.amt
+This file is PURELY ADDITIVE -- it only loads and exposes the values; the callers that switch over to them
+(weapon damage, the four wood types, the ammo reserves) are tasks #7/#8/#9, so nothing here changes gameplay
+yet. See the memory game-data-file-layout for the field spec and the format convention below.
+
+Format (settled): line-based key=value, split on the FIRST '='; blank lines and lines starting with '#' are
+skipped; each line is trimmed (so a trailing CR from CRLF is harmless). A value is either a fixed number, a
+'min,max' random range (rolled fresh on each use, mirroring the old hardcoded random() calls), or -- only for
+the firebomb status -- a ':'-delimited multi-part value. */
+
+// A parsed min,max range. lo==hi means a fixed value; roll_range() draws random(lo,hi) each call, like the code it replaces.
+int[] parse_range(string v)
+{
+int[] r; r.resize(2);
+v = v.trim_whitespace();
+int c = string_contains(v, ",", 1); // first comma, or -1 for a bare number
+if(c < 0) { r[0] = string_to_number(v); r[1] = r[0]; return r; }
+r[0] = string_to_number(string_left(v, c));
+r[1] = string_to_number(v.substr(c+1));
+return r;
+}
+// Draw a value from a loaded lo/hi range: a fresh random(lo,hi), or the fixed value when lo>=hi.
+int roll_range(int lo, int hi) { if(lo >= hi) return lo; return random(lo, hi); }
+
+/* Read a key=value file into parallel keys/vals arrays (both empty if the file is missing/unreadable). Kept as
+two arrays rather than a dictionary to match the server's existing conf/prefs parsing. Look values up with kv_get. */
+bool read_kv(string path, string[]@ keys, string[]@ vals)
+{
+keys.resize(0); vals.resize(0);
+if(!file_exists(path)) return false;
+file f;
+if(!f.open(path, "rb")) return false;
+string content = f.read();
+f.close();
+string[] lines = string_split(content, "\n", true);
+for(uint i=0; i<lines.length(); i++)
+{
+string ln = lines[i].trim_whitespace();
+if(ln == "" or string_left(ln, 1) == "#") continue; // blanks and comments
+int eq = string_contains(ln, "=", 1);
+if(eq < 1) continue; // no key before an '='
+keys.insert_last(string_left(ln, eq).trim_whitespace());
+vals.insert_last(ln.substr(eq+1).trim_whitespace());
+}
+return true;
+}
+// The value for a key, or def if the key isn't present. Linear find over the small per-file key set.
+string kv_get(string[]@ keys, string[]@ vals, string key, string def)
+{
+int i = keys.find(key);
+if(i < 0) return def;
+return vals[i];
+}
+
+/* One weapon's stats, loaded from a .mel/.exp/.arc file. Ranges are stored as lo/hi pairs (draw with
+roll_range). Ranged-only fields (bullet_speed, ammo_type, max_ammo) and the firebomb status are simply left at
+their defaults for weapons that don't set them. */
+class weapon_data
+{
+string name;      // the weapon name the client sends ("axe", "crossbow", ...)
+string clas;      // "melee" / "explosive" / "archery" (its folder)
+int dmg_lo, dmg_hi;
+bool melee;       // true = swings, no ammo; false = fires, consumes ammo
+int swing_speed;  // melee wind-up ms (manual fire only)
+int fire_mode;    // 0 = manual, 1 = auto
+int spam_time;    // manual-fire recovery ms
+int repeat_time;  // auto-fire recovery ms
+int range_lo, range_hi; // tiles: swing reach (melee) or bullet flight distance (ranged)
+int bullet_speed; // ranged: ms per tile of travel
+string ammo_type; // ranged: which reserve it draws from ("arrow"/"powder"/"gas"/"grenade"); "" for melee
+int max_ammo;     // ranged: magazine capacity
+bool has_status;  // true if this weapon applies a status effect on hit (firebomb's burn)
+string status_type;   // e.g. "burn"
+int status_duration;  // ms the status lasts
+int status_tick;      // ms between status ticks
+int status_dmg_lo, status_dmg_hi; // per-tick status damage range
+}
+// One wood type's values, loaded from a .mtr file. reinforce = wall strength per placed piece; starter/bonus = amounts granted.
+class wood_data
+{
+string name; // "block" / "drift" / "plank" / "shaft"
+int reinforce_lo, reinforce_hi;
+int starter_lo, starter_hi;
+int bonus_lo, bonus_hi;
+}
+// One ammo type's values, loaded from a .amt file. Leaner than wood (no reinforce -- ammo is never placed).
+class ammo_data
+{
+string name; // "arrow" / "gas" / "grenade" / "powder"
+int starter_lo, starter_hi;
+int bonus_lo, bonus_hi;
+}
+
+weapon_data@[] weapons_db;
+wood_data@[] wood_db;
+ammo_data@[] ammo_db;
+
+// Lookups by name, or null if not loaded. Callers null-check and fall back to their old hardcoded values until fully migrated.
+weapon_data@ get_weapon_data(string name)
+{
+for(uint i=0; i<weapons_db.length(); i++) if(weapons_db[i].name == name) return weapons_db[i];
+return null;
+}
+wood_data@ get_wood_data(string name)
+{
+for(uint i=0; i<wood_db.length(); i++) if(wood_db[i].name == name) return wood_db[i];
+return null;
+}
+ammo_data@ get_ammo_data(string name)
+{
+for(uint i=0; i<ammo_db.length(); i++) if(ammo_db[i].name == name) return ammo_db[i];
+return null;
+}
+
+// Load one weapon file into weapons_db (missing file = skipped, so get_weapon_data returns null and callers keep their default).
+void load_weapon_file(string clas, string name, string ext)
+{
+string[] keys, vals;
+if(!read_kv("data/weapons/"+clas+"/"+name+"."+ext, keys, vals)) return;
+weapon_data w;
+w.name = name;
+w.clas = clas;
+int[] dmg = parse_range(kv_get(keys, vals, "damage", "1"));
+w.dmg_lo = dmg[0]; w.dmg_hi = dmg[1];
+w.melee = kv_get(keys, vals, "melee", "true") == "true";
+w.swing_speed = string_to_number(kv_get(keys, vals, "swing speed", "300"));
+w.fire_mode = string_to_number(kv_get(keys, vals, "fire mode", "0"));
+w.spam_time = string_to_number(kv_get(keys, vals, "spam time", "300"));
+w.repeat_time = string_to_number(kv_get(keys, vals, "repeat time", "300"));
+int[] rng = parse_range(kv_get(keys, vals, "range", "5"));
+w.range_lo = rng[0]; w.range_hi = rng[1];
+w.bullet_speed = string_to_number(kv_get(keys, vals, "bullet speed", "30"));
+w.ammo_type = kv_get(keys, vals, "ammo type", "");
+w.max_ammo = string_to_number(kv_get(keys, vals, "max ammo", "1"));
+string st = kv_get(keys, vals, "status", "");
+if(st != "")
+{
+// status=<type>:<duration_ms>:<tick_ms>:<damage-range> (e.g. burn:4000:500:3,7). Split on ':' first, then the damage on ','.
+string[] parts = string_split(st, ":", true);
+if(parts.length() >= 4)
+{
+w.has_status = true;
+w.status_type = parts[0];
+w.status_duration = string_to_number(parts[1]);
+w.status_tick = string_to_number(parts[2]);
+int[] sd = parse_range(parts[3]);
+w.status_dmg_lo = sd[0]; w.status_dmg_hi = sd[1];
+}
+}
+weapons_db.insert_last(w);
+}
+// Load one wood .mtr file into wood_db.
+void load_wood_file(string name)
+{
+string[] keys, vals;
+if(!read_kv("data/objects/items/wood/"+name+".mtr", keys, vals)) return;
+wood_data d;
+d.name = name;
+int[] r = parse_range(kv_get(keys, vals, "reinforce", "10,20"));
+d.reinforce_lo = r[0]; d.reinforce_hi = r[1];
+int[] s = parse_range(kv_get(keys, vals, "starter", "10,20"));
+d.starter_lo = s[0]; d.starter_hi = s[1];
+int[] b = parse_range(kv_get(keys, vals, "bonus", "20,40"));
+d.bonus_lo = b[0]; d.bonus_hi = b[1];
+wood_db.insert_last(d);
+}
+// Load one ammo .amt file into ammo_db.
+void load_ammo_file(string name)
+{
+string[] keys, vals;
+if(!read_kv("data/objects/items/ammo/"+name+".amt", keys, vals)) return;
+ammo_data d;
+d.name = name;
+int[] s = parse_range(kv_get(keys, vals, "starter", "5,10"));
+d.starter_lo = s[0]; d.starter_hi = s[1];
+int[] b = parse_range(kv_get(keys, vals, "bonus", "8,12"));
+d.bonus_lo = b[0]; d.bonus_hi = b[1];
+ammo_db.insert_last(d);
+}
+/* Load every weapon and item data file into the lookup tables. Called once at server boot (cfs.nvgt), before
+setup_server. The roster is the known set of files; a dev tuning values edits the files, and this reloads them
+on the next start. Missing files are skipped silently, leaving get_*_data to return null for them. */
+void load_game_data()
+{
+weapons_db.resize(0); wood_db.resize(0); ammo_db.resize(0);
+load_weapon_file("melee", "axe", "mel");
+load_weapon_file("melee", "bat", "mel");
+load_weapon_file("melee", "crowbar", "mel");
+load_weapon_file("melee", "hammer", "mel");
+load_weapon_file("archery", "crossbow", "arc");
+load_weapon_file("explosive", "cannon", "exp");
+load_weapon_file("explosive", "firebomb", "exp");
+load_weapon_file("explosive", "grenade", "exp");
+load_wood_file("block");
+load_wood_file("drift");
+load_wood_file("plank");
+load_wood_file("shaft");
+load_ammo_file("arrow");
+load_ammo_file("gas");
+load_ammo_file("grenade");
+load_ammo_file("powder");
+}
