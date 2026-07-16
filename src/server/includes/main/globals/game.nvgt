@@ -23,7 +23,7 @@ string phase="idle"; // round phase: idle -> build -> wave -> over -> idle (host
 timer phasetimer;    // times the current phase (drives the build-phase countdown)
 int buildduration=0; // how many seconds the build phase lasts (set per map size when the round begins)
 timer woodtimer;     // drives wood drops during the build and wave phases
-int woodinterval=0;  // ms until the next wood drop, re-rolled to a random 1000-5000 after each one
+int woodinterval=0;  // ms until the next wood drop, re-rolled to a random 500-2000 after each one
 int wave_bot_target=0; // per-wall bot count for the current wave; +1 on each attack burst, no ceiling (intentional since 2.5 -- more bots make the walls fall faster, so the round self-limits)
 int wave_number=0; // which attack burst (round) the wave is on; 1 on the first attack, +1 each later burst, uncapped (announced to clients)
 bool warned=false; // set once the heads-up for the upcoming wave has been sent; re-armed at build start and at each rest segment
@@ -798,7 +798,7 @@ if(games[i].mode=="pve" and games[i].phase=="wave" and !games[i].wave_attacking 
 games[i].warned=true;
 send_to_game(games[i].id, "wavewarning "+wave_warning_seconds); // members + spectators
 }
-// Wood drops during the build and wave phases, on a random 1-5s cadence, up to a size-scaled cap.
+// Wood drops during the build and wave phases, on a random 0.5-2s cadence, up to a size-scaled cap.
 if((games[i].phase=="build" or games[i].phase=="wave") and games[i].woodtimer.elapsed >= games[i].woodinterval)
 {
 games[i].woodtimer.restart();

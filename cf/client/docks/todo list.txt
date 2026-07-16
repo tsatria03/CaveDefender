@@ -3,6 +3,7 @@
 **Unfinished. Add ranged weapons that fire traveling bullets at the walls, with an ammo and reload system.
 **Unfinished. Move the weapon and item values into data files the server reads instead of hardcoding them.
 **Unfinished. Add some more weapons to the EVP and PVP game modes.
+**Unfinished. Add a way to report bugs and or feedback from other players on the server.
 **Unfinished. Fix major balancing issues in the environment versus player and player versus player modes.
 
 ##These are the things that are already finished from earlier versions of the game.

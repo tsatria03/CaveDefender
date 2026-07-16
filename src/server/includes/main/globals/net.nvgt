@@ -846,6 +846,7 @@ send(players[pindex].peer_id, "ammo "+players[pindex].inv.count("arrow")+" "+pla
 void reset_player_ammo(int pindex)
 {
 players[pindex].granted_ammo_types.resize(0);
+players[pindex].mag.clear(); // empty all magazines too
 string[] a = ammo_types();
 for(uint i=0; i<a.length(); i++) players[pindex].inv.take(a[i], players[pindex].inv.count(a[i])); // drop each ammo type to 0 without touching wood
 send_ammo_count(pindex);
@@ -1228,10 +1229,51 @@ bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and
 if(attacker and (games[gi].phase=="build" or games[gi].phase=="wave"))
 {
 players[index].inv.give(wd.ammo_type, ammo_starter_amount(wd.ammo_type));
+players[index].mag.give(wd.ammo_type, wd.max_ammo); // magazine starts FULL on the starter grant
 players[index].granted_ammo_types.insert_last(wd.ammo_type);
 send_ammo_count(index);
 }
 }
+// Tell the client the equipped weapon's stats (fire cadence, magazine size, current loaded) for firing and the X readout.
+if(wd.melee) send(players[index].peer_id, "weaponstats 0 0 0 0", 0, true);
+else send(players[index].peer_id, "weaponstats 1 "+wd.max_ammo+" "+wd.spam_time+" "+players[index].mag.count(wd.ammo_type), 0, true);
+}
+}
+else if(parsed[0]=="fire" and index>-1)
+{
+/* An attacker fired their ranged weapon (client-optimistic: it already played the shot or dry-fire and decremented
+its own view of the magazine). Validate, consume one loaded round if any, and send back the authoritative magazine
+count so the client stays in sync. The traveling bullet + wall damage on arrival land in 5d. */
+int gi = get_game_index(players[index].room_id);
+weapon_data@ fwd = get_weapon_data(players[index].weapon);
+bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack"));
+bool can_fire = attacker and fwd !is null and !fwd.melee and fwd.ammo_type != "" and (games[gi].phase=="build" or games[gi].phase=="wave");
+if(can_fire)
+{
+if(players[index].mag.count(fwd.ammo_type) > 0) players[index].mag.take(fwd.ammo_type, 1); // [5d: spawn the bullet, resolve wall damage on arrival]
+send(players[index].peer_id, "loaded "+players[index].mag.count(fwd.ammo_type), 0, true); // authoritative magazine count
+}
+}
+else if(parsed[0]=="reload" and index>-1)
+{
+/* An attacker finished a reload (the client drove the timing off the reload sound). Move rounds from the reserve
+into the magazine, up to max_ammo, and re-sync the client's loaded + reserve counts. Validated like fire. */
+int gi = get_game_index(players[index].room_id);
+weapon_data@ rwd = get_weapon_data(players[index].weapon);
+bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack"));
+bool can = attacker and rwd !is null and !rwd.melee and rwd.ammo_type != "" and (games[gi].phase=="build" or games[gi].phase=="wave");
+if(can)
+{
+int need = rwd.max_ammo - players[index].mag.count(rwd.ammo_type); // room left in the magazine
+int have = players[index].inv.count(rwd.ammo_type);                // rounds in the reserve
+int move = (need < have) ? need : have;
+if(move > 0)
+{
+players[index].inv.take(rwd.ammo_type, move); // out of the reserve
+players[index].mag.give(rwd.ammo_type, move); // into the magazine
+send_ammo_count(index);                       // the reserve changed
+}
+send(players[index].peer_id, "loaded "+players[index].mag.count(rwd.ammo_type), 0, true); // the new magazine count
 }
 }
 else if(parsed[0]=="reinforce" and index>-1)

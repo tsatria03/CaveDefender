@@ -192,11 +192,10 @@ if(type=="grenade") return my_ammo_grenade;
 if(type=="powder") return my_ammo_powder;
 return 0;
 }
-/* The X-key ammo readout: your equipped weapon's ammo. Melee (or unarmed) takes none. For now it reads the
-reserve; the magazine (loaded count) joins this readout when firing and reload land in 5c. */
+/* The X-key ammo readout: your equipped ranged weapon's magazine and reserve. Melee (or unarmed) takes none. */
 string ammo_readout()
 {
 if(current_weapon == "" or is_melee_weapon(current_weapon)) return "This weapon takes no ammo.";
 string at = weapon_ammo_type(current_weapon);
-return "You have " + ammo_reserve_for(at) + " " + at + " ammo in reserve.";
+return my_loaded + " out of " + my_weapon_maxammo + " " + at + " ammo loaded, and " + ammo_reserve_for(at) + " " + at + " ammo in reserve.";
 }

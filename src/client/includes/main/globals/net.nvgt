@@ -1041,6 +1041,18 @@ void netloop_impl()
 			my_ammo_grenade = string_to_number(parsed[3]);
 			my_ammo_powder = string_to_number(parsed[4]);
 		}
+		else if (parsed[0] == "weaponstats" and parsed.length() > 4)
+		{
+			// The equipped weapon's stats from the server on equip: "weaponstats <ranged?> <maxammo> <spamtime> <loaded>" (all 0 for melee).
+			my_weapon_maxammo = string_to_number(parsed[2]);
+			my_weapon_spamtime = string_to_number(parsed[3]);
+			my_loaded = string_to_number(parsed[4]);
+		}
+		else if (parsed[0] == "loaded" and parsed.length() > 1)
+		{
+			// Authoritative magazine count after a shot or reload: "loaded <count>".
+			my_loaded = string_to_number(parsed[1]);
+		}
 		else if (parsed[0] == "wallstr" and parsed.length() > 4)
 		{
 			// The four cavern wall strengths (percent): "wallstr <north> <east> <south> <west>".
