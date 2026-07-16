@@ -1,0 +1,114 @@
+/* Firebomb wall fire (task 5e, the status-effect half of the ranged weapon system). A firebomb is a ranged
+explosive whose bullet, on a DAMAGING wall hit (resolve_bullets, bullet.nvgt), sets the wall alight on top of its
+impact damage. The fire is a damage-over-time held per game (games[gi].burns), the mirror of the in-flight bullet
+list: each wall_burn ticks `rate` damage every `tick` ms and lapses `duration` ms after its last firebomb.
+
+Two settled rules (2026-07-16):
+- The fire only advances during an ATTACK WINDOW (phase=="wave" and wave_attacking). During build or a rest window
+  -- whenever the wall can't otherwise be attacked -- the burn PAUSES: no damage ticks and no life spent, so it
+  resumes with its full remaining duration when the next attack window opens. We achieve this by accumulating only
+  the time that passes during attack windows (the per-tick `step` delta is discarded otherwise).
+- Burn damage is REAL attacker progress: in EVP it ratchets the wall's repair floor by the same permanent fraction
+  as a direct hit, so builders can't fully undo a burned wall.
+
+INTENSIFY on re-hit (modeled on real fire): a wall has ONE burn. A fresh firebomb on an already-burning wall does
+NOT stack a second fire -- it adds its burn damage onto the current `rate` (hotter) AND refreshes the duration.
+Uncapped; the throttle is the gas ammo economy. AUDIO (see the client half, 5e.2): the server sends "burnstart
+<dir>" on EVERY firebomb hit (the ignite AND each intensify), and "burnstop <dir>" once when the burn ends. The
+client plays a short burnstart whoosh each time and keeps a SINGLE burning loop per wall, started on the first
+burnstart and stopped on burnstop. */
+
+class wall_burn
+{
+string dir;      // which wall (compass direction) is on fire
+int rate;        // current damage per tick -- grows as more firebombs intensify the fire
+int tick;        // ms between damage ticks (from the weapon's status field)
+int duration;    // ms of attack-window life remaining measured from the last firebomb (refreshed on each hit)
+int tick_accum;  // attack-window ms accumulated toward the next damage tick
+int life_accum;  // attack-window ms accumulated toward lapsing; reset to 0 on each firebomb refresh
+timer step;      // restarted every gametick; its elapsed is the delta since the last tick, counted only while attacking
+}
+
+// The index of the burn on a given wall of a game, or -1 if that wall isn't on fire.
+int find_burn(int gi, string dir)
+{
+if(gi<0 or gi>=int(games.length())) return -1;
+for(uint i=0; i<games[gi].burns.length(); i++) if(games[gi].burns[i].dir == dir) return int(i);
+return -1;
+}
+/* Set a wall alight, or intensify an existing fire on it: called from resolve_bullets when a damaging firebomb
+lands. Adds this bomb's burn damage (rolled from the weapon's status range) to the wall's fire rate and refreshes
+the duration; a fresh wall gets a new burn. Always announces "burnstart <dir>" so the client plays the whoosh and
+(the first time) starts the burning loop. */
+void ignite_wall(int gi, string dir, weapon_data@ wd)
+{
+if(gi<0 or gi>=int(games.length()) or wd is null or !wd.has_status) return;
+int add = roll_range(wd.status_dmg_lo, wd.status_dmg_hi); // this bomb's contribution to the fire's per-tick damage
+int bi = find_burn(gi, dir);
+if(bi < 0)
+{
+wall_burn b;
+b.dir = dir;
+b.rate = add;
+b.tick = (wd.status_tick > 0) ? wd.status_tick : 500; // guard against a zero tick (would spin the catch-up loop)
+b.duration = wd.status_duration;
+b.tick_accum = 0;
+b.life_accum = 0;
+b.step.restart();
+games[gi].burns.insert_last(b);
+}
+else
+{
+games[gi].burns[bi].rate += add;                     // intensify: the fire burns hotter
+games[gi].burns[bi].duration = wd.status_duration;   // refresh the base duration...
+games[gi].burns[bi].life_accum = 0;                  // ...and reset its life so it lasts the full duration again
+}
+send_to_game(games[gi].id, "burnstart "+dir); // every hit: the whoosh + (first hit) the burning loop
+}
+/* Advance one game's wall fires; called every tick from gametick after resolve_bullets. Each burn only accrues
+time (and thus damage + lifetime) during an attack window; otherwise the elapsed delta is discarded so the fire
+sits frozen. A burn whose wall has fallen (by any cause) or whose life runs out is removed and stops ("burnstop").
+Iterated back-to-front so remove_at is safe. */
+void burn_tick(int gi)
+{
+if(gi<0 or gi>=int(games.length()) or games[gi].burns.length()==0) return;
+bool attacking = (games[gi].phase=="wave" and games[gi].wave_attacking); // only an attack window advances the fire
+for(int i = int(games[gi].burns.length())-1; i>=0; i--)
+{
+wall_burn@ b = games[gi].burns[i];
+int dt = int(b.step.elapsed); b.step.restart(); // time since the last gametick; kept only while attacking (below)
+if(dt > 250) dt = 250; // a gametick is milliseconds apart normally; a large gap means a pause/freeze/hitch skipped burn_tick, so clamp it -- paused time must not burst-burn on resume
+int wi = wall_in_dir(games[gi].id, b.dir, games[gi].size);
+if(wi < 0 or walls[wi].health <= 0) // the wall is gone: the fire dies out
+{
+games[gi].burns.remove_at(i);
+send_to_game(games[gi].id, "burnstop "+b.dir);
+continue;
+}
+if(!attacking) continue; // build or rest: the fire is paused -- no damage, no life spent (dt discarded)
+b.life_accum += dt;
+b.tick_accum += dt;
+bool hit=false, downed=false;
+while(b.tick_accum >= b.tick)
+{
+b.tick_accum -= b.tick;
+damage_wall(wi, b.rate);
+if(games[gi].mode == "evp") lower_wall_floor(wi, b.rate * evp_permanent_fraction); // burn is real progress: it ratchets the EVP floor like a direct hit
+hit = true;
+if(walls[wi].health <= 0) { downed = true; break; }
+}
+if(hit) broadcast_wall_strength(games[gi].id); // only when a tick actually dealt damage (not every gametick)
+if(downed)
+{
+if(games[gi].mode=="pvp") send_to_game(games[gi].id, "walldestroyed "+b.dir); // no bots to redistribute in PVP
+else on_wall_destroyed(games[gi].id, gi, b.dir);
+games[gi].burns.remove_at(i);
+send_to_game(games[gi].id, "burnstop "+b.dir);
+}
+else if(b.life_accum >= b.duration) // the fire burned out on its own
+{
+games[gi].burns.remove_at(i);
+send_to_game(games[gi].id, "burnstop "+b.dir);
+}
+}
+}

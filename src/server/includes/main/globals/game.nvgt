@@ -40,6 +40,7 @@ bool pvp_deserted=false;  // PVP: a whole side has no live player and the forfei
 timer pvp_desert_timer;   // PVP: times that grace; the empty side forfeits once this reaches pvp_forfeit_seconds.
 int pvp_desert_count=0;   // PVP: the last forfeit-countdown number already spoken, so each of 5..1 is sent just once.
 pending_bullet@[] bullets; // ranged shots in flight: held from fire until their travel timer elapses, then resolved to a wall hit or ricochet (resolve_bullets, task 5d). Cleared when the round resets.
+wall_burn@[] burns;        // walls set alight by firebombs: each ticks damage during attack windows only, intensifying when re-hit, until it lapses (burn_tick, task 5e). Cleared when the round resets.
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl, string md)
 {
 id=gid;
@@ -786,6 +787,7 @@ if(!games[i].solo and !games[i].pvp_deserted and games[i].pausetimer.elapsed >= 
 continue;
 }
 resolve_bullets(int(i)); // land any ranged shots whose travel time has elapsed (a wall hit or a ricochet) -- 5d
+burn_tick(int(i)); // advance any firebomb wall fires (attack-window ticks only) -- 5e
 if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
 set_game_phase(int(i), "wave");
 // Heads-up before the first wave: once, wave_warning_seconds before the build phase ends. (PVE only -- EVP has no incoming attacker wave to warn about.)
@@ -997,6 +999,7 @@ clear_builders(gameid);
 clear_items(gameid);
 clear_walls(gameid);
 games[gi].bullets.resize(0); // drop any ranged shots still in flight so they can't land on the fresh walls
+games[gi].burns.resize(0);   // and put out any wall fires still burning from the last round
 if(games[gi].mode=="pvp") spawn_ring_walls(gameid, size, 400, 400); // PVP walls are the inset ring
 else spawn_border_walls(gameid, size, 400, 400, true); // PVE/EVP: fresh border walls (max health 400, new random starting strengths)
 games[gi].phase = "idle";
@@ -1026,6 +1029,7 @@ clear_builders(gameid);
 clear_items(gameid);
 clear_walls(gameid);
 games[gi].bullets.resize(0); // drop any ranged shots still in flight so they can't land on the fresh walls
+games[gi].burns.resize(0);   // and put out any wall fires still burning from the last round
 spawn_border_walls(gameid, games[gi].size, 400, 400, true); // fresh walls, new random starting strengths
 send_to_game(gameid, "gamereset "+int(games[gi].size)); // redraw the fresh cavern for members + spectators
 recenter_game_members(gi); // server position must match the client's re-centred `me`, or reach checks misfire
