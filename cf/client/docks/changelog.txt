@@ -1,4 +1,5 @@
 New in 4.0.
+Brought back the number row for equipping weapons. The keys 1 through 0 followed by dash and equals draw your twelve weapons in alphabetical order, alongside the Alt plus W menu.
 The machine gun now fires fully automatic. Hold the space bar and it keeps up a steady stream of bullets on its own until you let go or the magazine runs dry, while every other weapon still swings or fires once per press.
 The pistol and machine gun's bullets now ring a spent shell casing at the wall as they land, layered onto the impact, on hits and ricochets alike.
 You can now fight unarmed with two new melee weapons, your own fists and feet. They are the quickest swings in the game but also the softest hitting, a free fallback for when you would rather not spend gathered ammo, and they sit in the Melee tab of the weapon menu with the rest.
