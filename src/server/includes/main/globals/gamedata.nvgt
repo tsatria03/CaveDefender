@@ -1,7 +1,7 @@
 /* Server-side data-file loader (task #6, the foundation of the data-driven weapon/item system). Reads the
 weapon and item data files under data/ at boot into lookup tables the rest of the server queries by name:
-  data/weapons/melee/*.mel, data/weapons/explosive/*.exp, data/weapons/archery/*.arc
-  data/objects/items/wood/*.mtr, data/objects/items/ammo/*.amt
+  data/equipment/weapons/melee/*.mel, data/equipment/weapons/explosive/*.exp, data/equipment/weapons/archery/*.arc
+  data/equipment/items/wood/*.mtr, data/equipment/items/ammo/*.amt
 This file is PURELY ADDITIVE -- it only loads and exposes the values; the callers that switch over to them
 (weapon damage, the four wood types, the ammo reserves) are tasks #7/#8/#9, so nothing here changes gameplay
 yet. See the memory game-data-file-layout for the field spec and the format convention below.
@@ -119,7 +119,7 @@ return null;
 void load_weapon_file(string clas, string name, string ext)
 {
 string[] keys, vals;
-if(!read_kv("data/weapons/"+clas+"/"+name+"."+ext, keys, vals)) return;
+if(!read_kv("data/equipment/weapons/"+clas+"/"+name+"."+ext, keys, vals)) return;
 weapon_data w;
 w.name = name;
 w.clas = clas;
@@ -156,7 +156,7 @@ weapons_db.insert_last(w);
 void load_wood_file(string name)
 {
 string[] keys, vals;
-if(!read_kv("data/objects/items/wood/"+name+".mtr", keys, vals)) return;
+if(!read_kv("data/equipment/items/wood/"+name+".mtr", keys, vals)) return;
 wood_data d;
 d.name = name;
 int[] r = parse_range(kv_get(keys, vals, "reinforce", "10,20"));
@@ -171,7 +171,7 @@ wood_db.insert_last(d);
 void load_ammo_file(string name)
 {
 string[] keys, vals;
-if(!read_kv("data/objects/items/ammo/"+name+".amt", keys, vals)) return;
+if(!read_kv("data/equipment/items/ammo/"+name+".amt", keys, vals)) return;
 ammo_data d;
 d.name = name;
 int[] s = parse_range(kv_get(keys, vals, "starter", "5,10"));

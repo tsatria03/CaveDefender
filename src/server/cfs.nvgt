@@ -96,7 +96,7 @@ f.close();
         f.write(motd);
         f.close();
     }
-load_game_data(); // read the data-driven weapon/item files (data/weapons, data/objects/items) into their lookup tables before play begins
+load_game_data(); // read the data-driven weapon/item files (data/equipment/weapons, data/equipment/items) into their lookup tables before play begins
 net.IPV6enabled = false; // use pure IPv4 (like BGT) so the server binds 0.0.0.0 and VPN/IPv4 clients (e.g. Radmin) can reach it; must be set before setup_server
 bool neth=net.setup_server(port, 5, 500);
 show_game_window("CaveDefender server, version "+version+", hosted on port "+port+", user limit "+userlimit);

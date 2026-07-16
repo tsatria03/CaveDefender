@@ -149,7 +149,7 @@ past the permanent damage the attackers have already done. */
 if(games[gi].phase=="build") { if(walls[wi].health > walls[wi].floor) walls[wi].floor = walls[wi].health; }
 else if(walls[wi].health > walls[wi].floor) walls[wi].health = walls[wi].floor;
 broadcast_wall_strength(gid);
-send_to_game(gid, "footstep objects/items/wood/"+builders[i].carried_type+"/place "+builders[i].x+" "+builders[i].y);
+send_to_game(gid, "footstep equipment/items/wood/"+builders[i].carried_type+"/place "+builders[i].x+" "+builders[i].y);
 }
 builders[i].target_wall="";
 continue;
@@ -198,7 +198,7 @@ int wx=items[wfound].x, wy=items[wfound].y, wid=items[wfound].id;
 string wtype=items[wfound].type;
 items.remove_at(wfound);
 send_to_game(gid, "removeitem "+wid);
-send_to_game(gid, "footstep objects/items/wood/"+wtype+"/take "+wx+" "+wy);
+send_to_game(gid, "footstep equipment/items/wood/"+wtype+"/take "+wx+" "+wy);
 builders[i].carrying=true;
 builders[i].carried_type=wtype; // remember the species so the repair and place sound match the piece it grabbed
 builders[i].target_wall=weakest_standing_wall(gid, s);

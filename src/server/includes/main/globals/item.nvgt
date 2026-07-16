@@ -117,7 +117,7 @@ left -= u;
 }
 return true;
 }
-/* How much one piece reinforces a wall, read from that wood type's data file (data/objects/items/wood/<type>.mtr,
+/* How much one piece reinforces a wall, read from that wood type's data file (data/equipment/items/wood/<type>.mtr,
 loaded into wood_db by gamedata.nvgt): roll_range over its reinforce min,max (oak strongest ... pine weakest).
 Falls back to a mid 10-20 if the data is missing, so a reinforce never breaks. */
 int wood_reinforce_value(string type)
@@ -139,7 +139,7 @@ string t = held[random(0, int(held.length())-1)];
 inv.take(t, 1);
 return t;
 }
-/* The starter / milestone-bonus wood amounts for a wood type, from its data file (data/objects/items/wood/<type>.mtr,
+/* The starter / milestone-bonus wood amounts for a wood type, from its data file (data/equipment/items/wood/<type>.mtr,
 loaded into wood_db): roll_range over its starter / bonus min,max. Currently uniform across the four species, so
 which type is chosen doesn't change the amount -- but each is tunable in its own file. Fallbacks match the old
 hardcoded ranges (starter 10-20, bonus 20-40) if the data is missing. */
@@ -167,7 +167,7 @@ return t;
 Ammo comes in four types, one per ranged weapon (crossbow->arrow, cannon->powder, firebomb->gas, grenade->grenade).
 Like wood, ammo is gathered off the ground and pooled in the player's inventory under these type keys (the reserve is
 just inv.count(<type>)), then loaded into the equipped weapon at reload. Values come from the .amt data files
-(data/objects/items/ammo/<type>.amt, loaded into ammo_db by gamedata.nvgt). This is the FOUNDATION only -- the type
+(data/equipment/items/ammo/<type>.amt, loaded into ammo_db by gamedata.nvgt). This is the FOUNDATION only -- the type
 list + amount accessors. The grant rule (the type you receive = your equipped ranged weapon's ammo type) and the
 ground pickups/consumption land with the ranged weapon system (#5), since ammo is only usable once ranged weapons exist. */
 string[] ammo_types()
@@ -190,7 +190,7 @@ string random_ammo_type()
 string[] a = ammo_types();
 return a[random(0, int(a.length())-1)];
 }
-/* The starter / milestone-bonus reserve amounts for an ammo type, from its data file (data/objects/items/ammo/<type>.amt,
+/* The starter / milestone-bonus reserve amounts for an ammo type, from its data file (data/equipment/items/ammo/<type>.amt,
 loaded into ammo_db): roll_range over its starter / bonus min,max. Fallbacks match the recommended ranges (arrow
 8-12/10-15, the heavy single-shots 3-5/4-7) if the data is missing. */
 int ammo_starter_amount(string type)
