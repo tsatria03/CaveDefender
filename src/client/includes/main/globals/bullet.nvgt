@@ -1,0 +1,78 @@
+/* Client mirror of the server's in-flight ranged bullets (task 5d.2, the audio half). The server owns the shot
+(net.nvgt's "fire" handler holds a pending_bullet and resolves the wall hit/ricochet on arrival); here we only
+play the TRAVEL audio: on "bulletspawn" we start the weapon's loop clip at the shooter's tile and slide it toward
+the target wall over the shot's flight time, so you hear the bullet whoosh across the space. The impact itself is a
+separate one-shot (play_bullet_hit / play_bullet_rico, driven by the server's "bullethit"/"bulletrico"), so a
+travelling bullet needs no matching -- each one just expires on its own timer when it reaches the wall.
+
+The loop rides the weapons pool `p` (the attacker's own pool -- clear, listener-following, the same pool the fire
+and impact play on), moving via update_sound_3d each frame. Not every weapon has a loop.ogg yet (sound placeholders
+come later), so a missing file just leaves slot -1 and skips the moving source; the impact still plays. */
+
+class client_bullet
+{
+int slot = -1;  // the travel loop's handle on the p pool, or -1 when the weapon has no loop.ogg (the shot is then silent in flight, but still lands)
+double ox, oy;  // origin: the shooter's tile, where the loop starts
+double tx, ty;  // target: the point on the wall along the shot's axis, where the loop ends
+timer travel;   // measures the flight since the shot was fired
+int flight_ms;  // total travel time from the server (distance to the wall in tiles times the weapon's ms-per-tile speed)
+}
+client_bullet@[] client_bullets;
+
+/* Start a travelling bullet from a "bulletspawn <px> <py> <dir> <weapon> <flight_ms>". The target point is where
+the straight shot meets the wall: the wall's coordinate on the travel axis, keeping the shooter's other coordinate
+(border walls sit at 0/size, the PVP ring at wmin/wmax). */
+void add_client_bullet(int px, int py, string dir, string wname, int flight_ms)
+{
+client_bullet b;
+b.ox = px; b.oy = py;
+double s = cavern_size;
+double wmin = int(s)/4, wmax = s - wmin; // PVP ring inset (matches the wall geometry in wall.nvgt / draw_map)
+if(game_mode == "pvp")
+{
+if(dir=="west") { b.tx=wmin; b.ty=py; }
+else if(dir=="east") { b.tx=wmax; b.ty=py; }
+else if(dir=="north") { b.tx=px; b.ty=wmax; }
+else if(dir=="south") { b.tx=px; b.ty=wmin; }
+else return;
+}
+else if(dir=="west") { b.tx=0; b.ty=py; }
+else if(dir=="east") { b.tx=s; b.ty=py; }
+else if(dir=="north") { b.tx=px; b.ty=s; }
+else if(dir=="south") { b.tx=px; b.ty=0; }
+else return;
+b.flight_ms = flight_ms;
+string loop = "sounds/weapons/"+weapon_class(wname)+"/"+wname+"/loop.ogg";
+if(file_exists(loop)) b.slot = p.play_3d(loop, me.x, me.y, me.z, b.ox, b.oy, 0, calculate_theta(me_rotation), true); // looping travel source; missing file -> silent flight (slot stays -1)
+b.travel.restart();
+client_bullets.insert_last(b);
+}
+/* Every frame in a game: slide each travelling bullet's loop from its origin toward its wall by how far into the
+flight it is, and stop it once it arrives (the impact one-shot plays separately). Iterated back-to-front so
+remove_at is safe. No-op when nothing is in flight. */
+void bulletloop()
+{
+for(int i = int(client_bullets.length())-1; i>=0; i--)
+{
+client_bullet@ b = client_bullets[i];
+double frac = (b.flight_ms > 0) ? double(b.travel.elapsed)/double(b.flight_ms) : 1.0;
+if(frac >= 1.0)
+{
+if(b.slot != -1) p.destroy_sound(b.slot); // arrived: stop the travel loop
+client_bullets.remove_at(i);
+continue;
+}
+if(b.slot != -1)
+{
+double cx = b.ox + (b.tx - b.ox) * frac;
+double cy = b.oy + (b.ty - b.oy) * frac;
+p.update_sound_3d(b.slot, cx, cy, 0); // move the whoosh along its path
+}
+}
+}
+// Drop every travelling bullet's loop (leaving a game / switching maps), so no handle leaks.
+void clear_client_bullets()
+{
+for(uint i=0; i<client_bullets.length(); i++) if(client_bullets[i].slot != -1) p.destroy_sound(client_bullets[i].slot);
+client_bullets.resize(0);
+}

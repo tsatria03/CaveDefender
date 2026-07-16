@@ -302,6 +302,7 @@ buffercheck();
 		swingloop(); // EVP or PVP attacker: drive the tap-to-swing melee. Weapon switching is the Alt+W menu (weapon_menu), opened from the West-wall key above.
 		fireloop();  // ...and ranged firing (Space) for a drawn ranged weapon; melee vs ranged are mutually exclusive, so only one reads Space per frame.
 		reloadloop(); // ...and complete a Shift+R reload once its sound has played out.
+		bulletloop(); // ...and slide every travelling bullet's whoosh toward its wall (everyone in the game, not just the shooter, hears these).
 		if (key_down(KEY_LEFT) and movetimer.elapsed>=movetime)
 		{
 			facing=Left;

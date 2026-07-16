@@ -25,6 +25,7 @@ clear_map(); // wipe the previous map first so switching spaces (lobby <-> offic
 clear_ambiences(); // drop the previous space's ambient bed before laying the new one.
 clear_musics(); // and its music track, same as the ambience.
 clear_clientitems(); // and any ground items (wood) from the previous space.
+clear_client_bullets(); // and any ranged bullets still travelling in the previous space.
 clear_clientbots(); // and the EVP builder-bot roster from the previous space.
 destroy_all_effect_spaces(); // drop the previous space's audio-effect zones (e.g. cave reverb) before laying the new one.
 in_cavern = (mapname=="cavern" or mapname=="cavern2"); // in a cavern arena or watcher deck: the cave sound SOURCES (bots, wood) carry reverb even when you listen from outside.
