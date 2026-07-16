@@ -16,7 +16,7 @@ int x, y;           // its tile on the cavern floor
 int movespeed;      // ms per step (and the place pause); rolled once at spawn (100-200) and kept -> walkers/runners
 timer movetimer;    // times each step and the place pause
 bool carrying=false;  // false = seeking wood; true = carrying a piece to its target wall
-string carried_type="";// the size of the wood being carried (small/medium/large_wood); scales the repair and the place sound
+string carried_type="";// the species of wood being carried (oak/maple/birch/pine); scales the repair and the place sound
 string target_wall="";// the wall it's carrying wood to (the weakest standing, chosen at pickup)
 bool placing=false;   // true = paused at the wall, placing the wood this beat
 builder(int bid, int gid, int ix, int iy, int spd)
@@ -149,7 +149,7 @@ past the permanent damage the attackers have already done. */
 if(games[gi].phase=="build") { if(walls[wi].health > walls[wi].floor) walls[wi].floor = walls[wi].health; }
 else if(walls[wi].health > walls[wi].floor) walls[wi].health = walls[wi].floor;
 broadcast_wall_strength(gid);
-send_to_game(gid, "footstep objects/items/"+builders[i].carried_type+"/place "+builders[i].x+" "+builders[i].y);
+send_to_game(gid, "footstep objects/items/wood/"+builders[i].carried_type+"/place "+builders[i].x+" "+builders[i].y);
 }
 builders[i].target_wall="";
 continue;
@@ -198,9 +198,9 @@ int wx=items[wfound].x, wy=items[wfound].y, wid=items[wfound].id;
 string wtype=items[wfound].type;
 items.remove_at(wfound);
 send_to_game(gid, "removeitem "+wid);
-send_to_game(gid, "footstep objects/items/"+wtype+"/take "+wx+" "+wy);
+send_to_game(gid, "footstep objects/items/wood/"+wtype+"/take "+wx+" "+wy);
 builders[i].carrying=true;
-builders[i].carried_type=wtype; // remember the size so the repair and place sound match the piece it grabbed
+builders[i].carried_type=wtype; // remember the species so the repair and place sound match the piece it grabbed
 builders[i].target_wall=weakest_standing_wall(gid, s);
 }
 else

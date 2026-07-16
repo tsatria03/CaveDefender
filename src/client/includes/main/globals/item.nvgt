@@ -8,16 +8,16 @@ class clientitem
 {
 int id;
 int x, y;
-string type; // the wood size, e.g. "small_wood" -> sounds/objects/items/small_wood/
+string type; // the wood species, e.g. "oak" -> sounds/objects/items/wood/oak/
 int loophandle = -1;
 clientitem(int iid, int ix, int iy, string ty)
 {
 id = iid; x = ix; y = iy; type = ty;
-objpool.play_3d("sounds/objects/items/" + type + "/drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
-/* Not every size has an ambient ground loop (small_wood has none); only start one when the file exists,
+objpool.play_3d("sounds/objects/items/wood/" + type + "/drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
+/* Not every species has an ambient ground loop; only start one when the file exists,
 leaving loophandle at -1 otherwise so cleanup is a no-op. */
-if(file_exists("sounds/objects/items/" + type + "/loop.ogg"))
-loophandle = objpool.play_3d("sounds/objects/items/" + type + "/loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), true);
+if(file_exists("sounds/objects/items/wood/" + type + "/loop.ogg"))
+loophandle = objpool.play_3d("sounds/objects/items/wood/" + type + "/loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), true);
 }
 }
 int get_clientitem_index(int id)

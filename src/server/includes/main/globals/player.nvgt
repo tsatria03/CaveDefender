@@ -33,7 +33,7 @@ int pending_reinforce=0; // the wall reinforce cap chosen at the reinforce step 
 inventory inv; // what this player is carrying (wood, etc.); authoritative here, mirrored to the client. Wired in 6c.
 int wood_collected=0;     // wood this player has personally picked up off the ground this game run; reset at each build start, reported at game over.
 int pending_bonus_wood=0; // milestone bonus wood COUNT to add to this player's stockpile at the next build phase (earned by beating their best round); cleared once granted.
-string pending_bonus_size=""; // the single random size (small/medium/large_wood) that bonus is granted as; rolled at game over so the results message can name it.
+string pending_bonus_size=""; // the single random wood species (oak/maple/birch/pine) that bonus is granted as; rolled at game over so the results message can name it.
 bool playagain_answered=false; // during a game's "over" phase: has this member answered the play-again prompt yet?
 string pending_results="";     // the exact roundover/evpover results message for this member during the "over" phase, re-sent on a reconnect-restore so a player who dropped during the results screen still gets the play-again prompt (and doesn't block the reset). Only read while phase=="over" and unanswered.
 string weapon="";              // EVP: the weapon this player currently has drawn (axe/bat/crowbar/hammer), mirrored from the client's setweapon notices, so a reconnect restores the same weapon instead of defaulting to the axe.

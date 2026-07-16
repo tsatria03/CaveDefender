@@ -46,7 +46,7 @@ string pending_roomgames=""; // last games summary (game count + players), used 
 bool roomgames_received=false;
 string pending_rooms=""; // last rooms overview (room count + office occupants), used by the R key in the lobby
 bool rooms_received=false;
-int my_wood_small=0, my_wood_medium=0, my_wood_large=0; // wood you're carrying by size in the current game (synced from the server; read by the I key)
+int my_wood_oak=0, my_wood_maple=0, my_wood_birch=0, my_wood_pine=0; // wood you're carrying by species in the current game (synced from the server; read by the I key)
 int wall_north=0, wall_east=0, wall_south=0, wall_west=0; // current cavern wall strengths as percents (synced; read by N/E/S/W/D)
 int cavern_size=0; // the current game's cavern grid size, for positioning wall-hit sounds
 string game_phase="idle"; // the current game's round phase (idle/build/wave), synced from the server
