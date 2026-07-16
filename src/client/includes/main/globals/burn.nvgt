@@ -67,6 +67,19 @@ client_burns.remove_at(i);
 }
 play_wall_fire(dir, "burnstop.ogg", false);
 }
+/* A wave swung to a REST window (attackers can't hurt the walls, and the server pauses the burn damage): silence
+every wall fire until the next attack window by stopping its loop, but KEEP the client_burn entry so we know to
+restart it. We destroy rather than pause_sound so this never fights the menu pause (pause_objects/resume_objects) --
+a silenced fire simply has no sound in the pool to be wrongly resumed. Driven by the waveseg message. */
+void pause_wall_burns()
+{
+for(uint i=0; i<client_burns.length(); i++) if(client_burns[i].slot != -1) { burnpool.destroy_sound(client_burns[i].slot); client_burns[i].slot = -1; }
+}
+// A wave swung back to an ATTACK window: the fires resume (the server resumes their damage), so restart each loop.
+void resume_wall_burns()
+{
+for(uint i=0; i<client_burns.length(); i++) if(client_burns[i].slot == -1) client_burns[i].slot = play_wall_fire(client_burns[i].dir, "burning.ogg", true);
+}
 // Stop every wall fire (leaving a game / switching maps / round reset), so no burning loop leaks.
 void clear_client_burns()
 {
