@@ -261,7 +261,9 @@ buffercheck();
 		if (in_game and game_outside and !shift_is_down() and !control_is_down() and key_pressed(KEY_B)) track_bots(); // EVP only: locate the builder bots; !shift keeps Shift+B as the buffer menu, !control frees Ctrl+B for the EVP begin-round hotkey
 		if (!control_is_down() and key_pressed(KEY_R)) // !control frees Ctrl+R for the room retrieve-password hotkey; read once: key_pressed is one-shot, so a second read in the same frame misses it
 		{
-			if(alt_is_down())
+			if(shift_is_down() and in_game and !watching and (game_outside or (game_mode=="pvp" and my_side=="attack")))
+				start_reload(); // Shift+R: reload the equipped ranged weapon (attackers, EVP/PVP); a melee weapon just says it takes no ammo
+			else if(alt_is_down())
 			{
 				// Alt+R toggles auto-running anywhere you can move; saved so it sticks next session.
 				autorun = !autorun;
@@ -297,7 +299,9 @@ buffercheck();
 		if (in_game and key_pressed(KEY_T)) speak("wall strengths. " + wall_phrase_short("north", wall_north) + ". " + wall_phrase_short("east", wall_east) + ". " + wall_phrase_short("south", wall_south) + ". " + wall_phrase_short("west", wall_west) + ".");
 		if (in_game and !watching and !game_outside and !(game_mode=="pvp" and my_side=="attack") and key_pressed(KEY_D)) track_wood(); // gatherers only: spectators and EVP players don't gather, and neither do PVP attackers (only the defenders do)
 		if (in_game and !watching and (game_outside or (game_mode=="pvp" and my_side=="attack")) and !control_is_down() and key_pressed(KEY_A)) track_ammo(); // attackers only: locate nearby ground ammo, the mirror of the D key's wood; !control leaves Ctrl+A for the PVP assign hotkey
-		swingloop(); // EVP or PVP attacker: drive the held-Space swing and set the `swinging` lock. Weapon switching is now the Alt+W menu (weapon_menu), opened from the West-wall key above.
+		swingloop(); // EVP or PVP attacker: drive the tap-to-swing melee. Weapon switching is the Alt+W menu (weapon_menu), opened from the West-wall key above.
+		fireloop();  // ...and ranged firing (Space) for a drawn ranged weapon; melee vs ranged are mutually exclusive, so only one reads Space per frame.
+		reloadloop(); // ...and complete a Shift+R reload once its sound has played out.
 		if (key_down(KEY_LEFT) and movetimer.elapsed>=movetime)
 		{
 			facing=Left;

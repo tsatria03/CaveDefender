@@ -72,6 +72,7 @@ void draw_weapon(string wname)
 {
 if(wname=="" or wname==current_weapon) return; // unknown, or already drawn
 current_weapon = wname;
+is_reloading = false; // switching weapons cancels any reload in progress
 p.destroy_sound(wepslot); // cut off the previous DRAW still ringing so switching weapons doesn't stack draws
 wepslot = p.play_3d("sounds/weapons/"+weapon_class(wname)+"/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step weapons/"+weapon_class(wname)+"/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
@@ -112,6 +113,7 @@ when a round starts. The "x equipped" notice always goes to the misc buffer (spe
 void equip_weapon(string wname)
 {
 current_weapon = wname;
+is_reloading = false; // a fresh arm cancels any reload in progress
 p.destroy_sound(wepslot);
 wepslot = p.play_3d("sounds/weapons/"+weapon_class(wname)+"/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step weapons/"+weapon_class(wname)+"/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
@@ -163,5 +165,63 @@ string firepath = "weapons/"+weapon_class(swing_weapon)+"/"+swing_weapon+"/fire"
 new swing never destroys a still-ringing hit clip (which the pool may have given a recycled slot). */
 p.play_3d("sounds/"+firepath+".ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step "+firepath+" "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the swing in 3D at our spot
+}
+}
+/* --- Ranged fire (the mirror of swingloop for the attack side, task 5c.2) ---
+Tap Space to fire the equipped RANGED weapon, paced by the weapon's spam_time (fire mode 0). A shot needs a loaded
+round (my_loaded>0): play the fire sound, drop my_loaded optimistically, relay the shot, and tell the server, which
+owns the magazine, re-syncs `loaded`, and (in 5d) spawns the traveling bullet + resolves wall damage on arrival. An
+empty magazine dry-fires the `empty` sound instead. No-op for melee (swingloop handles those), spectators, a paused
+game, PVE/defenders, or with no weapon -- and since it's gated to ranged while swingloop is gated to melee, only one
+of the two ever reads Space in a given frame. my_weapon_spamtime / my_loaded come from the server (weaponstats/loaded). */
+timer firetimer; // paces ranged fire at the weapon's spam_time
+void fireloop()
+{
+if((!game_outside and !(game_mode=="pvp" and my_side=="attack")) or !in_game or watching or game_paused or current_weapon=="" or is_melee_weapon(current_weapon)) return; // ranged weapons only
+if(!is_reloading and key_pressed(KEY_SPACE) and firetimer.elapsed >= my_weapon_spamtime)
+{
+firetimer.restart();
+string cls = weapon_class(current_weapon);
+if(my_loaded > 0)
+{
+my_loaded--; // optimistic; the server re-syncs via "loaded"
+p.play_3d("sounds/weapons/"+cls+"/"+current_weapon+"/fire.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+send(0, "step weapons/"+cls+"/"+current_weapon+"/fire "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the shot in 3D
+send(0, "fire", 0, true); // tell the server to consume a round (and, in 5d, spawn the bullet)
+}
+else p.play_3d("sounds/weapons/"+cls+"/"+current_weapon+"/empty.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // dry-fire: out of loaded ammo
+}
+}
+/* --- Reload (Shift+R, task 5c.3) ---
+The reload SOUND is the timing (option B, no data field): play the weapon's reload clip, measure its length with
+get_sound_length, and drive a timer for exactly that long, blocking fire meanwhile. When it elapses, tell the server,
+which moves rounds from your reserve into the magazine (up to max) and re-syncs `loaded` + the reserve. is_reloading
+clears on completion or when you switch weapons (draw_weapon/equip_weapon). No completion sound -- the reload clip IS
+the whole cue. Refuses (with a one-line reason) when there's nothing to reload: melee, a full magazine, or empty reserve. */
+bool is_reloading=false; // true while a reload plays; blocks firing
+timer reloadtimer;       // measures the reload sound's duration
+int reload_duration=0;   // ms; the reload sound's length, measured when the reload starts
+void start_reload()
+{
+if(is_reloading) return; // already reloading
+if(current_weapon=="" or is_melee_weapon(current_weapon)) { speak("This weapon takes no ammo."); return; }
+if(my_loaded >= my_weapon_maxammo) { speak("Your magazine is already full."); return; }
+string at = weapon_ammo_type(current_weapon);
+if(ammo_reserve_for(at) <= 0) { speak("You have no " + at + " ammo left to reload."); return; }
+string cls = weapon_class(current_weapon);
+int slot = p.play_3d("sounds/weapons/"+cls+"/"+current_weapon+"/reload.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+reload_duration = int(p.get_sound_length(slot)); // the clip's length in ms drives the timer; a missing clip reads 0 -> instant
+send(0, "step weapons/"+cls+"/"+current_weapon+"/reload "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the reload
+is_reloading = true;
+reloadtimer.restart();
+}
+// Complete the reload once its sound has played out, then tell the server to move reserve -> magazine.
+void reloadloop()
+{
+if(!is_reloading) return;
+if(reloadtimer.elapsed >= reload_duration)
+{
+is_reloading = false;
+send(0, "reload", 0, true); // server moves reserve into the magazine (up to max) and re-syncs loaded + the reserve counts
 }
 }
