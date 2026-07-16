@@ -1020,8 +1020,8 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "play_item" and parsed.length() > 2)
 		{
-			// A personal item sound for you, e.g. "play_item oak take" -> objects/items/wood/oak/take.ogg (wood items only for now).
-			p.play_stationary("sounds/objects/items/wood/" + parsed[1] + "/" + parsed[2] + ".ogg", false);
+			// A personal item sound for you, e.g. "play_item oak take" -> objects/items/wood/oak/take.ogg (or ammo/arrow/take for ammo).
+			p.play_stationary("sounds/objects/items/" + item_sound_category(parsed[1]) + "/" + parsed[1] + "/" + parsed[2] + ".ogg", false);
 		}
 		else if (parsed[0] == "wood" and parsed.length() > 4)
 		{
@@ -1030,6 +1030,14 @@ void netloop_impl()
 			my_wood_maple = string_to_number(parsed[2]);
 			my_wood_birch = string_to_number(parsed[3]);
 			my_wood_pine = string_to_number(parsed[4]);
+		}
+		else if (parsed[0] == "ammo" and parsed.length() > 4)
+		{
+			// Your ammo reserve by type, synced from the server (the X key reads it): "ammo <arrow> <gas> <grenade> <powder>".
+			my_ammo_arrow = string_to_number(parsed[1]);
+			my_ammo_gas = string_to_number(parsed[2]);
+			my_ammo_grenade = string_to_number(parsed[3]);
+			my_ammo_powder = string_to_number(parsed[4]);
 		}
 		else if (parsed[0] == "wallstr" and parsed.length() > 4)
 		{

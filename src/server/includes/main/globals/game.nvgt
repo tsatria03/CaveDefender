@@ -502,6 +502,7 @@ send(players[pi].peer_id, "yourside defend", 0, true);
 else // attack
 {
 players[pi].x = ax; players[pi].y = ay;
+reset_player_ammo(pi); // fresh round: no ammo yet, re-grantable on the first ranged draw
 send(players[pi].peer_id, "yourside attack", 0, true);
 }
 broadcast_pos(pi); // sync the new spawn to the others in the game (their tracker/beacons); the mover's own client repositions on yourside
@@ -522,6 +523,8 @@ if(games[gindex].mode=="evp")
 /* EVP: the bots defend. Spawn the wall-builders now (more each round cleared -- the escalation) -- they
 reinforce through the build phase and keep repairing through the wave. Players carry no wood in EVP. */
 spawn_builders(games[gindex].id, evp_builders_for_round(games[gindex].evp_rounds_cleared));
+// Fresh round for the attackers: reset each player's ammo (reserve + granted-types), re-grantable on the first ranged draw.
+for(uint m=0; m<games[gindex].members.length(); m++) { int pi=get_player_index(games[gindex].members[m]); if(pi>=0) reset_player_ammo(pi); }
 }
 else if(games[gindex].mode=="pvp")
 {
@@ -812,6 +815,29 @@ int wy = random(wlo, whi);
 string wt = random_wood_type(); // a random wood species (oak/maple/birch/pine), each with its own sounds
 int iid = spawn_item(games[i].id, wx, wy, wt);
 send_to_game(games[i].id, "spawnitem "+iid+" "+wt+" "+wx+" "+wy); // send the SAME species to the client so its sounds and the D readout match
+}
+/* Ammo drops for the attacking side (EVP players / PVP attackers), on the same cadence and cap as wood but in the
+attacker zone: EVP roams the interior grid, a PVP attacker the exterior band outside the wall ring. PVE has no
+attackers, so no ammo. Gathered by the attackers exactly as defenders gather wood (gather_ammo). */
+if(games[i].mode=="evp" or games[i].mode=="pvp")
+{
+int adrops = wood_drops_per_tick(games[i].size);
+for(int d=0; d<adrops; d++)
+{
+if(ammo_count_in(games[i].id) >= wood_cap(games[i].size)) break;
+int ax, ay;
+if(games[i].mode=="pvp")
+{
+int wm = games[i].size/4; // outside the ring: reject an interior-core cell (rejection sampling, a few tries)
+int tries=0;
+do { ax=random(1, games[i].size-1); ay=random(1, games[i].size-1); tries++; }
+while(tries<8 and ax>wm and ax<games[i].size-wm and ay>wm and ay<games[i].size-wm);
+}
+else { ax=random(1, games[i].size-1); ay=random(1, games[i].size-1); } // EVP: the interior grid the attackers roam
+string at = random_ammo_type();
+int aid = spawn_item(games[i].id, ax, ay, at);
+send_to_game(games[i].id, "spawnitem "+aid+" "+at+" "+ax+" "+ay);
+}
 }
 }
 /* Flip between attacking and resting every half-build-phase. In PVE the bots hammer, then back off so players

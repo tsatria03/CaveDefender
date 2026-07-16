@@ -837,6 +837,19 @@ void send_wood_count(int pindex)
 {
 send(players[pindex].peer_id, "wood "+players[pindex].inv.count("oak")+" "+players[pindex].inv.count("maple")+" "+players[pindex].inv.count("birch")+" "+players[pindex].inv.count("pine"), 0, true);
 }
+// Push the player's ammo reserve, by type, to their client (the X-key readout): "ammo <arrow> <gas> <grenade> <powder>".
+void send_ammo_count(int pindex)
+{
+send(players[pindex].peer_id, "ammo "+players[pindex].inv.count("arrow")+" "+players[pindex].inv.count("gas")+" "+players[pindex].inv.count("grenade")+" "+players[pindex].inv.count("powder"), 0, true);
+}
+// Zero a player's ammo reserve and its granted-this-round tracking (called at build-phase start so each round starts fresh), then sync the client.
+void reset_player_ammo(int pindex)
+{
+players[pindex].granted_ammo_types.resize(0);
+string[] a = ammo_types();
+for(uint i=0; i<a.length(); i++) players[pindex].inv.take(a[i], players[pindex].inv.count(a[i])); // drop each ammo type to 0 without touching wood
+send_ammo_count(pindex);
+}
 // The four cavern wall strengths (as percents) for a game, for the client's N/E/S/W/D keys.
 string wall_strength_msg(int gameid)
 {
@@ -892,6 +905,47 @@ for(uint wm=0; wm<players.length(); wm++)
 if(players[wm].room_id == rid and players[wm].peer_id != players[pindex].peer_id)
 send(players[wm].peer_id, "footstep objects/items/wood/"+picked_type+"/take "+px+" "+py, 0, true);
 send_wood_count(pindex);
+}
+}
+/* Pick up every ammo item within `radius` tiles of the player -- the attacker's mirror of gather_wood. Only the
+attacking side gathers ammo (EVP players, PVP attackers); PVE has none and defenders gather wood, not ammo. Adds
+to the reserve (inventory), removes the items for everyone, and gives the picker the take sound + an ammo count. */
+void gather_ammo(int pindex, int radius)
+{
+int rid = players[pindex].room_id;
+int gi = get_game_index(rid);
+if(gi < 0) return;
+bool attacker = (games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[pindex].team=="attack");
+if(!attacker) return; // only the attacking side has ammo
+if(games[gi].phase != "build" and games[gi].phase != "wave") return;
+int px = players[pindex].x;
+int py = players[pindex].y;
+int got = 0;
+string picked_type = "arrow"; // the type of a picked round, so the take sound matches (fallback never used when got>0)
+for(int i=int(items.length())-1; i>=0; i--)
+{
+if(@items[i]==null) continue;
+if(items[i].room_id != rid or !is_ammo(items[i].type)) continue;
+int dx = items[i].x - px; if(dx < 0) dx = -dx;
+int dy = items[i].y - py; if(dy < 0) dy = -dy;
+if(dx <= radius and dy <= radius)
+{
+int iid = items[i].id;
+picked_type = items[i].type;
+items.remove_at(i);
+players[pindex].inv.give(picked_type, 1); // add the round to the player's reserve
+got++;
+for(uint m=0; m<players.length(); m++)
+if(players[m].room_id == rid) send(players[m].peer_id, "removeitem "+iid, 0, true);
+}
+}
+if(got > 0)
+{
+send(players[pindex].peer_id, "play_item "+picked_type+" take", 0, true);
+for(uint wm=0; wm<players.length(); wm++)
+if(players[wm].room_id == rid and players[wm].peer_id != players[pindex].peer_id)
+send(players[wm].peer_id, "footstep objects/items/ammo/"+picked_type+"/take "+px+" "+py, 0, true);
+send_ammo_count(pindex);
 }
 }
 void netloop()
@@ -1138,7 +1192,7 @@ else if(parsed[0]=="move" and parsed.length()>2 and index>-1)
 players[index].x=string_to_number(parsed[1]);
 players[index].y=string_to_number(parsed[2]);
 broadcast_pos(index); // no-op for spectators (guarded), so watchers aren't tracked as players
-if(!players[index].spectating) gather_wood(index, 5); // auto-grab nearby wood -- but a watcher never picks up the players' wood
+if(!players[index].spectating) { gather_wood(index, 5); gather_ammo(index, 5); } // auto-grab nearby wood (defenders) and ammo (attackers); each self-gates by role, and a watcher picks up neither
 }
 else if(parsed[0]=="voicecue" and index>-1 and parsed.length()==2 and (parsed[1]=="on" or parsed[1]=="off"))
 {
@@ -1158,10 +1212,27 @@ send(players[i].peer_id, cue, 0, true);
 }
 else if(parsed[0]=="setweapon" and index>-1 and parsed.length()>1)
 {
-/* EVP: the client tells us which weapon it just drew, so we can restore the same one on a reconnect. Validate
-against the four weapons; ignore anything else. */
+/* The attacker's client tells us which weapon it just drew, so we can restore the same one on a reconnect.
+Validate against the loaded weapons; ignore anything else. On the FIRST time this round the player draws a RANGED
+weapon of a given ammo type, grant that type's starter ammo (Option A -- so the melee auto-arm at round start
+doesn't block it); re-drawing the same type doesn't re-grant, and a melee weapon grants nothing. */
 string w=parsed[1];
-if(w=="axe" or w=="bat" or w=="crowbar" or w=="hammer") players[index].weapon=w;
+weapon_data@ wd = get_weapon_data(w);
+if(wd !is null)
+{
+players[index].weapon=w;
+if(!wd.melee and wd.ammo_type != "" and players[index].granted_ammo_types.find(wd.ammo_type) < 0)
+{
+int gi = get_game_index(players[index].room_id);
+bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack"));
+if(attacker and (games[gi].phase=="build" or games[gi].phase=="wave"))
+{
+players[index].inv.give(wd.ammo_type, ammo_starter_amount(wd.ammo_type));
+players[index].granted_ammo_types.insert_last(wd.ammo_type);
+send_ammo_count(index);
+}
+}
+}
 }
 else if(parsed[0]=="reinforce" and index>-1)
 {
