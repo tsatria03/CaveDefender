@@ -1,0 +1,58 @@
+/* Ranged bullets in flight (task 5d, the traveling-bullet half of the ranged weapon system). A ranged shot is
+resolved with the "A-plus" model: when a player fires (the "fire" handler in net.nvgt), the server ray-marches
+from the shooter along their facing to the first wall within range, LOCKS the target wall and the outcome, then
+holds a pending_bullet for its flight time. resolve_bullets() -- called each tick from gametick per game -- lands
+the hit (or ricochet) only when the travel timer elapses, so the impact lands honestly at the end of the travel
+audio rather than the instant the trigger was pulled. Walls are static, so locking the target at fire-time loses
+nothing. Bullets NEVER hit players (Wallbreaker: the walls are the objective); they pass harmlessly through.
+
+The outcome is locked at fire time, mirroring melee: a shot fired during a wave's ATTACK window at a wall in
+range is DAMAGING (it spends one loaded round and hurts the wall on arrival); a shot during the build phase, a
+wave's rest window, or that finds no wall is a free RICOCHET -- it spends no ammo and deals no damage, just the
+audible bounce. So ammo is spent only when the shot can actually hurt the wall (the build-phase rule). */
+
+class pending_bullet
+{
+string shooter;     // the shooter's account name -- looked up fresh on arrival for the PVP damage tally, so a reconnect between fire and impact can't stale an index
+string weapon;      // the weapon name, sent to clients so they play its hit/ricochet sound at the wall
+string dir;         // the compass direction of the target wall (west/east/north/south), locked at fire time
+bool damaging;      // locked at fire: true only for a shot fired in a wave attack window at a wall in range with a round chambered -- it hurts the wall on arrival; false = a harmless ricochet
+int dmg_lo, dmg_hi; // the weapon's damage range, rolled fresh on arrival (roll_range)
+timer flight;       // measures the bullet's travel since it was fired
+int flight_ms;      // total travel time: the distance to the wall (tiles) times the weapon's bullet_speed (ms per tile)
+}
+
+/* Advance and resolve one game's in-flight bullets; called every tick from gametick for each game. A bullet whose
+travel timer has elapsed is removed and resolved: a damaging shot rolls its damage onto the target wall (the EVP
+permanent-floor ratchet applies, as with a melee hit), tallies it for the shooter, and broadcasts the impact,
+downing the wall if it hits 0; a ricochet just broadcasts the bounce. A shot that outlives its round (the phase
+left build/wave) or whose wall already fell simply fizzles. Iterated back-to-front so remove_at is safe. */
+void resolve_bullets(int gi)
+{
+if(gi < 0 or gi >= int(games.length())) return;
+for(int b = int(games[gi].bullets.length()) - 1; b >= 0; b--)
+{
+pending_bullet@ bl = games[gi].bullets[b];
+if(bl.flight.elapsed < bl.flight_ms) continue; // still travelling
+games[gi].bullets.remove_at(b);
+if(games[gi].phase != "build" and games[gi].phase != "wave") continue; // the round ended mid-flight: the shot fizzles
+int wi = wall_in_dir(games[gi].id, bl.dir, games[gi].size);
+if(wi < 0 or walls[wi].health <= 0) continue; // the wall already fell: nothing to hit
+if(bl.damaging)
+{
+int dmg = roll_range(bl.dmg_lo, bl.dmg_hi);
+damage_wall(wi, dmg);
+if(games[gi].mode == "evp") lower_wall_floor(wi, dmg * evp_permanent_fraction); // EVP ratchet: half the hit is permanent, as with a player melee swing
+int si = get_player_index_from(bl.shooter);
+if(si > -1) players[si].pvp_damage += dmg; // results-screen tally (PVP; a harmless no-op field in EVP)
+broadcast_wall_strength(games[gi].id);
+send_to_game(games[gi].id, "bullethit "+bl.dir+" "+bl.weapon); // clients play the weapon's impact at the wall + the wall's creak
+if(walls[wi].health <= 0)
+{
+if(games[gi].mode == "pvp") send_to_game(games[gi].id, "walldestroyed "+bl.dir); // no bots to redistribute in PVP; the client re-tiles the breach
+else on_wall_destroyed(games[gi].id, gi, bl.dir);                                // EVP: down the wall the shared way (redistribute/announce)
+}
+}
+else send_to_game(games[gi].id, "bulletrico "+bl.dir+" "+bl.weapon); // a harmless bounce (build/rest/miss): the weapon's ricochet clip, no damage
+}
+}
