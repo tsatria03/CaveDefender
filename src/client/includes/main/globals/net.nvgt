@@ -1499,6 +1499,7 @@ void netloop_impl()
 			{
 				wave_number = (parsed.length() > 2) ? string_to_number(parsed[2]) : wave_number + 1; // round number rides on the message
 				p.play_stationary("sounds/ui/misc/wavestart.ogg", false);
+				resume_wall_burns(); // attack window reopened: any wall still on fire resumes burning (matches the server resuming its burn damage)
 				if (game_mode == "pvp") add_buffer_item("alerts", my_side == "attack" ? "Attack, smash the walls!" : "The attackers are striking, gather wood!");
 					else if (game_outside) add_buffer_item("alerts", "Attack, tear the walls down!");
 				else add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
@@ -1506,6 +1507,7 @@ void netloop_impl()
 			else
 			{
 				p.play_stationary("sounds/ui/misc/wavestop.ogg", false);
+				pause_wall_burns(); // rest window: the server pauses the burn damage, so silence the fires until the next attack window
 				if (game_mode == "pvp") add_buffer_item("alerts", my_side == "attack" ? "Hold your fire, the walls are being repaired." : "Repair the walls now!");
 					else if (game_outside) add_buffer_item("alerts", "The bots are repairing, hold your fire.");
 				else add_buffer_item("alerts", "The enemies stopped coming.");

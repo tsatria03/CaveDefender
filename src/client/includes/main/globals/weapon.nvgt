@@ -197,8 +197,8 @@ else p.play_3d("sounds/weapons/"+cls+"/"+current_weapon+"/empty.ogg", me.x, me.y
 The reload SOUND is the timing (option B, no data field): play the weapon's reload clip, measure its length with
 get_sound_length, and drive a timer for exactly that long, blocking fire meanwhile. When it elapses, tell the server,
 which moves rounds from your reserve into the magazine (up to max) and re-syncs `loaded` + the reserve. is_reloading
-clears on completion or when you switch weapons (draw_weapon/equip_weapon). No completion sound -- the reload clip IS
-the whole cue. Refuses (with a one-line reason) when there's nothing to reload: melee, a full magazine, or empty reserve. */
+clears on completion or when you switch weapons (draw_weapon/equip_weapon). A ping plays on completion (the weapon is
+ready) since the reload clip alone was hard to time. Refuses (with a one-line reason) when there's nothing to reload: melee, a full magazine, or empty reserve. */
 bool is_reloading=false; // true while a reload plays; blocks firing
 timer reloadtimer;       // measures the reload sound's duration
 int reload_duration=0;   // ms; the reload sound's length, measured when the reload starts
@@ -216,13 +216,16 @@ send(0, "step weapons/"+cls+"/"+current_weapon+"/reload "+int(me.x)+" "+int(me.y
 is_reloading = true;
 reloadtimer.restart();
 }
-// Complete the reload once its sound has played out, then tell the server to move reserve -> magazine.
+// Complete the reload once its sound has played out: play the ready-ping, then tell the server to move reserve -> magazine.
 void reloadloop()
 {
 if(!is_reloading) return;
 if(reloadtimer.elapsed >= reload_duration)
 {
 is_reloading = false;
+string cls = weapon_class(current_weapon);
+p.play_3d("sounds/weapons/"+cls+"/"+current_weapon+"/ping.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // the reload-complete cue: the weapon is loaded and ready (the reload clip alone was hard to time)
+send(0, "step weapons/"+cls+"/"+current_weapon+"/ping "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the ready-ping in 3D at our spot too
 send(0, "reload", 0, true); // server moves reserve into the magazine (up to max) and re-syncs loaded + the reserve counts
 }
 }
