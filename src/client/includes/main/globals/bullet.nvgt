@@ -42,7 +42,7 @@ else if(dir=="north") { b.tx=px; b.ty=s; }
 else if(dir=="south") { b.tx=px; b.ty=0; }
 else return;
 b.flight_ms = flight_ms;
-string loop = "sounds/weapons/"+weapon_class(wname)+"/"+wname+"/loop.ogg";
+string loop = "sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/loop.ogg";
 if(file_exists(loop)) b.slot = p.play_3d(loop, me.x, me.y, me.z, b.ox, b.oy, 0, calculate_theta(me_rotation), true); // looping travel source; missing file -> silent flight (slot stays -1)
 b.travel.restart();
 client_bullets.insert_last(b);

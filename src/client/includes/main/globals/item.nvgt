@@ -5,7 +5,7 @@ a positional loop at its tile while it sits there, stopped when it's picked up o
 update_sound_pools() moves the listener for both pools, so the loops pan and fade as you walk around them. */
 clientitem@[] clientitems(0);
 /* Which sound folder an item's type lives under: ground items are either WOOD (oak/maple/birch/pine ->
-objects/items/wood/<type>/) or AMMO (arrow/gas/grenade/powder -> objects/items/ammo/<type>/). The server sends
+equipment/items/wood/<type>/) or AMMO (arrow/gas/grenade/powder -> equipment/items/ammo/<type>/). The server sends
 just the type; the client maps it to its category here so drop/loop/take play from the right folder. */
 string item_sound_category(string type)
 {
@@ -25,7 +25,7 @@ int loophandle = -1;
 clientitem(int iid, int ix, int iy, string ty)
 {
 id = iid; x = ix; y = iy; type = ty;
-string base = "sounds/objects/items/" + item_sound_category(type) + "/" + type + "/"; // wood/<species>/ or ammo/<type>/
+string base = "sounds/equipment/items/" + item_sound_category(type) + "/" + type + "/"; // wood/<species>/ or ammo/<type>/
 sound_pool@ pl = item_pool_for(type); // ammo -> ammopool (clear), wood -> woodpool (cave-muffled from outside)
 pl.play_3d(base + "drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
 /* Not every item type has an ambient ground loop; only start one when the file exists,

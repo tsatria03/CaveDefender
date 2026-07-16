@@ -904,7 +904,7 @@ send(players[pindex].peer_id, "play_item "+picked_type+" take", 0, true);
 // Let others in the game hear the pickup in 3D at the gatherer's spot (reuses the positional footstep relay).
 for(uint wm=0; wm<players.length(); wm++)
 if(players[wm].room_id == rid and players[wm].peer_id != players[pindex].peer_id)
-send(players[wm].peer_id, "footstep objects/items/wood/"+picked_type+"/take "+px+" "+py, 0, true);
+send(players[wm].peer_id, "footstep equipment/items/wood/"+picked_type+"/take "+px+" "+py, 0, true);
 send_wood_count(pindex);
 }
 }
@@ -945,7 +945,7 @@ if(got > 0)
 send(players[pindex].peer_id, "play_item "+picked_type+" take", 0, true);
 for(uint wm=0; wm<players.length(); wm++)
 if(players[wm].room_id == rid and players[wm].peer_id != players[pindex].peer_id)
-send(players[wm].peer_id, "footstep objects/items/ammo/"+picked_type+"/take "+px+" "+py, 0, true);
+send(players[wm].peer_id, "footstep equipment/items/ammo/"+picked_type+"/take "+px+" "+py, 0, true);
 send_ammo_count(pindex);
 }
 }
@@ -1379,7 +1379,7 @@ else if(dir=="south") placey = 0;
 else if(dir=="north") placey = games[gi].size;
 for(uint pm=0; pm<players.length(); pm++)
 if(players[pm].room_id == players[index].room_id)
-send(players[pm].peer_id, "footstep objects/items/wood/"+place_type+"/place "+placex+" "+placey, 0, true);
+send(players[pm].peer_id, "footstep equipment/items/wood/"+place_type+"/place "+placex+" "+placey, 0, true);
 send(event.peer_id, "reinforced "+dir+" "+gain, 0,true);
 broadcast_wall_strength(games[gi].id);
 }
