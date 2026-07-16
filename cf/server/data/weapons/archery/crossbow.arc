@@ -5,4 +5,4 @@ spam time=500
 range=10
 bullet speed=30
 ammo type=arrow
-max ammo=3
+max ammo=10

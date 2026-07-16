@@ -205,8 +205,8 @@ void start_reload()
 {
 if(is_reloading) return; // already reloading
 if(current_weapon=="" or is_melee_weapon(current_weapon)) { speak("This weapon takes no ammo."); return; }
-if(my_loaded >= my_weapon_maxammo) { speak("Your magazine is already full."); return; }
 string at = weapon_ammo_type(current_weapon);
+if(my_loaded >= my_weapon_maxammo) { speak("This weapon is already loaded with " + at + " ammo."); return; }
 if(ammo_reserve_for(at) <= 0) { speak("You have no " + at + " ammo left to reload."); return; }
 string cls = weapon_class(current_weapon);
 int slot = p.play_3d("sounds/weapons/"+cls+"/"+current_weapon+"/reload.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);

@@ -5,4 +5,4 @@ spam time=1100
 range=10
 bullet speed=30
 ammo type=grenade
-max ammo=1
+max ammo=3
