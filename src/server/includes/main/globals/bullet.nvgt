@@ -52,6 +52,12 @@ if(walls[wi].health <= 0)
 if(games[gi].mode == "pvp") send_to_game(games[gi].id, "walldestroyed "+bl.dir); // no bots to redistribute in PVP; the client re-tiles the breach
 else on_wall_destroyed(games[gi].id, gi, bl.dir);                                // EVP: down the wall the shared way (redistribute/announce)
 }
+else
+{
+// The wall survived: a firebomb also SETS IT ALIGHT (a burn-over-time on top of the impact) -- other ranged weapons don't. 5e
+weapon_data@ wd = get_weapon_data(bl.weapon);
+if(wd !is null and wd.has_status and wd.status_type == "burn") ignite_wall(gi, bl.dir, wd);
+}
 }
 else send_to_game(games[gi].id, "bulletrico "+bl.dir+" "+bl.weapon); // a harmless bounce (build/rest/miss): the weapon's ricochet clip, no damage
 }
