@@ -285,6 +285,7 @@ buffercheck();
 			else announce_games("allgamemembers", "on the server");
 		}
 		if (in_game and !watching and !game_outside and !(game_mode=="pvp" and my_side=="attack") and !control_is_down() and key_pressed(KEY_I)) speak(wood_readout()); // gatherers only: spectators carry no wood, EVP players carry none (bots use it), and PVP attackers gather none either
+		if (in_game and !watching and (game_outside or (game_mode=="pvp" and my_side=="attack")) and key_pressed(KEY_X)) speak(ammo_readout()); // attackers only (EVP players / PVP attackers): read your equipped weapon's ammo, the mirror of the I key's wood
 		if (in_game and key_pressed(KEY_N)) speak(wall_phrase_full("north", wall_north));
 		if (in_game and key_pressed(KEY_E)) speak(wall_phrase_full("east", wall_east));
 		if (in_game and !control_is_down() and key_pressed(KEY_S)) speak(wall_phrase_full("south", wall_south)); // !control frees Ctrl+S for the PVE/EVP skip-build hotkey

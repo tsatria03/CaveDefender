@@ -32,6 +32,15 @@ return "melee";
 }
 // True for the four melee weapons (the only ones that swing; ranged firing isn't wired yet).
 bool is_melee_weapon(string name) { return weapon_class(name) == "melee"; }
+// The ammo type a ranged weapon feeds on (crossbow->arrow, cannon->powder, firebomb->gas, grenade->grenade); "" for melee/none.
+string weapon_ammo_type(string name)
+{
+if(name=="crossbow") return "arrow";
+if(name=="cannon") return "powder";
+if(name=="firebomb") return "gas";
+if(name=="grenade") return "grenade";
+return "";
+}
 // The display (tab) name for a weapon class: capitalized.
 string class_display_name(string clas)
 {
@@ -94,7 +103,9 @@ if(weapon_menu_last_tab >= 0 and weapon_menu_last_tab <= int(classes.length())) 
 int mres = m.run(-1, true, false);
 if(m.active_tab >= 0) weapon_menu_last_tab = m.active_tab; // remember the tab (valid right after run, before the next reset)
 if(mres < 0) { speak("canceled"); return; } // escaped
-draw_weapon(m.selected_item_id);
+string sel = m.selected_item_id;
+if(sel == current_weapon) { speak("This weapon is already equipped."); return; } // picked the one already in hand -- say so instead of silently doing nothing
+draw_weapon(sel);
 }
 /* Force-equip a weapon and ALWAYS play its draw sound, even if it's already current. Used to arm the player
 when a round starts. The "x equipped" notice always goes to the misc buffer (speaks + logs). */

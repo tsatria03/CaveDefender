@@ -182,6 +182,12 @@ bool is_ammo(string type)
 string[] a = ammo_types();
 return a.find(type) >= 0;
 }
+// A random ammo type (arrow/gas/grenade/powder), for the ground drops (mirrors random_wood_type).
+string random_ammo_type()
+{
+string[] a = ammo_types();
+return a[random(0, int(a.length())-1)];
+}
 /* The starter / milestone-bonus reserve amounts for an ammo type, from its data file (data/objects/items/ammo/<type>.amt,
 loaded into ammo_db): roll_range over its starter / bonus min,max. Fallbacks match the recommended ranges (arrow
 8-12/10-15, the heavy single-shots 3-5/4-7) if the data is missing. */
@@ -203,6 +209,14 @@ int wood_count_in(int room_id)
 int n=0;
 for(uint i=0; i<items.length(); i++)
 if(@items[i]!=null and items[i].room_id==room_id and is_wood(items[i].type)) n++;
+return n;
+}
+// Count the ammo currently on the ground in a space (mirrors wood_count_in, for the ammo drop cap).
+int ammo_count_in(int room_id)
+{
+int n=0;
+for(uint i=0; i<items.length(); i++)
+if(@items[i]!=null and items[i].room_id==room_id and is_ammo(items[i].type)) n++;
 return n;
 }
 // Remove an item by its id (on pickup).

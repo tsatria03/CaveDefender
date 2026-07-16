@@ -4,20 +4,29 @@ objpool: a one-shot drop sound when it appears, and a positional loop at its til
 stopped when it's picked up or the game is left. update_sound_pools() moves the listener for objpool,
 so the loops pan and fade as you walk around them. */
 clientitem@[] clientitems(0);
+/* Which sound folder an item's type lives under: ground items are either WOOD (oak/maple/birch/pine ->
+objects/items/wood/<type>/) or AMMO (arrow/gas/grenade/powder -> objects/items/ammo/<type>/). The server sends
+just the type; the client maps it to its category here so drop/loop/take play from the right folder. */
+string item_sound_category(string type)
+{
+if(type=="arrow" or type=="gas" or type=="grenade" or type=="powder") return "ammo";
+return "wood"; // oak/maple/birch/pine
+}
 class clientitem
 {
 int id;
 int x, y;
-string type; // the wood species, e.g. "oak" -> sounds/objects/items/wood/oak/
+string type; // the item type: a wood species (oak/maple/birch/pine) or an ammo type (arrow/gas/grenade/powder); item_sound_category maps it to its sound folder
 int loophandle = -1;
 clientitem(int iid, int ix, int iy, string ty)
 {
 id = iid; x = ix; y = iy; type = ty;
-objpool.play_3d("sounds/objects/items/wood/" + type + "/drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
-/* Not every species has an ambient ground loop; only start one when the file exists,
+string base = "sounds/objects/items/" + item_sound_category(type) + "/" + type + "/"; // wood/<species>/ or ammo/<type>/
+objpool.play_3d(base + "drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
+/* Not every item type has an ambient ground loop; only start one when the file exists,
 leaving loophandle at -1 otherwise so cleanup is a no-op. */
-if(file_exists("sounds/objects/items/wood/" + type + "/loop.ogg"))
-loophandle = objpool.play_3d("sounds/objects/items/wood/" + type + "/loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), true);
+if(file_exists(base + "loop.ogg"))
+loophandle = objpool.play_3d(base + "loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), true);
 }
 }
 int get_clientitem_index(int id)
