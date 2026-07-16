@@ -109,7 +109,7 @@ Environment versus player.
 
 Environment versus player, or EVP, flips the game around: instead of defending the walls, you attack them, and the bots defend. You play from the gravel outside the cave, and your job is to smash all four walls down while the bots build them back up. Choose EVP when you pick your game mode at the start.
 
-You fight with weapons, not wood. When a round starts you are handed all four on the number row: press one for the axe, two for the bat, three for the crowbar, or four for the hammer, and you hear which one you have drawn. Before the round begins you carry nothing and cannot attack.
+You fight with weapons, not wood. When a round starts you are handed all four weapons and one is drawn for you; press Alt plus W at any time to open the weapon menu and pick the axe, bat, crowbar, or hammer, and you hear which one you have drawn. Before the round begins you carry nothing and cannot attack.
 
 Walk up to a wall and hold space to swing the weapon in your hand at the nearest wall, the same five tile reach as reinforcing. Each weapon takes a moment to wind up before the blow lands, and heavier weapons hit harder but swing slower, so the hammer does the most damage while the axe lands the fastest. You can keep moving and switch weapons freely while you swing.
 
@@ -279,7 +279,7 @@ Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; ho
 
 B. Locate the builder bots, nearest first. EVP only.
 
-Number row, 1, 2, 3, or 4. Draw the axe, bat, crowbar, or hammer. For attackers, that is EVP and PVP.
+Alt plus W. Open the weapon menu to draw the axe, bat, crowbar, or hammer. For attackers, that is EVP and PVP.
 
 Spacebar. Held, swings your drawn weapon at the nearest wall in reach. For attackers, that is EVP and PVP.
 

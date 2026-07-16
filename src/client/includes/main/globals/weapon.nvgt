@@ -1,30 +1,48 @@
-/* Client-side player weapon for EVP (the outdoor attack mode): the player carries all four weapons on the
-number row and draws (equips) one at a time. Only meaningful while game_outside is true; PVE players
-defend and never wield a weapon. The selection here is purely local state + the draw sound — the actual
-attack (windup, damage, fire/hit sounds) is wired in a later sub-section. */
-string current_weapon=""; // the equipped weapon's name ("axe"/"bat"/"crowbar"/"hammer"), or "" when not in an EVP game.
-/* Map a number-row key (1-4) to its weapon name. This is the PLAYER key layout (1 axe, 2 bat, 3 crowbar,
-4 hammer) -- deliberately distinct from the bots' internal weapon-id scheme; keep the two from being confused. */
-string weapon_name_for_key(int keynum)
+/* Client-side player weapon for the attack side (EVP outdoors, and the PVP attackers): the player carries their
+weapons and draws (equips) one at a time from the Alt+W weapon menu (weapon_menu, below). Only meaningful for
+the attacking side; PVE and PVP defenders never wield a weapon. The selection here is purely local state + the
+draw sound — the actual attack (windup, damage, fire/hit sounds) is wired in a later sub-section. */
+string current_weapon=""; // the equipped weapon's name ("axe"/"bat"/"crowbar"/"hammer"), or "" when not armed.
+/* The weapons the player can draw, in menu order. Single source of truth for the Alt+W menu; the ranged weapons
+(task #5) will extend this list once they exist. For now it's the four melee weapons. */
+string[] available_weapons()
 {
-if(keynum==1) return "axe";
-if(keynum==2) return "bat";
-if(keynum==3) return "crowbar";
-if(keynum==4) return "hammer";
-return "";
+string[] w;
+w.insert_last("axe");
+w.insert_last("bat");
+w.insert_last("crowbar");
+w.insert_last("hammer");
+return w;
 }
-/* Draw (equip) the weapon for a number key, playing its draw sound. Does nothing if that weapon is already
-the one in hand (no pointless redraw) or the key isn't a weapon. */
-void draw_weapon(int keynum)
+/* Draw (equip) a weapon by name, playing its draw sound. Does nothing if that weapon is already the one in hand
+(no pointless redraw) or the name is empty. */
+void draw_weapon(string wname)
 {
-string wname = weapon_name_for_key(keynum);
-if(wname=="" or wname==current_weapon) return; // unknown key, or already drawn
+if(wname=="" or wname==current_weapon) return; // unknown, or already drawn
 current_weapon = wname;
 p.destroy_sound(wepslot); // cut off the previous DRAW still ringing so switching weapons doesn't stack draws
 wepslot = p.play_3d("sounds/weapons/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step weapons/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
 send(0, "setweapon "+wname, 0, true); // tell the server which weapon we have drawn, so a reconnect restores the same one
 add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
+}
+/* Alt+W in an EVP or PVP-attack game (the West-wall key branches here when Alt is held): a local pop-up to pick
+which weapon to draw, replacing the old number-row keys. Lists the weapons you can carry (available_weapons),
+marks the one in hand as currently active, and equips your choice via draw_weapon (a no-op if you pick the one
+you already hold). Purely local plus the same setweapon/step notices the number keys sent; canceling leaves your
+weapon unchanged. Pumps the network while open so the modal doesn't time the connection out. */
+void weapon_menu()
+{
+string[] weps = available_weapons();
+if(weps.length()==0) return;
+m.reset();
+m.intro_text = "Weapon menu. Choose a weapon to draw.";
+@m.background_callback = @net_keepalive_cb; // pump the network each tick so the open menu doesn't time us out
+for(uint i=0; i<weps.length(); i++)
+m.add_item(weps[i] + (weps[i]==current_weapon ? ". Currently active." : "")); // mark the weapon in hand
+int choice = m.run();
+if(choice < 0 or choice >= int(weps.length())) { speak("canceled"); return; } // escaped or out of range
+draw_weapon(weps[choice]);
 }
 /* Force-equip a weapon and ALWAYS play its draw sound, even if it's already current. Used to arm the player
 when a round starts. The "x equipped" notice always goes to the misc buffer (speaks + logs). */
