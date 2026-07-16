@@ -1,4 +1,5 @@
 New in 4.0.
+Two new weapons join the attacking side, the pistol and the machine gun, gathered under a new Artillery tab in the weapon menu. Both fire bullets at the walls like the other ranged weapons and feed on a new gathered ammo kind, normal ammo, which drops in your area to pick up just like arrows or powder.
 Fixed a wall fire's sound carrying on through a rest period, when the fire was not actually damaging the wall; the fire now falls silent while the attackers are held off and picks back up when they can attack again.
 The firebomb now sets a wall on fire on top of its hit, and the fire keeps chewing at the wall for a few seconds afterward. Hitting a wall that is already burning makes the fire hotter and last longer, so a team can stoke a wall down fast. The fire only burns while you can actually attack the wall, going quiet during the build phase and the rest windows and resuming when the next attack window opens.
 You can now reload a ranged weapon with shift plus R, moving rounds from your reserve into it. The reload takes as long as its sound plays and blocks firing until it finishes, and a ping tells you the moment the weapon is loaded and ready.

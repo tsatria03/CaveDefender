@@ -177,6 +177,7 @@ a.insert_last("arrow");
 a.insert_last("gas");
 a.insert_last("grenade");
 a.insert_last("powder");
+a.insert_last("normal");
 return a;
 }
 bool is_ammo(string type)
