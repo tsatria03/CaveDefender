@@ -1042,12 +1042,14 @@ void netloop_impl()
 			my_ammo_powder = string_to_number(parsed[4]);
 			my_ammo_normal = string_to_number(parsed[5]);
 		}
-		else if (parsed[0] == "weaponstats" and parsed.length() > 4)
+		else if (parsed[0] == "weaponstats" and parsed.length() > 6)
 		{
-			// The equipped weapon's stats from the server on equip: "weaponstats <ranged?> <maxammo> <spamtime> <loaded>" (all 0 for melee).
+			// The equipped weapon's stats from the server on equip: "weaponstats <ranged?> <maxammo> <spamtime> <loaded> <firemode> <repeattime>" (all 0 for melee).
 			my_weapon_maxammo = string_to_number(parsed[2]);
 			my_weapon_spamtime = string_to_number(parsed[3]);
 			my_loaded = string_to_number(parsed[4]);
+			my_weapon_firemode = string_to_number(parsed[5]);
+			my_weapon_repeattime = string_to_number(parsed[6]);
 		}
 		else if (parsed[0] == "loaded" and parsed.length() > 1)
 		{
