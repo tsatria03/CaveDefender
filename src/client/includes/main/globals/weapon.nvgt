@@ -22,7 +22,7 @@ string[] w;
 if(clas=="archery") { w.insert_last("crossbow"); }
 else if(clas=="artillery") { w.insert_last("machinegun"); w.insert_last("pistol"); }
 else if(clas=="explosive") { w.insert_last("cannon"); w.insert_last("firebomb"); w.insert_last("grenade"); }
-else if(clas=="melee") { w.insert_last("axe"); w.insert_last("bat"); w.insert_last("crowbar"); w.insert_last("hammer"); }
+else if(clas=="melee") { w.insert_last("axe"); w.insert_last("bat"); w.insert_last("crowbar"); w.insert_last("feet"); w.insert_last("fist"); w.insert_last("hammer"); }
 return w;
 }
 // The class folder a weapon lives in (archery/explosive/melee), for its sound path and its menu tab. Melee if unknown.
@@ -64,7 +64,9 @@ w.insert_last("bat");
 w.insert_last("cannon");
 w.insert_last("crossbow");
 w.insert_last("crowbar");
+w.insert_last("feet");
 w.insert_last("firebomb");
+w.insert_last("fist");
 w.insert_last("grenade");
 w.insert_last("hammer");
 w.insert_last("machinegun");
@@ -138,10 +140,10 @@ one swing) + our own timer, not key_repeating, so the windup/cooldown alone pace
 bool swinging=false; // true during a swing's windup; only blocks starting another swing (NOT movement/switching)
 timer swingtimer;    // while swinging: measures the windup; while idle: measures recovery since the last hit
 string swing_weapon=""; // the weapon the in-flight swing began with, so switching weapons mid-swing doesn't change the pending hit
-// Per-weapon windup (ms): from the Space-press to the impact. Heavier weapons wind up slower (and hit harder, server-side).
-int swing_windup(string w) { if(w=="axe") return 300; if(w=="bat") return 375; if(w=="crowbar") return 450; return 600; } // hammer slowest
+// Per-weapon windup (ms): from the Space-press to the impact. Heavier weapons wind up slower (and hit harder, server-side); bare fists are the quickest of all.
+int swing_windup(string w) { if(w=="fist") return 250; if(w=="axe") return 300; if(w=="feet") return 350; if(w=="bat") return 375; if(w=="crowbar") return 450; return 600; } // hammer slowest
 // Per-weapon recovery (ms): the cooldown after a hit before another swing can start.
-int swing_recovery(string w) { if(w=="axe") return 200; if(w=="bat") return 250; if(w=="crowbar") return 325; return 450; } // hammer slowest
+int swing_recovery(string w) { if(w=="fist") return 200; if(w=="axe") return 200; if(w=="feet") return 250; if(w=="bat") return 250; if(w=="crowbar") return 325; return 450; } // hammer slowest
 /* Run every frame in an EVP game: drive the tap-to-swing melee. When a windup completes, tells the server to
 apply the hit. No-op for PVE, spectators, a paused game, or with no weapon in hand. */
 void swingloop()

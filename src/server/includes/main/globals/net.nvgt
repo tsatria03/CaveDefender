@@ -846,6 +846,7 @@ send(players[pindex].peer_id, "ammo "+players[pindex].inv.count("arrow")+" "+pla
 void reset_player_ammo(int pindex)
 {
 players[pindex].granted_ammo_types.resize(0);
+players[pindex].granted_mags.resize(0); // every weapon's free first-draw mag fill re-arms with the new round
 players[pindex].mag.clear(); // empty all magazines too
 string[] a = ammo_types();
 for(uint i=0; i<a.length(); i++) players[pindex].inv.take(a[i], players[pindex].inv.count(a[i])); // drop each ammo type to 0 without touching wood
@@ -1215,28 +1216,36 @@ else if(parsed[0]=="setweapon" and index>-1 and parsed.length()>1)
 {
 /* The attacker's client tells us which weapon it just drew, so we can restore the same one on a reconnect.
 Validate against the loaded weapons; ignore anything else. On the FIRST time this round the player draws a RANGED
-weapon of a given ammo type, grant that type's starter ammo (Option A -- so the melee auto-arm at round start
-doesn't block it); re-drawing the same type doesn't re-grant, and a melee weapon grants nothing. */
+weapon of a given ammo kind, grant that kind's starter RESERVE (Option A -- so the melee auto-arm at round start
+doesn't block it), and on each ranged weapon's first draw fill its OWN magazine. Magazines are PER WEAPON, so the
+pistol and machine gun share a normal-ammo reserve but never a mag. A melee weapon grants nothing. */
 string w=parsed[1];
 weapon_data@ wd = get_weapon_data(w);
 if(wd !is null)
 {
 players[index].weapon=w;
-if(!wd.melee and wd.ammo_type != "" and players[index].granted_ammo_types.find(wd.ammo_type) < 0)
+if(!wd.melee and wd.ammo_type != "")
 {
 int gi = get_game_index(players[index].room_id);
 bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack"));
 if(attacker and (games[gi].phase=="build" or games[gi].phase=="wave"))
 {
-players[index].inv.give(wd.ammo_type, ammo_starter_amount(wd.ammo_type));
-players[index].mag.give(wd.ammo_type, wd.max_ammo); // magazine starts FULL on the starter grant
+if(players[index].granted_ammo_types.find(wd.ammo_type) < 0)
+{
+players[index].inv.give(wd.ammo_type, ammo_starter_amount(wd.ammo_type)); // starter reserve, once per ammo kind
 players[index].granted_ammo_types.insert_last(wd.ammo_type);
 send_ammo_count(index);
+}
+if(players[index].granted_mags.find(w) < 0)
+{
+players[index].mag.give(w, wd.max_ammo); // this weapon's own magazine starts full on its first draw of the round
+players[index].granted_mags.insert_last(w);
+}
 }
 }
 // Tell the client the equipped weapon's stats (fire cadence, magazine size, current loaded) for firing and the X readout.
 if(wd.melee) send(players[index].peer_id, "weaponstats 0 0 0 0", 0, true);
-else send(players[index].peer_id, "weaponstats 1 "+wd.max_ammo+" "+wd.spam_time+" "+players[index].mag.count(wd.ammo_type), 0, true);
+else send(players[index].peer_id, "weaponstats 1 "+wd.max_ammo+" "+wd.spam_time+" "+players[index].mag.count(w), 0, true);
 }
 }
 else if(parsed[0]=="fire" and index>-1)
@@ -1290,7 +1299,7 @@ bool window = (games[gi].phase=="wave" and games[gi].wave_attacking); // an atta
 bool damaging = (tdir != "") and window;
 if(damaging)
 {
-if(players[index].mag.count(fwd.ammo_type) > 0) players[index].mag.take(fwd.ammo_type, 1); // spend one loaded round -- only on a shot that can hurt the wall
+if(players[index].mag.count(players[index].weapon) > 0) players[index].mag.take(players[index].weapon, 1); // spend one round from THIS weapon's own magazine -- only on a shot that can hurt the wall
 else damaging = false; // nothing chambered: it still flies, but as a harmless ricochet that spends nothing
 }
 if(tdir != "")
@@ -1307,7 +1316,7 @@ games[gi].bullets.insert_last(b);
 send_to_game(games[gi].id, "bulletspawn "+players[index].x+" "+players[index].y+" "+tdir+" "+players[index].weapon+" "+b.flight_ms); // clients play the travelling loop from the shooter to the wall
 }
 }
-send(players[index].peer_id, "loaded "+((fwd is null) ? 0 : players[index].mag.count(fwd.ammo_type)), 0, true); // re-sync the magazine (unchanged for a free/whiffed shot, one less for a spent round)
+send(players[index].peer_id, "loaded "+((fwd is null) ? 0 : players[index].mag.count(players[index].weapon)), 0, true); // re-sync this weapon's magazine (unchanged for a free/whiffed shot, one less for a spent round)
 }
 else if(parsed[0]=="reload" and index>-1)
 {
@@ -1319,16 +1328,16 @@ bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and
 bool can = attacker and rwd !is null and !rwd.melee and rwd.ammo_type != "" and (games[gi].phase=="build" or games[gi].phase=="wave");
 if(can)
 {
-int need = rwd.max_ammo - players[index].mag.count(rwd.ammo_type); // room left in the magazine
-int have = players[index].inv.count(rwd.ammo_type);                // rounds in the reserve
+int need = rwd.max_ammo - players[index].mag.count(players[index].weapon); // room left in THIS weapon's own magazine
+int have = players[index].inv.count(rwd.ammo_type);                        // rounds in the shared per-kind reserve
 int move = (need < have) ? need : have;
 if(move > 0)
 {
-players[index].inv.take(rwd.ammo_type, move); // out of the reserve
-players[index].mag.give(rwd.ammo_type, move); // into the magazine
-send_ammo_count(index);                       // the reserve changed
+players[index].inv.take(rwd.ammo_type, move);        // out of the reserve
+players[index].mag.give(players[index].weapon, move); // into this weapon's magazine
+send_ammo_count(index);                              // the reserve changed
 }
-send(players[index].peer_id, "loaded "+players[index].mag.count(rwd.ammo_type), 0, true); // the new magazine count
+send(players[index].peer_id, "loaded "+players[index].mag.count(players[index].weapon), 0, true); // the new magazine count
 }
 }
 else if(parsed[0]=="reinforce" and index>-1)

@@ -92,8 +92,8 @@ for(int n=have; n<target; n++) spawn_enemy(gameid, dirs[d], random(1, 4));
 }
 /* Random damage per weapon, now read from the weapon's data file (data/equipment/weapons/melee/<name>.mel, loaded into
 weapons_db by gamedata.nvgt): roll_range over that weapon's damage min,max. Drives both PVE bot strikes and EVP
-player swings. Falls back to the original hardcoded values (axe 1-3, bat 2-4, crowbar 3-6, hammer 4-8) if the
-data is missing, so damage never breaks. */
+player swings. Falls back to hardcoded values (fist 1-2, feet 1-3, axe 1-3, bat 2-4, crowbar 3-6, hammer 4-8) if
+the data is missing, so damage never breaks. */
 int enemy_damage(int weapon)
 {
 weapon_data@ wd = get_weapon_data(weapon_name_for_id(weapon));
@@ -101,27 +101,34 @@ if(wd !is null) return roll_range(wd.dmg_lo, wd.dmg_hi);
 if(weapon==1) return random(1, 3); // axe
 if(weapon==4) return random(2, 4); // bat
 if(weapon==2) return random(3, 6); // crowbar
+if(weapon==5) return random(1, 2); // fist (player-only unarmed; bots stay on 1-4)
+if(weapon==6) return random(1, 3); // feet
 return random(4, 8);               // hammer
 }
 /* Map a weapon NAME (as the EVP client sends it) to the internal weapon id used by enemy_damage and the
-wallhit sound (1 axe, 2 crowbar, 3 hammer, 4 bat). Used by the player "attack" handler so a player's swing
-deals the same per-weapon damage a bot's would and plays the matching hit sound. */
+wallhit sound (1 axe, 2 crowbar, 3 hammer, 4 bat, 5 fist, 6 feet -- bots only roll 1-4; the unarmed pair is
+player-only). Used by the player "attack" handler so a player's swing deals the same per-weapon damage a bot's
+would and plays the matching hit sound. */
 int weapon_id_for_name(string w)
 {
 if(w=="axe") return 1;
 if(w=="crowbar") return 2;
 if(w=="hammer") return 3;
 if(w=="bat") return 4;
+if(w=="fist") return 5;
+if(w=="feet") return 6;
 return 1; // unknown -> axe
 }
-/* Reverse of weapon_id_for_name: the weapon NAME for an internal id (1 axe, 2 crowbar, 3 hammer, 4 bat), so
-enemy_damage can look the weapon up in weapons_db by the name its data file is keyed on. */
+/* Reverse of weapon_id_for_name: the weapon NAME for an internal id (1 axe, 2 crowbar, 3 hammer, 4 bat, 5 fist,
+6 feet), so enemy_damage can look the weapon up in weapons_db by the name its data file is keyed on. */
 string weapon_name_for_id(int id)
 {
 if(id==1) return "axe";
 if(id==2) return "crowbar";
 if(id==3) return "hammer";
 if(id==4) return "bat";
+if(id==5) return "fist";
+if(id==6) return "feet";
 return "axe"; // unknown -> axe
 }
 /* Every server tick: each bot whose attack timer is up swings at its wall, dealing its weapon's damage,

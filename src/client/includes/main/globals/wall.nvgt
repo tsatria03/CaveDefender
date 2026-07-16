@@ -46,13 +46,15 @@ else if(dir=="east") { minx=s; maxx=s; miny=0; maxy=s; }
 else if(dir=="north") { minx=0; maxx=s; miny=s; maxy=s; }
 else if(dir=="south") { minx=0; maxx=s; miny=0; maxy=0; }
 else return;
-/* Pick the weapon's hit sound by weapon id (1 axe, 2 crowbar, 3 hammer, 4 bat). Explicit branches rather
-than a nested ternary so the mapping is unmistakable and a stray value can't silently fall through.
-Every weapon has hit1-3, so one of the three plays at random. */
+/* Pick the weapon's hit sound by weapon id (1 axe, 2 crowbar, 3 hammer, 4 bat, 5 fist, 6 feet). Explicit
+branches rather than a nested ternary so the mapping is unmistakable and a stray value can't silently fall
+through. Every melee weapon has hit1-3, so one of the three plays at random. */
 string wname;
 if(weapon==1) wname = "axe";
 else if(weapon==2) wname = "crowbar";
 else if(weapon==4) wname = "bat";
+else if(weapon==5) wname = "fist";
+else if(weapon==6) wname = "feet";
 else wname = "hammer";
 string snd = "equipment/weapons/"+weapon_class(wname)+"/"+wname+"/hit"+random(1,3);
 /* PVE (inside) scales the strike by the wall's strength as a danger cue; EVP (outside) has no such cue —
@@ -94,6 +96,8 @@ string wname;
 if(weapon==1) wname = "axe";
 else if(weapon==2) wname = "crowbar";
 else if(weapon==4) wname = "bat";
+else if(weapon==5) wname = "fist";
+else if(weapon==6) wname = "feet";
 else wname = "hammer";
 int h = p.play_extended_3d("sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/rico.ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
 p.update_sound_3d(h, minx, miny, 0);
@@ -128,6 +132,16 @@ p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
 int hh = p.play_extended_3d("sounds/objects/walls/wallwood/hurt"+random(1,3)+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
 p.update_sound_3d(hh, minx, miny, 0);
 p.update_sound_range_3d(hh, 0, maxx-minx, 0, maxy-miny, 0, 0);
+/* SF-style spent casing (task #14): a weapon with shell clips (the artillery guns) rings a random shell at the
+wall on top of every landing bullet, just as SimpleFighter layers a *shell* variant onto each bullet's hit.
+Data-driven by the files: a weapon without shell1.ogg simply skips it. */
+string shellbase = "sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/shell";
+if(file_exists(shellbase+"1.ogg"))
+{
+int sh = p.play_extended_3d(shellbase+random(1,2)+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+p.update_sound_3d(sh, minx, miny, 0);
+p.update_sound_range_3d(sh, 0, maxx-minx, 0, maxy-miny, 0, 0);
+}
 }
 /* A ranged bullet bounced off a wall it couldn't hurt (the server "bulletrico <dir> <weapon>" message, task 5d):
 the ranged mirror of play_wall_rico -- the weapon's rico.ogg across the target wall's span, no damage, no creak.
@@ -153,6 +167,14 @@ else return;
 int h = p.play_extended_3d("sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/rico.ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
 p.update_sound_3d(h, minx, miny, 0);
 p.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
+// The spent casing rings on a bounce too, same as a hit (task #14): SF plays a *shell* on every bullet landing.
+string shellbase = "sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/shell";
+if(file_exists(shellbase+"1.ogg"))
+{
+int sh = p.play_extended_3d(shellbase+random(1,2)+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+p.update_sound_3d(sh, minx, miny, 0);
+p.update_sound_range_3d(sh, 0, maxx-minx, 0, maxy-miny, 0, 0);
+}
 }
 /* Server-driven wall destruction (the "walldestroyed <dir>" message). Plays the death clip across the
 wall span and re-tiles the breach to a wood floor, so you HEAR a breach as you walk over it. Walls are
