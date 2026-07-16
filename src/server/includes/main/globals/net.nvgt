@@ -837,10 +837,10 @@ void send_wood_count(int pindex)
 {
 send(players[pindex].peer_id, "wood "+players[pindex].inv.count("oak")+" "+players[pindex].inv.count("maple")+" "+players[pindex].inv.count("birch")+" "+players[pindex].inv.count("pine"), 0, true);
 }
-// Push the player's ammo reserve, by type, to their client (the X-key readout): "ammo <arrow> <gas> <grenade> <powder>".
+// Push the player's ammo reserve, by type, to their client (the X-key readout): "ammo <arrow> <gas> <grenade> <powder> <normal>".
 void send_ammo_count(int pindex)
 {
-send(players[pindex].peer_id, "ammo "+players[pindex].inv.count("arrow")+" "+players[pindex].inv.count("gas")+" "+players[pindex].inv.count("grenade")+" "+players[pindex].inv.count("powder"), 0, true);
+send(players[pindex].peer_id, "ammo "+players[pindex].inv.count("arrow")+" "+players[pindex].inv.count("gas")+" "+players[pindex].inv.count("grenade")+" "+players[pindex].inv.count("powder")+" "+players[pindex].inv.count("normal"), 0, true);
 }
 // Zero a player's ammo reserve and its granted-this-round tracking (called at build-phase start so each round starts fresh), then sync the client.
 void reset_player_ammo(int pindex)

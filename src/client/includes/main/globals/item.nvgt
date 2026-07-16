@@ -9,7 +9,7 @@ equipment/items/wood/<type>/) or AMMO (arrow/gas/grenade/powder -> equipment/ite
 just the type; the client maps it to its category here so drop/loop/take play from the right folder. */
 string item_sound_category(string type)
 {
-if(type=="arrow" or type=="gas" or type=="grenade" or type=="powder") return "ammo";
+if(type=="arrow" or type=="gas" or type=="grenade" or type=="powder" or type=="normal") return "ammo";
 return "wood"; // oak/maple/birch/pine
 }
 /* Which sound pool an item plays on: AMMO -> ammopool (listener-following, stays clear outside), WOOD -> woodpool

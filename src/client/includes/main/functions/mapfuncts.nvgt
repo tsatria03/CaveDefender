@@ -190,6 +190,7 @@ if(type=="arrow") return my_ammo_arrow;
 if(type=="gas") return my_ammo_gas;
 if(type=="grenade") return my_ammo_grenade;
 if(type=="powder") return my_ammo_powder;
+if(type=="normal") return my_ammo_normal;
 return 0;
 }
 /* The X-key ammo readout: your equipped ranged weapon's magazine and reserve. Melee (or unarmed) takes none. */

@@ -1033,13 +1033,14 @@ void netloop_impl()
 			my_wood_birch = string_to_number(parsed[3]);
 			my_wood_pine = string_to_number(parsed[4]);
 		}
-		else if (parsed[0] == "ammo" and parsed.length() > 4)
+		else if (parsed[0] == "ammo" and parsed.length() > 5)
 		{
-			// Your ammo reserve by type, synced from the server (the X key reads it): "ammo <arrow> <gas> <grenade> <powder>".
+			// Your ammo reserve by type, synced from the server (the X key reads it): "ammo <arrow> <gas> <grenade> <powder> <normal>".
 			my_ammo_arrow = string_to_number(parsed[1]);
 			my_ammo_gas = string_to_number(parsed[2]);
 			my_ammo_grenade = string_to_number(parsed[3]);
 			my_ammo_powder = string_to_number(parsed[4]);
+			my_ammo_normal = string_to_number(parsed[5]);
 		}
 		else if (parsed[0] == "weaponstats" and parsed.length() > 4)
 		{

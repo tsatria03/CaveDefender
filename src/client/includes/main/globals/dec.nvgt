@@ -47,7 +47,7 @@ bool roomgames_received=false;
 string pending_rooms=""; // last rooms overview (room count + office occupants), used by the R key in the lobby
 bool rooms_received=false;
 int my_wood_oak=0, my_wood_maple=0, my_wood_birch=0, my_wood_pine=0; // wood you're carrying by species in the current game (synced from the server; read by the I key)
-int my_ammo_arrow=0, my_ammo_gas=0, my_ammo_grenade=0, my_ammo_powder=0; // ammo reserve you're carrying by type in the current game (attackers; synced from the server, read by the X key)
+int my_ammo_arrow=0, my_ammo_gas=0, my_ammo_grenade=0, my_ammo_powder=0, my_ammo_normal=0; // ammo reserve you're carrying by type in the current game (attackers; synced from the server, read by the X key)
 int my_weapon_maxammo=0, my_weapon_spamtime=0, my_loaded=0; // the equipped ranged weapon's magazine size, fire-cadence ms, and current loaded rounds -- synced from the server on equip (weaponstats) and each shot (loaded)
 int wall_north=0, wall_east=0, wall_south=0, wall_west=0; // current cavern wall strengths as percents (synced; read by N/E/S/W/D)
 int cavern_size=0; // the current game's cavern grid size, for positioning wall-hit sounds

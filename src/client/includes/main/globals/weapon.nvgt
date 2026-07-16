@@ -4,13 +4,14 @@ by class. Only meaningful for the attacking side; PVE and PVP defenders never wi
 is local state + the draw sound; ranged FIRING (ammo, the traveling bullet) is wired in later #5 sections, so for
 now a ranged weapon can be drawn but does nothing on Space -- only melee swings (see swingloop's is_melee_weapon gate). */
 string current_weapon=""; // the equipped weapon's name (any of the 8), or "" when not armed.
-/* The weapon roster, grouped by class. weapon_classes() is the tab order (archery, explosive, melee); each class's
-weapons are listed alphabetically (matching SimpleFighter). available_weapons() is all 8 alphabetically for the
-menu's "All" tab. These also drive the class segment of every weapon sound path (sounds/equipment/weapons/<class>/<name>/). */
+/* The weapon roster, grouped by class. weapon_classes() is the tab order (archery, artillery, explosive, melee); each
+class's weapons are listed alphabetically (matching SimpleFighter). available_weapons() is all of them alphabetically
+for the menu's "All" tab. These also drive the class segment of every weapon sound path (sounds/equipment/weapons/<class>/<name>/). */
 string[] weapon_classes()
 {
 string[] c;
 c.insert_last("archery");
+c.insert_last("artillery");
 c.insert_last("explosive");
 c.insert_last("melee");
 return c;
@@ -19,6 +20,7 @@ string[] weapons_of_class(string clas)
 {
 string[] w;
 if(clas=="archery") { w.insert_last("crossbow"); }
+else if(clas=="artillery") { w.insert_last("machinegun"); w.insert_last("pistol"); }
 else if(clas=="explosive") { w.insert_last("cannon"); w.insert_last("firebomb"); w.insert_last("grenade"); }
 else if(clas=="melee") { w.insert_last("axe"); w.insert_last("bat"); w.insert_last("crowbar"); w.insert_last("hammer"); }
 return w;
@@ -30,28 +32,30 @@ string[] classes = weapon_classes();
 for(uint c=0; c<classes.length(); c++) { string[] ws = weapons_of_class(classes[c]); if(ws.find(name) >= 0) return classes[c]; }
 return "melee";
 }
-// True for the four melee weapons (the only ones that swing; ranged firing isn't wired yet).
+// True for a melee weapon (the class that swings; the archery, artillery, and explosive weapons fire instead).
 bool is_melee_weapon(string name) { return weapon_class(name) == "melee"; }
-// The ammo type a ranged weapon feeds on (crossbow->arrow, cannon->powder, firebomb->gas, grenade->grenade); "" for melee/none.
+// The ammo type a ranged weapon feeds on (crossbow->arrow, cannon->powder, firebomb->gas, grenade->grenade, pistol/machinegun->normal); "" for melee/none.
 string weapon_ammo_type(string name)
 {
 if(name=="crossbow") return "arrow";
 if(name=="cannon") return "powder";
 if(name=="firebomb") return "gas";
 if(name=="grenade") return "grenade";
+if(name=="pistol" or name=="machinegun") return "normal";
 return "";
 }
 // The display (tab) name for a weapon class: capitalized.
 string class_display_name(string clas)
 {
 if(clas=="archery") return "Archery";
+if(clas=="artillery") return "Artillery";
 if(clas=="explosive") return "Explosive";
 if(clas=="melee") return "Melee";
 return clas;
 }
 // A weapon's menu label: its name, marked when it's the one you currently hold.
 string weapon_menu_label(string name) { return name + (name==current_weapon ? ". Currently active." : ""); }
-// All 8 weapons alphabetically -- the "All" tab of the weapon menu.
+// Every weapon alphabetically -- the "All" tab of the weapon menu.
 string[] available_weapons()
 {
 string[] w;
@@ -63,6 +67,8 @@ w.insert_last("crowbar");
 w.insert_last("firebomb");
 w.insert_last("grenade");
 w.insert_last("hammer");
+w.insert_last("machinegun");
+w.insert_last("pistol");
 return w;
 }
 int weapon_menu_last_tab=0; // which weapon-menu tab to reopen on (0=All, 1=Archery, 2=Explosive, 3=Melee), remembered across opens

@@ -194,6 +194,8 @@ load_weapon_file("archery", "crossbow", "arc");
 load_weapon_file("explosive", "cannon", "exp");
 load_weapon_file("explosive", "firebomb", "exp");
 load_weapon_file("explosive", "grenade", "exp");
+load_weapon_file("artillery", "machinegun", "art");
+load_weapon_file("artillery", "pistol", "art");
 load_wood_file("oak");
 load_wood_file("maple");
 load_wood_file("birch");
@@ -202,4 +204,5 @@ load_ammo_file("arrow");
 load_ammo_file("gas");
 load_ammo_file("grenade");
 load_ammo_file("powder");
+load_ammo_file("normal");
 }
