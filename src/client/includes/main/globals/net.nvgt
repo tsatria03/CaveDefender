@@ -1077,6 +1077,21 @@ void netloop_impl()
 			hit clip as a ricochet (no wall creak, no damage) -- feedback that you're on a wall. */
 			play_wall_rico(parsed[1], string_to_number(parsed[2]));
 		}
+		else if (parsed[0] == "bullethit" and parsed.length() > 2)
+		{
+			// A ranged shot landed on a wall: "bullethit <dir> <weapon>". Play the weapon's impact at that wall (task 5d).
+			play_bullet_hit(parsed[1], parsed[2]);
+		}
+		else if (parsed[0] == "bulletrico" and parsed.length() > 2)
+		{
+			// A ranged shot bounced off a wall it couldn't hurt: "bulletrico <dir> <weapon>". Play the weapon's ricochet (task 5d).
+			play_bullet_rico(parsed[1], parsed[2]);
+		}
+		else if (parsed[0] == "bulletspawn" and parsed.length() > 5)
+		{
+			// A shot was fired: "bulletspawn <px> <py> <dir> <weapon> <flight_ms>". Start its travelling loop from the shooter toward the wall (task 5d).
+			add_client_bullet(string_to_number(parsed[1]), string_to_number(parsed[2]), parsed[3], parsed[4], string_to_number(parsed[5]));
+		}
 		else if (parsed[0] == "walldestroyed" and parsed.length() > 1)
 		{
 			// A wall fell: "walldestroyed <direction>". Death sound + re-tile the breach to a wood platform.
