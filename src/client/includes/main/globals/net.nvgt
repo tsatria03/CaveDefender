@@ -968,7 +968,7 @@ void netloop_impl()
 		{
 			int fx = string_to_number(parsed[2]);
 			int fy = string_to_number(parsed[3]);
-			/* Wood take/place is a cave-interior item sound: play it on objpool, which reverbs by the source side, so
+			/* Wood take/place is a cave-interior item sound: play it on woodpool, which reverbs by the source side, so
 			bot wood (and a defender's placements) echo from inside the cave. Everything else (footsteps, wall bumps) stays on p.
 			PVP routes instead by which SIDE of the wall ring the source sits on, relative to you: a sound from the far
 			side plays on crosspool (muffled through the wall, and reverberant too when the far side is the interior);
@@ -978,8 +978,10 @@ void netloop_impl()
 				if(pvp_crosswall(fx, fy)) crosspool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 				else p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 			}
+			else if(string_contains(parsed[1], "objects/items/ammo/", 1) > -1)
+				ammopool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false); // ammo take/place: the attacker's own resource, clear (listener pool), not cave-muffled
 			else if(string_contains(parsed[1], "objects/items/", 1) > -1)
-				objpool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
+				woodpool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 			else
 				p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 		}
@@ -1010,7 +1012,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "spawnitem" and parsed.length() > 4)
 		{
-			// A ground item appeared: "spawnitem <id> <type> <x> <y>". Plays its drop + loop on objpool.
+			// A ground item appeared: "spawnitem <id> <type> <x> <y>". Plays its drop + loop on its item pool (woodpool or ammopool).
 			add_clientitem(string_to_number(parsed[1]), string_to_number(parsed[3]), string_to_number(parsed[4]), parsed[2]);
 		}
 		else if (parsed[0] == "removeitem" and parsed.length() > 1)

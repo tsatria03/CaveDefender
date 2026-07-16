@@ -128,10 +128,11 @@ snd.set_fx(lp ? cave_lowpass_fx : "$lowpass");
 /* Apply the effect zones each frame.
 - The local player's OWN listening pools follow the LISTENER via the effect zones (spawned only for the inside
   cavern/deck): wet inside, dry on the exterior. No lowpass on your own sounds -- you're right there.
-- The cave-interior SOURCES (bots on botpool; ground wood + wood take/place on objpool) reverb by their own
+- The cave-interior SOURCES (bots on botpool; ground wood + wood take/place on woodpool) reverb by their own
   location (always inside the cave), AND are lowpass-muffled when YOU are outside the wall -- so from the EVP
   exterior you hear the bots and wood echoey AND muffled, while your own sounds stay clear. (This is the same
-  source-side muffle PVP will use across the walls.) */
+  source-side muffle PVP will use across the walls.) AMMO is different: it plays on ammopool with the LISTENER
+  effects (like your own sounds) so it stays clear outside -- it's your resource, gathered with you, not a cave sound. */
 void apply_effect_pools()
 {
 apply_all_effects(me.x, me.y, p, me.z, "p");
@@ -139,9 +140,10 @@ apply_all_effects(me.x, me.y, beaconpool, me.z, "beaconpool");
 apply_all_effects(me.x, me.y, vpool, me.z, "vpool");
 apply_all_effects(me.x, me.y, ambpool, me.z, "ambpool");
 apply_all_effects(me.x, me.y, musicpool, me.z, "musicpool");
+apply_all_effects(me.x, me.y, ammopool, me.z, "ammopool"); // ammo is the attacker's OWN resource, gathered outside -- it follows the listener (dry outside), NOT source-muffled like the cave wood
 bool muffle = in_cavern and listener_outside;
 set_cave_source_fx(botpool, "botpool", in_cavern, muffle);
-set_cave_source_fx(objpool, "objpool", in_cavern, muffle);
+set_cave_source_fx(woodpool, "woodpool", in_cavern, muffle);
 /* PVP cross-wall pool: relayed sounds whose source is on the far side of the ring play here. Lowpass always on
 (through the wall); reverb on only when the far side is the cave interior -- i.e. when the listener is OUTSIDE. */
 if(game_mode == "pvp") set_cave_source_fx(crosspool, "crosspool", !pvp_inside_ring(me.x, me.y), true);

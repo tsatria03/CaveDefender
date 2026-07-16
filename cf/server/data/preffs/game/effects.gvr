@@ -1,0 +1,5 @@
+EVP=cavern:freeverb:1.0:1.0:0.5:0.5:1.0
+EVP=cavern:lowpass:1500:5:0.5
+PVP=cavern:freeverb:1.0:1.0:0.5:0.5:1.0
+PVP=cavern:lowpass:1500:5:0.5
+PVE=cavern:freeverb:1.0:1.0:0.5:0.5:1.0
