@@ -152,14 +152,31 @@ apply_all_effects(me.x, me.y, beaconpool, me.z, "beaconpool");
 apply_all_effects(me.x, me.y, vpool, me.z, "vpool");
 apply_all_effects(me.x, me.y, ambpool, me.z, "ambpool");
 apply_all_effects(me.x, me.y, musicpool, me.z, "musicpool");
-apply_all_effects(me.x, me.y, ammopool, me.z, "ammopool"); // ammo is the attacker's OWN resource, gathered outside -- it follows the listener (dry outside), NOT source-muffled like the cave wood
 apply_all_effects(me.x, me.y, burnpool, me.z, "burnpool"); // firebomb wall fire: follows the listener like the wall-hit sounds -- reverberant to a defender inside the cave, dry to an attacker outside
+if(game_mode == "pvp")
+{
+/* PVP: all ground wood sits on the defenders' interior, so treat the wood pool like the cave itself --
+reverberant, and muffled through the wall whenever YOU are the attacker outside the ring. This is the same
+source-side muffle EVP applies to the cave from the gravel; PVP just couldn't use it before because its arena
+isn't named "cavern" (so in_cavern is false). No bots in PVP, so botpool is idle either way. */
+bool outside_ring = !pvp_inside_ring(me.x, me.y);
+set_cave_source_fx(woodpool, "woodpool", true, outside_ring);
+set_cave_source_fx(botpool, "botpool", true, outside_ring);
+/* Cross-wall pool: relayed sounds whose source is on the far side of the ring play here. Lowpass always on
+(through the wall); reverb on only when the far side is the cave interior -- i.e. when the listener is OUTSIDE. */
+set_cave_source_fx(crosspool, "crosspool", outside_ring, true);
+/* Ammo is the mirror of wood: it drops on the attacker's EXTERIOR band (open air, so no reverb), and should be
+muffled through the wall for the DEFENDER inside, while staying clear for the attacker whose resource it is.
+So lowpass on when you're inside the ring, off when you're the attacker outside. */
+set_cave_source_fx(ammopool, "ammopool", false, !outside_ring);
+}
+else
+{
+apply_all_effects(me.x, me.y, ammopool, me.z, "ammopool"); // EVP/PVE: ammo is the attacker's OWN resource, gathered outside -- follows the listener (dry outside), not source-muffled like the cave wood
 bool muffle = in_cavern and listener_outside;
 set_cave_source_fx(botpool, "botpool", in_cavern, muffle);
 set_cave_source_fx(woodpool, "woodpool", in_cavern, muffle);
-/* PVP cross-wall pool: relayed sounds whose source is on the far side of the ring play here. Lowpass always on
-(through the wall); reverb on only when the far side is the cave interior -- i.e. when the listener is OUTSIDE. */
-if(game_mode == "pvp") set_cave_source_fx(crosspool, "crosspool", !pvp_inside_ring(me.x, me.y), true);
+}
 }
 void spawn_effect_space(double x1, double x2, double y1, double y2, string id, string fx, string ctag, double mnz=0, double mxz=0)
 {
