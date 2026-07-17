@@ -1160,6 +1160,10 @@ void netloop_impl()
 			if(myrank == "player") remove_buffer("staff chats");
 			else ensure_buffer("staff chats");
 		}
+		else if (parsed[0] == "fx" and parsed.length() > 2)
+		{
+			set_cave_fx_presets(parsed[1], parsed[2]); // the host's cave acoustics (effects.gvr): adopt the reverb and muffle presets, validated by their effect-type prefixes
+		}
 		else if (parsed[0] == "rankchange" and parsed.length() > 3)
 		{
 			myrank = parsed[3];

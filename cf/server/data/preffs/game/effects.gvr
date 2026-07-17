@@ -1,5 +1,5 @@
-EVP=cavern:freeverb:1.0:1.0:0.5:0.5:1.0
-EVP=cavern:lowpass:1500:5:0.5
-PVP=cavern:freeverb:1.0:1.0:0.5:0.5:1.0
-PVP=cavern:lowpass:1500:5:0.5
-PVE=cavern:freeverb:1.0:1.0:0.5:0.5:1.0
+# Cave acoustics, applied in every game mode. reverb = what the cave interior sounds like (freeverb: dry, wet, room size, damping, width).
+# muffle = the through-the-wall filter for cave sounds heard from the other side (lowpass: cutoff frequency in hertz, bandwidth, wet/dry mix).
+# The game decides WHEN each applies on its own: reverb inside the cave, muffle when a wall stands between you and the sound. PVE never muffles because a PVE listener is never outside.
+reverb=freeverb:1.0:1.0:0.5:0.5:1.0
+muffle=lowpass:1500:5:0.5
