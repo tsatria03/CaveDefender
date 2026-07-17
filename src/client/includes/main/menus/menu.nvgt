@@ -337,17 +337,19 @@ void loadservermenu()
 	writepreffs();
 	dlgmessage("Server changed to " + servers[idx].sname + ". Press enter to continue.");
 }
-// Remove a saved server preset.
+// Remove a saved server preset. Built-in presets (the Central server) are never listed, so they can't be removed.
 void removeservermenu()
 {
-	if(servers.length()==0)
+	int removable=0;
+	for(uint i=0; i<servers.length(); i++) if(!servers[i].builtin) removable++;
+	if(removable==0)
 	{
 		dlgmessage("There are no saved servers to remove. Press enter to continue.");
 		return;
 	}
 	setupmenu();
 	for(uint i=0; i<servers.length(); i++)
-		m.add_item(server_list_text(i), ""+i);
+		if(!servers[i].builtin) m.add_item(server_list_text(i), ""+i); // skip built-ins: they're editable but not removable
 	m.add_item("back", "back");
 	m.intro_text="Remove a server. Choose the server you want to remove.";
 	int mres=m.run();
@@ -355,6 +357,7 @@ void removeservermenu()
 	if(sel=="back") { speak("canceled"); return; }
 	int idx=string_to_number(sel);
 	if(idx<0 or idx>=int(servers.length())) return;
+	if(servers[idx].builtin) return; // belt and suspenders: a built-in can't be reached from the list above anyway
 	setupmenu();
 	m.add_item("yes");
 	m.add_item("no");

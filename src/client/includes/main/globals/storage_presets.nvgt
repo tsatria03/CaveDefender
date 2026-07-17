@@ -3,8 +3,10 @@ class serverpreset
 	string sname;
 	string sip;
 	int sport;
+	bool builtin = false; // true = a built-in default preset (the Central server): shown after Custom, editable, but never removable
 	serverpreset(){}
 	serverpreset(string n, string i, int p){ sname=n; sip=i; sport=p; }
+	serverpreset(string n, string i, int p, bool b){ sname=n; sip=i; sport=p; builtin=b; }
 }
 serverpreset[] servers;
 
