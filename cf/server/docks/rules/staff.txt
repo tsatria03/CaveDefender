@@ -13,6 +13,8 @@ Use the lightest tool that fits the violation. A quiet notification or message o
 3. Do not abuse your powers.
 Never use a mute, kick, ban, rank change, or one of the account tools, renaming or deleting an account or resetting a password, to win an argument, settle a grudge, or punish someone for disagreeing with you. Those account tools reach a player's very identity and access, so handle them with extra care: never delete or rename an account to get back at its owner, and never reset a password to lock a player out of their own account or to get into it and look around. The same goes for your room and game authority: you can delete any room and stop any game, even ones you don't host, but only to enforce the rules or protect players, never to clear people out, free up a slot, or break up a game you simply want to disrupt. Act on the rules, not on your feelings, and do not hand out ranks you were not asked to give.
 
+The developer tools that reach every player at once, muting or kicking everyone and freezing or unfreezing the whole server, are emergency instruments for things like a raid, a flood of rule breakers, or urgent maintenance at the owner's direction. Never use them for convenience, for dramatic effect, or to end a conversation you are simply tired of, because every innocent player on the server pays for that press too.
+
 4. Stay impartial.
 Treat every player the same, whether or not you know or like them. No favoritism, and no going easy on friends or hard on rivals.
 
