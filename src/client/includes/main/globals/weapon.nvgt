@@ -54,7 +54,7 @@ if(clas=="melee") return "Melee";
 return clas;
 }
 // A weapon's menu label: its name, marked when it's the one you currently hold.
-string weapon_menu_label(string name) { return name + (name==current_weapon ? ". Currently active." : ""); }
+string weapon_menu_label(string name) { return name + (name==current_weapon ? ". Equipped." : ""); }
 // Every weapon alphabetically -- the "All" tab of the weapon menu.
 string[] available_weapons()
 {

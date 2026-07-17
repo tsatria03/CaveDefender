@@ -624,8 +624,9 @@ for(uint i=0; i<langs.length(); i++)
 {
 players[index].menu_targets.insert_last(langs[i]); // raw "English (English)" line, so the choice maps back via language_bare
 int n = players_on_channel(language_bare(langs[i]));
-string label = langs[i] + " " + n + (n==1 ? " player in this channel." : " players in this channel.");
-if(string_to_lower_case(language_bare(langs[i])) == string_to_lower_case(players[index].language)) label += " Currently active."; // mark the channel you're on
+string label = langs[i];
+if(string_to_lower_case(language_bare(langs[i])) == string_to_lower_case(players[index].language)) label += ". Selected."; // mark the channel you're on, before the player count
+label += " " + n + (n==1 ? " player in this channel." : " players in this channel.");
 opts.insert_last(label);
 }
 send_menu(peer, "channel", "Select a language channel to use.", opts);
@@ -744,7 +745,7 @@ for(uint i=0; i<opts.length(); i++)
 {
 players[index].menu_targets.insert_last(opts[i]); // raw line kept so pronoun_bare maps the choice back
 string label = opts[i];
-if(string_to_lower_case(pronoun_bare(opts[i])) == string_to_lower_case(players[index].pronoun)) label += ". Currently active."; // mark the pronoun you use
+if(string_to_lower_case(pronoun_bare(opts[i])) == string_to_lower_case(players[index].pronoun)) label += ". Selected."; // mark the pronoun you use
 display.insert_last(label);
 }
 send_menu(peer, "pronoun", "Select the pronouns used to refer to you in messages.", display);

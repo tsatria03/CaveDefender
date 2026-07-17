@@ -245,10 +245,12 @@ bool newaccountform()
 	}
 	return false;
 }
-// One server preset formatted for a list item, e.g. "Tony's server. IP: localhost. Port: 25562."
-string server_list_text(uint i)
+/* One server preset formatted for a list item, e.g. "Tony's server. IP: localhost. Port: 25562." An optional
+marker (e.g. ". Selected.") is placed right after the NAME, before the address, so the status is heard before the
+details rather than trailing at the very end. */
+string server_list_text(uint i, string marker="")
 {
-	return servers[i].sname + ". IP: " + servers[i].sip + ". Port: " + servers[i].sport;
+	return servers[i].sname + marker + ". IP: " + servers[i].sip + ". Port: " + servers[i].sport;
 }
 /* Index of a saved server at this address (IP + port), or -1 if none. The address is the identity of a server
 (the name is just a label), so two presets pointing at the same IP and port are the same server and can't both
@@ -320,9 +322,9 @@ The default top entry is Custom: it keeps whatever ip/port are set (a manually e
 void loadservermenu()
 {
 	setupmenu(false);
-	m.add_item("Custom" + (server_custom ? ". Currently active." : ""), "custom"); // Custom is active when you're on a manually entered address
+	m.add_item("Custom" + (server_custom ? ". Selected." : ""), "custom"); // Custom is active when you're on a manually entered address
 	for(uint i=0; i<servers.length(); i++)
-		m.add_item(server_list_text(i) + ((!server_custom and servers[i].sip==ip and servers[i].sport==port) ? ". Currently active." : ""), ""+i); // mark the server you're set to
+		m.add_item(server_list_text(i, (!server_custom and servers[i].sip==ip and servers[i].sport==port) ? ". Selected." : ""), ""+i); // mark the server you're set to, right after its name
 	m.add_item("back", "back");
 	m.intro_text="Choose a server to use in the game.";
 	int mres=m.run();
@@ -464,7 +466,7 @@ void loadaccountmenu()
 	if(accounts.length()==0) { dlgmessage("There are no saved accounts to use. Press enter to continue."); return; }
 	setupmenu(false);
 	for(uint i=0; i<accounts.length(); i++)
-		m.add_item(account_list_text(i) + (string_to_lower_case(accounts[i].uname)==string_to_lower_case(name) ? ". Currently active." : ""), ""+i); // mark the account you're set to
+		m.add_item(account_list_text(i) + (string_to_lower_case(accounts[i].uname)==string_to_lower_case(name) ? ". Selected." : ""), ""+i); // mark the account you're set to
 	m.add_item("back", "back");
 	m.intro_text="Choose an account to use in the game.";
 	int mres=m.run();
@@ -755,7 +757,7 @@ void settingsmenu()
 				string[]@ devices = get_sound_output_devices();
 				devices.remove_at(0);
 				setupmenu();
-				for(uint i=0; i<devices.length(); i++) m.add_item(devices[i] + (devices[i] == soundcard ? ". Currently active." : ""), devices[i]); // mark the device you're using
+				for(uint i=0; i<devices.length(); i++) m.add_item(devices[i] + (devices[i] == soundcard ? ". Selected." : ""), devices[i]); // mark the device you're using
 				m.intro_text="Choose a sound device you'd like to use in the game.";
 				int dres=m.run();
 				if(dres>=0 and dres<int(devices.length()))
@@ -770,7 +772,7 @@ void settingsmenu()
 			{
 				string[]@ idevs = get_sound_input_devices(); // already includes a "Default" entry at index 0
 				setupmenu();
-				for(uint i=0; i<idevs.length(); i++) m.add_item(idevs[i] + (idevs[i] == recname ? ". Currently active." : ""), ""+i); // mark the recording device you're using
+				for(uint i=0; i<idevs.length(); i++) m.add_item(idevs[i] + (idevs[i] == recname ? ". Selected." : ""), ""+i); // mark the recording device you're using
 				m.intro_text="Choose a recording device you'd like to use for voice chat.";
 				int rres=m.run();
 				if(rres<0) speak("canceled");
