@@ -13,15 +13,9 @@ string gmt()
 {
 return get_tile_at(me.x,me.y);
 }
-/* A single cavern wall's strength spoken in full (the N/E/S/W keys). A wall at 0 reads as destroyed
-rather than "0 percent strength". */
-string wall_phrase_full(string dir, int pct)
-{
-if(pct<=0) return "the "+dir+" wall has been destroyed.";
-return "the "+dir+" wall has "+pct+" percent strength.";
-}
-/* A single wall's strength in the short form used by the T summary ("north 26 percent", or
-"north destroyed" when it's down). */
+/* A single wall's strength ("north 26 percent", or "north destroyed" when it's down). Used by both the
+T summary and the individual N/E/S/W keys -- the keys used to speak a longer "the north wall has ..."
+phrase, shortened to this form on a player's suggestion so the number arrives sooner. */
 string wall_phrase_short(string dir, int pct)
 {
 if(pct<=0) return dir+" destroyed";
