@@ -31,6 +31,41 @@ sound_pool@ wall_impact_pool()
 if(game_mode == "pvp" and pvp_inside_ring(me.x, me.y)) return @crosspool;
 return @p;
 }
+/* Which pool a wall WOOD-placement sound plays on (a defender reinforcing, or an EVP bot repairing). The wood is
+always placed on the interior, so in PVP the attacker OUTSIDE hears it muffled through the wall (crosspool) while
+the defender inside hears it clear (p) -- the mirror of wall_impact_pool, whose strikes come from the attacker. In
+EVP/PVE it's a cave source on woodpool: reverberant, and muffled from outside exactly as the loose cave wood is. */
+sound_pool@ wall_wood_pool()
+{
+if(game_mode == "pvp") return pvp_inside_ring(me.x, me.y) ? @p : @crosspool;
+return @woodpool;
+}
+/* Play a wall reinforce placement (the "wallplace <dir> <type>" message, from a player or an EVP bot) ACROSS the
+span of the wall it mended, so the placement carries along the whole wall like the hit and fire sounds rather than
+fading toward one spot. Same span geometry as play_wall_hit: border walls (EVP/PVE) at 0/size, the PVP ring inset. */
+void play_wall_wood(string dir, string type)
+{
+double s = cavern_size;
+double wmin = int(s)/4, wmax = s - wmin;
+double minx, maxx, miny, maxy;
+if(game_mode == "pvp")
+{
+if(dir=="west") { minx=wmin; maxx=wmin; miny=wmin; maxy=wmax; }
+else if(dir=="east") { minx=wmax; maxx=wmax; miny=wmin; maxy=wmax; }
+else if(dir=="north") { minx=wmin; maxx=wmax; miny=wmax; maxy=wmax; }
+else if(dir=="south") { minx=wmin; maxx=wmax; miny=wmin; maxy=wmin; }
+else return;
+}
+else if(dir=="west") { minx=0; maxx=0; miny=0; maxy=s; }
+else if(dir=="east") { minx=s; maxx=s; miny=0; maxy=s; }
+else if(dir=="north") { minx=0; maxx=s; miny=s; maxy=s; }
+else if(dir=="south") { minx=0; maxx=s; miny=0; maxy=0; }
+else return;
+sound_pool@ wp = wall_wood_pool();
+int h = wp.play_extended_3d("sounds/equipment/items/wood/"+type+"/place.ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
+wp.update_sound_3d(h, minx, miny, 0);
+wp.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
+}
 /* Play a hit on a wall in real 3D, positioned across that wall's span, with the
 weapon's hit sound AND the wall's own hurt creak. Inside (PVE) both are scaled to the wall's remaining
 strength as a danger cue (a healthy wall's strikes are quiet, a weakening wall's get loud); outside (EVP)

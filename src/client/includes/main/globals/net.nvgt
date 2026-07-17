@@ -1078,6 +1078,11 @@ void netloop_impl()
 			// A wall was struck: "wallhit <direction> <weapon>" -- a bot (PVE) or a player's swing (EVP). Play it in 3D at that wall.
 			play_wall_hit(parsed[1], string_to_number(parsed[2]));
 		}
+		else if (parsed[0] == "wallplace" and parsed.length() > 2)
+		{
+			// A wall was reinforced: "wallplace <direction> <woodtype>" -- a defender's placement or an EVP bot's repair. Play the wood-place sound across that wall's span.
+			play_wall_wood(parsed[1], parsed[2]);
+		}
 		else if (parsed[0] == "wallrico" and parsed.length() > 2)
 		{
 			/* EVP build phase: your swing connected with a wall that can't be hurt yet, so play the weapon's
