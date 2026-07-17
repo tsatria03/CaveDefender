@@ -246,8 +246,8 @@ bool newaccountform()
 	return false;
 }
 /* One server preset formatted for a list item, e.g. "Tony's server. IP: localhost. Port: 25562." An optional
-marker (e.g. ". Selected.") is placed right after the NAME, before the address, so the status is heard before the
-details rather than trailing at the very end. */
+marker (e.g. ". Selected") is placed right after the NAME, before the address, so the status is heard before the
+details rather than trailing at the very end. It should NOT end in a period -- the ". IP:" that follows supplies one. */
 string server_list_text(uint i, string marker="")
 {
 	return servers[i].sname + marker + ". IP: " + servers[i].sip + ". Port: " + servers[i].sport;
@@ -324,7 +324,7 @@ void loadservermenu()
 	setupmenu(false);
 	m.add_item("Custom" + (server_custom ? ". Selected." : ""), "custom"); // Custom is active when you're on a manually entered address
 	for(uint i=0; i<servers.length(); i++)
-		m.add_item(server_list_text(i, (!server_custom and servers[i].sip==ip and servers[i].sport==port) ? ". Selected." : ""), ""+i); // mark the server you're set to, right after its name
+		m.add_item(server_list_text(i, (!server_custom and servers[i].sip==ip and servers[i].sport==port) ? ". Selected" : ""), ""+i); // mark the server you're set to, right after its name (no trailing period: the ". IP:" that follows supplies it)
 	m.add_item("back", "back");
 	m.intro_text="Choose a server to use in the game.";
 	int mres=m.run();
