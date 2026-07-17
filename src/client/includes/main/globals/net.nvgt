@@ -1129,7 +1129,7 @@ void netloop_impl()
 			phase for the next (tougher) round follows right after. */
 			int n = string_to_number(parsed[1]);
 			p.play_stationary("sounds/ui/misc/roundcleared.ogg", false); // add this cue; missing = silent until then
-			add_buffer_item("alerts", "Round " + n + " cleared! The bots rebuild, tougher.");
+			add_buffer_item("alerts", "Round " + n + " cleared! The bots are rebuilding.");
 		}
 		else if (parsed[0] == "evpover" and parsed.length() > 1)
 		{
