@@ -9,7 +9,7 @@ int spamtime=3000; // the sliding window in MILLISECONDS, from conf.svr's spamti
 int spamdir=600; // the auto-mute duration in SECONDS applied to the global channel when the guard trips, from conf.svr's spamdir=. 0 = an indefinite mute (mirrors the mute system's own 0 = indefinite).
 string motd = "Welcome to the server!";
 timer svruptimer;
-int peak_players=0;   // all-time peak of concurrent live players ever seen on this server; loaded from/saved to data/preffs/peak.svr (survives restarts)
+int peak_players=0;   // all-time peak of concurrent live players ever seen on this server; loaded from/saved to data/preffs/main/peak.svr (survives restarts)
 string peak_when="";  // the formatted local date/time that peak was reached (e.g. "12/22/2022 at 5:45 PM"); blank until the first peak is recorded
 file f;
 instance servstence("cavedefender_server"); // single-instance guard; own app id so it won't clash with the client's on one machine.
