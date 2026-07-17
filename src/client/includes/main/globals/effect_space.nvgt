@@ -59,9 +59,11 @@ pool_fx_signatures.set(poolkey, sig);
 for (uint t = 0; t < tags.length(); t++) pool.mixer.set_fx(desired[t]);
 }
 
-/* Cave-interior reverb preset (freeverb: dry, wet, room size, damping, width). Tuned by ear for an enclosed
-stone cavern; adjust these to taste. Applied to the cavern/inside-deck interior in every game mode. */
-const string cave_reverb_fx = "$reverb:freeverb:1.0:1.0:0.5:0.5:1.0";
+/* Cave-interior reverb preset (freeverb: dry, wet, room size, damping, width). The default is tuned by ear
+for an enclosed stone cavern; the server may replace it at login from its effects.gvr (the fx wire message,
+see set_cave_fx_presets), so a host tunes the acoustics without a client rebuild. Applied to the
+cavern/inside-deck interior in every game mode. */
+string cave_reverb_fx = "$reverb:freeverb:1.0:1.0:0.5:0.5:1.0";
 /* Register a reverb zone over a rectangular interior (the cave floor or the inside watcher deck). Cleared on
 the next map draw via destroy_all_effect_spaces(). */
 void spawn_cave_reverb(double minx, double maxx, double miny, double maxy)
@@ -75,8 +77,18 @@ Set by draw_map. */
 bool in_cavern = false;      // in a cavern arena or watcher deck (set by draw_map): the cave SOURCES carry reverb.
 bool listener_outside = false; // the local player is on the exterior (EVP gravel arena, or the outdoor deck): the cave sources are ALSO lowpass-muffled, as if heard through the wall.
 /* Lowpass "through stone" muffle for cave sounds heard from outside the wall (frequency cutoff / bandwidth /
-quality). Tune the cutoff (first number) by ear -- lower = more muffled. First brought in for EVP; PVP reuses it. */
-const string cave_lowpass_fx = "$lowpass:lowpass:1500:5:0.5";
+quality). Lower cutoff (first number) = more muffled. First brought in for EVP; PVP reuses it. Like the reverb
+above, the server may replace it at login from effects.gvr. */
+string cave_lowpass_fx = "$lowpass:lowpass:1500:5:0.5";
+/* Adopt the server's acoustics presets (the fx wire message, sent once right after login): bare effect strings
+without the slot tag ("freeverb:..." / "lowpass:..."). Each is validated by its effect-type prefix so a
+malformed or missing value keeps the built-in default; every consumer (zones, pools, voice, burn) picks the
+new strings up automatically since they all reference these two variables. */
+void set_cave_fx_presets(string reverb, string muffle)
+{
+if(string_left(reverb, 9) == "freeverb:") cave_reverb_fx = "$reverb:" + reverb;
+if(string_left(muffle, 8) == "lowpass:") cave_lowpass_fx = "$lowpass:" + muffle;
+}
 /* Set the cave effects on a cave-SOURCE pool (bots, ground wood), guarded on the combined state so we only touch
 the mixer on a change. reverb_on = the source sits inside the cave; lowpass_on = the listener is on the OTHER
 side of the wall (outside), so the source is muffled. The mixer runs both named slots ($reverb, $lowpass) at once. */

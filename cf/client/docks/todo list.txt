@@ -7,29 +7,59 @@
 ##These are the things that are already finished from earlier versions of the game.
 
 **Finished. Bring back weapon choosing with the number row.
+**Finished. Let server hosts tune the cave's reverb and through-the-wall muffle from a server data file.
+**Finished. Let server hosts tune how often items drop, how many may lie on the ground, and the walls' base strength from a server data file.
 **Finished. Add full-auto weapons that keep firing while you hold the space bar.
+**Finished. Play a spent shell casing at the wall when a pistol or machine gun bullet lands.
 **Finished. Add some more items and weapons to the EVP and PVP game modes.
+**Finished. Fix a wall fire's sound carrying on through a rest period when it wasn't damaging the wall.
+**Finished. Make the firebomb set a wall on fire that keeps burning it while the attackers can attack.
 **Finished. Add ranged weapons that fire traveling bullets at the walls, with an ammo and reload system.
+**Finished. Make melee weapons swing once per press of the space bar instead of repeating while held.
+**Finished. Give the Big map its own wood supply level, between the medium and largest maps.
+**Finished. Replace the three wood sizes with four tree kinds that each reinforce a wall by a different amount.
 **Finished. Move the weapon and item values into data files the server reads instead of hardcoding them.
 **Finished. Replace the number row weapon keys with a menu for choosing your weapon.
 **Finished. Let control J in the lobby rejoin the last public room you chose this session, and control shift J the last private room with its password prefilled.
+**Finished. Add a monitor that brings the server right back up whenever it stops or restarts.
+**Finished. Mark your current choice with Currently active in every menu that picks a setting.
+**Finished. Add control A and control H hotkeys that jump straight to an Actions menu panel.
+**Finished. Make enter in the lobby or a room open an Actions menu with account and location panels.
+**Finished. Let Alt plus P open your preferences from inside the game without disconnecting.
+**Finished. Add a preferences setting to stop menus reading their keyboard shortcuts.
+**Finished. Make every menu item with a keyboard shortcut name it after the item.
+**Finished. Add control key shortcuts for the round menu's actions in a game.
+**Finished. Add control key shortcuts for the room menu's actions while in a room.
+**Finished. Add lobby keys to create or join a room straight from the keyboard, with shift for the private versions.
+**Finished. Add a shift B buffer menu gathering everything you can do with a buffer into one list.
+**Finished. Let a single buffer message open in a read-only box to read with the arrow keys.
+**Finished. Prefill the password box when staff join their own private room.
+**Finished. Stop players from sending a private message to themselves.
 **Finished. Auto-mute a non-staff player in global chat when they send too many messages too fast, with the trip rate and mute length set by the host in the server config.
 **Finished. Let the host pick a wall reinforce limit of 200, 400, or 800 percent or no limit when starting a PVE or PVP game, and in PVE choose whether enemy bots pile onto the remaining walls when one falls.
 **Finished. Add a developer /bansall command that lists every banned account on the server, read-only, with each ban's length and reason.
 **Finished. Add developer /muteall and /unmuteall commands that mute and unmute everyone except developers in a channel, timed or indefinite.
 **Finished. Add a developer /kickall command that disconnects everyone except developers at once, with an optional reason shown to each kicked player.
 **Finished. Add developer /gamestop and /gamestart commands that freeze the whole server, pausing every game and locking all players out of moving and chatting until a developer lifts it.
+**Finished. Limit restarting or shutting down the server to developers instead of administrators.
 **Finished. Let staff add an optional reason when kicking a player with /kick, shown to the kicked player and noted to other staff.
+**Finished. Check typed reasons for screen reader crash strings before other players see them.
 **Finished. Remove the staff ability to put another player AFK, and let anyone add an optional reason to their own AFK.
 **Finished. Let players send a private message to someone offline with /pm, delivered with a sound the next time that player signs in.
 **Finished. Add a /report command so any player can report someone to the staff, with a staff /reports viewer that logs every report.
 **Finished. Split the ban command into permanent and timed versions so a reason can be added cleanly, giving /ban and /tempban.
 **Finished. Let the chat keys and buffer navigation keys work while a game is paused, keeping every other key disabled.
+**Finished. Let the /restart countdown be any length of at least one second.
+**Finished. Tell you the most players ever connected at once, and when, on F4 with the uptime.
 **Finished. Remove a destroyed wall's bots instead of piling them onto the remaining walls, so the last standing wall isn't swarmed by every bot from the fallen ones.
 **Finished. Add a Big, 75 by 75 map size to the start-game size menu in every mode.
 **Finished. Remove the limit on how far a wall can be reinforced, so players can over-build a buffer of any size.
 **Finished. Play the voice chat start and stop tones in 3D from a player's position for everyone nearby, wrapping the live stream or a recorded message's playback instead of only playing locally.
 **Finished. Make a player's email private on the information card, shown only to staff instead of everyone.
+**Finished. Add a voice chat mode setting to stream your voice live or send it as a recorded message.
+**Finished. Make voice chat carry the game's audio effects in every mode, not just player versus player.
+**Finished. Make the version-mismatch message say which side is behind, the game or the server.
+**Finished. Add a ruleswitch server option so the rules agreement can only be disabled on purpose.
 **Finished. Show a player's PVP win-loss record, PVE and EVP best rounds, and warning count on the information card for everyone.
 **Finished. Add staff /bans and /mutes commands that look up a player's ban and mute status the same way /warnings shows warnings.
 **Finished. Stop writing blank account files at signup, creating the room, mute, and ban files only when they are first needed.

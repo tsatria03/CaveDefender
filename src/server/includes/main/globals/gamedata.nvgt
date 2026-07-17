@@ -254,6 +254,26 @@ int[] r = parse_range(val);
 if(r[0] > 0 and r[1] >= r[0]) { t.spawn_lo = r[0]; t.spawn_hi = r[1]; }
 }
 }
+/* --- Cave acoustics (data/preffs/game/effects.gvr, task #17) ---
+Two global effect presets, host-tunable: reverb = what the cave interior sounds like, muffle = the
+through-the-wall filter. Pushed to each client once at spawn ("fx <reverb> <muffle>"); the client's own
+routing decides WHEN each applies (reverb inside the cave, muffle across a wall), so these only re-flavor
+the sound. Each value must carry its effect-type prefix and, since it rides a space-delimited wire message,
+may not contain spaces -- anything else keeps the default (the client's old hardcoded values). */
+string effect_reverb_preset = "freeverb:1.0:1.0:0.5:0.5:1.0";
+string effect_muffle_preset = "lowpass:1500:5:0.5";
+void load_game_effects()
+{
+effect_reverb_preset = "freeverb:1.0:1.0:0.5:0.5:1.0";
+effect_muffle_preset = "lowpass:1500:5:0.5";
+string[] keys, vals;
+if(!read_kv("data/preffs/game/effects.gvr", keys, vals)) return;
+string rv = kv_get(keys, vals, "reverb", "");
+string mf = kv_get(keys, vals, "muffle", "");
+if(string_left(rv, 9) == "freeverb:" and string_contains(rv, " ", 1) < 0) effect_reverb_preset = rv;
+if(string_left(mf, 8) == "lowpass:" and string_contains(mf, " ", 1) < 0) effect_muffle_preset = mf;
+}
+
 /* Load data/preffs/game/conf.gvr into the tunings. Called once at boot alongside load_game_data. Two passes
 so line order in the file never matters: the item* defaults land in every category first, then the
 per-category wood*/ammo* overrides go on top of them. */
