@@ -4,3 +4,4 @@ fire mode=0
 swing speed=300
 spam time=200
 range=5
+status=burn:2000:500:1,3

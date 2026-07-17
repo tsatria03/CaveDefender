@@ -38,7 +38,7 @@ string pending_bonus_size=""; // the single random wood species (oak/maple/birch
 bool playagain_answered=false; // during a game's "over" phase: has this member answered the play-again prompt yet?
 string pending_results="";     // the exact roundover/evpover results message for this member during the "over" phase, re-sent on a reconnect-restore so a player who dropped during the results screen still gets the play-again prompt (and doesn't block the reset). Only read while phase=="over" and unanswered.
 string weapon="";              // the weapon this attacker (EVP / PVP attack) currently has drawn (any of the 8), mirrored from the client's setweapon notices, so a reconnect restores it instead of defaulting to the axe.
-string[] granted_ammo_types;   // which ammo types this player has already received their starter ammo for THIS round (Option A: granted on first ranged equip of a type); reset at build-phase start so each round re-grants.
+string[] granted_ammo_types;   // which ammo types this player has already received their starter ammo for THIS GAME (Option A: granted on first ranged equip of a type); reset when a fresh game's first build phase starts -- a cleared EVP round keeps ammo, so no mid-game re-grant.
 string[] granted_mags;         // which WEAPONS have had their magazine filled free this round (each ranged weapon's own mag starts full on its first draw); reset with the ammo each round.
 bool flagged=false; // staff-attention flag: when true this staff member's rank shows to regular players; default off (incognito). Loaded from flag.usr at spawn.
 bool agreed=false; // has this player agreed to the server rules at the current rulesver (rules.usr)? Loaded at spawn; gates the lobby menu and invites until true.

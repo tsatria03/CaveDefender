@@ -842,7 +842,7 @@ void send_ammo_count(int pindex)
 {
 send(players[pindex].peer_id, "ammo "+players[pindex].inv.count("arrow")+" "+players[pindex].inv.count("gas")+" "+players[pindex].inv.count("grenade")+" "+players[pindex].inv.count("powder")+" "+players[pindex].inv.count("normal"), 0, true);
 }
-// Zero a player's ammo reserve and its granted-this-round tracking (called at build-phase start so each round starts fresh), then sync the client.
+// Zero a player's ammo reserve, magazines, and the granted-starter tracking (called when a fresh GAME starts -- a cleared EVP round keeps ammo), then sync the client.
 void reset_player_ammo(int pindex)
 {
 players[pindex].granted_ammo_types.resize(0);
@@ -1458,6 +1458,7 @@ lower_wall_floor(wi, dmg * evp_permanent_fraction);
 broadcast_wall_strength(games[gi].id);
 send_to_game(games[gi].id, "wallhit "+dir+" "+wid); // EVP plays it at constant volume
 if(walls[wi].health <= 0) on_wall_destroyed(games[gi].id, gi, dir);
+else { weapon_data@ wd = get_weapon_data(parsed[1]); if(wd !is null and wd.has_status and wd.status_type == "burn") ignite_wall(gi, dir, wd); } // a flaming melee weapon (axe/hammer) sets the surviving wall alight on a damaging swing, mirroring the firebomb bullet
 }
 else
 {
