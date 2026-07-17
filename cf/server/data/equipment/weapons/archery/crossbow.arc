@@ -1,4 +1,4 @@
-damage=5,12
+damage=5,10
 melee=false
 fire mode=0
 spam time=500

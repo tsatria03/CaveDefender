@@ -1383,28 +1383,12 @@ if(games[gi].reinforce_cap > 0) repair_wall(wi, gain, true, games[gi].reinforce_
 else repair_wall(wi, gain, false); // "No limit" was chosen: uncapped, as before
 if(games[gi].mode=="pvp") players[index].pvp_wood_placed++; // tally this defender's placements for the results screen
 send_wood_count(index);
-/* Play the placement in 3D AT THE WALL being reinforced -- the placer's spot projected onto that border --
-so everyone, the placer included, hears which wall and side the wood went to. Reuses the footstep relay. */
-int placex = players[index].x, placey = players[index].y;
-if(games[gi].mode=="pvp") // project just INSIDE the inset ring (one tile past the wall), not onto it
-{
-/* One tile inside the wall, not on the ring boundary itself: the placer is a defender (interior), so the sound
-must read as an interior-side source. A point exactly on the ring counts as OUTSIDE the interior (pvp_inside_ring
-uses strict bounds), which would wrongly muffle the placement for the defender and leave it clear for the
-attacker across the wall. Nudging one tile in puts it on the defender's side so the cross-wall muffle is right. */
-int wm = games[gi].size/4;
-if(dir=="west") placex = wm + 1;
-else if(dir=="east") placex = games[gi].size - wm - 1;
-else if(dir=="south") placey = wm + 1;
-else if(dir=="north") placey = games[gi].size - wm - 1;
-}
-else if(dir=="west") placex = 0;
-else if(dir=="east") placex = games[gi].size;
-else if(dir=="south") placey = 0;
-else if(dir=="north") placey = games[gi].size;
+/* Play the placement across the WALL being reinforced, so everyone (the placer included) hears which wall the
+wood went to, spanning its full length. The client's wallplace handler ranges it across the wall and routes the
+cross-wall muffle by the listener's side, so no source position is needed here. */
 for(uint pm=0; pm<players.length(); pm++)
 if(players[pm].room_id == players[index].room_id)
-send(players[pm].peer_id, "footstep equipment/items/wood/"+place_type+"/place "+placex+" "+placey, 0, true);
+send(players[pm].peer_id, "wallplace "+dir+" "+place_type, 0, true);
 send(event.peer_id, "reinforced "+dir+" "+gain, 0,true);
 broadcast_wall_strength(games[gi].id);
 }
