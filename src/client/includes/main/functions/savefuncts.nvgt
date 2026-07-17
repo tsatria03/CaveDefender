@@ -128,15 +128,17 @@ if(st.d.exists("server_custom"))
 {
 server_custom=st.read_bool("server_custom");
 }
+ensure_central_server(); // guarantee the built-in Central server preset is present (seeds it on a fresh install or an older save that predates it)
 }
-// Server presets are stored as one string: each entry is name, ip, port joined by tabs, entries by newlines.
+/* Server presets are stored as one string: each entry is name, ip, port, and a builtin flag (1/0) joined by tabs,
+entries by newlines. Older saves have only the first three fields; those parse as non-builtin (the flag defaults off). */
 string serialize_servers()
 {
 string serialized="";
 for(uint i=0; i<servers.length(); i++)
 {
 if(i>0) serialized+="\n";
-serialized += servers[i].sname + "\t" + servers[i].sip + "\t" + servers[i].sport;
+serialized += servers[i].sname + "\t" + servers[i].sip + "\t" + servers[i].sport + "\t" + (servers[i].builtin ? "1" : "0");
 }
 return serialized;
 }
@@ -149,8 +151,18 @@ for(uint i=0; i<lines.length(); i++)
 {
 string[] f=string_split(lines[i], "\t", true);
 if(f.length()<3) continue;
-servers.insert_last(serverpreset(f[0], f[1], string_to_number(f[2])));
+bool b = (f.length()>3 and f[3]=="1"); // 4th field, when present, is the builtin flag; absent on older saves
+servers.insert_last(serverpreset(f[0], f[1], string_to_number(f[2]), b));
 }
+}
+/* The built-in Central server preset (the project's official VPS): always present in the list, shown right after
+Custom, editable but never removable. Seeded at the front here if no builtin preset is found, so it appears on a
+fresh install and is added for players whose older saves predate it. If you've EDITED it, that copy is saved with
+its builtin flag set and kept as-is on the next load rather than reset to the default. */
+void ensure_central_server()
+{
+for(uint i=0; i<servers.length(); i++) if(servers[i].builtin) return; // already present (default or edited) -- leave it
+servers.insert_at(0, serverpreset("Central server", "reality-breaker-studios.net", 25562, true));
 }
 /* Account presets are stored as one string: each entry is username, password joined by a tab, entries by newlines.
 (Usernames/passwords can't contain spaces, and a typed password won't contain a tab/newline, so those are safe delimiters.) */
