@@ -8,7 +8,8 @@ So the whoosh reports every hit while the single sustained loop tells you the wa
 
 Everything rides its OWN pool, burnpool (listener-following, like the wall-hit sounds): a defender inside the cave
 hears the fire reverberant, an attacker outside hears it dry. The clips live beside the other wall sounds under
-objects/walls/wallwood/ (burnstart / burning / burnstop). Positioned at the burning wall's midpoint. */
+objects/walls/wallwood/ (burnstart / burning / burnstop). Positioned ACROSS the burning wall's full span (a line
+source, like the wall-hit sounds), so the fire stays at a constant distance as you move along the wall. */
 
 class client_burn
 {
@@ -22,28 +23,32 @@ int find_client_burn(string dir)
 for(uint i=0; i<client_burns.length(); i++) if(client_burns[i].dir == dir) return int(i);
 return -1;
 }
-/* Play a wall-fire clip at the midpoint of the wall in `dir`, returning its handle (looping loops for the
-sustained burn). The midpoint follows the same geometry the wall-hit sounds use: border walls (EVP/PVE) at
-0/size, the PVP ring inset at wmin/wmax. */
+/* Play a wall-fire clip ACROSS the span of the wall in `dir`, returning its handle (looping loops for the
+sustained burn). Positioned at the wall's corner with a range covering its full length, exactly like the wall-hit
+sounds, so the fire holds a constant distance as you move along the wall and only fades as you move away from it.
+The span follows draw_map: border walls (EVP/PVE) at 0/size, the PVP ring inset at wmin/wmax. */
 int play_wall_fire(string dir, string file, bool looping)
 {
 double s = cavern_size;
 double wmin = int(s)/4, wmax = s - wmin;
-double mx, my;
+double minx, maxx, miny, maxy;
 if(game_mode == "pvp")
 {
-if(dir=="west") { mx=wmin; my=s/2; }
-else if(dir=="east") { mx=wmax; my=s/2; }
-else if(dir=="north") { mx=s/2; my=wmax; }
-else if(dir=="south") { mx=s/2; my=wmin; }
+if(dir=="west") { minx=wmin; maxx=wmin; miny=wmin; maxy=wmax; }
+else if(dir=="east") { minx=wmax; maxx=wmax; miny=wmin; maxy=wmax; }
+else if(dir=="north") { minx=wmin; maxx=wmax; miny=wmax; maxy=wmax; }
+else if(dir=="south") { minx=wmin; maxx=wmax; miny=wmin; maxy=wmin; }
 else return -1;
 }
-else if(dir=="west") { mx=0; my=s/2; }
-else if(dir=="east") { mx=s; my=s/2; }
-else if(dir=="north") { mx=s/2; my=s; }
-else if(dir=="south") { mx=s/2; my=0; }
+else if(dir=="west") { minx=0; maxx=0; miny=0; maxy=s; }
+else if(dir=="east") { minx=s; maxx=s; miny=0; maxy=s; }
+else if(dir=="north") { minx=0; maxx=s; miny=s; maxy=s; }
+else if(dir=="south") { minx=0; maxx=s; miny=0; maxy=0; }
 else return -1;
-return burnpool.play_3d("sounds/objects/walls/wallwood/"+file, me.x, me.y, me.z, mx, my, 0, calculate_theta(me_rotation), looping);
+int h = burnpool.play_extended_3d("sounds/objects/walls/wallwood/"+file, me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, looping, 0, 0, 0, 100, false);
+burnpool.update_sound_3d(h, minx, miny, 0);
+burnpool.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
+return h;
 }
 /* "burnstart <dir>": every firebomb hit. Play the ignite/intensify whoosh, and start the burning loop only if this
 wall isn't already alight (a re-hit keeps the one loop -- the whoosh is the "hotter" feedback). */
