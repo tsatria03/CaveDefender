@@ -1,7 +1,7 @@
 port=25562
 userlimit=200
 owners=DevilGuardian,tsatria03,tony
-rulesver=3
+rulesver=4
 ruleswitch=1
 spamguard=1
 spamcount=5

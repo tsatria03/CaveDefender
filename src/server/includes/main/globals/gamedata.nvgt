@@ -185,7 +185,7 @@ setup_server. The roster is the known set of files; a dev tuning values edits th
 on the next start. Missing files are skipped silently, leaving get_*_data to return null for them. */
 /* --- Game tuning (data/preffs/game/conf.gvr, task #16) ---
 The item economy and wall strength, host-tunable. item* lines are the DEFAULTS for every item category
-(wood, ammo, and anything added later); a wood*/ammo* line overrides just that category. count and cap
+(wood, ammo, and anything added later); a wood-or-ammo-prefixed line overrides just that category. count and cap
 values are "size:value" pairs matched by the map-size NUMBER -- the small/medium/big/large words in the
 keys are labels for readability only, never parsed. spawn is a min,max ms range re-rolled each tick.
 wallbase is the walls' full (max) health; the 50-100% starting roll, the reinforce chooser's 200/400/800%
@@ -276,7 +276,7 @@ if(string_left(mf, 8) == "lowpass:" and string_contains(mf, " ", 1) < 0) effect_
 
 /* Load data/preffs/game/conf.gvr into the tunings. Called once at boot alongside load_game_data. Two passes
 so line order in the file never matters: the item* defaults land in every category first, then the
-per-category wood*/ammo* overrides go on top of them. */
+per-category wood- and ammo-prefixed overrides go on top of them. */
 void load_game_conf()
 {
 seed_tuning(wood_tuning);
