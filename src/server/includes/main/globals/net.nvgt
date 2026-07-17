@@ -852,6 +852,16 @@ string[] a = ammo_types();
 for(uint i=0; i<a.length(); i++) players[pindex].inv.take(a[i], players[pindex].inv.count(a[i])); // drop each ammo type to 0 without touching wood
 send_ammo_count(pindex);
 }
+/* The EVP milestone reward (the attackers' mirror of PVE's bonus wood): grant a bonus of EVERY ammo type,
+each its own data-driven .amt bonus amount, into the reserve, then clear the pending flag and sync the client.
+Called at the next EVP game's build phase, after reset_player_ammo has zeroed the reserve. */
+void grant_ammo_bonus(int pindex)
+{
+string[] a = ammo_types();
+for(uint i=0; i<a.length(); i++) players[pindex].inv.give(a[i], ammo_bonus_amount(a[i]));
+players[pindex].pending_bonus_ammo = false;
+send_ammo_count(pindex);
+}
 // The four cavern wall strengths (as percents) for a game, for the client's N/E/S/W/D keys.
 string wall_strength_msg(int gameid)
 {
