@@ -6,3 +6,4 @@ range=10
 bullet speed=30
 ammo type=powder
 max ammo=1
+status=burn:4000:500:3,7

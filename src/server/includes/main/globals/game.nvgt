@@ -527,7 +527,10 @@ if(games[gindex].mode=="evp")
 /* EVP: the bots defend. Spawn the wall-builders now (more each round cleared -- the escalation) -- they
 reinforce through the build phase and keep repairing through the wave. Players carry no wood in EVP. */
 spawn_builders(games[gindex].id, evp_builders_for_round(games[gindex].evp_rounds_cleared));
-// Fresh round for the attackers: reset each player's ammo (reserve + granted-types), re-grantable on the first ranged draw.
+/* Reset the attackers' ammo (reserve, magazines, and the granted-starter tracking) only when a fresh GAME
+begins (no rounds cleared yet). Clearing a round keeps everything -- loaded rounds, reserve, and the
+already-granted flags -- so ammo carries across rounds the way the drawn weapon already does. */
+if(games[gindex].evp_rounds_cleared == 0)
 for(uint m=0; m<games[gindex].members.length(); m++) { int pi=get_player_index(games[gindex].members[m]); if(pi>=0) reset_player_ammo(pi); }
 }
 else if(games[gindex].mode=="pvp")
