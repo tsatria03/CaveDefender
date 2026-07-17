@@ -51,24 +51,29 @@ return -1;
 }
 /* How much wood may sit on a cavern's floor at once (scales with map size). Bigger maps get a much
 higher ceiling so the extra drops aren't suppressed, but it's kept modest (never a flood) since at
-most four players defend any map. Tiered by the four map sizes (25 / 50 / 75 / 100). */
+most four players defend any map. Tiered by map size from conf.gvr's cap lines (defaults: 6/18/28/40
+at 25/50/75/100 -- see wood_tuning in gamedata.nvgt). */
 int wood_cap(int size)
 {
-if(size<=25) return 6;
-if(size<=50) return 18;
-if(size<=75) return 28;
-return 40;
+return tier_value(wood_tuning.sizes_cap, wood_tuning.vals_cap, size);
 }
 /* How many wood pieces drop per spawn tick. The drop cadence is flat across map sizes, so on a big map
 one piece per tick is the same trickle spread over far more ground -- this is what actually starves
 larger maps. Dropping more per tick raises the supply RATE with size (the real fix), kept measured so
-big maps are richer but never awash. Tiered by the four map sizes (25 / 50 / 75 / 100). */
+big maps are richer but never awash. Tiered by map size from conf.gvr's count lines (defaults: 1/2/3/4). */
 int wood_drops_per_tick(int size)
 {
-if(size<=25) return 1;
-if(size<=50) return 2;
-if(size<=75) return 3;
-return 4;
+return tier_value(wood_tuning.sizes_count, wood_tuning.vals_count, size);
+}
+/* The ammo-side twins: same tiers, but from ammo_tuning, so a host can pace or cap ammo separately from
+wood (identical until a conf.gvr ammo* line overrides the shared item* defaults). */
+int ammo_cap(int size)
+{
+return tier_value(ammo_tuning.sizes_cap, ammo_tuning.vals_cap, size);
+}
+int ammo_drops_per_tick(int size)
+{
+return tier_value(ammo_tuning.sizes_count, ammo_tuning.vals_count, size);
 }
 /* Ground wood comes in four SPECIES (oak, maple, birch, pine), each with its own sounds. To the economy they're
 all just "wood" (any type counts toward the cap and gathers into a wall the same); the type varies the sound the

@@ -183,6 +183,103 @@ ammo_db.insert_last(d);
 /* Load every weapon and item data file into the lookup tables. Called once at server boot (cfs.nvgt), before
 setup_server. The roster is the known set of files; a dev tuning values edits the files, and this reloads them
 on the next start. Missing files are skipped silently, leaving get_*_data to return null for them. */
+/* --- Game tuning (data/preffs/game/conf.gvr, task #16) ---
+The item economy and wall strength, host-tunable. item* lines are the DEFAULTS for every item category
+(wood, ammo, and anything added later); a wood*/ammo* line overrides just that category. count and cap
+values are "size:value" pairs matched by the map-size NUMBER -- the small/medium/big/large words in the
+keys are labels for readability only, never parsed. spawn is a min,max ms range re-rolled each tick.
+wallbase is the walls' full (max) health; the 50-100% starting roll, the reinforce chooser's 200/400/800%
+caps, and the EVP builder cap are all multiples of it, so they scale with it automatically. Everything is
+seeded with the old hardcoded values first, so a missing file or line changes nothing. */
+class item_tuning
+{
+int[] sizes_count; int[] vals_count; // drops per spawn tick, by map size (kept sorted ascending)
+int[] sizes_cap; int[] vals_cap;     // how many may lie on the ground at once, by map size
+int spawn_lo = 500; int spawn_hi = 2000; // ms between spawn ticks (re-rolled after each one)
+}
+item_tuning wood_tuning;
+item_tuning ammo_tuning;
+double wall_base_health = 400; // wallbase= -- the four destroyable walls' full (max) health
+
+// Set one size tier in a parallel sizes/vals pair: replace the matching size, or insert keeping sizes sorted.
+void set_tier(int[]@ sizes, int[]@ vals, int size, int val)
+{
+for(uint i=0; i<sizes.length(); i++)
+{
+if(sizes[i] == size) { vals[i] = val; return; }
+if(sizes[i] > size) { sizes.insert_at(i, size); vals.insert_at(i, val); return; }
+}
+sizes.insert_last(size); vals.insert_last(val);
+}
+// The value for a map size: the first tier at or above it (mirroring the old size<=25/50/75 ladders), or the top tier for anything bigger.
+int tier_value(int[]@ sizes, int[]@ vals, int size)
+{
+for(uint i=0; i<sizes.length(); i++) if(size <= sizes[i]) return vals[i];
+return vals[vals.length()-1];
+}
+// Seed a tuning with the old hardcoded economy: counts 1/2/3/4 and caps 6/18/28/40 at sizes 25/50/75/100, 500-2000ms cadence.
+void seed_tuning(item_tuning@ t)
+{
+t.sizes_count.resize(0); t.vals_count.resize(0);
+t.sizes_cap.resize(0); t.vals_cap.resize(0);
+int[] sizes = {25, 50, 75, 100};
+int[] counts = {1, 2, 3, 4};
+int[] caps = {6, 18, 28, 40};
+for(uint i=0; i<sizes.length(); i++)
+{
+set_tier(t.sizes_count, t.vals_count, sizes[i], counts[i]);
+set_tier(t.sizes_cap, t.vals_cap, sizes[i], caps[i]);
+}
+t.spawn_lo = 500; t.spawn_hi = 2000;
+}
+/* Apply one conf.gvr line to a tuning. field is the key with its category prefix already stripped
+("count_small", "cap_big", "spawn"); the label after the '_' is ignored. count/cap values are "size:value";
+spawn is "min,max". Malformed or nonsense values are skipped, leaving the seeded default in place. */
+void apply_tuning_line(item_tuning@ t, string field, string val)
+{
+bool is_count = string_left(field, 5) == "count";
+if(is_count or string_left(field, 3) == "cap")
+{
+int c = string_contains(val, ":", 1);
+if(c < 1) return; // needs size:value
+int size = string_to_number(string_left(val, c));
+int v = string_to_number(val.substr(c+1));
+if(size <= 0 or v < 0) return;
+if(is_count) set_tier(t.sizes_count, t.vals_count, size, v);
+else set_tier(t.sizes_cap, t.vals_cap, size, v);
+}
+else if(field == "spawn")
+{
+int[] r = parse_range(val);
+if(r[0] > 0 and r[1] >= r[0]) { t.spawn_lo = r[0]; t.spawn_hi = r[1]; }
+}
+}
+/* Load data/preffs/game/conf.gvr into the tunings. Called once at boot alongside load_game_data. Two passes
+so line order in the file never matters: the item* defaults land in every category first, then the
+per-category wood*/ammo* overrides go on top of them. */
+void load_game_conf()
+{
+seed_tuning(wood_tuning);
+seed_tuning(ammo_tuning);
+wall_base_health = 400;
+string[] keys, vals;
+if(!read_kv("data/preffs/game/conf.gvr", keys, vals)) return;
+for(uint i=0; i<keys.length(); i++) // pass 1: wallbase + the item* defaults (applied to every category)
+{
+if(keys[i] == "wallbase") { double wb = string_to_number(vals[i]); if(wb > 0) wall_base_health = wb; }
+else if(string_left(keys[i], 4) == "item")
+{
+apply_tuning_line(wood_tuning, keys[i].substr(4), vals[i]);
+apply_tuning_line(ammo_tuning, keys[i].substr(4), vals[i]);
+}
+}
+for(uint i=0; i<keys.length(); i++) // pass 2: per-category overrides
+{
+if(string_left(keys[i], 4) == "wood") apply_tuning_line(wood_tuning, keys[i].substr(4), vals[i]);
+else if(string_left(keys[i], 4) == "ammo") apply_tuning_line(ammo_tuning, keys[i].substr(4), vals[i]);
+}
+}
+
 void load_game_data()
 {
 weapons_db.resize(0); wood_db.resize(0); ammo_db.resize(0);
