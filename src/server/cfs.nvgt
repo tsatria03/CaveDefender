@@ -20,10 +20,11 @@ svruptimer.restart();
 if(!directory_exists("data")) directory_create("data");
 if(!directory_exists("data/players")) directory_create("data/players");
 if(!directory_exists("data/preffs")) directory_create("data/preffs");
-load_peak(); // load the all-time concurrent-player record (data/preffs/peak.svr), reported with uptime on F4
-if(file_exists("data/preffs/conf.svr"))
+if(!directory_exists("data/preffs/main")) directory_create("data/preffs/main"); // server-wide prefs (conf, motd, peak, chatfilter, languages, pronouns, reports) live one level down in main/
+load_peak(); // load the all-time concurrent-player record (data/preffs/main/peak.svr), reported with uptime on F4
+if(file_exists("data/preffs/main/conf.svr"))
 {
-f.open("data/preffs/conf.svr", "rb");
+f.open("data/preffs/main/conf.svr", "rb");
 string content=f.read();
 string[] prefs=string_split(content, "\r\n", true);
 string[] values;
@@ -84,15 +85,15 @@ if(spamtime<1) spamtime=1;   // the sliding window must be a positive span of mi
 if(spamdir<0) spamdir=0;     // negative durations make no sense; 0 already means an indefinite mute
 f.close();
 }
-    if(file_exists("data/preffs/motd.svr"))
+    if(file_exists("data/preffs/main/motd.svr"))
     {
-        f.open("data/preffs/motd.svr", "r");
+        f.open("data/preffs/main/motd.svr", "r");
         motd = f.read();
         f.close();
     }
     else
     {
-        f.open("data/preffs/motd.svr", "w");
+        f.open("data/preffs/main/motd.svr", "w");
         f.write(motd);
         f.close();
     }
@@ -113,7 +114,7 @@ gametick();
 void writeprefs()
 {
 file f;
-f.open("data/preffs/conf.svr", "wb");
+f.open("data/preffs/main/conf.svr", "wb");
 string what;
 string ownerlist="";
 for(uint i=0; i<owners.length(); i++) ownerlist+=(i>0 ? "," : "")+owners[i];

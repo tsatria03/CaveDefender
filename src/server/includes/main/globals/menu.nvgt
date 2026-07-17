@@ -552,7 +552,7 @@ send_menu(players[index].peer_id, "startpileup", "Should enemy bots pile onto th
 /* Called when a player answers a server menu. player_index is their roster index, id is the menu's
 id, choice is the 0-based option index they picked (or -1 if they cancelled). This is the hook
 feature code fills in — e.g. tally a poll, apply a choice, etc. Empty for now.
-Read the configured language channels (one per line, "English (Native)") from data/preffs/languages.svr,
+Read the configured language channels (one per line, "English (Native)") from data/preffs/main/languages.svr,
 skipping blanks. Read fresh each time so a host can edit the list without restarting.
 These small hand-editable .svr lists are read on many events but change only when a host edits the file, so
 each loader caches its parsed result and re-reads only when the file's modified time changes. A host's edit
@@ -562,13 +562,13 @@ string[] cached_languages; int64 languages_mtime = -1; bool language_cache_ready
 string[] load_language_channels()
 {
 int64 mt = -1;
-if(file_exists("data/preffs/languages.svr")) { timestamp ts = file_get_date_modified("data/preffs/languages.svr"); mt = ts; }
+if(file_exists("data/preffs/main/languages.svr")) { timestamp ts = file_get_date_modified("data/preffs/main/languages.svr"); mt = ts; }
 if(language_cache_ready and mt == languages_mtime) return cached_languages;
 string[] langs;
 if(mt != -1)
 {
 file lf;
-if(lf.open("data/preffs/languages.svr", "rb"))
+if(lf.open("data/preffs/main/languages.svr", "rb"))
 {
 string content = lf.read();
 lf.close();
@@ -631,19 +631,19 @@ opts.insert_last(label);
 send_menu(peer, "channel", "Select a language channel to use.", opts);
 }
 /* Read the configured pronoun options (one per line, "masculine (he/him/his/his/himself)") from
-data/preffs/pronouns.svr, skipping blanks. Cached and re-read only when the file's modified time changes (see
+data/preffs/main/pronouns.svr, skipping blanks. Cached and re-read only when the file's modified time changes (see
 load_language_channels), so a host can still edit the list without restarting. */
 string[] cached_pronouns; int64 pronouns_mtime = -1; bool pronoun_cache_ready = false;
 string[] load_pronoun_options()
 {
 int64 mt = -1;
-if(file_exists("data/preffs/pronouns.svr")) { timestamp ts = file_get_date_modified("data/preffs/pronouns.svr"); mt = ts; }
+if(file_exists("data/preffs/main/pronouns.svr")) { timestamp ts = file_get_date_modified("data/preffs/main/pronouns.svr"); mt = ts; }
 if(pronoun_cache_ready and mt == pronouns_mtime) return cached_pronouns;
 string[] opts;
 if(mt != -1)
 {
 file pf;
-if(pf.open("data/preffs/pronouns.svr", "rb"))
+if(pf.open("data/preffs/main/pronouns.svr", "rb"))
 {
 string content = pf.read();
 pf.close();

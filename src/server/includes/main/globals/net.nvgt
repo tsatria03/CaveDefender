@@ -51,7 +51,7 @@ string format_uptime(int uptime_seconds)
     uptime_message += string(seconds) + (seconds == 1 ? " second." : " seconds.");
     return uptime_message;
 }
-/* --- All-time peak concurrent players (reported alongside uptime on F4), persisted in data/preffs/peak.svr ---
+/* --- All-time peak concurrent players (reported alongside uptime on F4), persisted in data/preffs/main/peak.svr ---
 Zero-pad a non-negative int to at least 2 digits ("5" -> "05") for the peak timestamp. */
 string pad2(int n) { string s = "" + n; return (s.length() < 2) ? "0" + s : s; }
 // The current local date and time like "12/22/2022 at 5:45 PM" (US M/D/Y, 12-hour clock, no seconds).
@@ -69,23 +69,23 @@ int n = 0;
 for(uint i=0; i<players.length(); i++) if(!players[i].held) n++;
 return n;
 }
-// Load the all-time peak from data/preffs/peak.svr (line 1 = count, line 2 = the formatted date/time). Missing file = no peak yet.
+// Load the all-time peak from data/preffs/main/peak.svr (line 1 = count, line 2 = the formatted date/time). Missing file = no peak yet.
 void load_peak()
 {
 peak_players = 0; peak_when = "";
-if(!file_exists("data/preffs/peak.svr")) return;
+if(!file_exists("data/preffs/main/peak.svr")) return;
 file pf;
-if(!pf.open("data/preffs/peak.svr", "rb")) return;
+if(!pf.open("data/preffs/main/peak.svr", "rb")) return;
 string raw = pf.read(); pf.close();
 string[] lines = string_split(raw, "\r\n", true);
 if(lines.length() >= 1) peak_players = int(string_to_number(lines[0].trim_whitespace()));
 if(lines.length() >= 2) peak_when = lines[1];
 }
-// Persist the current peak to data/preffs/peak.svr.
+// Persist the current peak to data/preffs/main/peak.svr.
 void save_peak()
 {
 file pf;
-if(!pf.open("data/preffs/peak.svr", "wb")) return;
+if(!pf.open("data/preffs/main/peak.svr", "wb")) return;
 pf.write("" + peak_players + "\r\n" + peak_when + "\r\n");
 pf.close();
 }
@@ -95,7 +95,7 @@ void update_peak()
 int n = live_player_count();
 if(n > peak_players) { peak_players = n; peak_when = format_now_stamp(); save_peak(); }
 }
-/* --- Player reports (filed with /report, reviewed by staff with /reports), persisted in data/preffs/reports.svr ---
+/* --- Player reports (filed with /report, reviewed by staff with /reports), persisted in data/preffs/main/reports.svr ---
 A readable local timestamp for a report, e.g. "July 8, 2026 at 3:42 PM" (month name, 12-hour, no seconds),
 matching the "Member since" style on the account card. */
 string report_time_stamp()
@@ -105,29 +105,29 @@ string ampm = (h < 12) ? "AM" : "PM";
 int h12 = h % 12; if(h12 == 0) h12 = 12;
 return DATE_MONTH_NAME + " " + DATE_DAY + ", " + DATE_YEAR + " at " + h12 + ":" + pad2(TIME_MINUTE) + " " + ampm;
 }
-/* Append one report to data/preffs/reports.svr. One report per line, TAB-delimited:
+/* Append one report to data/preffs/main/reports.svr. One report per line, TAB-delimited:
 <stamp>\t<reporter>\t<reported>\t<location>\t<reason>. Tabs, not the colon used elsewhere, because the readable
 stamp contains colons; the reason is last so it may contain anything (including tabs, rejoined on read). Nothing
 is ever deleted -- a host hand-clears the file if it grows too long. Rewrites the whole file (reports are rare). */
 void add_report(string reporter, string reported, string location, string reason)
 {
 string existing = "";
-if(file_exists("data/preffs/reports.svr"))
+if(file_exists("data/preffs/main/reports.svr"))
 {
-file rf; if(rf.open("data/preffs/reports.svr", "rb")) { existing = rf.read(); rf.close(); }
+file rf; if(rf.open("data/preffs/main/reports.svr", "rb")) { existing = rf.read(); rf.close(); }
 }
 string line = report_time_stamp() + "\t" + reporter + "\t" + reported + "\t" + location + "\t" + reason;
 file wf;
-if(!wf.open("data/preffs/reports.svr", "wb")) return;
+if(!wf.open("data/preffs/main/reports.svr", "wb")) return;
 wf.write(existing + line + "\n");
 wf.close();
 }
 // The staff /reports viewer: every report on record, newest first, numbered, in three-line blocks.
 string format_reports()
 {
-if(!file_exists("data/preffs/reports.svr")) return "There are no reports on record.";
+if(!file_exists("data/preffs/main/reports.svr")) return "There are no reports on record.";
 file rf;
-if(!rf.open("data/preffs/reports.svr", "rb")) return "There are no reports on record.";
+if(!rf.open("data/preffs/main/reports.svr", "rb")) return "There are no reports on record.";
 string raw = rf.read(); rf.close();
 string[] lines = string_split(raw, "\n", true);
 string listing = "";
@@ -2521,7 +2521,7 @@ if(event.type == event_receive && event.channel == 1 && !world_frozen) // world-
     {
         motd = string_replace(get_event_message(), "/motd ", "", true);
         file f;
-        f.open("data/preffs/motd.svr", "w");
+        f.open("data/preffs/main/motd.svr", "w");
         f.write(motd);
         f.close();
         send(event.peer_id, "misc Message of the Day has been changed to: " + motd, 0, true); // actor: first-person confirmation in misc

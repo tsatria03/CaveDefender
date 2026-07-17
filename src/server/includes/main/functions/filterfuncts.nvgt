@@ -5,7 +5,7 @@
                     players is an attack, not a language preference. Hardcoded on purpose -- DO NOT remove or
                     make skippable, and do NOT move these into chatfilter.svr (a host could delete them).
   - filter_chat() : the host WORD filter (profanity etc.). Rules live in the hand-editable
-                    data/preffs/chatfilter.svr (see load_filter_rules), read fresh each call -- no restart.
+                    data/preffs/main/chatfilter.svr (see load_filter_rules), read fresh each call -- no restart.
                     The Unfiltered language channel skips it for global chat; local chat is always filtered.
   - filterchar()  : the CHARACTER filter for identifiers (usernames, nicknames) -- unrelated to the above. */
 
@@ -29,15 +29,15 @@ if(regex(message, ".*(" + crash[i] + ").*")) return true;
 return false;
 }
 
-/* Read the chat word-filter rules from data/preffs/chatfilter.svr, one per line, skipping blank lines and #
+/* Read the chat word-filter rules from data/preffs/main/chatfilter.svr, one per line, skipping blank lines and #
 comments. Read fresh each call so a host can edit the list without restarting. Each rule is "re=<pattern>"
 (regex) or a plain lowercase substring -- interpreted by filter_chat(). */
 string[] load_filter_rules()
 {
 string[] rules;
-if(!file_exists("data/preffs/chatfilter.svr")) return rules;
+if(!file_exists("data/preffs/main/chatfilter.svr")) return rules;
 file ff;
-if(!ff.open("data/preffs/chatfilter.svr", "rb")) return rules;
+if(!ff.open("data/preffs/main/chatfilter.svr", "rb")) return rules;
 string content = ff.read();
 ff.close();
 string[] lines = string_split(content, "\n", true);
@@ -56,7 +56,7 @@ bool filter_chat(string message)
 {
 if(filterstuff==0) return false;
 message=string_to_lower_case(message);
-string[] filter=load_filter_rules(); // the rules in data/preffs/chatfilter.svr, read fresh each call
+string[] filter=load_filter_rules(); // the rules in data/preffs/main/chatfilter.svr, read fresh each call
 for(uint counter=0; counter<filter.length(); counter++)
 {
 string banned=filter[counter];

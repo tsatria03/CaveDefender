@@ -1,19 +1,14 @@
-ammocount_small=25:1
-ammocount_medium=50:2
-ammocount_big=75:3
-ammocount_large=100:4
-ammocap_small=25:6
-ammocap_medium=50:18
-ammocap_big=75:28
-ammocap_large=100:40
-ammospawn=500,2000
-woodcount_small=25:1
-woodcount_medium=50:2
-woodcount_big=75:3
-woodcount_large=100:4
-woodcap_small=25:6
-woodcap_medium=50:18
-woodcap_big=75:28
-woodcap_large=100:40
-woodspawn=500,2000
-wallbase=200
+# Game tuning. The item* lines are the defaults for EVERY item category (wood, ammo, and any added later).
+# A category can override any line by prefixing it with its name, e.g. ammocap_big=75:14 or ammospawn=1000,3000.
+# Size lines are matched by the map size NUMBER (25/50/75/100); the small/medium/big/large words are just labels.
+# count = items dropped per spawn tick. cap = how many may lie on the ground at once. spawn = the min,max tick delay in milliseconds.
+itemcount_small=25:1
+itemcount_medium=50:2
+itemcount_big=75:3
+itemcount_large=100:4
+itemcap_small=25:6
+itemcap_medium=50:18
+itemcap_big=75:28
+itemcap_large=100:40
+itemspawn=500,2000
+wallbase=400

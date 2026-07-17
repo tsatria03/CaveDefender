@@ -6,6 +6,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Bring back weapon choosing with the number row.
 **Finished. Add full-auto weapons that keep firing while you hold the space bar.
 **Finished. Add some more items and weapons to the EVP and PVP game modes.
 **Finished. Add ranged weapons that fire traveling bullets at the walls, with an ammo and reload system.
