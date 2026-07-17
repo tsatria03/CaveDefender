@@ -23,7 +23,9 @@ string phase="idle"; // round phase: idle -> build -> wave -> over -> idle (host
 timer phasetimer;    // times the current phase (drives the build-phase countdown)
 int buildduration=0; // how many seconds the build phase lasts (set per map size when the round begins)
 timer woodtimer;     // drives wood drops during the build and wave phases
-int woodinterval=0;  // ms until the next wood drop, re-rolled to a random 500-2000 after each one
+int woodinterval=0;  // ms until the next wood drop, re-rolled from wood_tuning's spawn range after each one
+timer ammotimer;     // drives ammo drops for the attacking side (EVP/PVP), on its own cadence independent of wood
+int ammointerval=0;  // ms until the next ammo drop, re-rolled from ammo_tuning's spawn range after each one
 int wave_bot_target=0; // per-wall bot count for the current wave; +1 on each attack burst, no ceiling (intentional since 2.5 -- more bots make the walls fall faster, so the round self-limits)
 int wave_number=0; // which attack burst (round) the wave is on; 1 on the first attack, +1 each later burst, uncapped (announced to clients)
 bool warned=false; // set once the heads-up for the upcoming wave has been sent; re-armed at build start and at each rest segment
@@ -166,8 +168,8 @@ game g(gid, parent_room, hostname, hostpeer, size, solo, mode);
 g.reinforce_cap=reinforce_cap; // PVE/PVP wall reinforce ceiling chosen at creation (0 = no limit); unused by EVP
 g.bots_pileup=bots_pileup;     // PVE bot pile-up chosen at creation; unused by EVP/PVP (no attacking bots there)
 games.insert_last(g);
-if(mode=="pvp") spawn_ring_walls(gid, size, 400, 400); // PVP: the four destructible walls form a MIDDLE ring (interior defenders, exterior attackers)
-else spawn_border_walls(gid, size, 400, 400, true); // PVE/EVP: the four destroyable walls are the cavern border (max health 400)
+if(mode=="pvp") spawn_ring_walls(gid, size, wall_base_health, wall_base_health); // PVP: the four destructible walls form a MIDDLE ring (interior defenders, exterior attackers)
+else spawn_border_walls(gid, size, wall_base_health, wall_base_health, true); // PVE/EVP: the four destroyable walls are the cavern border (max health = conf.gvr's wallbase, default 400)
 return gid;
 }
 /* Send a player already set up as a spectator (spectating=true, room_id=the game) the full watch scope: the deck
@@ -614,6 +616,7 @@ games[gi].paused=true;
 games[gi].pausetimer.restart();
 games[gi].phasetimer.pause();
 games[gi].woodtimer.pause();
+games[gi].ammotimer.pause();
 games[gi].wavetimer.pause();
 games[gi].wave_cycletimer.pause();
 for(uint i=0; i<enemies.length(); i++)
@@ -630,6 +633,7 @@ if(gi<0 or gi>=int(games.length()) or !games[gi].paused) return;
 games[gi].paused=false;
 games[gi].phasetimer.resume();
 games[gi].woodtimer.resume();
+games[gi].ammotimer.resume();
 if(!(games[gi].mode=="evp" and games[gi].phase=="wave" and !games[gi].wave_attacking)) games[gi].wavetimer.resume(); // EVP: leave the round clock frozen if we unpaused mid-rest; the next attack window resumes it
 games[gi].wave_cycletimer.resume();
 for(uint i=0; i<enemies.length(); i++)
@@ -663,6 +667,7 @@ continue;
 games[gi].world_paused=true;
 games[gi].phasetimer.pause();
 games[gi].woodtimer.pause();
+games[gi].ammotimer.pause();
 games[gi].wavetimer.pause();
 games[gi].wave_cycletimer.pause();
 for(uint i=0; i<enemies.length(); i++)
@@ -689,6 +694,7 @@ continue;
 games[gi].world_paused=false;
 games[gi].phasetimer.resume();
 games[gi].woodtimer.resume();
+games[gi].ammotimer.resume();
 if(!(games[gi].mode=="evp" and games[gi].phase=="wave" and !games[gi].wave_attacking)) games[gi].wavetimer.resume(); // EVP: keep the round clock frozen if we unpaused mid-rest (mirrors resume_game)
 games[gi].wave_cycletimer.resume();
 for(uint i=0; i<enemies.length(); i++)
@@ -802,11 +808,11 @@ if(games[i].mode=="pve" and games[i].phase=="wave" and !games[i].wave_attacking 
 games[i].warned=true;
 send_to_game(games[i].id, "wavewarning "+wave_warning_seconds); // members + spectators
 }
-// Wood drops during the build and wave phases, on a random 0.5-2s cadence, up to a size-scaled cap.
+// Wood drops during the build and wave phases, on wood_tuning's random cadence (default 0.5-2s), up to a size-scaled cap.
 if((games[i].phase=="build" or games[i].phase=="wave") and games[i].woodtimer.elapsed >= games[i].woodinterval)
 {
 games[i].woodtimer.restart();
-games[i].woodinterval = random(500, 2000);
+games[i].woodinterval = roll_range(wood_tuning.spawn_lo, wood_tuning.spawn_hi);
 // Drop several pieces at once on bigger maps (a size-scaled supply rate), each only while under the cap.
 int drops = wood_drops_per_tick(games[i].size);
 for(int d=0; d<drops; d++)
@@ -820,15 +826,19 @@ string wt = random_wood_type(); // a random wood species (oak/maple/birch/pine),
 int iid = spawn_item(games[i].id, wx, wy, wt);
 send_to_game(games[i].id, "spawnitem "+iid+" "+wt+" "+wx+" "+wy); // send the SAME species to the client so its sounds and the D readout match
 }
-/* Ammo drops for the attacking side (EVP players / PVP attackers), on the same cadence and cap as wood but in the
-attacker zone: EVP roams the interior grid, a PVP attacker the exterior band outside the wall ring. PVE has no
-attackers, so no ammo. Gathered by the attackers exactly as defenders gather wood (gather_ammo). */
-if(games[i].mode=="evp" or games[i].mode=="pvp")
+}
+/* Ammo drops for the attacking side (EVP players / PVP attackers), on its OWN timer and ammo_tuning values
+(identical to wood's until a conf.gvr ammo* line overrides them), in the attacker zone: EVP roams the interior
+grid, a PVP attacker the exterior band outside the wall ring. PVE has no attackers, so no ammo. Gathered by the
+attackers exactly as defenders gather wood (gather_ammo). */
+if((games[i].mode=="evp" or games[i].mode=="pvp") and (games[i].phase=="build" or games[i].phase=="wave") and games[i].ammotimer.elapsed >= games[i].ammointerval)
 {
-int adrops = wood_drops_per_tick(games[i].size);
+games[i].ammotimer.restart();
+games[i].ammointerval = roll_range(ammo_tuning.spawn_lo, ammo_tuning.spawn_hi);
+int adrops = ammo_drops_per_tick(games[i].size);
 for(int d=0; d<adrops; d++)
 {
-if(ammo_count_in(games[i].id) >= wood_cap(games[i].size)) break;
+if(ammo_count_in(games[i].id) >= ammo_cap(games[i].size)) break;
 int ax, ay;
 if(games[i].mode=="pvp")
 {
@@ -841,7 +851,6 @@ else { ax=random(1, games[i].size-1); ay=random(1, games[i].size-1); } // EVP: t
 string at = random_ammo_type();
 int aid = spawn_item(games[i].id, ax, ay, at);
 send_to_game(games[i].id, "spawnitem "+aid+" "+at+" "+ax+" "+ay);
-}
 }
 }
 /* Flip between attacking and resting every half-build-phase. In PVE the bots hammer, then back off so players
@@ -1000,8 +1009,8 @@ clear_items(gameid);
 clear_walls(gameid);
 games[gi].bullets.resize(0); // drop any ranged shots still in flight so they can't land on the fresh walls
 games[gi].burns.resize(0);   // and put out any wall fires still burning from the last round
-if(games[gi].mode=="pvp") spawn_ring_walls(gameid, size, 400, 400); // PVP walls are the inset ring
-else spawn_border_walls(gameid, size, 400, 400, true); // PVE/EVP: fresh border walls (max health 400, new random starting strengths)
+if(games[gi].mode=="pvp") spawn_ring_walls(gameid, size, wall_base_health, wall_base_health); // PVP walls are the inset ring
+else spawn_border_walls(gameid, size, wall_base_health, wall_base_health, true); // PVE/EVP: fresh border walls (wallbase max health, new random starting strengths)
 games[gi].phase = "idle";
 games[gi].evp_rounds_cleared = 0; // a fresh game (after play-again) starts the EVP score over (no-op for PVE)
 games[gi].pvp_deserted = false; // and clears any leftover PVP desertion state (no-op for the co-op modes)
@@ -1030,7 +1039,7 @@ clear_items(gameid);
 clear_walls(gameid);
 games[gi].bullets.resize(0); // drop any ranged shots still in flight so they can't land on the fresh walls
 games[gi].burns.resize(0);   // and put out any wall fires still burning from the last round
-spawn_border_walls(gameid, games[gi].size, 400, 400, true); // fresh walls, new random starting strengths
+spawn_border_walls(gameid, games[gi].size, wall_base_health, wall_base_health, true); // fresh walls, new random starting strengths
 send_to_game(gameid, "gamereset "+int(games[gi].size)); // redraw the fresh cavern for members + spectators
 recenter_game_members(gi); // server position must match the client's re-centred `me`, or reach checks misfire
 broadcast_wall_strength(gameid);

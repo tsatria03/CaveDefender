@@ -2,6 +2,7 @@
 # A category can override any line by prefixing it with its name, e.g. ammocap_big=75:14 or ammospawn=1000,3000.
 # Size lines are matched by the map size NUMBER (25/50/75/100); the small/medium/big/large words are just labels.
 # count = items dropped per spawn tick. cap = how many may lie on the ground at once. spawn = the min,max tick delay in milliseconds.
+
 itemcount_small=25:1
 itemcount_medium=50:2
 itemcount_big=75:3
