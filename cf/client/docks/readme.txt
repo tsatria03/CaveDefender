@@ -133,6 +133,8 @@ Each switch is announced, and tab tells you which window you are in. You also ha
 
 Bring every wall down and you clear the round; the cavern is rebuilt and the next round sends more bots to defend it, so it gets harder each time. The game ends when the bots hold you off, that is, when the wave's time runs out with a wall still standing. You are then shown how many rounds you cleared and asked whether to play again or leave. The pause menu works just as it does in the other mode.
 
+Whenever you finish a game having cleared more rounds than your best ever, you earn a bonus of ammo for beating your record, a little of every kind added to your reserve when your next game begins. It is the attacker's version of the defenders' bonus starting wood, and the game over screen tells you when you have earned it.
+
 Player versus player.
 
 Player versus player, or PVP, is the wall fight with people on both sides instead of bots. One team attacks the four walls from outside, the other defends them from inside, and nobody ever crosses the walls. Choose PVP when you pick your game mode at the start; it is always an open game.

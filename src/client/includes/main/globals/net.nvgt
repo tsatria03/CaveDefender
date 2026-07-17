@@ -360,20 +360,24 @@ void handle_pvp_result(string message)
 	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting to pick sides again."); }
 	else send(0, "playagain no", 0, true);
 }
-/* EVP game over (a loss): "evpover <rounds-cleared>". The only loss is the round timer running out. Show the
-results and the play-again prompt, mirroring handle_roundover; the score is rounds cleared. Play again -> a
-fresh round-1 game the host begins; no -> leave to the room. */
+/* EVP game over (a loss): "evpover <rounds-cleared> <milestone>". The only loss is the round timer running out.
+Show the results and the play-again prompt, mirroring handle_roundover; the score is rounds cleared. A non-zero
+milestone means a new personal best, which earned bonus ammo for the next game. Play again -> a fresh round-1
+game the host begins; no -> leave to the room. */
 void handle_evp_over(string message)
 {
 	string[] parsed = string_split(message, " ", true);
 	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
 	int cleared = string_to_number(parsed[1]);
+	int milestone = (parsed.length() > 2) ? string_to_number(parsed[2]) : 0; // new personal best (0 = not a new best); a new best earned bonus ammo
 	pause_objects(); // silence lingering loops behind the results dialog and play-again prompt
 	string why = "You ran out of time before bringing the walls down.";
 	string results = "Game over! You cleared " + cleared + (cleared == 1 ? " round.\r\n" : " rounds.\r\n");
 	results += why + "\r\n";
 	results += "Press enter to continue.";
 	dlgmessage(results);
+	// Milestone: a fresh personal-best round earned bonus starting ammo for the next game (the attackers' bonus wood).
+	if(milestone > 0) dlgmessage("Congratulations! You reached a new best of " + milestone + (milestone == 1 ? " round" : " rounds") + ", earning bonus ammo for your next game. Great job! Press enter to continue.");
 	setupmenu();
 	m.add_item("Yes");
 	m.add_item("No");

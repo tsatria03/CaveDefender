@@ -531,7 +531,13 @@ spawn_builders(games[gindex].id, evp_builders_for_round(games[gindex].evp_rounds
 begins (no rounds cleared yet). Clearing a round keeps everything -- loaded rounds, reserve, and the
 already-granted flags -- so ammo carries across rounds the way the drawn weapon already does. */
 if(games[gindex].evp_rounds_cleared == 0)
-for(uint m=0; m<games[gindex].members.length(); m++) { int pi=get_player_index(games[gindex].members[m]); if(pi>=0) reset_player_ammo(pi); }
+for(uint m=0; m<games[gindex].members.length(); m++)
+{
+int pi=get_player_index(games[gindex].members[m]);
+if(pi<0) continue;
+reset_player_ammo(pi);
+if(players[pi].pending_bonus_ammo) grant_ammo_bonus(pi); // milestone reward from beating your best EVP round last game: a bonus of every ammo type, added after the reset
+}
 }
 else if(games[gindex].mode=="pvp")
 {
@@ -1062,9 +1068,17 @@ for(uint m=0; m<games[gi].members.length(); m++)
 {
 int pi = get_player_index(games[gi].members[m]);
 if(pi < 0) continue;
-if(cleared > get_evp_best_round(players[pi].name)) set_evp_best_round(players[pi].name, cleared); // update the EVP personal best (most rounds cleared)
+/* Milestone: beating your personal-best EVP round (most cleared) grants a one-time bonus of every ammo type
+at your next EVP game's build phase, and records the new best. Matching or falling short grants nothing. */
+int milestone = 0;
+if(cleared > get_evp_best_round(players[pi].name))
+{
+set_evp_best_round(players[pi].name, cleared);
+players[pi].pending_bonus_ammo = true;
+milestone = cleared;
+}
 players[pi].playagain_answered = false; // awaiting the play-again answer
-players[pi].pending_results = "evpover "+cleared; // kept so a reconnect during the results screen can re-show this prompt
+players[pi].pending_results = "evpover "+cleared+" "+milestone; // <cleared> <milestone> (milestone 0 = no new best); kept so a reconnect during the results screen can re-show this prompt
 send(games[gi].members[m], players[pi].pending_results, 0, true); // client: results dialog + play-again
 }
 for(uint s=0; s<players.length(); s++)
