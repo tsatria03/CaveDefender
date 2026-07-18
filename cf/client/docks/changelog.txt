@@ -1,4 +1,6 @@
 New in 4.1.
+In environment versus player, the bots' walls now get tougher every round you clear instead of stalling at the same strength. Each cleared round raises how far the bots fortify the walls, so the deeper you go the harder they are to tear down, climbing well past two hundred percent in the later rounds.
+Environment versus player bots no longer waste a trip trying to reinforce a wall that was destroyed while they were carrying wood to it; they now redirect that wood to the weakest wall still standing.
 The pistol and machine gun now ring one of twelve ricochet sounds at random when a shot bounces off a wall, instead of the same one every time.
 Several sounds that had gone silent in the release build now play again: the in-flight whoosh of a ranged shot as the bullet, arrow, or projectile crosses to the wall, the ambient loop of wood and ammo lying on the ground so dropped items are easier to home in on, and the pistol and machine gun's spent shell casing ringing at the wall on every landing bullet.
 The X ammo readout now adds that firing won't spend a round yet when you check it during the build phase or a rest window, so its counts no longer read as ready to fire when a shot would only ricochet for free.

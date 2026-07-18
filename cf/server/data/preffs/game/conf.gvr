@@ -13,3 +13,9 @@ itemcap_big=75:28
 itemcap_large=100:40
 itemspawn=500,2000
 wallbase=400
+# EVP wall toughness escalation: each wave the bots' walls are guaranteed to at least evpfortifybase of full strength,
+# rising by evpfortifystep for every round already cleared. So with these defaults round 1 fortifies to 150%, round 2
+# to 200%, round 3 to 250%, and so on -- the walls get provably harder to bring down the further you get. base is a
+# multiple of full strength (1.5 = 150%), step is added per cleared round (0.5 = +50% each). Raise step to escalate faster, lower it to stretch the mode out longer.
+evpfortifybase=1.5
+evpfortifystep=0.5

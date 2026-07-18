@@ -200,6 +200,14 @@ int spawn_lo = 500; int spawn_hi = 2000; // ms between spawn ticks (re-rolled af
 item_tuning wood_tuning;
 item_tuning ammo_tuning;
 double wall_base_health = 400; // wallbase= -- the four destroyable walls' full (max) health
+/* EVP per-round fortify escalation: at each wave start every standing wall is guaranteed to at least this fraction
+of its max health, and that fraction CLIMBS every cleared round -- so the bots' defence gets provably tougher round
+over round (the wall % readout keeps rising) instead of plateauing at whatever the build-phase wood supply allowed.
+base = the round-0 target (round 1 played), step = extra target added per cleared round. Tunable via conf.gvr. */
+double evp_fortify_base = 1.5; // evpfortifybase= -- round-0 target as a multiple of max health (1.5 = 150%)
+double evp_fortify_step = 0.5; // evpfortifystep= -- extra target per cleared round (0.5 = +50% each round)
+// This round's guaranteed wall-fortify target, as a multiple of max health; never below full (1.0).
+double evp_fortify_mult(int rounds_cleared) { double m = evp_fortify_base + rounds_cleared * evp_fortify_step; return m < 1.0 ? 1.0 : m; }
 
 // Set one size tier in a parallel sizes/vals pair: replace the matching size, or insert keeping sizes sorted.
 void set_tier(int[]@ sizes, int[]@ vals, int size, int val)
@@ -282,11 +290,15 @@ void load_game_conf()
 seed_tuning(wood_tuning);
 seed_tuning(ammo_tuning);
 wall_base_health = 400;
+evp_fortify_base = 1.5;
+evp_fortify_step = 0.5;
 string[] keys, vals;
 if(!read_kv("data/preffs/game/conf.gvr", keys, vals)) return;
-for(uint i=0; i<keys.length(); i++) // pass 1: wallbase + the item* defaults (applied to every category)
+for(uint i=0; i<keys.length(); i++) // pass 1: wallbase + the EVP fortify escalation + the item* defaults (applied to every category)
 {
 if(keys[i] == "wallbase") { double wb = string_to_number(vals[i]); if(wb > 0) wall_base_health = wb; }
+else if(keys[i] == "evpfortifybase") { double v = string_to_number(vals[i]); if(v > 0) evp_fortify_base = v; }
+else if(keys[i] == "evpfortifystep") { double v = string_to_number(vals[i]); if(v >= 0) evp_fortify_step = v; }
 else if(string_left(keys[i], 4) == "item")
 {
 apply_tuning_line(wood_tuning, keys[i].substr(4), vals[i]);
