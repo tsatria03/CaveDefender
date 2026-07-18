@@ -74,4 +74,5 @@ form_menu m;
 instance gamstence;
 kh keyhook;
 sound_pool p, pool, spool, temp, beaconpool, vpool, ambpool, musicpool, woodpool, ammopool, botpool, crosspool, burnpool;
+sound_pool bulletpool(200); // ranged bullet travel loops get their own pool (own cap) so heavy machine-gun fire can't crowd their whooshes off the shared weapons pool p; treated exactly like p (see decpool all_pools + effect_space)
 virtual_dialogs vd;

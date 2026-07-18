@@ -153,6 +153,7 @@ snd.set_fx(lp ? cave_lowpass_fx : "$lowpass");
 void apply_effect_pools()
 {
 apply_all_effects(me.x, me.y, p, me.z, "p");
+apply_all_effects(me.x, me.y, bulletpool, me.z, "bulletpool"); // ranged bullet travel loops: same clear, listener-following cave treatment as the fire shot on p
 apply_all_effects(me.x, me.y, beaconpool, me.z, "beaconpool");
 apply_all_effects(me.x, me.y, vpool, me.z, "vpool");
 apply_all_effects(me.x, me.y, ambpool, me.z, "ambpool");

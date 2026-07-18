@@ -5,9 +5,13 @@ the target wall over the shot's flight time, so you hear the bullet whoosh acros
 separate one-shot (play_bullet_hit / play_bullet_rico, driven by the server's "bullethit"/"bulletrico"), so a
 travelling bullet needs no matching -- each one just expires on its own timer when it reaches the wall.
 
-The loop rides the weapons pool `p` (the attacker's own pool -- clear, listener-following, the same pool the fire
-and impact play on), moving via update_sound_3d each frame. Not every weapon has a loop.ogg yet (sound placeholders
-come later), so a missing file just leaves slot -1 and skips the moving source; the impact still plays. */
+The loop rides its own dedicated `bulletpool` (declared in dec.nvgt, registered in decpool's all_pools for the
+per-frame listener update + pause/resume, and given the same clear, listener-following cave FX as `p` in
+effect_space) -- a separate pool so heavy machine-gun fire can't crowd the whooshes off the shared weapons pool p.
+It moves via update_sound_3d each frame. The loop is played directly, with NO file_exists guard:
+the client's sounds are embedded in the boxed exe (Enigma virtual FS), where file_exists reads false even though
+play_3d loads the very same file fine -- so a guard silenced every travel loop. A genuinely missing loop.ogg just
+fails to load into an invalid slot, which the move/destroy calls ignore, so the impact still plays regardless. */
 
 class client_bullet
 {
@@ -43,7 +47,7 @@ else if(dir=="south") { b.tx=px; b.ty=0; }
 else return;
 b.flight_ms = flight_ms;
 string loop = "sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/loop.ogg";
-if(file_exists(loop)) b.slot = p.play_3d(loop, me.x, me.y, me.z, b.ox, b.oy, 0, calculate_theta(me_rotation), true); // looping travel source; missing file -> silent flight (slot stays -1)
+b.slot = bulletpool.play_3d(loop, me.x, me.y, me.z, b.ox, b.oy, 0, calculate_theta(me_rotation), true); // looping travel source on the dedicated bulletpool, played directly (no file_exists guard -- it reads false for the boxed/virtual-FS sound and was silencing every loop); a missing file just fails into an invalid slot
 b.travel.restart();
 client_bullets.insert_last(b);
 }
@@ -58,7 +62,7 @@ client_bullet@ b = client_bullets[i];
 double frac = (b.flight_ms > 0) ? double(b.travel.elapsed)/double(b.flight_ms) : 1.0;
 if(frac >= 1.0)
 {
-if(b.slot != -1) p.destroy_sound(b.slot); // arrived: stop the travel loop
+if(b.slot != -1) bulletpool.destroy_sound(b.slot); // arrived: stop the travel loop
 client_bullets.remove_at(i);
 continue;
 }
@@ -66,13 +70,13 @@ if(b.slot != -1)
 {
 double cx = b.ox + (b.tx - b.ox) * frac;
 double cy = b.oy + (b.ty - b.oy) * frac;
-p.update_sound_3d(b.slot, cx, cy, 0); // move the whoosh along its path
+bulletpool.update_sound_3d(b.slot, cx, cy, 0); // move the whoosh along its path
 }
 }
 }
 // Drop every travelling bullet's loop (leaving a game / switching maps), so no handle leaks.
 void clear_client_bullets()
 {
-for(uint i=0; i<client_bullets.length(); i++) if(client_bullets[i].slot != -1) p.destroy_sound(client_bullets[i].slot);
+for(uint i=0; i<client_bullets.length(); i++) if(client_bullets[i].slot != -1) bulletpool.destroy_sound(client_bullets[i].slot);
 client_bullets.resize(0);
 }
