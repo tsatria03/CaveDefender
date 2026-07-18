@@ -1,3 +1,5 @@
+New in 4.1.
+The game over screen after an environment versus player game now names exactly how much bonus ammo you earned for beating your best round, listing the amount of each kind, rather than only telling you that a bonus was earned.
 New in 4.0.
 Fixed the through-the-wall muffling of weapons in player versus player games. As a defender, the attackers' strikes on your walls, their swings, ranged hits, ricochets, and spent shells, now reach you muffled through the wall, matching how their footsteps and firing already sound, instead of ringing out clear as though nothing stood between you.
 Fixed the through-the-wall muffling of gathered items in player versus player games, both the defenders' wood and the attackers' ammo. Each side now hears its own items clearly, since they are right there with them, while items on the far side of the wall come through muffled the way the wall should block the sound, rather than clear as if nothing stood between the two sides. This covers the pieces lying on the ground as well as the wood the defenders place on the walls.

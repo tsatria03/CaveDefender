@@ -536,7 +536,7 @@ for(uint m=0; m<games[gindex].members.length(); m++)
 int pi=get_player_index(games[gindex].members[m]);
 if(pi<0) continue;
 reset_player_ammo(pi);
-if(players[pi].pending_bonus_ammo) grant_ammo_bonus(pi); // milestone reward from beating your best EVP round last game: a bonus of every ammo type, added after the reset
+if(players[pi].pending_bonus_ammo != "") grant_ammo_bonus(pi); // milestone reward from beating your best EVP round last game: a bonus of every ammo type, added after the reset
 }
 }
 else if(games[gindex].mode=="pvp")
@@ -1071,14 +1071,17 @@ if(pi < 0) continue;
 /* Milestone: beating your personal-best EVP round (most cleared) grants a one-time bonus of every ammo type
 at your next EVP game's build phase, and records the new best. Matching or falling short grants nothing. */
 int milestone = 0;
+string bonus = ""; // the rolled per-type bonus amounts as "type:amount" pairs; stored for the grant and named in the results message
 if(cleared > get_evp_best_round(players[pi].name))
 {
 set_evp_best_round(players[pi].name, cleared);
-players[pi].pending_bonus_ammo = true;
+string[] at = ammo_types();
+for(uint k=0; k<at.length(); k++) bonus += (bonus.is_empty() ? "" : " ") + at[k] + ":" + ammo_bonus_amount(at[k]); // roll each amount NOW so the message can name it and the grant hands out these exact figures
+players[pi].pending_bonus_ammo = bonus;
 milestone = cleared;
 }
 players[pi].playagain_answered = false; // awaiting the play-again answer
-players[pi].pending_results = "evpover "+cleared+" "+milestone; // <cleared> <milestone> (milestone 0 = no new best); kept so a reconnect during the results screen can re-show this prompt
+players[pi].pending_results = "evpover "+cleared+" "+milestone+(bonus.is_empty() ? "" : " "+bonus); // <cleared> <milestone> [type:amount ...] (milestone 0 = no new best, no pairs); kept so a reconnect during the results screen can re-show this prompt
 send(games[gi].members[m], players[pi].pending_results, 0, true); // client: results dialog + play-again
 }
 for(uint s=0; s<players.length(); s++)
