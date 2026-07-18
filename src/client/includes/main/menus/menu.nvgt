@@ -674,9 +674,9 @@ void settingsmenu()
 		form.assign_to_tab(fdv, tabs, tab_sound);
 		int glh = form.create_checkbox("Enable global HRTF support", hrtf);
 		form.assign_to_tab(glh, tabs, tab_sound);
-		int rdm = form.create_button("Select recording de&vice. Currently set to " + recname);
+		int rdm = form.create_button("Select &input device. Currently set to " + recname);
 		form.assign_to_tab(rdm, tabs, tab_sound);
-		int sdm = form.create_button("Select sound &device. Currently set to " + soundcard);
+		int sdm = form.create_button("Select &output device. Currently set to " + soundcard);
 		form.assign_to_tab(sdm, tabs, tab_sound);
 		int mrp = form.create_checkbox("Enable wrapping in menus", menuwrap);
 		form.assign_to_tab(mrp, tabs, tab_menu);
@@ -758,13 +758,13 @@ void settingsmenu()
 				devices.remove_at(0);
 				setupmenu();
 				for(uint i=0; i<devices.length(); i++) m.add_item(devices[i] + (devices[i] == soundcard ? ". Selected." : ""), devices[i]); // mark the device you're using
-				m.intro_text="Choose a sound device you'd like to use in the game.";
+				m.intro_text="Choose an output device you'd like to use in the game.";
 				int dres=m.run();
 				if(dres>=0 and dres<int(devices.length()))
 				{
 					soundcard=devices[dres];
 					sound_output_device=dres+1;
-					dlgmessage("Sound device set to "+soundcard+". Press enter to continue.");
+					dlgmessage("Output device set to "+soundcard+". Press enter to continue.");
 				}
 				break;
 			}
@@ -773,14 +773,14 @@ void settingsmenu()
 				string[]@ idevs = get_sound_input_devices(); // already includes a "Default" entry at index 0
 				setupmenu();
 				for(uint i=0; i<idevs.length(); i++) m.add_item(idevs[i] + (idevs[i] == recname ? ". Selected." : ""), ""+i); // mark the recording device you're using
-				m.intro_text="Choose a recording device you'd like to use for voice chat.";
+				m.intro_text="Choose an input device you'd like to use for voice chat.";
 				int rres=m.run();
 				if(rres<0) speak("canceled");
 				else
 				{
 					recdev=string_to_number(m.selected_item_id); // list index == microphone.start_recording device index
 					recname=idevs[recdev];
-					dlgmessage("Recording device set to "+recname+". Press enter to continue.");
+					dlgmessage("Input device set to "+recname+". Press enter to continue.");
 				}
 				break;
 			}
