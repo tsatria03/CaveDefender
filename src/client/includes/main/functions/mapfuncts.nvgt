@@ -189,10 +189,15 @@ if(type=="powder") return my_ammo_powder;
 if(type=="normal") return my_ammo_normal;
 return 0;
 }
-/* The X-key ammo readout: your equipped ranged weapon's magazine and reserve. Melee (or unarmed) takes none. */
+/* The X-key ammo readout: your equipped ranged weapon's magazine and reserve. Melee (or unarmed) takes none. During
+the build phase and a wave's rest windows a shot is a free ricochet (it spends nothing), so the readout flags that
+you can't actually spend the ammo yet -- the counts alone would otherwise read as "ready to fire". */
 string ammo_readout()
 {
 if(current_weapon == "" or is_melee_weapon(current_weapon)) return "This weapon takes no ammo.";
 string at = weapon_ammo_type(current_weapon);
-return my_loaded + " out of " + my_weapon_maxammo + " " + at + " ammo loaded, and " + ammo_reserve_for(at) + " " + at + " ammo in reserve.";
+string s = my_loaded + " out of " + my_weapon_maxammo + " " + at + " ammo loaded, and " + ammo_reserve_for(at) + " " + at + " ammo in reserve.";
+if(game_phase == "build") s += " Firing won't spend a round until the wave begins.";
+else if(game_phase == "wave" and !wave_attacking) s += " Firing won't spend a round until the next attack window.";
+return s;
 }
