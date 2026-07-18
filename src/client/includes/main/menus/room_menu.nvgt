@@ -1,4 +1,4 @@
-/* The room menu itself is now server-authoritative (Enter sends "openmenu"; the server builds and
+/* The room menu itself is now server-authoritative (Enter sends "openpanel room"; the server builds and
 pushes it — see server menu.nvgt / net.nvgt). What remains here are the R / L / G "glance" helpers,
 which speak who/what is around (they are spoken announcements, not menus). Called from game.nvgt. */
 

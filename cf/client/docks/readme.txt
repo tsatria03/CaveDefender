@@ -63,15 +63,15 @@ The private message button asks you for a message and sends it straight to that 
 
 If you are staff, the card also shows action buttons for the things your rank lets you do to that player: kick, ban, promote, demote, notify, and warn. Only the buttons you are actually allowed to use on that particular player appear, and choosing one asks for anything it needs, such as a ban length, a new rank, a notification, or a warning level and reason, before carrying out the same action as the matching staff command. They never let you do anything the commands would not, so all the usual rank rules still apply; the staff help explains each of these in full.
 
-The actions menu.
+The account and location panels.
 
-In the lobby or any room you are in, press enter to open the actions menu. It has two items. The account panel gathers your personal, account-tied settings in one place: your language channel, your pronoun, your muted players list, and changing your nickname, email, or password, each doing the same as the matching slash command. The lobby panel, called the room panel when you are in a room, is the create and join rooms menu, or the room menu, both described just below. In a game, enter opens the round menu instead, and your personal settings stay reachable through their slash commands, the players menu on F6, and your preferences on Alt plus P. You can also jump straight to a panel without the actions menu: control plus A opens the account panel, and control plus H opens the lobby or room panel for wherever you are.
+In the lobby or any room you are in, press enter to open the panel for where you are: the lobby panel in the lobby, or the room panel in a room, which is the create and join rooms menu, or the room menu, both described just below. Press shift plus enter to open the account panel instead, which gathers your personal, account-tied settings in one place: your language channel, your pronoun, your muted players list, and changing your nickname, email, or password, each doing the same as the matching slash command. In a game, enter opens the round menu instead, and your personal settings stay reachable through their slash commands, the players menu on F6, and your preferences on Alt plus P.
 
 Rooms.
 
-From the lobby, press enter and choose the lobby panel to create or join a public or private room. You can host up to one public and one private room of your own.
+From the lobby, press enter to open the lobby panel and create or join a public or private room. You can host up to one public and one private room of your own.
 
-Inside a room, press enter and choose the room panel for the room menu. If you host the room you can use Kick from room to send a player back to the lobby, and, for a private room, set or retrieve its password. The Kick from room list also includes your own name, which you can pick to simply leave your own room, just like Leave room does. You can delete your own room, but only when you are the only one in it and no games are running.
+Inside a room, press enter to open the room panel, the room menu. If you host the room you can use Kick from room to send a player back to the lobby, and, for a private room, set or retrieve its password. The Kick from room list also includes your own name, which you can pick to simply leave your own room, just like Leave room does. You can delete your own room, but only when you are the only one in it and no games are running.
 
 When you join a private room, you are asked for its password first. If you are staff joining a private room you created yourself, that box opens with the password already filled in, so you can just press enter rather than type it; this only happens for your own room, and joining anyone else's private room still asks you to type the password as usual.
 
@@ -183,10 +183,7 @@ C. Speak your coordinates, the surface you are standing on, and the way you are 
 
 Rooms.
 
-Control plus A. Open the account panel. Works in the lobby and any room.
-Control plus H. Open the panel for where you are: the lobby panel in the lobby, or the room panel in a room.
-
-The rest of these run lobby or room actions directly without opening the menu first. These first ones work only in the lobby.
+These run lobby or room actions directly without opening the menu first. These first ones work only in the lobby.
 
 Control plus C. Create a public room.
 Control plus shift plus C. Create a private room.
@@ -272,7 +269,8 @@ Shift plus B. Open the Buffer menu, which gathers everything you can do with the
 
 Menus and leaving.
 
-Enter. In the lobby or a room, open the actions menu, with its account panel and the lobby or room panel; in a game you host, open the round menu.
+Enter. In the lobby or a room, open the panel for where you are, the lobby panel or the room panel; in a game you host, open the round menu.
+Shift plus enter. In the lobby or a room, open the account panel, your personal settings in one place.
 Alt plus P. Open your preferences without leaving, the same settings you reach from the main menu; saving or canceling returns you to where you were.
 Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the connection menu, asking you to confirm first if that setting is on.
 

@@ -66,18 +66,7 @@ return;
 send_menu(peer, priv ? "joinprivate" : "joinpublic", priv ? "Private rooms" : "Public rooms", opts);
 }
 
-/* The top-level Actions menu (Enter in the lobby or a room). Two panels: the Account panel (personal,
-account-persisted settings) and the Lobby/Room panel (the create/join or room-management menu for where you
-are). The second item is named for where you are -- "Lobby panel" in the lobby, "Room panel" in a room. */
-void push_actions_menu(int index)
-{
-int peer = players[index].peer_id;
-string[] opts;
-opts.insert_last("Account panel\tControl plus A."); // 0: personal account settings (Ctrl+A jumps straight here)
-opts.insert_last((players[index].room_id == 0 ? "Lobby panel" : "Room panel") + "\tControl plus H."); // 1: rooms/games (lobby) or room management (room); Ctrl+H jumps here
-send_menu(peer, "actions", "Actions menu", opts);
-}
-/* The lobby menu: create or join a public/private room. Reached from the Actions menu's "Lobby panel" item, and
+/* The lobby menu: create or join a public/private room. Reached directly by Enter in the lobby, and
 its menuresults are also sent directly by the Ctrl+C/J lobby hotkeys. The tab-tagged shortcut labels are shown
 or stripped per the client's "Read keyboard shortcuts in menus" setting. */
 void push_lobby_menu(int index)
@@ -90,7 +79,7 @@ opts.insert_last("Join a public room\tControl plus J.");
 opts.insert_last("Join a private room\tControl plus shift plus J.");
 send_menu(peer, "lobby", "Lobby panel", opts);
 }
-/* The Account panel (from the Actions menu): personal, account-persisted settings. The first three items reuse
+/* The Account panel (Shift+Enter in the lobby or a room): personal, account-persisted settings. The first three items reuse
 the same sub-menus /channel, /pronoun, and /ignored push; the three change items run on the client (which owns
 the input boxes and the masked password form) via accountaction, reusing the /changemail, /nick, /changepass flows. */
 void push_account_menu(int index)
@@ -927,18 +916,6 @@ if(choice == 0) do_create_room(player_index, peer, false, ""); // Create a publi
 else if(choice == 1) ask_input(peer, "Enter a password for your room (at least 6 characters). Others will need it to join.", "createroom private", true, true);
 else if(choice == 2) push_join_list(player_index, false); // Join a public room
 else if(choice == 3) push_join_list(player_index, true);  // Join a private room
-}
-else if(id == "actions")
-{
-/* Top-level Actions menu: 0 = Account panel, 1 = the Lobby/Room panel for where you are. Only reachable via
-openmenu (Enter), which already gated agreement, so no rules re-check is needed to descend into a panel. */
-if(choice < 0) return; // cancelled
-if(choice == 0) push_account_menu(player_index);
-else if(choice == 1)
-{
-if(players[player_index].room_id == 0) push_lobby_menu(player_index);
-else if(get_room_index(players[player_index].room_id) > -1) push_room_menu(player_index);
-}
 }
 else if(id == "account")
 {
