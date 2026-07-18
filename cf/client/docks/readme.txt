@@ -119,7 +119,7 @@ The ranged weapons, the crossbow, cannon, firebomb, grenade, pistol, and machine
 
 Ammo is a resource you gather, the attacker's version of the defenders' wood. Several kinds drop on the ground in your area, arrows for the crossbow, powder for the cannon, gas for the firebomb, grenades, and normal ammo shared by the pistol and machine gun, and you pick each up by walking over it. Press x to hear the drawn weapon's ammo, how many rounds are loaded and how many wait in reserve, and press a to locate the nearest ammo on the ground, nearest first, the way d locates wood for the defenders.
 
-When a weapon runs low, press shift plus R to reload it, moving rounds from your reserve into it. The reload takes as long as its sound plays, blocking you from firing until it finishes, and a ping tells you the moment it is loaded and ready.
+Once a weapon is empty, press shift plus R to reload it, moving rounds from your reserve into it. You can only reload an empty weapon, not top up a partly loaded one, so a full magazine is always spent before the next reload. The reload takes as long as its sound plays, blocking you from firing until it finishes, and a ping tells you the moment it is loaded and ready.
 
 Some weapons set the wall on fire on top of their hit, and the fire keeps gnawing at the wall for a few seconds after. The explosive weapons, the firebomb, cannon, and grenade, light the fiercest and longest fires, while the two heaviest melee weapons, the axe and hammer, leave a smaller, shorter blaze when they land a damaging blow. Hit a wall that is already burning and the fire grows hotter and lasts longer, so a team can stoke a wall down fast. Like your swings, the fire only eats the wall while you can actually attack it, going quiet during the build phase and the rest windows and picking back up when the next attack window opens. You hear a wall fire spread across the whole length of the wall it burns, so it stays with the wall as you move along it and only grows distant as you step away from the wall itself, the same way the sounds of the wall being struck carry.
 
@@ -294,7 +294,7 @@ Number row, 1 through 0 then dash and equals. Draw a weapon directly, in alphabe
 
 Spacebar. Swing a drawn melee weapon at the nearest wall, or fire a drawn ranged weapon at the wall you face, once per press; the machine gun instead fires continuously while it is held. For attackers, that is EVP and PVP.
 
-Shift plus R. Reload the drawn ranged weapon from your reserve; a ping sounds when it is loaded. For attackers, that is EVP and PVP.
+Shift plus R. Reload the drawn ranged weapon from your reserve once it is empty; a ping sounds when it is loaded. For attackers, that is EVP and PVP.
 
 X. Hear the drawn ranged weapon's ammo, how many rounds are loaded and how many are in reserve. For attackers, that is EVP and PVP.
 

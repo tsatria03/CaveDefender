@@ -1338,11 +1338,12 @@ send(players[index].peer_id, "loaded "+((fwd is null) ? 0 : players[index].mag.c
 else if(parsed[0]=="reload" and index>-1)
 {
 /* An attacker finished a reload (the client drove the timing off the reload sound). Move rounds from the reserve
-into the magazine, up to max_ammo, and re-sync the client's loaded + reserve counts. Validated like fire. */
+into the magazine, up to max_ammo, and re-sync the client's loaded + reserve counts. Validated like fire, and only
+when the magazine is empty -- reloading is a full magazine, never a top-up, so a partial mag can't drain the reserve early. */
 int gi = get_game_index(players[index].room_id);
 weapon_data@ rwd = get_weapon_data(players[index].weapon);
 bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack"));
-bool can = attacker and rwd !is null and !rwd.melee and rwd.ammo_type != "" and (games[gi].phase=="build" or games[gi].phase=="wave");
+bool can = attacker and rwd !is null and !rwd.melee and rwd.ammo_type != "" and (games[gi].phase=="build" or games[gi].phase=="wave") and players[index].mag.count(players[index].weapon)==0;
 if(can)
 {
 int need = rwd.max_ammo - players[index].mag.count(players[index].weapon); // room left in THIS weapon's own magazine

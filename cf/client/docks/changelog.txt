@@ -1,4 +1,5 @@
 New in 4.1.
+You can now only reload a ranged weapon once it is fully empty, rather than topping up a partly loaded one. Spend the magazine first, then reload, so refilling early can no longer drain your reserve a few rounds at a time.
 Pressing enter in the lobby or a room now opens the panel for where you are straight away, the lobby panel or the room panel, and shift plus enter opens the account panel, instead of first stopping at a two item chooser. These replace the control plus H and control plus A shortcuts, which are no longer needed and have been removed. In a game, enter still opens the round menu.
 A fresh setup of the game, or resetting your settings, now points you at the Central server by default rather than a local one, so a new install is ready to connect to the official server straight away. It is the Central preset either way, so you can still switch to another server whenever you like.
 The game over screen after an environment versus player game now names exactly how much bonus ammo you earned for beating your best round, listing the amount of each kind, rather than only telling you that a bonus was earned.
