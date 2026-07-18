@@ -206,7 +206,7 @@ timer firetimer; // paces ranged fire: spam_time between taps (mode 0) or repeat
 void fire_one_shot()
 {
 string cls = weapon_class(current_weapon);
-my_loaded--; // optimistic; the server re-syncs via "loaded" (a build-phase or missed shot spends nothing, so it comes back)
+my_loaded--; // optimistic; the server re-syncs via "loaded" (a build-phase or rest-window shot spends nothing, so it comes back; a miss during a wave now costs the round)
 p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/fire.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step equipment/weapons/"+cls+"/"+current_weapon+"/fire "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the shot in 3D
 string fdir = (facing==Left) ? "west" : (facing==Right) ? "east" : (facing==Forward) ? "north" : "south"; // which wall the shot flies toward

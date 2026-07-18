@@ -1269,10 +1269,10 @@ else if(parsed[0]=="fire" and index>-1)
 {
 /* An attacker fired their ranged weapon ("fire <facing>"; the client already played the shot and decremented its
 own view of the magazine optimistically). Ray-march from the shooter along their facing to the first wall within
-range, then LOCK the outcome (5d, the A-plus model): a shot in a wave attack window at a wall in range with a
-round chambered is DAMAGING -- spend one round and hold a bullet that hurts the wall on arrival; a shot during
-build, a rest window, or that finds no wall is a free RICOCHET (no ammo spent, no damage, just the bounce). So
-ammo is spent only when the shot can actually hurt the wall. resolve_bullets lands the hit/bounce when the travel
+range, then LOCK the outcome (5d, the A-plus model): a live shot in a wave attack window with a round chambered
+SPENDS that round wherever it's aimed -- hit or miss -- and is DAMAGING (a bullet that hurts the wall on arrival)
+only when a wall lies in range along the facing. A shot during build or a rest window, or on an empty magazine, is
+a free RICOCHET (no ammo spent, no damage, just the bounce). resolve_bullets lands the hit/bounce when the travel
 timer elapses; the authoritative magazine count goes back either way so the client's optimistic view re-syncs. */
 int gi = get_game_index(players[index].room_id);
 weapon_data@ fwd = get_weapon_data(players[index].weapon);
@@ -1312,13 +1312,10 @@ if(dy<0 and cy==0) { tdir="south"; tdist=d; break; }
 }
 }
 }
-bool window = (games[gi].phase=="wave" and games[gi].wave_attacking); // an attack window: a shot can hurt the wall
-bool damaging = (tdir != "") and window;
-if(damaging)
-{
-if(players[index].mag.count(players[index].weapon) > 0) players[index].mag.take(players[index].weapon, 1); // spend one round from THIS weapon's own magazine -- only on a shot that can hurt the wall
-else damaging = false; // nothing chambered: it still flies, but as a harmless ricochet that spends nothing
-}
+bool window = (games[gi].phase=="wave" and games[gi].wave_attacking); // an attack window: shots are live and burn a round, hit or miss
+bool spend = window and players[index].mag.count(players[index].weapon) > 0; // a live shot with a round chambered spends it wherever it's aimed -- firing into open space during a wave still costs ammo
+bool damaging = spend and (tdir != ""); // ...but it only hurts the wall when one lies in range along the facing
+if(spend) players[index].mag.take(players[index].weapon, 1); // spend one round from THIS weapon's own magazine
 if(tdir != "")
 {
 pending_bullet b;
