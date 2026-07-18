@@ -21,8 +21,9 @@ string wall_phrase_short(string dir, int pct)
 if(pct<=0) return dir+" destroyed";
 return dir+" "+pct+" percent";
 }
-/* The compass heading (degrees, 0 = north, clockwise) for a facing const, so the relative-direction
-helpers in rotation.nvgt can describe where something is compared to the way you're facing. */
+/* The compass heading (degrees, 0 = north, clockwise) for a facing const. NOTE: no longer used by the tracking
+keys -- they now reference the north-up frame (me_rotation, always 0) so the readout matches the 3D audio and
+doesn't spin with your movement. Kept as a small utility in case a facing-relative readout is wanted again. */
 double facing_degrees(int f)
 {
 if(f==Right) return 90;
@@ -30,8 +31,9 @@ if(f==Backward) return 180;
 if(f==Left) return 270;
 return 0; // Forward / north
 }
-/* Read out every other player in your current space, nearest first, as a direction relative to the way
-you're facing plus a rough distance (the P key). Mirrors the nearby-players readout in WeldrynWars. */
+/* Read out every other player in your current space, nearest first, as a FIXED compass direction (north is
+straight ahead -- the Up-arrow direction -- matching the north-up 3D audio, since the player never turns and
+me_rotation is always 0) plus a rough distance (the P key). Mirrors the nearby-players readout in WeldrynWars. */
 void track_players()
 {
 if(players.length()==0) { speak("No players nearby."); return; }
@@ -43,7 +45,7 @@ for(uint i=0; i<players.length(); i++)
 {
 if(!players[i].tracked) continue; // voice-only entries (e.g. a spectator) aren't real cavern players
 double d = get_2d_distance(me.x, me.y, players[i].x, players[i].y);
-double ang = calculate_x_y_angle(me.x, me.y, players[i].x, players[i].y, facing_degrees(facing));
+double ang = calculate_x_y_angle(me.x, me.y, players[i].x, players[i].y, me_rotation);
 int td = int(d + 0.5);
 /* Match the listings: an away player reads "AFK ...", a flagged staff member shows their rank, and the
 name shown is the nickname (falling back to the username key if the nickname hasn't synced yet). */
@@ -68,8 +70,8 @@ string spoken;
 for(uint i=0; i<lines.length(); i++) spoken += (i>0 ? " " : "") + lines[i];
 speak(spoken);
 }
-/* Read out every EVP builder bot in the cavern, nearest first, as a direction relative to the way you're
-facing plus a rough distance (the B key). Same idea as track_players, for the builder bots (no names). */
+/* Read out every EVP builder bot in the cavern, nearest first, as a fixed compass direction (north straight
+ahead, like track_players) plus a rough distance (the B key). Same idea as track_players, for the builder bots. */
 void track_bots()
 {
 if(clientbots.length()==0) { speak("No bots nearby."); return; }
@@ -78,7 +80,7 @@ string[] lines;
 for(uint i=0; i<clientbots.length(); i++)
 {
 double d = get_2d_distance(me.x, me.y, clientbots[i].x, clientbots[i].y);
-double ang = calculate_x_y_angle(me.x, me.y, clientbots[i].x, clientbots[i].y, facing_degrees(facing));
+double ang = calculate_x_y_angle(me.x, me.y, clientbots[i].x, clientbots[i].y, me_rotation);
 int td = int(d + 0.5);
 dists.insert_last(d);
 lines.insert_last("Bot is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
@@ -97,9 +99,9 @@ string spoken;
 for(uint i=0; i<lines.length(); i++) spoken += (i>0 ? " " : "") + lines[i];
 speak(spoken);
 }
-/* Read out every piece of ground WOOD in the cavern, nearest first, as a direction relative to the way you're
-facing plus a rough distance (the D key). Ammo shares the client item list, so this filters to wood only; ammo is
-the A key (track_ammo). Same idea as track_players. */
+/* Read out every piece of ground WOOD in the cavern, nearest first, as a fixed compass direction (north straight
+ahead, like track_players) plus a rough distance (the D key). Ammo shares the client item list, so this filters to
+wood only; ammo is the A key (track_ammo). Same idea as track_players. */
 void track_wood()
 {
 double[] dists;
@@ -108,7 +110,7 @@ for(uint i=0; i<clientitems.length(); i++)
 {
 if(item_sound_category(clientitems[i].type) != "wood") continue; // wood only; ammo is tracked with the A key
 double d = get_2d_distance(me.x, me.y, clientitems[i].x, clientitems[i].y);
-double ang = calculate_x_y_angle(me.x, me.y, clientitems[i].x, clientitems[i].y, facing_degrees(facing));
+double ang = calculate_x_y_angle(me.x, me.y, clientitems[i].x, clientitems[i].y, me_rotation);
 int td = int(d + 0.5);
 dists.insert_last(d);
 lines.insert_last(clientitems[i].type + " wood is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
@@ -138,7 +140,7 @@ for(uint i=0; i<clientitems.length(); i++)
 {
 if(item_sound_category(clientitems[i].type) != "ammo") continue; // ammo only; wood is the D key
 double d = get_2d_distance(me.x, me.y, clientitems[i].x, clientitems[i].y);
-double ang = calculate_x_y_angle(me.x, me.y, clientitems[i].x, clientitems[i].y, facing_degrees(facing));
+double ang = calculate_x_y_angle(me.x, me.y, clientitems[i].x, clientitems[i].y, me_rotation);
 int td = int(d + 0.5);
 dists.insert_last(d);
 lines.insert_last(clientitems[i].type + " ammo is " + calculate_x_y_string(ang) + ", about " + td + (td==1 ? " tile away." : " tiles away."));
