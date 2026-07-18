@@ -1,5 +1,5 @@
 int port=25562;
-string ip="localhost";
+string ip="reality-breaker-studios.net"; // fresh-install / post-reset default: the Central server (no saved ip/port yet). Mirror of CENTRAL_IP/CENTRAL_PORT in storage_presets.nvgt -- kept in sync by hand (global init order can't reference those constants here).
 bool server_custom=false; // true = on a manually entered (non-preset) server; forces the label to "Custom" even if ip/port happen to match a preset
 bool encrypting=true, connected, registering, pinging, connection_dropped, kicked, justregistered, reconnect_aborted, reconnecting, reconnected;
 

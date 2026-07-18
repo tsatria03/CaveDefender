@@ -77,8 +77,9 @@ side_scrolling=false;
 speak_menu_position=false;
 gamxit=1;
 typingSounds=1;
-ip="localhost";
-port=25562;
+ip=CENTRAL_IP; // a fresh setup / reset points at the Central server, not localhost
+port=CENTRAL_PORT;
+server_custom=false; // and treats it as a chosen preset, not a manually entered custom server
 name="";
 password="";
 }

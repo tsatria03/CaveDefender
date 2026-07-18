@@ -162,7 +162,7 @@ its builtin flag set and kept as-is on the next load rather than reset to the de
 void ensure_central_server()
 {
 for(uint i=0; i<servers.length(); i++) if(servers[i].builtin) return; // already present (default or edited) -- leave it
-servers.insert_at(0, serverpreset("Central server", "reality-breaker-studios.net", 25562, true));
+servers.insert_at(0, serverpreset(CENTRAL_NAME, CENTRAL_IP, CENTRAL_PORT, true));
 }
 /* Account presets are stored as one string: each entry is username, password joined by a tab, entries by newlines.
 (Usernames/passwords can't contain spaces, and a typed password won't contain a tab/newline, so those are safe delimiters.) */
