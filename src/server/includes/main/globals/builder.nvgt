@@ -135,14 +135,15 @@ the players' damage sticks until the rest window opens. */
 bool can_build = !(games[gi].phase=="wave" and games[gi].wave_attacking);
 if(builders[i].placing)
 {
-// The place beat finished: feed the carried wood into the target wall (if it still stands), heard at the bot.
+/* The place beat finished: feed the carried wood into the target wall if it still stands. If a player felled
+that wall during the placing pause, DON'T waste the piece and DON'T mime placing onto a breach -- re-aim at the
+weakest wall still standing and keep carrying the wood there; only drop it when nothing stands. */
 builders[i].movetimer.restart();
 builders[i].placing=false;
-builders[i].carrying=false;
 int wi = border_wall(gid, builders[i].target_wall, s);
 if(wi>-1 and walls[wi].health>0)
 {
-repair_wall(wi, wood_reinforce_value(builders[i].carried_type)); // repair scales with the size the bot carried (small<medium<large), same as a player's reinforce
+repair_wall(wi, wood_reinforce_value(builders[i].carried_type), true, evp_fortify_mult(games[gi].evp_rounds_cleared)); // repair up to THIS round's fortify target (climbs each cleared round), so bots can build the walls past the old fixed ceiling
 /* EVP damage ratchet (see lower_wall_floor): during the build phase the bots fortify freely, so the wall's
 repair ceiling rises with the work; during a wave rest they may only restore up to that ceiling, never
 past the permanent damage the attackers have already done. */
@@ -150,8 +151,16 @@ if(games[gi].phase=="build") { if(walls[wi].health > walls[wi].floor) walls[wi].
 else if(walls[wi].health > walls[wi].floor) walls[wi].health = walls[wi].floor;
 broadcast_wall_strength(gid);
 send_to_game(gid, "wallplace "+builders[i].target_wall+" "+builders[i].carried_type); // the repair is heard across the whole wall the bot mended, not just at the bot's spot
-}
+builders[i].carrying=false;
 builders[i].target_wall="";
+}
+else
+{
+// The target fell during the placing pause: re-aim at the weakest wall still standing and carry the wood there
+string nw = weakest_standing_wall(gid, s);
+if(nw==""){ builders[i].carrying=false; builders[i].target_wall=""; } // nothing left to fix -- drop it and idle
+else builders[i].target_wall=nw; // still carrying: head to the new weakest wall instead of burning the trip
+}
 continue;
 }
 if(builders[i].carrying)

@@ -1,14 +1,15 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Fix EVP bots reinforcing walls that don't exist.
+**Unfinished. Make the game timers found in the EVP game adjustible.
+**Finished. Fix EVP bots reinforcing walls that don't exist.
+**Finished. Make it so bots in the EVP actually get tougher, as in build the walls past 200percent, aka 800 health.
 **Unfinished. Add a way to report bugs and or feedback from other players on the server.
-**Unfinished. Make it so bots in the EVP actually get tougher, as in build the walls past 200percent, aka 800 health.
 **Unfinished. Fix major attacking and wall issues with the PVP game.
 **Unfinished. Add a free play mode where you can collect wood, destroy walls, or even spawn bots to do 1 or both.
 
 ##These are the things that are already finished from earlier versions of the game.
 
-**Finished. Fix major balancing issues in the environment versus player.
+**Finished. Fix major balancing issues in the environment versus player game.
 **Finished. Bring back weapon choosing with the number row.
 **Finished. Let server hosts tune the cave's reverb and through-the-wall muffle from a server data file.
 **Finished. Let server hosts tune how often items drop, how many may lie on the ground, and the walls' base strength from a server data file.

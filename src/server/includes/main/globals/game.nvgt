@@ -580,6 +580,22 @@ games[gindex].evp_round_secs = evp_round_seconds(games[gindex].size) + games[gin
 games[gindex].wave_attacking = true;
 games[gindex].wave_cycletimer.restart();
 games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
+/* Guarantee this round's fortification: back every standing wall up to a per-round target that climbs each
+cleared round, so the defence is provably tougher round over round (the wall % keeps rising) instead of
+plateauing at whatever the build-phase wood supply happened to allow. The bots' build-phase work already
+counts (their cap is this same target); this only tops up any shortfall so a slow build can't leave the round
+soft. Standing walls only -- a breach stays a breach. Set the floor too, so it's the wave's repair ceiling. */
+double fmult = evp_fortify_mult(games[gindex].evp_rounds_cleared);
+string[]@ fdirs = WALL_DIRS;
+for(uint fw=0; fw<fdirs.length(); fw++)
+{
+int fwi = border_wall(games[gindex].id, fdirs[fw], games[gindex].size);
+if(fwi<0 or walls[fwi].health<=0) continue;
+double ftgt = walls[fwi].maxhealth * fmult;
+if(walls[fwi].health < ftgt) walls[fwi].health = ftgt;
+if(walls[fwi].floor < ftgt) walls[fwi].floor = ftgt;
+}
+broadcast_wall_strength(games[gindex].id);
 }
 else if(games[gindex].mode=="pvp")
 {
