@@ -1,4 +1,5 @@
 New in 4.1.
+Several sounds that had gone silent in the release build now play again: the in-flight whoosh of a ranged shot as the bullet, arrow, or projectile crosses to the wall, the ambient loop of wood and ammo lying on the ground so dropped items are easier to home in on, and the pistol and machine gun's spent shell casing ringing at the wall on every landing bullet.
 The X ammo readout now adds that firing won't spend a round yet when you check it during the build phase or a rest window, so its counts no longer read as ready to fire when a shot would only ricochet for free.
 Firing a ranged weapon during an attack window now spends a round no matter where you aim, so a shot into open space or one that reaches no wall costs ammo just like a hit did before. Shots during the build phase and rest windows still ricochet free, and a shot only does damage when it actually reaches a wall.
 You can now only reload a ranged weapon once it is fully empty, rather than topping up a partly loaded one. Spend the magazine first, then reload, so refilling early can no longer drain your reserve a few rounds at a time.

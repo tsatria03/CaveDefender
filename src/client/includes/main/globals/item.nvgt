@@ -28,9 +28,10 @@ id = iid; x = ix; y = iy; type = ty;
 string base = "sounds/equipment/items/" + item_sound_category(type) + "/" + type + "/"; // wood/<species>/ or ammo/<type>/
 sound_pool@ pl = item_pool_for(type); // ammo -> ammopool (clear), wood -> woodpool (cave-muffled from outside)
 pl.play_3d(base + "drop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), false);
-/* Not every item type has an ambient ground loop; only start one when the file exists,
-leaving loophandle at -1 otherwise so cleanup is a no-op. */
-if(file_exists(base + "loop.ogg"))
+/* Every item type (all wood species and ammo kinds) has an ambient ground loop, so start it directly. NO
+file_exists guard: the sounds are embedded in the boxed exe, where file_exists reads false even though play_3d
+loads the same file fine, so a guard would silence every ground loop in release. A missing file just fails into an
+invalid loophandle, which stop/cleanup ignore. */
 loophandle = pl.play_3d(base + "loop.ogg", me.x, me.y, me.z, x, y, 0, calculate_theta(me_rotation), true);
 }
 }
