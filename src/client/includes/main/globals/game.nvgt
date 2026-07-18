@@ -207,8 +207,6 @@ buffercheck();
 			{
 				if (key_pressed(KEY_C)) send(0, shift_is_down() ? "menuresult lobby 1" : "menuresult lobby 0", 0, true); // create private / public room
 				if (key_pressed(KEY_J)) send(0, shift_is_down() ? "rejoinlast private" : "rejoinlast public", 0, true); // quick-rejoin the last private / public room joined this session
-				if (key_pressed(KEY_A)) send(0, "openpanel account", 0, true); // Ctrl+A: jump to the Account panel
-				if (key_pressed(KEY_H)) send(0, "openpanel lobby", 0, true);   // Ctrl+H: jump to the Lobby panel (the location panel while in the lobby)
 			}
 			/* Room quick-actions (in a room, not a game): Ctrl+<key> runs the matching room-menu action without opening the
 			menu. Each key read once; Ctrl+S start and Ctrl+Shift+S stop share S. Sent by action name (roomaction <act>),
@@ -224,8 +222,6 @@ buffercheck();
 				if (current_room_private and key_pressed(KEY_R)) send(0, "roomaction getpw", 0, true);   // retrieve password: private room you host only
 				if (key_pressed(KEY_D)) send(0, "roomaction delete", 0, true);
 				if (key_pressed(KEY_L)) send(0, "roomaction leave", 0, true);
-				if (key_pressed(KEY_A)) send(0, "openpanel account", 0, true); // Ctrl+A: jump to the Account panel
-				if (key_pressed(KEY_H)) send(0, "openpanel room", 0, true);    // Ctrl+H: jump to the Room panel (the location panel while in a room)
 			}
 			/* PVE/EVP round hotkeys (host only, in a PVE or EVP game): Ctrl+B begins the round, Ctrl+S skips the build phase
 			(staff), Ctrl+I invites, Ctrl+K kicks. Each key read once, sent by action name via do_game_action, which
@@ -432,7 +428,7 @@ direction sent here is just a legacy hint it ignores (facing no longer matters).
 				}
 				else if(!watching and (current_game_host == name or game_mode == "pvp")) send(0, "openmenu", 0, true); // plain Enter opens the round menu: the host in any mode, and every PVP player (for Choose your side / Watch instead). The server shows nothing if there's nothing to do, so a non-host in PVE/EVP still gets no menu.
 			}
-			else send(0, "openmenu", 0, true); // lobby/room: open the menu
+			else send(0, shift_is_down() ? "openpanel account" : (current_room==0 ? "openpanel lobby" : "openpanel room"), 0, true); // lobby/room: Enter jumps straight to the location panel (lobby or room), Shift+Enter to the Account panel -- these replace the old two-item Actions menu chooser
 		}
 		if(key_pressed(KEY_TAB) and in_game) speak_game_status(); // in a game, Tab speaks the current round status
 		if(key_pressed(KEY_ESCAPE))

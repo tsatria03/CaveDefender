@@ -1907,31 +1907,23 @@ if(get_game_index(players[index].room_id) >= 0) do_game_action(index, event.peer
 }
 else if(parsed[0]=="openmenu" and index>-1)
 {
-/* The client asks the server to open the menu for wherever they are; the server is the authority on
-the options. Lobby and rooms are server-driven now; the in-game menu is still client-rendered. */
-if(!players[index].agreed)
-{
-/* Rules gate: the lobby menu is the only way into rooms/games, so blocking it (plus /accept, /reject, and
-invites) keeps an unagreed player out of all gameplay until they agree. This is where the read/agree
-reminder is shown, since there's no longer a login-time alert. */
-send(event.peer_id, "misc You must read the server rules before you can play. Type /rules to read them, then /rules agree to continue, or /rules disagree to leave.", 0,true);
-}
-else if(players[index].room_id==0 or get_room_index(players[index].room_id)>-1)
-{
-push_actions_menu(index); // Enter in the lobby or a room opens the Actions menu (Account panel + the Lobby/Room panel)
-}
-else if(get_game_index(players[index].room_id)>-1)
-{
-push_game_menu(index); // Enter in a game = round controls
-}
+/* Enter in a game opens the round controls (client-rendered menu the server pushes). The lobby and room panels
+are now reached directly with Enter and Shift+Enter, which the client sends as openpanel (rules-gated there), so
+openmenu only serves the in-game menu; a player in a game has already agreed, so no rules gate is needed here. */
+if(get_game_index(players[index].room_id)>-1) push_game_menu(index);
 }
 else if(parsed[0]=="openpanel" and index>-1 and parsed.length()>1)
 {
-/* A Ctrl+A / Ctrl+H hotkey jumps straight to an Actions-menu panel, skipping the Actions menu itself. Gated like
-openmenu (no panels until you've agreed to the rules), and each panel is pushed only in its own context: the
-account panel in the lobby or a room, the lobby panel only in the lobby, the room panel only in a room. A
-wrong-context press does nothing quietly, matching the other context-specific hotkeys. */
-if(players[index].agreed)
+/* Enter (location panel) and Shift+Enter (account panel) in the lobby or a room jump straight to a panel:
+the location panel (lobby/room) or the account panel. This is the only way into rooms/games, so it's gated on
+rules agreement; an unagreed player gets the read/agree reminder here (there's no login-time alert). Each panel is
+pushed only in its own context: the account panel in the lobby or a room, the lobby panel only in the lobby, the
+room panel only in a room. A wrong-context press does nothing quietly, matching the other context-specific hotkeys. */
+if(!players[index].agreed)
+{
+send(event.peer_id, "misc You must read the server rules before you can play. Type /rules to read them, then /rules agree to continue, or /rules disagree to leave.", 0,true);
+}
+else
 {
 string which = parsed[1];
 if(which == "account" and (players[index].room_id==0 or get_room_index(players[index].room_id)>-1)) push_account_menu(index);
