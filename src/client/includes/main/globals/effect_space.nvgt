@@ -129,11 +129,16 @@ void apply_voice_fx(sound@ snd, double sx, double sy)
 {
 if(@snd == null) return;
 bool rev = false, lp = false;
-if(in_cavern) // dry outside any cavern space (lobby, rooms)
+if(game_mode == "pvp")
 {
-if(game_mode == "pvp") { rev = pvp_inside_ring(sx, sy); lp = pvp_crosswall(sx, sy); }
-else rev = !listener_outside; // shared interior (PVE / inside deck) reverbs; EVP gravel stays dry
+/* PVP: the ring interior IS the cave, but in_cavern is false in PVP (the arena's map is "pvparena", not
+"cavern"), so this must sit OUTSIDE that gate or PVP voice gets no effects at all. Reverb when the SPEAKER is
+inside the ring (their voice rings in the cave); muffle when they're across the wall ring from you. */
+rev = pvp_inside_ring(sx, sy);
+lp = pvp_crosswall(sx, sy);
 }
+else if(in_cavern) // PVE / inside deck reverbs; EVP gravel and the lobby/rooms stay dry
+rev = !listener_outside;
 snd.set_fx(rev ? cave_reverb_fx : "$reverb"); // the bare tag clears that slot
 snd.set_fx(lp ? cave_lowpass_fx : "$lowpass");
 }
