@@ -10,6 +10,14 @@ class serverpreset
 }
 serverpreset[] servers;
 
+/* The built-in Central server (the project's official VPS): the preset the game points at by default on a fresh
+install and after a settings reset, and the always-present, non-removable entry seeded by ensure_central_server().
+Single source of truth for its address -- NOTE: net.nvgt's ip/port globals default to these same literals by hand,
+because global initialization order across files can't safely reference these constants; keep the two in sync. */
+const string CENTRAL_NAME = "Central server";
+const string CENTRAL_IP = "reality-breaker-studios.net";
+const int CENTRAL_PORT = 25562;
+
 /* Saved account presets, managed from the connection menu's Account storage. Selecting one fills name/password
 (the active account). Passwords are stored locally in the encrypted settings.cvf -- obfuscation-grade local
 convenience, the same place the last-used account is already cached. */
