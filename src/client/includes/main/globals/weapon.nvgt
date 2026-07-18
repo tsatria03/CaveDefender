@@ -241,7 +241,7 @@ The reload SOUND is the timing (option B, no data field): play the weapon's relo
 get_sound_length, and drive a timer for exactly that long, blocking fire meanwhile. When it elapses, tell the server,
 which moves rounds from your reserve into the magazine (up to max) and re-syncs `loaded` + the reserve. is_reloading
 clears on completion or when you switch weapons (draw_weapon/equip_weapon). A ping plays on completion (the weapon is
-ready) since the reload clip alone was hard to time. Refuses (with a one-line reason) when there's nothing to reload: melee, a full magazine, or empty reserve. */
+ready) since the reload clip alone was hard to time. Refuses (with a one-line reason) when a reload isn't allowed: melee, a magazine that still has rounds (reload only once empty), or empty reserve. */
 bool is_reloading=false; // true while a reload plays; blocks firing
 timer reloadtimer;       // measures the reload sound's duration
 int reload_duration=0;   // ms; the reload sound's length, measured when the reload starts
@@ -250,7 +250,7 @@ void start_reload()
 if(is_reloading) return; // already reloading
 if(current_weapon=="" or is_melee_weapon(current_weapon)) { speak("This weapon takes no ammo."); return; }
 string at = weapon_ammo_type(current_weapon);
-if(my_loaded >= my_weapon_maxammo) { speak("This weapon is already loaded with " + at + " ammo."); return; }
+if(my_loaded > 0) { speak("This weapon is already loaded with " + at + " ammo."); return; } // must be fully spent first, so a partial magazine can't be topped up (which would drain the reserve early)
 if(ammo_reserve_for(at) <= 0) { speak("You have no " + at + " ammo left to reload."); return; }
 string cls = weapon_class(current_weapon);
 int slot = p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/reload.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
