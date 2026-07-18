@@ -221,9 +221,9 @@ if(ver != version)
 the SERVER is the one behind, so don't wrongly tell the player to update. version strings are "major.minor"
 with minors that always roll over at .9, so a plain numeric compare orders them correctly. */
 if(string_to_number(ver) < string_to_number(version))
-send(event.peer_id, "error: your game is out of date. your version: "+ver+", server version: "+version+". Please update your game to connect to this server.", 0,true);
+send(event.peer_id, "error: your game is out of date. your version: "+ver+". Server version: "+version+". Please update your game to connect to this server.", 0,true);
 else
-send(event.peer_id, "error: this server is out of date. your version: "+ver+", server version: "+version+". The server needs to be updated before you can connect.", 0,true);
+send(event.peer_id, "error: this server is out of date. your version: "+ver+". Server version: "+version+". The server needs to be updated before you can connect.", 0,true);
 return;
 }
 if(!account_exists(name))

@@ -1,5 +1,6 @@
 ####These are the things that need to be finished for future versions of the game.
 
+**Unfinished. Fix EVP bots reinforcing walls that don't exist.
 **Unfinished. Add a way to report bugs and or feedback from other players on the server.
 **Unfinished. Make it so bots in the EVP actually get tougher, as in build the walls past 200percent, aka 800 health.
 **Unfinished. Fix major attacking and wall issues with the PVP game.
