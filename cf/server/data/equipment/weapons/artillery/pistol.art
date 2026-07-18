@@ -3,6 +3,6 @@ melee=false
 fire mode=0
 spam time=200
 range=20
-bullet speed=90
+bullet speed=60
 ammo type=normal
 max ammo=5

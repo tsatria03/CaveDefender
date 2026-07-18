@@ -3,6 +3,6 @@ melee=false
 fire mode=1
 repeat time=100
 range=10
-bullet speed=90
+bullet speed=60
 ammo type=normal
 max ammo=15
