@@ -360,9 +360,10 @@ void handle_pvp_result(string message)
 	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting to pick sides again."); }
 	else send(0, "playagain no", 0, true);
 }
-/* EVP game over (a loss): "evpover <rounds-cleared> <milestone>". The only loss is the round timer running out.
-Show the results and the play-again prompt, mirroring handle_roundover; the score is rounds cleared. A non-zero
-milestone means a new personal best, which earned bonus ammo for the next game. Play again -> a fresh round-1
+/* EVP game over (a loss): "evpover <rounds-cleared> <milestone> [type:amount ...]". The only loss is the round timer
+running out. Show the results and the play-again prompt, mirroring handle_roundover; the score is rounds cleared. A
+non-zero milestone means a new personal best, which earned bonus ammo for the next game -- the trailing "type:amount"
+pairs (one per ammo type) are the exact rolled amounts, named in the milestone dialog. Play again -> a fresh round-1
 game the host begins; no -> leave to the room. */
 void handle_evp_over(string message)
 {
@@ -376,8 +377,21 @@ void handle_evp_over(string message)
 	results += why + "\r\n";
 	results += "Press enter to continue.";
 	dlgmessage(results);
-	// Milestone: a fresh personal-best round earned bonus starting ammo for the next game (the attackers' bonus wood).
-	if(milestone > 0) dlgmessage("Congratulations! You reached a new best of " + milestone + (milestone == 1 ? " round" : " rounds") + ", earning bonus ammo for your next game. Great job! Press enter to continue.");
+	// Milestone: a fresh personal-best round earned bonus starting ammo for the next game (the attackers' bonus wood). The trailing pairs (parsed[3..]) name the exact rolled amount of each ammo type, e.g. "12 arrow ammo, 5 gas ammo, ..., and 14 normal ammo".
+	if(milestone > 0)
+	{
+		string bonus_list = "";
+		for(uint i = 3; i < parsed.length(); i++)
+		{
+			string[] kv = string_split(parsed[i], ":", true);
+			if(kv.length() != 2) continue;
+			string piece = kv[1] + " " + kv[0] + " ammo";
+			if(bonus_list.is_empty()) bonus_list = piece;
+			else if(i == parsed.length() - 1) bonus_list += ", and " + piece;
+			else bonus_list += ", " + piece;
+		}
+		dlgmessage("Congratulations! You reached a new best of " + milestone + (milestone == 1 ? " round" : " rounds") + ", earning " + bonus_list + " for your next game. Great job! Press enter to continue.");
+	}
 	setupmenu();
 	m.add_item("Yes");
 	m.add_item("No");

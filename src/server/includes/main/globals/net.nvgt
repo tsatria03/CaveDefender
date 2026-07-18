@@ -852,14 +852,19 @@ string[] a = ammo_types();
 for(uint i=0; i<a.length(); i++) players[pindex].inv.take(a[i], players[pindex].inv.count(a[i])); // drop each ammo type to 0 without touching wood
 send_ammo_count(pindex);
 }
-/* The EVP milestone reward (the attackers' mirror of PVE's bonus wood): grant a bonus of EVERY ammo type,
-each its own data-driven .amt bonus amount, into the reserve, then clear the pending flag and sync the client.
-Called at the next EVP game's build phase, after reset_player_ammo has zeroed the reserve. */
+/* The EVP milestone reward (the attackers' mirror of PVE's bonus wood): grant the bonus amounts that were rolled
+and stored at game over (pending_bonus_ammo, "type:amount" pairs, one per ammo type) into the reserve, then clear
+the pending flag and sync the client. Granting the stored figures (rather than re-rolling) keeps the amounts the
+results message named. Called at the next EVP game's build phase, after reset_player_ammo has zeroed the reserve. */
 void grant_ammo_bonus(int pindex)
 {
-string[] a = ammo_types();
-for(uint i=0; i<a.length(); i++) players[pindex].inv.give(a[i], ammo_bonus_amount(a[i]));
-players[pindex].pending_bonus_ammo = false;
+string[] pairs = string_split(players[pindex].pending_bonus_ammo, " ", true);
+for(uint i=0; i<pairs.length(); i++)
+{
+string[] kv = string_split(pairs[i], ":", true);
+if(kv.length() == 2) players[pindex].inv.give(kv[0], string_to_number(kv[1]));
+}
+players[pindex].pending_bonus_ammo = "";
 send_ammo_count(pindex);
 }
 // The four cavern wall strengths (as percents) for a game, for the client's N/E/S/W/D keys.
