@@ -1310,10 +1310,14 @@ for(int d=1; d<=fwd.range_hi; d++)
 cx+=dx; cy+=dy;
 if(pvp)
 {
-if(dx<0 and cx==wmin and cy>=wmin and cy<=wmax) { tdir="west"; tdist=d; break; }
-if(dx>0 and cx==wmax and cy>=wmin and cy<=wmax) { tdir="east"; tdist=d; break; }
-if(dy>0 and cy==wmax and cx>=wmin and cx<=wmax) { tdir="north"; tdist=d; break; }
-if(dy<0 and cy==wmin and cx>=wmin and cx<=wmax) { tdir="south"; tdist=d; break; }
+/* PVP attackers stand OUTSIDE the ring and fire INWARD, so the first ring wall the ray crosses is the near
+side they're beyond: firing east (dx>0) from the west reaches the west wall at wmin, etc. -- the mirror of
+ring_wall_in_reach, the outside geometry the melee handler uses. (The EVP branch below is inside-out because
+those shooters fire outward at the border.) */
+if(dx>0 and cx==wmin and cy>=wmin and cy<=wmax) { tdir="west"; tdist=d; break; }
+if(dx<0 and cx==wmax and cy>=wmin and cy<=wmax) { tdir="east"; tdist=d; break; }
+if(dy>0 and cy==wmin and cx>=wmin and cx<=wmax) { tdir="south"; tdist=d; break; }
+if(dy<0 and cy==wmax and cx>=wmin and cx<=wmax) { tdir="north"; tdist=d; break; }
 }
 else
 {
