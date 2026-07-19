@@ -145,6 +145,50 @@ listing += "Reason: " + reason;
 if(listing == "") return "There are no reports on record.";
 return listing;
 }
+/* --- Player feedback / bug reports (filed with /feedback or /fb, reviewed by DEVELOPERS with /feedbacks or /fbs),
+persisted in data/preffs/main/feedback.svr. The sibling of the report system above: same tab-delimited, append-only,
+never-auto-deleted file, but with no reported-player field since feedback targets no one. --- */
+/* Append one feedback entry to data/preffs/main/feedback.svr. One per line, TAB-delimited:
+<stamp>\t<submitter>\t<location>\t<text>. The text is last so it may contain anything (including tabs, rejoined
+on read). Nothing is ever deleted -- a host hand-clears the file if it grows too long. Rewrites the whole file. */
+void add_feedback(string submitter, string location, string text)
+{
+string existing = "";
+if(file_exists("data/preffs/main/feedback.svr"))
+{
+file ff; if(ff.open("data/preffs/main/feedback.svr", "rb")) { existing = ff.read(); ff.close(); }
+}
+string line = report_time_stamp() + "\t" + submitter + "\t" + location + "\t" + text;
+file wf;
+if(!wf.open("data/preffs/main/feedback.svr", "wb")) return;
+wf.write(existing + line + "\n");
+wf.close();
+}
+// The developer /feedbacks viewer: every feedback entry on record, newest first, numbered, in three-line blocks (mirrors format_reports).
+string format_feedback()
+{
+if(!file_exists("data/preffs/main/feedback.svr")) return "There is no feedback on record.";
+file ff;
+if(!ff.open("data/preffs/main/feedback.svr", "rb")) return "There is no feedback on record.";
+string raw = ff.read(); ff.close();
+string[] lines = string_split(raw, "\n", true);
+string listing = "";
+int shown = 0;
+for(int i = int(lines.length()) - 1; i >= 0; i--) // newest first: the file is appended in chronological order
+{
+if(lines[i].trim_whitespace() == "") continue;
+string[] parts = string_split(lines[i], "\t", true);
+if(parts.length() < 4) continue;
+string text = string_join(parts, "\t", 3); // rejoin the message (may itself contain tabs)
+shown++;
+if(shown > 1) listing += "\r\n\r\n";
+listing += shown + ". " + parts[1] + ", on " + parts[0] + ".\r\n";
+listing += "Sent from " + parts[2] + ".\r\n";
+listing += "Feedback: " + text;
+}
+if(listing == "") return "There is no feedback on record.";
+return listing;
+}
 /* Read-only overview for the developer /bansall command: every account that currently holds an active ban. Bans
 live on offline account folders, so there's no in-memory list -- we scan them all. Expired timed bans are
 skipped. Listed in the order find_directories returns (there's no ban timestamp to sort by). */
@@ -1898,6 +1942,13 @@ per-player viewers this takes no name. Non-staff is silently ignored. */
 if(rank_level(players[index].rank) < 1) { }
 else send(event.peer_id, "reportstext\n"+format_reports(), 0, true);
 }
+else if(parsed[0]=="getfeedbacks" and index>-1)
+{
+/* Developers view all player feedback on record, read-only, newest first, in the doc viewer (feedback is a
+dev-review tool). Like getreports it takes no name. Anyone below developer is silently ignored. */
+if(rank_level(players[index].rank) < 3) { }
+else send(event.peer_id, "feedbackstext\n"+format_feedback(), 0, true);
+}
 else if(parsed[0]=="getbansall" and index>-1)
 {
 /* Developer-only read-only overview of every banned account. Bans live on offline folders, so this is the only
@@ -3213,6 +3264,29 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                 if(is_staff(players[i].rank) && int(i) != index) send(players[i].peer_id, "report "+alert, 0, true);
                             send(event.peer_id, "misc Your report has been sent to the staff.", 0, true);
                         }
+                    }
+                }
+                else if(parsed[0] == "/feedback" || parsed[0] == "/fb")
+                {
+                    /* Anyone can send feedback or a bug report to the developers. There is no target -- everything after
+                    the command is the message, which is required. It's logged to feedback.svr with the sender's name and
+                    location for developers to review later with /feedbacks; unlike /report it isn't pushed live. Only the
+                    crash-string filter is applied (so a caught string can't wreck the doc viewer when it's read), not the
+                    public word filter -- feedback is a private developer-only log, so players write freely. */
+                    string fbtext = "";
+                    for(uint r=1; r<parsed.length(); r++) fbtext += (fbtext == "" ? "" : " ") + parsed[r];
+                    if(fbtext == "")
+                    {
+                        send(event.peer_id, "misc Your feedback was empty, so nothing was sent.", 0, true);
+                    }
+                    else if(filter_crash(fbtext))
+                    {
+                        send(event.peer_id, "misc Your feedback was not sent because it contained forbidden text.", 0, true);
+                    }
+                    else
+                    {
+                        add_feedback(players[index].name, report_location_phrase(index), fbtext);
+                        send(event.peer_id, "misc Your feedback has been sent to the developers.", 0, true);
                     }
                 }
             }

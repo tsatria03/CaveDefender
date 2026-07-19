@@ -283,6 +283,20 @@ void comparse(string text, string channel = "global")
 				if(parsed.length() != 1) { syntax_error("/reports"); return; }
 				send(0, "getreports", 0, true);
 			}
+		else if(base == "/feedback" or base == "/fb")
+			{
+				/* Anyone can send feedback or a bug report to the staff. There's no target, just a required message.
+				Sent raw like /report so the server logs it with your name and where you were. */
+				if(parsed.length() < 2) { syntax_error("/feedback your message"); return; }
+				send(0, text, 1, true);
+			}
+		else if(base == "/feedbacks" or base == "/fbs")
+			{
+				// Developers open a read-only view of all feedback on record, newest first (feedback is a dev-review tool).
+				if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
+				if(parsed.length() != 1) { syntax_error("/feedbacks"); return; }
+				send(0, "getfeedbacks", 0, true);
+			}
 		else if(base == "/bansall")
 		{
 			// Developer-only read-only list of every banned account on the server, in the doc viewer.
