@@ -10,7 +10,7 @@ Treat everyone with kindness. Harassment, hate speech, racism, threats, insults,
 
 2. Do not spam or disrupt.
 
-Don't flood chat with repeated, meaningless, or gibberish messages, and don't try to send screen reader crash strings; the game blocks the ones it knows, but attempting it is still a violation. Global chat carries an automatic guard that may mute your global messages for a time if you send them too quickly, but that safeguard is not permission to spam: flooding any channel is a violation whether the guard catches it or not. Spam also covers disruptive actions, such as rapidly creating and deleting rooms, hopping in and out of a room over and over to flood it with join and leave notices, or joining and leaving a game as a spectator to interfere with a round in progress. The quick rejoin keys make returning to your last room easy, but that convenience is not permission to bounce in and out of it repeatedly.
+Don't flood chat with repeated, meaningless, or gibberish messages, and don't try to send screen reader crash strings; the game blocks the ones it knows, but attempting it is still a violation. Global chat carries an automatic guard that may mute your global messages for a time if you send them too quickly, but that safeguard is not permission to spam: flooding any channel is a violation whether the guard catches it or not. Spam also covers disruptive actions, such as rapidly creating and deleting rooms, hopping in and out of a room over and over to flood it with join and leave notices, or joining and leaving a game as a spectator to interfere with a round in progress. The quick rejoin keys make returning to your last room easy, but that convenience is not permission to bounce in and out of it repeatedly. Joining and leaving rooms also carries an automatic cooldown that quietly ignores a move made too soon after your last, but like the chat guard, that safeguard is not permission to spam.
 
 3. Keep content appropriate, and use the right channel.
 
@@ -22,7 +22,7 @@ This includes malicious links, viruses, pirated or unlicensed software, leaks, t
 
 5. Do not cheat.
 
-Do not use anything to gain an unfair advantage, including key pressers or other non-human input, speed hacks, memory or variable manipulation, modified clients, or knowingly abusing bugs instead of reporting them. If you find a bug, report it to staff. Cheating can result in an immediate ban with no warning.
+Do not use anything to gain an unfair advantage, including key pressers or other non-human input, speed hacks, memory or variable manipulation, modified clients, or knowingly abusing bugs instead of reporting them. If you find a bug, report it with the /feedback command so the developers can look into it. Cheating can result in an immediate ban with no warning.
 
 6. Respect staff.
 
