@@ -209,6 +209,20 @@ double evp_fortify_step = 0.5; // evpfortifystep= -- extra target per cleared ro
 // This round's guaranteed wall-fortify target, as a multiple of max health; never below full (1.0).
 double evp_fortify_mult(int rounds_cleared) { double m = evp_fortify_base + rounds_cleared * evp_fortify_step; return m < 1.0 ? 1.0 : m; }
 
+/* EVP round timer (host-tunable, EVP-ONLY -- PVE has no survival clock and PVP uses its own pvp_round_seconds).
+The round is a budget of real ATTACKING seconds (the clock freezes during rest windows): a per-map-size base plus
+a bonus added for every round already cleared, so the clock loosens the deeper you get. Tunable via conf.gvr:
+evproundtime_<label>=<size>:<seconds> sets a size tier; evproundbonus=<seconds> is added per cleared round. */
+int[] evp_round_sizes; int[] evp_round_secs_vals; // parallel size -> base-seconds tiers, seeded in seed_evp_round_time (read via tier_value)
+int evp_round_bonus = 10; // evproundbonus= -- seconds added to the round timer per round already cleared
+void seed_evp_round_time() // the old hardcoded ladder: 75 / 120 / 180 / 180 seconds at sizes 25 / 50 / 75 / 100
+{
+evp_round_sizes.resize(0); evp_round_secs_vals.resize(0);
+int[] sizes = {25, 50, 75, 100};
+int[] secs = {75, 120, 180, 180};
+for(uint i=0; i<sizes.length(); i++) set_tier(evp_round_sizes, evp_round_secs_vals, sizes[i], secs[i]);
+}
+
 // Set one size tier in a parallel sizes/vals pair: replace the matching size, or insert keeping sizes sorted.
 void set_tier(int[]@ sizes, int[]@ vals, int size, int val)
 {
@@ -292,13 +306,21 @@ seed_tuning(ammo_tuning);
 wall_base_health = 400;
 evp_fortify_base = 1.5;
 evp_fortify_step = 0.5;
+seed_evp_round_time();
+evp_round_bonus = 10;
 string[] keys, vals;
 if(!read_kv("data/preffs/game/conf.gvr", keys, vals)) return;
-for(uint i=0; i<keys.length(); i++) // pass 1: wallbase + the EVP fortify escalation + the item* defaults (applied to every category)
+for(uint i=0; i<keys.length(); i++) // pass 1: wallbase + the EVP fortify escalation + the EVP round timer + the item* defaults (applied to every category)
 {
 if(keys[i] == "wallbase") { double wb = string_to_number(vals[i]); if(wb > 0) wall_base_health = wb; }
 else if(keys[i] == "evpfortifybase") { double v = string_to_number(vals[i]); if(v > 0) evp_fortify_base = v; }
 else if(keys[i] == "evpfortifystep") { double v = string_to_number(vals[i]); if(v >= 0) evp_fortify_step = v; }
+else if(keys[i] == "evproundbonus") { int b = string_to_number(vals[i]); if(b >= 0) evp_round_bonus = b; }
+else if(string_left(keys[i], 12) == "evproundtime") // evproundtime_<label>=<size>:<seconds> -- one round-timer tier
+{
+int c = string_contains(vals[i], ":", 1);
+if(c >= 1) { int size = string_to_number(string_left(vals[i], c)); int v = string_to_number(vals[i].substr(c+1)); if(size > 0 and v >= 0) set_tier(evp_round_sizes, evp_round_secs_vals, size, v); }
+}
 else if(string_left(keys[i], 4) == "item")
 {
 apply_tuning_line(wood_tuning, keys[i].substr(4), vals[i]);
