@@ -4,7 +4,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
-**Finished. Add a way for players to send bug reports and feedback to the staff.
+**Finished. Add a way for players to send bug reports and feedback to the developer.
 **Finished. Fix major attacking issues with the PVP game.
 **Finished. Make the game timers found in the EVP game adjustible.
 **Finished. Fix EVP bots reinforcing walls that don't exist.

@@ -59,25 +59,30 @@ send(peer, "play roomcreate.ogg", 0,true);
 string chint = priv ? "You can join it with its password from the join private room option." : "You can join it from the join public room option.";
 broadcast_event(display_name_flagged(index)+" just created a "+(priv?"private":"public")+" room. "+chint, peer);
 }
+// A silent cooldown (ms) between a player's room moves, so they can't join/leave rooms super fast; see player.room_move_timer.
+const int room_move_cooldown = 500;
 /* Try to put a player into a room by id, validating presence, existence, and (for private rooms) the
-password. Sends feedback on failure. Shared by the joinroom command and the lobby join menus. */
-void do_join_room(int index, int peer, int roomid, string password)
+password. Sends feedback on failure. Shared by the joinroom command and the lobby join menus. Returns whether
+the player actually joined. throttle applies the anti-spam room-move cooldown (silently refused if too soon);
+invitation acceptance passes false, since an invite isn't a spam vector and is gated by the invite flow itself. */
+bool do_join_room(int index, int peer, int roomid, string password, bool throttle=true)
 {
+if(throttle and players[index].room_move_timer.elapsed < room_move_cooldown) return false; // too soon after the last room move: ignore silently, no message
 if(players[index].room_id != 0)
 {
 send(peer, "You are already in a room.", 0,true);
-return;
+return false;
 }
 int ri=get_room_index(roomid);
 if(ri==-1)
 {
 send(peer, "That room no longer exists.", 0,true);
-return;
+return false;
 }
 if(rooms[ri].is_private and password!=rooms[ri].password)
 {
 send(peer, "Incorrect room password.", 0,true);
-return;
+return false;
 }
 bool already=false;
 for(uint k=0; k<rooms[ri].members.length(); k++) if(rooms[ri].members[k]==peer) already=true;
@@ -92,6 +97,8 @@ string jtype = rooms[ri].is_private?"private":"public";
 string jposs = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
 string jwhere = (players[index].name == rooms[ri].host) ? jposs+" own "+jtype+" room" : display_name_flagged_for(rooms[ri].host)+"'s "+jtype+" room";
 broadcast_event(display_name_flagged(index)+" joined "+jwhere+".", peer);
+players[index].room_move_timer.restart(); // start the cooldown so the next join/leave must wait room_move_cooldown
+return true;
 }
 // How long a pending room invitation stays valid before /accept refuses it (2 minutes, in ms).
 const int invite_timeout = 120000;
@@ -134,7 +141,7 @@ if(ri < 0) { players[index].invite_room = 0; send(peer, "misc That room is no lo
 if(players[index].room_id != 0) { send(peer, "misc You can only accept an invitation from the lobby.", 0, true); return; }
 string inviter = players[index].invite_from;
 players[index].invite_room = 0; // consume the invite before joining
-do_join_room(index, peer, rooms[ri].id, rooms[ri].password); // password passed in = bypasses the private check
+do_join_room(index, peer, rooms[ri].id, rooms[ri].password, false); // password passed in = bypasses the private check; throttle=false = an accepted invite isn't spam, so it skips the room-move cooldown
 int hi = get_online_index(inviter);
 if(hi > -1) send(players[hi].peer_id, "misc " + display_name_flagged(index) + " has accepted your room invite.", 0, true);
 }
