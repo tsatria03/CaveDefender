@@ -1151,6 +1151,7 @@ players[existing].restoring=false;
 index=existing;
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true); // the host's cave-acoustics presets (effects.gvr); re-sent on reconnect in case the client restarted
+send(event.peer_id, "autoafk "+autoafk, 0, true); // the host's idle-timeout policy (conf.svr's autoafk); re-sent on reconnect in case the client restarted
 if(players[index].restore_reannounce) send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true); // only if they were held (announced offline); a live takeover was never offline
 players[index].restore_reannounce=false;
 send(event.peer_id, "voicemutestate "+(is_muted_now(index, "voice") ? "1" : "0"), 0, true); // silent voice-mute state so the client can warn on O without opening the mic; no message or sound
@@ -1180,6 +1181,7 @@ players[index].ignored = get_ignored(players[index].name); // personal ignore li
 players[index].agreed = has_agreed_rules(players[index].name); // rules agreement (rules.usr vs rulesver); gates play until agreed. The reminder to read/agree is shown when they try to open the lobby, not at spawn.
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true); // the host's cave-acoustics presets (effects.gvr): the client adopts them for its reverb/muffle slots
+send(event.peer_id, "autoafk "+autoafk, 0, true); // the host's idle-timeout policy (conf.svr's autoafk): 0 = off, else the client auto-goes-AFK after this many idle seconds
 /* New accounts are announced at creation time (see register_account), so logging in for the first time
 is just a normal "online" notice like anyone else. */
 send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);

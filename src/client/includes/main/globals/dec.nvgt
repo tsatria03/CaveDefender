@@ -62,6 +62,8 @@ bool afk_counting=false; // true during the /afk pre-countdown; any key cancels 
 int afk_count=0; // seconds elapsed in the AFK countdown (10 = go away)
 string afk_reason=""; // optional reason typed with /afk, captured at command time and sent when the countdown finishes; announcement-only
 timer afk_timer; // ticks the one-per-second AFK countdown beeps
+int auto_afk_ms=0; // host idle-timeout policy from the server (conf.svr's autoafk, in ms; 0 = disabled). Set by the "autoafk" message on login.
+timer activity_timer; // time since our last key press; when it passes auto_afk_ms we auto-go-AFK. Any key restarts it (see the main loop), and it's held at zero whenever we're already away, mid-countdown, or auto-AFK is off.
 double game_build_seconds=0; // build-phase length (or remaining, on join) for the local countdown
 timer game_phasetimer; // restarted on each phase change; drives the build-phase countdown shown in the game menu
 timer rectimer;

@@ -33,6 +33,16 @@ bool regex(string message, string pattern)
 	return re.match(message);
 }
 
+/* A NON-consuming probe: is ANY key held this frame? Used by the auto-AFK idle timer to tell whether the
+player is still at the keyboard. Unlike afk_wake_key_pressed (which uses key_pressed and swallows the press),
+key_down only reads state, so gameplay still sees the input. Every key counts as activity -- merely being at
+the keyboard, even reading buffers, keeps you present -- so the timer resets on anything. */
+bool any_key_down()
+{
+	for(uint k=4; k<=285; k++) if(key_down(k)) return true;
+	return false;
+}
+
 bool afk_wake_key_pressed()
 {
 	for(uint k=4; k<=285; k++)

@@ -27,6 +27,8 @@ void game()
 	current_game_host="";
 	afk=false;
 	afk_counting=false;
+	auto_afk_ms=0;            // forget any stale idle-timeout policy; the server re-sends autoafk on this login/reconnect
+	activity_timer.restart(); // start the idle clock fresh for this session
 	world_frozen=false;       // clear any stale world-stop; if the server is still frozen it re-sends worldfreeze on spawn
 	while(true)
 	{
@@ -189,6 +191,18 @@ buffercheck();
 			}
 			// No wake key this frame: fall through so the exempt keys (buffers, F1-F5, G/L/R, escape) work.
 		}
+		/* Auto-AFK: the host's idle timeout (auto_afk_ms, from the server; 0 = off). While we're present, any key
+		held keeps activity_timer at zero; once we've gone that long without touching the keyboard, we go STRAIGHT
+		to AFK -- no countdown -- by sending "afk" (no reason), exactly as a finished /afk countdown does, so the
+		afkon cue and everyone's notice come from the normal path. The else pins the clock at zero whenever we're
+		already away, mid-countdown, auto-AFK is off, or input is locked (a world freeze or a game pause -- you
+		can't press a key then, so that time isn't idleness), so it starts fresh the instant we're back and active. */
+		if(auto_afk_ms>0 and !afk and !afk_counting and !world_frozen and !game_paused)
+		{
+			if(any_key_down()) activity_timer.restart();
+			else if(activity_timer.elapsed>=auto_afk_ms) { afk=true; send(0, "afk", 0, true); }
+		}
+		else activity_timer.restart();
 		/* Auto-running (toggle with Alt+R): when on you run by default and holding a modifier walks; when
 		off it's the reverse (walk by default, modifier runs). Mirrors how SimpleFighter inverts with alt. */
 		bool running = autorun;

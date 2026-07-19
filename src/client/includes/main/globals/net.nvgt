@@ -902,6 +902,13 @@ void netloop_impl()
 			int fnl = string_contains(message, "\n", 1);
 			if(fnl > -1) add_buffer_item("alerts", message.substr(fnl + 1));
 		}
+		else if (parsed[0] == "autoafk" and parsed.length() > 1)
+		{
+			/* The host's idle-timeout policy (conf.svr's autoafk, in seconds; 0 = disabled), sent on login and
+			reconnect. Store it in ms for the main-loop idle timer, and start the clock fresh from now. */
+			auto_afk_ms = string_to_number(parsed[1]) * 1000;
+			activity_timer.restart();
+		}
 		else if (parsed[0] == "afkself" and parsed.length() > 1)
 		{
 			/* You went away or came back: set the state, play the cue, and note it first-person in misc. Going

@@ -23,3 +23,7 @@ spamguard=1
 spamcount=5
 spamtime=3000
 spamdir=600
+
+# Auto-AFK: seconds a player can go without pressing any key before they're automatically marked away, the same
+# as /afk but with no countdown. 0 turns it off so only manual /afk works; any positive value is floored at 30.
+autoafk=300
