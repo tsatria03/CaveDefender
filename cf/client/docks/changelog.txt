@@ -1,4 +1,5 @@
 New in 4.2.
+The server no longer rewrites its configuration file every few seconds. It used to overwrite the file on a timer, wiping any edits a host made while the server was running; now it only saves the file at startup and when a setting actually changes, so a host's edits can now stay put.
 Server hosts can now tune the environment versus player round timer through the game settings file. The base time limit for each map size and the extra seconds every cleared round adds are both adjustable, and an untouched file plays exactly as before.
 New in 4.1.
 In environment versus player, the bots' walls now get tougher every round you clear instead of stalling at the same strength. Each cleared round raises how far the bots fortify the walls, so the deeper you go the harder they are to tear down, climbing well past two hundred percent in the later rounds.

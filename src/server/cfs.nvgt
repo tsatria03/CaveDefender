@@ -85,6 +85,10 @@ if(spamtime<1) spamtime=1;   // the sliding window must be a positive span of mi
 if(spamdir<0) spamdir=0;     // negative durations make no sense; 0 already means an indefinite mute
 f.close();
 }
+/* Normalize the config once now: re-save it with the standard comments, creating it with documented defaults if it
+was missing. This is the only routine rewrite -- owner changes still save immediately, and nothing else here changes
+at runtime, so the file is no longer rewritten on a timer (which used to overwrite a host's live edits). */
+writeprefs();
     if(file_exists("data/preffs/main/motd.svr"))
     {
         f.open("data/preffs/main/motd.svr", "r");
@@ -113,14 +117,42 @@ netloop();
 gametick();
 }
 }
+/* Persist the server-wide config. Called once at startup (to normalize + document the file) and whenever a setting
+changes at runtime (currently only the owner list) -- NOT on a timer, so a host's live edits aren't overwritten. The
+grouped comments below are re-emitted on every save. The loader (top of this file) ignores blank and #-prefixed
+lines, and comment text must never contain '=' (the loader splits each line on the first '='). */
 void writeprefs()
 {
 file f;
 f.open("data/preffs/main/conf.svr", "wb");
-string what;
 string ownerlist="";
 for(uint i=0; i<owners.length(); i++) ownerlist+=(i>0 ? "," : "")+owners[i];
-what="port="+port+"\r\n"+"userlimit="+userlimit+"\r\n"+"owners="+ownerlist+"\r\n"+"rulesver="+rulesver+"\r\n"+"ruleswitch="+ruleswitch+"\r\n"+"spamguard="+spamguard+"\r\n"+"spamcount="+spamcount+"\r\n"+"spamtime="+spamtime+"\r\n"+"spamdir="+spamdir+"\r\n";
+string what="";
+what+="# CaveDefender server configuration. Each line is one setting -- its name, an equals sign, then the value.\r\n";
+what+="# Lines starting with a hash are comments, ignored by the server. The server rewrites this file at startup and\r\n";
+what+="# when a setting changes at runtime (like the owner list), so edit the values here with the server stopped;\r\n";
+what+="# any hand-added comments will be replaced by these.\r\n";
+what+="# All settings take effect on restart.\r\n";
+what+="\r\n";
+what+="# Network: the UDP port to listen on, and the most players allowed online at once.\r\n";
+what+="port="+port+"\r\n";
+what+="userlimit="+userlimit+"\r\n";
+what+="\r\n";
+what+="# Owner accounts: up to three comma-separated aliases for the single owner, each forced to developer rank and\r\n";
+what+="# matched without case sensitivity; a blank value means no owner. Maintained automatically on owner rename or transfer.\r\n";
+what+="owners="+ownerlist+"\r\n";
+what+="\r\n";
+what+="# Rules agreement: raise rulesver to make everyone re-read and re-agree to the rules once. ruleswitch is the master\r\n";
+what+="# gate -- 1 means players must agree before they can play, 0 turns the gate off so anyone can play unagreed.\r\n";
+what+="rulesver="+rulesver+"\r\n";
+what+="ruleswitch="+ruleswitch+"\r\n";
+what+="\r\n";
+what+="# Global-chat anti-spam auto-mute: spamguard is the master switch (1 on, 0 off). A non-staff player who sends\r\n";
+what+="# spamcount messages within spamtime milliseconds is auto-muted in global chat for spamdir seconds (0 is indefinite).\r\n";
+what+="spamguard="+spamguard+"\r\n";
+what+="spamcount="+spamcount+"\r\n";
+what+="spamtime="+spamtime+"\r\n";
+what+="spamdir="+spamdir+"\r\n";
 f.write(what);
 f.close();
 }

@@ -1,8 +1,6 @@
 bool encryption=true;
 int maxvoicebytes=262144; // ~256 KB; the server drops voice packets larger than this (anti-flood).
-int writetime=10000;
 dictionary verified_logins;
-timer writetimer;
 bool restart_pending=false; // a /restart countdown is in progress
 int restart_delay=0;        // how long (ms) the countdown runs before relaunch
 timer restart_timer;
@@ -968,11 +966,6 @@ send_ammo_count(pindex);
 void netloop()
 {
 event = net.request();
-if(writetimer.elapsed>writetime)
-{
-writetimer.restart();
-writeprefs();
-}
 if(restart_pending and restart_timer.elapsed>=restart_delay)
 {
 restart_pending=false;

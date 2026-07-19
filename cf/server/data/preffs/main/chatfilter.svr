@@ -2,6 +2,7 @@
 # Rules use \b word boundaries so they match whole words only and don't block innocent words (e.g. "hell" won't block "hello").
 
 # mild bad words
+
 re=\bcrap
 re=\bdamn
 re=\bdam\b
@@ -11,6 +12,7 @@ re=\bpiss
 re=\bbastard
 
 # moderate bad words
+
 re=\bshit
 re=\bbitch
 re=\bdick\b
@@ -21,17 +23,20 @@ re=\bslut
 re=\bwhore
 
 # strong bad words
+
 re=\bfuck
 re=\bfucker
 re=\bfuk
 re=\bfuker
 
 # extremely bad words / slurs
+
 re=\bcunt
 re=\bnigg
 re=\bfag
 re=\bretard
 
 # sexual / explicit terms
+
 re=\bsex
 re=\bgay\b

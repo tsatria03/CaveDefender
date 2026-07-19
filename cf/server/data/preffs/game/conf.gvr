@@ -13,6 +13,9 @@ itemcap_big=75:28
 itemcap_large=100:40
 itemspawn=500,2000
 
+# wallbase is the full (max) health of the four destroyable walls, and it applies to ALL THREE game modes -- PVE,
+# environment versus player, and player versus player alike (not just PVE/PVP). In EVP it's also the anchor the
+# fortify percentages ride on, so a "150%" wall is 1.5 times this value; raising it makes walls tougher everywhere.
 wallbase=400
 
 # EVP wall toughness escalation: each wave the bots' walls are guaranteed to at least evpfortifybase of full strength,

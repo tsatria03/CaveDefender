@@ -1,3 +1,6 @@
+# Pronoun sets a player can choose from, one per line: a label, then in parentheses the five slash-separated forms
+# (subject / object / possessive determiner / possessive pronoun / reflexive) that drive how third-person messages
+# refer to that player. Blank lines and lines starting with a hash are ignored. Edit while the server is stopped.
 Masculine/male (he/him/his/his/himself)
 Feminine/female (she/her/her/hers/herself)
 Singular/they (they/them/their/theirs/themself)
