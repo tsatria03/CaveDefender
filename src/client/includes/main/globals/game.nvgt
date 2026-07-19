@@ -502,14 +502,27 @@ void speak_game_status()
 		{
 			int rem = int(game_build_seconds) - int(game_phasetimer.elapsed / 1000); // the attacking-seconds budget, frozen during build windows
 			if(rem < 0) rem = 0;
-			if(my_side == "attack") speak((wave_attacking ? "Attack window, smash the walls, " : "Hold your fire, the walls are being repaired, ") + rem + (rem == 1 ? " second" : " seconds") + " left.");
-			else speak((wave_attacking ? "The attackers are striking, gather wood, " : "Repair window, mend the walls, ") + rem + (rem == 1 ? " second" : " seconds") + " left.");
+			/* The clock is a budget of attack seconds -- frozen during repair windows -- so say "left" while it's ticking
+			(attack window) and "attacking paused at" while it's held (repair window), the same clarity as the EVP readout. */
+			if(my_side == "attack")
+			{
+				if(wave_attacking) speak("Attack window, smash the walls, " + rem + (rem == 1 ? " second" : " seconds") + " left.");
+				else speak("Hold your fire, the walls are being repaired, attacking paused at " + rem + (rem == 1 ? " second" : " seconds") + ".");
+			}
+			else
+			{
+				if(wave_attacking) speak("The attackers are striking, gather wood, " + rem + (rem == 1 ? " second" : " seconds") + " left.");
+				else speak("Repair window, reinforce the walls, attacking paused at " + rem + (rem == 1 ? " second" : " seconds") + ".");
+			}
 		}
 		else if(game_outside)
 		{
 			int rem = int(game_build_seconds) - int(game_phasetimer.elapsed / 1000); // EVP wave carries the round timer in game_build_seconds
 			if(rem < 0) rem = 0;
-			speak("Round " + wave_number + (wave_attacking ? ", tear down the walls, " : ", the bots are repairing, ") + rem + (rem == 1 ? " second" : " seconds") + " left.");
+			/* The round clock is a budget of attack seconds -- it freezes during a repair window. Say "paused" then, so the
+			unchanging number reads as held rather than a stuck countdown; during an attack window it's ticking, so say "left". */
+			if(wave_attacking) speak("Round " + wave_number + ", tear down the walls, " + rem + (rem == 1 ? " second" : " seconds") + " left.");
+			else speak("Round " + wave_number + ", the bots are repairing, attacking paused at " + rem + (rem == 1 ? " second" : " seconds") + ".");
 		}
 		else if(wave_attacking) speak("Round " + wave_number + ", the enemies are attacking.");
 		else speak("Round " + wave_number + " complete. The enemies are resting.");
