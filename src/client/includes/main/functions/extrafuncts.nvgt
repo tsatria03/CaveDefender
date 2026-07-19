@@ -305,6 +305,7 @@ while(true)
 {
 wait(5);
 form.monitor();
+net_keepalive(); // service the network so a long read (server help/rules, the staff views, or the client docks) doesn't time the connection out, mirroring the chat inputs and the F6 card
 if (form.is_pressed(dockclose)) return;
 }
 }
