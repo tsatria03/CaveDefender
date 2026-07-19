@@ -134,6 +134,17 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/fastrestart"); return; }
 		send(0, "fastrestart", 0, true);
 	}
+	else if(base == "/shutdown" or base == "/sdn")
+	{
+		if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
+		if(parsed.length() != 1) { syntax_error("/shutdown"); return; }
+		setupmenu();
+		m.add_item("yes");
+		m.add_item("no");
+		m.intro_text = "Are you sure you want to completely shut down the server?";
+		if(m.run() != 0) { speak("canceled"); return; }
+		send(0, "shutdown", 0, true); // stop the server FOR GOOD: unlike a restart, it kills the auto-restart supervisor first so nothing brings it back
+	}
 	else if(base == "/gamestop" or base == "/gp")
 	{
 		if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }

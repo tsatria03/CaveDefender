@@ -370,6 +370,25 @@ wait(5);
 }
 exit();
 }
+/* Stops the server FOR GOOD (the /shutdown command). Same graceful client-disconnect + flush + exit as do_restart,
+but FIRST kills the downcheck supervisor (compiled builds only) so it can't relaunch us -- the remote equivalent of
+pressing Escape in the server console. If downcheck isn't running (e.g. an uncompiled dev run), the taskkill no-ops. */
+void do_shutdown()
+{
+if(SCRIPT_COMPILED) run(expand_environment_variables("%SystemRoot%\\System32\\taskkill.exe"), "/F /IM downcheck.exe", true, true); // kill the supervisor first, and wait for it, so it can't relaunch us in the gap
+for(uint i=0; i<players.length(); i++)
+{
+net.disconnect_peer_forcefully(players[i].peer_id);
+}
+timer flush;
+flush.restart();
+while(flush.elapsed<300)
+{
+net.request();
+wait(5);
+}
+exit();
+}
 /* Carries out a ban that has already passed the rank and target checks, shared by /ban (permanent) and
 /tempban (timed). dur is the length in whole seconds (0 = permanent); reason is "" when none was given.
 Records the ban with its reason, drops the target from the roster, tells them (with the reason), announces
@@ -2421,6 +2440,10 @@ restart_timer.restart();
 else if(parsed[0]=="fastrestart" and index>-1 and rank_level(players[index].rank)>=3)
 {
 do_restart();
+}
+else if(parsed[0]=="shutdown" and index>-1 and rank_level(players[index].rank)>=3)
+{
+do_shutdown(); // stop the server for good -- kills the downcheck supervisor first so it can't relaunch us
 }
 else if(parsed[0]=="freeze" and index>-1 and rank_level(players[index].rank)>=3)
 {
