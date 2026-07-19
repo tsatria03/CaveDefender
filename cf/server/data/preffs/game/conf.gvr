@@ -12,10 +12,25 @@ itemcap_medium=50:18
 itemcap_big=75:28
 itemcap_large=100:40
 itemspawn=500,2000
+
 wallbase=400
+
 # EVP wall toughness escalation: each wave the bots' walls are guaranteed to at least evpfortifybase of full strength,
 # rising by evpfortifystep for every round already cleared. So with these defaults round 1 fortifies to 150%, round 2
 # to 200%, round 3 to 250%, and so on -- the walls get provably harder to bring down the further you get. base is a
 # multiple of full strength (1.5 = 150%), step is added per cleared round (0.5 = +50% each). Raise step to escalate faster, lower it to stretch the mode out longer.
+
 evpfortifybase=1.5
 evpfortifystep=0.5
+
+# EVP round timer (environment versus player only -- PVE has no clock and PVP uses its own). The round is a budget of
+# real attacking seconds: the clock counts down only while you are attacking and freezes during the rest windows.
+# evproundtime is the base limit per map size (size:seconds, matched by the size number like the item lines above);
+# evproundbonus is extra seconds added to that base for every round already cleared, so the clock loosens the deeper
+# you get. Defaults: 75/120/180/180 seconds by size, plus 10 seconds per cleared round.
+
+evproundtime_small=25:75
+evproundtime_medium=50:120
+evproundtime_big=75:180
+evproundtime_large=100:180
+evproundbonus=10

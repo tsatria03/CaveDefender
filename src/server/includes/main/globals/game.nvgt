@@ -471,7 +471,7 @@ return 75;
 /* EVP round timer (seconds the attackers have to bring all four walls down once the wave starts), by map
 size. Constant per size -- the escalation comes from the defenders (more builders each round), not a
 shrinking clock. Tunable. */
-int evp_round_seconds(int size) { if(size<=25) return 75; if(size<=50) return 120; return 180; }
+int evp_round_seconds(int size) { return tier_value(evp_round_sizes, evp_round_secs_vals, size); } // host-tunable per size (conf.gvr evproundtime_*), seeded to the old 75/120/180/180 ladder
 /* PVP round timer: the budget of actual ATTACKING seconds the attackers have to bring all four walls down.
 Like EVP's clock it FREEZES during build windows (so rest downtime never burns the limit), and it's a
 single decisive round (no escalation -- fixed human headcount, no bots to ramp). Scaled by map size, tunable. */
@@ -576,7 +576,7 @@ on an attack segment. The round number is the current EVP round and stays fixed 
 (escalation is per round cleared -- more builders -- not per segment). Start the round timer too (wavetimer
 counts against evp_round_secs). */
 games[gindex].wave_number = games[gindex].evp_rounds_cleared + 1; // 1-based current round
-games[gindex].evp_round_secs = evp_round_seconds(games[gindex].size) + games[gindex].evp_rounds_cleared * 10; // +10s per round already cleared, so escalation lives in the bot count, not a shrinking clock
+games[gindex].evp_round_secs = evp_round_seconds(games[gindex].size) + games[gindex].evp_rounds_cleared * evp_round_bonus; // base (per size) + a host-tunable bonus per round already cleared (conf.gvr evproundbonus), so the clock loosens the deeper you get
 games[gindex].wave_attacking = true;
 games[gindex].wave_cycletimer.restart();
 games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
