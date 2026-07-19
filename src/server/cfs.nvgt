@@ -83,6 +83,12 @@ spamdir=string_to_number(values[prefs.find("spamdir")]);
 if(spamcount<1) spamcount=1; // a trip needs at least one message; guard against a config value that would trip on nothing or never
 if(spamtime<1) spamtime=1;   // the sliding window must be a positive span of milliseconds
 if(spamdir<0) spamdir=0;     // negative durations make no sense; 0 already means an indefinite mute
+if(prefs.find("autoafk")!=-1)
+{
+autoafk=string_to_number(values[prefs.find("autoafk")]);
+}
+if(autoafk<0) autoafk=0;                 // negative makes no sense; 0 already means disabled
+if(autoafk>0 and autoafk<30) autoafk=30; // a positive idle timeout is floored at 30 seconds
 f.close();
 }
 /* Normalize the config once now: re-save it with the standard comments, creating it with documented defaults if it
@@ -153,6 +159,10 @@ what+="spamguard="+spamguard+"\r\n";
 what+="spamcount="+spamcount+"\r\n";
 what+="spamtime="+spamtime+"\r\n";
 what+="spamdir="+spamdir+"\r\n";
+what+="\r\n";
+what+="# Auto-AFK: seconds a player can go without pressing any key before they're automatically marked away, the same\r\n";
+what+="# as /afk but with no countdown. 0 turns it off so only manual /afk works; any positive value is floored at 30.\r\n";
+what+="autoafk="+autoafk+"\r\n";
 f.write(what);
 f.close();
 }

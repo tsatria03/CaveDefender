@@ -7,6 +7,7 @@ int spamguard=1; // master on/off for the global-chat anti-spam auto-mute, from 
 int spamcount=5; // how many global messages, from conf.svr's spamcount=, trip the anti-spam guard when sent within spamtime milliseconds.
 int spamtime=3000; // the sliding window in MILLISECONDS, from conf.svr's spamtime=, within which spamcount global messages counts as spam.
 int spamdir=600; // the auto-mute duration in SECONDS applied to the global channel when the guard trips, from conf.svr's spamdir=. 0 = an indefinite mute (mirrors the mute system's own 0 = indefinite).
+int autoafk=300; // seconds of no keyboard input before a player is auto-marked away, from conf.svr's autoafk=. 0 = disabled (only manual /afk). A positive value is clamped to a minimum of 30 at load. The client owns the idle timer (any key resets it) and goes STRAIGHT to AFK -- no countdown -- when it elapses, reusing the normal /afk path. Sent to each client on login. Takes effect on restart.
 string motd = "Welcome to the server!";
 timer svruptimer;
 int peak_players=0;   // all-time peak of concurrent live players ever seen on this server; loaded from/saved to data/preffs/main/peak.svr (survives restarts)
