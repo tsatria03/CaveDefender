@@ -69,7 +69,7 @@ In the lobby or any room you are in, press enter to open the panel for where you
 
 Rooms.
 
-From the lobby, press enter to open the lobby panel and create or join a public or private room. You can host up to one public and one private room of your own.
+From the lobby, press enter to open the lobby panel and create or join a public or private room. You can host up to one public and one private room of your own. Joining and leaving rooms share a brief half-second cooldown, so you cannot bounce in and out of a room super fast; it is silent, so a join or leave that comes too soon after your last one is simply ignored until the moment passes.
 
 Inside a room, press enter to open the room panel, the room menu. If you host the room you can use Kick from room to send a player back to the lobby, and, for a private room, set or retrieve its password. The Kick from room list also includes your own name, which you can pick to simply leave your own room, just like Leave room does. You can delete your own room, but only when you are the only one in it and no games are running.
 

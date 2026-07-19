@@ -2034,7 +2034,8 @@ do_create_room(index, event.peer_id, priv, pass);
 }
 else if(parsed[0]=="leaveroom" and index>-1)
 {
-if(players[index].room_id != 0)
+// The same silent room-move cooldown as joining: too soon after the last join/leave, ignore it (no message).
+if(players[index].room_id != 0 and players[index].room_move_timer.elapsed >= room_move_cooldown)
 {
 int lri=get_room_index(players[index].room_id);
 string lhost = (lri>-1) ? rooms[lri].host : "";
@@ -2045,6 +2046,7 @@ set_room_scope(index, 0);
 string lposs = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
 string lwhere = (lhost=="") ? "a room" : (players[index].name==lhost ? lposs+" own "+ltype+" room" : display_name_flagged_for(lhost)+"'s "+ltype+" room");
 broadcast_event(display_name_flagged(index)+" left "+lwhere+".", event.peer_id);
+players[index].room_move_timer.restart(); // start the cooldown so the next join/leave must wait room_move_cooldown
 }
 }
 else if(parsed[0]=="startgame" and index>-1 and parsed.length()>2)
