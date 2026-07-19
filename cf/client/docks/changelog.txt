@@ -1,4 +1,5 @@
 New in 4.2.
+The instant server restart command now says the server is restarting when you use it, and the shutdown command says it is shutting down once you confirm, so neither acts silently anymore; the countdown restart already announced itself.
 Developers can now take the server fully offline from in game with the new /shutdown command, or /sdn for short, which asks you to confirm first. Unlike a restart, which brings the server back on its own, this stops it for good and keeps the auto-restart monitor from reviving it, so the server stays down until someone starts it again by hand.
 The server no longer rewrites its configuration file every few seconds. It used to overwrite the file on a timer, wiping any edits a host made while the server was running; now it only saves the file at startup and when a setting actually changes, so a host's edits can now stay put.
 Server hosts can now tune the environment versus player round timer through the game settings file. The base time limit for each map size and the extra seconds every cleared round adds are both adjustable, and an untouched file plays exactly as before.
