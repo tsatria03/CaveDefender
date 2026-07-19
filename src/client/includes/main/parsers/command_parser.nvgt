@@ -133,6 +133,7 @@ void comparse(string text, string channel = "global")
 		if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
 		if(parsed.length() != 1) { syntax_error("/fastrestart"); return; }
 		send(0, "fastrestart", 0, true);
+		speak("The server is restarting."); // instant feedback -- /restart already speaks its countdown, but this one fires immediately, so acknowledge it out loud
 	}
 	else if(base == "/shutdown" or base == "/sdn")
 	{
@@ -144,6 +145,7 @@ void comparse(string text, string channel = "global")
 		m.intro_text = "Are you sure you want to completely shut down the server?";
 		if(m.run() != 0) { speak("canceled"); return; }
 		send(0, "shutdown", 0, true); // stop the server FOR GOOD: unlike a restart, it kills the auto-restart supervisor first so nothing brings it back
+		speak("The server is shutting down."); // instant feedback once confirmed, matching the restart commands
 	}
 	else if(base == "/gamestop" or base == "/gp")
 	{
