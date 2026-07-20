@@ -5,29 +5,37 @@ These are the expectations for staff: moderators, administrators, and developers
 As staff, you must read and agree to both the player rules and these staff rules before you can play: read each page with /rules player and /rules staff, then type /rules agree to accept both and enter the lobby, or /rules disagree to leave. You only agree once, and are asked again only if the rules are updated.
 
 1. Lead by example.
+
 Everything expected of players is expected of you, and more. Hold yourself to a higher standard in chat and in how you treat people.
 
 2. Be fair and proportionate.
+
 Use the lightest tool that fits the violation. A quiet notification or message often covers a small or first slip; warnings run 1 to 4, so save the higher levels for serious or repeated breaks, and keep the server-wide notification for announcements, not for correcting one player. Escalate only as needed: a mute, then a kick, then a ban, timed or permanent. Don't jump to the harshest option over something minor, though serious breaks like cheating or sharing harmful content can skip straight to a ban. Renaming or deleting an account, or resetting a password, sit off this ladder entirely: they are last-resort tools, used sparingly and only at the owner's direction, and rule 3 spells out how they may and may not be used. Players can flag rule breaks with /report, which you read back with /reports; look into each one, but judge it on what you actually find, not the accusation alone.
 
 3. Do not abuse your powers.
+
 Never use a mute, kick, ban, rank change, or one of the account tools, renaming or deleting an account or resetting a password, to win an argument, settle a grudge, or punish someone for disagreeing with you. Those account tools reach a player's very identity and access, so handle them with extra care: never delete or rename an account to get back at its owner, and never reset a password to lock a player out of their own account or to get into it and look around. The same goes for your room and game authority: you can delete any room and stop any game, even ones you don't host, but only to enforce the rules or protect players, never to clear people out, free up a slot, or break up a game you simply want to disrupt. Act on the rules, not on your feelings, and do not hand out ranks you were not asked to give.
 
-The developer tools that reach every player at once, muting or kicking everyone and freezing or unfreezing the whole server, are emergency instruments for things like a raid, a flood of rule breakers, or urgent maintenance at the owner's direction. Never use them for convenience, for dramatic effect, or to end a conversation you are simply tired of, because every innocent player on the server pays for that press too.
-
 4. Stay impartial.
+
 Treat every player the same, whether or not you know or like them. No favoritism, and no going easy on friends or hard on rivals.
 
 5. Work within your rank.
+
 Act only within the limits of your rank, and do not try to get around who you are allowed to act on. If a situation is above your rank or you are unsure how to handle it, bring it to a higher ranked staff member or the owner instead of overstepping.
 
 6. Keep it professional.
+
 Settle disagreements between staff in private, in staff chat or with the owner, not in front of players. Do not share moderation details or staff-only information with players, and stay calm and respectful even with a difficult one.
 
 7. When in doubt, ask.
+
 If you are not sure whether something breaks the rules or how to respond, check with another staff member or the owner before you act. It is better to ask than to make a call you cannot take back.
 
 8. Be honest in your reasons.
+
 When an action takes a reason, such as a kick, ban, or warning, keep it truthful and specific: state what the player actually did, never enter a fake or misleading reason to justify an action you should not be taking, and never use the reason to insult or mock the player. A reason is optional, but a punishment always needs a real basis whether or not you write one down.
+
+The developer tools that reach every player at once, muting or kicking everyone and freezing or unfreezing the whole server, are emergency instruments for things like a raid, a flood of rule breakers, or urgent maintenance at the owner's direction. Never use them for convenience, for dramatic effect, or to end a conversation you are simply tired of, because every innocent player on the server pays for that press too.
 
 Staff status is a tool for keeping CaveDefender safe and welcoming, not a privilege. Use it that way and the rest follows.
