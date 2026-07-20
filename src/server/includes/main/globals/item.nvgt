@@ -227,6 +227,55 @@ for(uint i=0; i<items.length(); i++)
 if(@items[i]!=null and items[i].room_id==room_id and is_ammo(items[i].type)) n++;
 return n;
 }
+/* FREE PLAY: scatter up to `count` ground items into a free arena, each at a random interior floor tile, and
+announce each to the clients (the same "spawnitem" the drop tick sends). `category` is "wood", "ammo", or "both";
+`kind` is a specific type ("oak"/"arrow"/...) or "all"/"" for a random mix within the category. Respects the
+per-CATEGORY ground cap (one ceiling for all wood, another for all ammo -- the same 6/18/28/40 by size a PVE/EVP
+cavern uses), so the floor never holds more than a normal round would. A single-category batch stops once that
+category is full; a "both" batch stops only when BOTH are full, routing each drop to whichever still has room.
+Returns how many actually dropped. */
+int add_free_items(int gi, string category, string kind, int count)
+{
+int gameid = games[gi].id, size = games[gi].size, dropped = 0;
+for(int i=0; i<count; i++)
+{
+string cat = category;
+if(cat == "both")
+{
+bool woodfull = wood_count_in(gameid) >= wood_cap(size);
+bool ammofull = ammo_count_in(gameid) >= ammo_cap(size);
+if(woodfull and ammofull) break;         // both ceilings reached: nothing more fits
+if(woodfull) cat = "ammo";               // route each drop to whichever category still has room
+else if(ammofull) cat = "wood";
+else cat = (random(0, 1) == 0) ? "wood" : "ammo";
+}
+else if(cat == "wood" and wood_count_in(gameid) >= wood_cap(size)) break; // this category's ceiling reached
+else if(cat == "ammo" and ammo_count_in(gameid) >= ammo_cap(size)) break;
+string type;
+if(cat == "wood") type = (kind == "" or kind == "all") ? random_wood_type() : kind;
+else type = (kind == "" or kind == "all") ? random_ammo_type() : kind;
+int x = random(1, size-1), y = random(1, size-1); // interior only; 0 and size are walls
+int iid = spawn_item(gameid, x, y, type);
+send_to_game(gameid, "spawnitem "+iid+" "+type+" "+x+" "+y);
+dropped++;
+}
+return dropped;
+}
+/* Remove every ground item in a game AND tell the clients to stop each one's audio loop (the "Clear cavern items"
+control, 4.4c). Plain clear_items only wipes the server list -- the clients keep looping until told -- so this
+sends a removeitem per item as it goes. Returns how many were cleared. */
+int clear_items_broadcast(int gameid)
+{
+int n = 0;
+for(int i=int(items.length())-1; i>=0; i--)
+{
+if(@items[i]==null or items[i].room_id!=gameid) continue;
+send_to_game(gameid, "removeitem "+items[i].id);
+items.remove_at(i);
+n++;
+}
+return n;
+}
 // Remove an item by its id (on pickup).
 void remove_item(int id)
 {

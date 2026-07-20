@@ -433,7 +433,9 @@ if(gi < 0) return;
 players[index].menu_actions.resize(0);
 string[] opts;
 opts.insert_last("Add cavern bots"); players[index].menu_actions.insert_last("addbots");
+opts.insert_last("Add cavern items"); players[index].menu_actions.insert_last("additems");
 opts.insert_last("Clear cavern bots"); players[index].menu_actions.insert_last("clearbots");
+opts.insert_last("Clear cavern items"); players[index].menu_actions.insert_last("clearitems");
 send_menu(peer, "cavern", "Cavern controls.", opts);
 }
 /* Run a cavern-control action by its action key (from the cavern menu). Re-validates free/active/host here so a
@@ -445,10 +447,16 @@ int gi = get_game_index(players[player_index].room_id);
 if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active") return;
 if(games[gi].host_peer != peer) { send(peer, "misc Only the host can control the cavern.", 0, true); return; }
 if(act == "addbots") ask_input(peer, "How many attacker bots?", "cavernbotcount", false); // client returns "cavernbotcount <n>"
+else if(act == "additems") push_cavern_item_type(player_index); // What item? -> kind -> How many?
 else if(act == "clearbots")
 {
 clear_enemies(games[gi].id);
 send(peer, "misc The cavern bots have been cleared.", 0, true);
+}
+else if(act == "clearitems")
+{
+clear_items_broadcast(games[gi].id);
+send(peer, "misc The cavern items have been cleared.", 0, true);
 }
 }
 // FREE PLAY: step 2 of Add cavern bots -- pick which wall the bots attack (or all four). The count rides in menu_pending.
@@ -469,6 +477,39 @@ string[] opts;
 opts.insert_last("Spread all " + n + " across the walls");
 opts.insert_last("Put " + n + " on each wall");
 send_menu(players[index].peer_id, "cavernbotspread", "How should they be placed across the walls?", opts);
+}
+// FREE PLAY: step 1 of Add cavern items -- what to drop. Wood and Ammo go on to a kind picker; Both skips it (a random mix).
+void push_cavern_item_type(int index)
+{
+string[] opts;
+opts.insert_last("Ammo");
+opts.insert_last("Wood");
+opts.insert_last("Both");
+send_menu(players[index].peer_id, "cavernitemtype", "What do you want to drop?", opts);
+}
+/* FREE PLAY: step 2 of Add cavern items -- the specific kind (or all of the category, a mix). The category rides
+in menu_pending; the option order is fixed so on_menu_result can map the choice back to a type name. */
+void push_cavern_item_kind(int index, string category)
+{
+string[] opts;
+if(category == "ammo")
+{
+opts.insert_last("Arrow");   // 0
+opts.insert_last("Gas");     // 1
+opts.insert_last("Grenade"); // 2
+opts.insert_last("Normal");  // 3
+opts.insert_last("Powder");  // 4
+opts.insert_last("All ammo");// 5 -> a random mix
+}
+else
+{
+opts.insert_last("Birch");   // 0
+opts.insert_last("Maple");   // 1
+opts.insert_last("Oak");     // 2
+opts.insert_last("Pine");    // 3
+opts.insert_last("All wood");// 4 -> a random mix
+}
+send_menu(players[index].peer_id, "cavernitemkind", "Which kind?", opts);
 }
 // PVP: the two-option side chooser a player opens with "Choose your side" (sets their OWN side).
 void push_pvp_side_menu(int index)
@@ -1223,6 +1264,45 @@ string[]@ dirs = WALL_DIRS;
 for(uint d = 0; d < dirs.length(); d++) add_free_bots(gi, dirs[d], n);
 send(peer, "misc " + n + (n == 1 ? " bot" : " bots") + " added to each wall.", 0, true);
 }
+}
+else if(id == "cavernitemtype")
+{
+// FREE PLAY, Add cavern items step 1: Ammo/Wood go to a kind picker; Both skips straight to the count (a random mix).
+if(choice < 0) return; // cancelled
+int gi = get_game_index(players[player_index].room_id);
+if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+if(choice == 0) { players[player_index].menu_pending = "ammo"; push_cavern_item_kind(player_index, "ammo"); }
+else if(choice == 1) { players[player_index].menu_pending = "wood"; push_cavern_item_kind(player_index, "wood"); }
+else { players[player_index].menu_pending = "both all"; ask_input(peer, "How many items?", "cavernitemcount", false); } // Both: no kind step
+}
+else if(id == "cavernitemkind")
+{
+/* FREE PLAY, Add cavern items step 2: the kind. menu_pending holds the category ("ammo"/"wood"); rewrite it to
+"<category> <kind>" (kind "all" = a random mix) so the count handler knows both. Option order is set by push_cavern_item_kind. */
+if(choice < 0) return; // cancelled
+int gi = get_game_index(players[player_index].room_id);
+if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+string category = players[player_index].menu_pending;
+string kind = "all";
+if(category == "ammo")
+{
+if(choice == 0) kind = "arrow";
+else if(choice == 1) kind = "gas";
+else if(choice == 2) kind = "grenade";
+else if(choice == 3) kind = "normal";
+else if(choice == 4) kind = "powder";
+else kind = "all";
+}
+else
+{
+if(choice == 0) kind = "birch";
+else if(choice == 1) kind = "maple";
+else if(choice == 2) kind = "oak";
+else if(choice == 3) kind = "pine";
+else kind = "all";
+}
+players[player_index].menu_pending = category + " " + kind;
+ask_input(peer, "How many items?", "cavernitemcount", false); // client returns "cavernitemcount <n>"
 }
 else if(id == "gameinvitearea")
 {
