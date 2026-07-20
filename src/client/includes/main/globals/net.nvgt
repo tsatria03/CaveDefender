@@ -1033,6 +1033,23 @@ void netloop_impl()
 			else
 				p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 		}
+		else if (parsed[0] == "playerreload" and parsed.length() > 2)
+		{
+			/* A nearby player started reloading: "playerreload <name> <weapon>". Play their reload sound at their spot;
+			reloadfollowloop then keeps it on them as they move and drops it when the clip ends. The pool is fixed for the
+			clip's life: crosspool (muffled) if they're across the ring from us in PVP, else p, matching how footsteps
+			route. If we don't track them (out of scope), we simply don't hear it. */
+			int pi = get_player_index(parsed[1]);
+			if(pi > -1)
+			{
+				string w = parsed[2];
+				string path = "sounds/equipment/weapons/" + weapon_class(w) + "/" + w + "/reload.ogg";
+				sound_pool@ pool = (game_mode == "pvp" and pvp_crosswall(players[pi].x, players[pi].y)) ? @crosspool : @p;
+				if(players[pi].reloadsound != -1 and @players[pi].reloadpool != null) players[pi].reloadpool.destroy_sound(players[pi].reloadsound); // stop any previous one still ringing
+				players[pi].reloadsound = pool.play_3d(path, me.x, me.y, me.z, players[pi].x, players[pi].y, 0, calculate_theta(me_rotation), false);
+				@players[pi].reloadpool = @pool;
+			}
+		}
 		else if (parsed[0] == "voicecue" and parsed.length() > 4)
 			{
 				/* A player keyed their mic on or off in LIVE mode: play their von/voff cue in 3D at their spot, so you

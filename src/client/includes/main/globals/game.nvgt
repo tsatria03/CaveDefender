@@ -119,6 +119,7 @@ buffercheck();
 		update_sound_pools();
 			apply_effect_pools(); // after the listener is positioned: reverb on in the cave interior, dry elsewhere.
 		beaconloop();
+		reloadfollowloop(); // keep other players' in-flight reload sounds on their moving spots (third-person mirror of the local reload fix)
 		voiceloop();
 		update_ambiences(me.x, me.y);
 		update_musics(me.x, me.y);
