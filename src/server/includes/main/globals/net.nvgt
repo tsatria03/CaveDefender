@@ -1550,6 +1550,18 @@ for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==players[index].room_id and players[i].peer_id!=event.peer_id) send(players[i].peer_id, fs, 0, true);
 }
 }
+else if(parsed[0]=="reloadrelay" and index>-1 and parsed.length()>1)
+{
+/* Relay a reload ("reloadrelay <weapon>") to everyone sharing the reloader's room, so their clients start a reload
+sound that FOLLOWS the reloader as they move (playerreload <name> <weapon>), rather than the old fixed one-shot that
+stayed where the reload began. Spectators aren't relayed (they don't reload). */
+if(!players[index].spectating)
+{
+string rr="playerreload "+players[index].name+" "+parsed[1];
+for(uint i=0; i<players.length(); i++)
+if(players[i].room_id==players[index].room_id and players[i].peer_id!=event.peer_id) send(players[i].peer_id, rr, 0, true);
+}
+}
 else if(parsed[0]=="disconnect")
 {
 if(index>-1)

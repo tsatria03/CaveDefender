@@ -11,6 +11,8 @@ string name;
 int x, y;            // map position (2D; z is always 0 since the game has no height).
 timer beacontimer;   // paces the periodic beacon, like SimpleFighter's checktimer / objtimer.
 int beaconsound=-1;  // sound_pool handle for this player's beacon; -1 when nothing is playing.
+int reloadsound=-1;  // handle of this player's in-flight reload sound (-1 = none); reloadfollowloop keeps it on their moving spot and drops it when the clip ends.
+sound_pool@ reloadpool=null; // the pool that reload sound plays on (p, or crosspool for a muffled cross-wall reload in PVP), kept so it can be repositioned and destroyed.
 opus_decoder@ voice_dec=null; // per-speaker opus decoder (stateful; reset after a silence gap).
 sound@ voice_snd=null;        // positioned push-stream playing this speaker's live voice; null when idle.
 timer voice_rxtimer;          // time since their last voice packet; drives the gap reset and cleanup.
@@ -71,6 +73,7 @@ int i=get_player_index(pname);
 if(i<0) return;
 if(@players[i].voice_snd != null) players[i].voice_snd.close();
 beaconpool.destroy_sound(players[i].beaconsound); // stop their last beacon pulse if it's still ringing
+if(players[i].reloadsound != -1 and @players[i].reloadpool != null) players[i].reloadpool.destroy_sound(players[i].reloadsound); // stop a reload sound still ringing before we drop them
 players.remove_at(i);
 }
 
@@ -82,6 +85,7 @@ for(uint i=0; i<players.length(); i++)
 {
 if(@players[i].voice_snd != null) players[i].voice_snd.close();
 beaconpool.destroy_sound(players[i].beaconsound); // stop any beacon still ringing before we drop the roster
+if(players[i].reloadsound != -1 and @players[i].reloadpool != null) players[i].reloadpool.destroy_sound(players[i].reloadsound); // and any reload sound still ringing
 }
 players.resize(0);
 }
@@ -105,5 +109,24 @@ if(players[i].beacontimer.elapsed>=beacontime)
 players[i].beaconsound=beaconpool.play_extended_3d("sounds/ui/misc/beacon.ogg", me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, players[i].beaconpitch, false);
 players[i].beacontimer.restart();
 }
+}
+}
+/* Keep each tracked player's in-flight reload sound on their current spot -- the reload clip is long enough that a
+moving reloader would otherwise leave it behind (the third-person mirror of the local reload fix) -- and drop it once
+the clip finishes. The pool is whatever the playerreload handler chose (p, or crosspool for a muffled cross-wall
+reload in PVP). Runs every frame from the game loop, like beaconloop. */
+void reloadfollowloop()
+{
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].reloadsound == -1) continue;
+if(@players[i].reloadpool == null or !players[i].reloadpool.sound_is_playing(players[i].reloadsound)) // finished (or the pool was lost): clean up
+{
+if(@players[i].reloadpool != null) players[i].reloadpool.destroy_sound(players[i].reloadsound);
+players[i].reloadsound = -1;
+@players[i].reloadpool = null;
+continue;
+}
+players[i].reloadpool.update_sound_3d(players[i].reloadsound, players[i].x, players[i].y, 0); // follow their tracked position
 }
 }

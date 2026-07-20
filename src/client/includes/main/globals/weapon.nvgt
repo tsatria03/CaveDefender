@@ -257,7 +257,7 @@ if(ammo_reserve_for(at) <= 0) { speak("You have no " + at + " ammo left to reloa
 string cls = weapon_class(current_weapon);
 reload_slot = p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/reload.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 reload_duration = int(p.get_sound_length(reload_slot)); // the clip's length in ms drives the timer; a missing clip reads 0 -> instant
-send(0, "step equipment/weapons/"+cls+"/"+current_weapon+"/reload "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the reload
+send(0, "reloadrelay "+current_weapon, 0, true); // nearby players start a reload sound that FOLLOWS me (relayed as playerreload), instead of a one-shot left where I began
 is_reloading = true;
 reloadtimer.restart();
 }
