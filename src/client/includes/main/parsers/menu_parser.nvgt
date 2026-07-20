@@ -35,6 +35,10 @@ void show_server_menu(string message)
 	if(in_game and !game_paused) resume_objects();
 	// Confirmation menus (id "confirm:<cmd>") treat anything but Yes (option 0) as a cancel.
 	bool isconfirm = (string_left(menuid, 8) == "confirm:");
-	if(choice < 0 or (isconfirm and choice != 0)) speak("canceled");
+	/* The data browser (id "datanav:...") drives its own Escape: the server walks up a folder level per press and
+	only cancels at the root, so don't auto-say "canceled" here -- going up would clip it. The server sends a
+	"datacancel" that speaks it when the browser actually closes. */
+	bool isdatanav = (string_left(menuid, 8) == "datanav:");
+	if((choice < 0 or (isconfirm and choice != 0)) and !isdatanav) speak("canceled");
 	send(0, "menuresult " + menuid + " " + choice, 0, true);
 }

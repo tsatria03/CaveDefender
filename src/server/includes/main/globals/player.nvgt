@@ -22,6 +22,7 @@ timer room_move_timer; // throttles room joins/leaves: a silent cooldown (room_m
 int last_public_room=0;
 int last_private_room=0;
 string last_private_pw="";
+string data_nav_path=""; // developer editdata/viewdata browser: the folder currently being browsed (data-relative, "" = the data root), so Escape can walk up one level per press. Transient.
 string team=""; // which side this player is on within their game (PVP: attack/defend); routes team chat. Empty in co-op games, so team chat reaches everyone in the game until PVP splits the sides.
 int pvp_damage=0; // PVP: total wall damage this attacker dealt this match (reset each round start); shown on the results screen.
 int pvp_wood_placed=0; // PVP: pieces of wood this defender placed to reinforce this match (reset each round start); shown on the results screen.
