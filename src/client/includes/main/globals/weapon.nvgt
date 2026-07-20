@@ -1,4 +1,4 @@
-/* Client-side player weapon for the attack side (EVP outdoors, and the PVP attackers): the player carries all
+/* Client-side player weapon for the attack side (EVP outdoors, PVP attackers, and free play -- see can_attack): the player carries all
 their weapons and draws (equips) one at a time from the Alt+W weapon menu (weapon_menu, below), a tabbed picker
 by class, or the number-row hotkeys (weapon_hotkey_loop, below). Only meaningful for the attacking side; PVE and
 PVP defenders never wield a weapon. The selection here is local state + the draw sound; melee swinging and ranged
@@ -87,7 +87,7 @@ send(0, "step equipment/weapons/"+weapon_class(wname)+"/"+wname+"/draw "+int(me.
 send(0, "setweapon "+wname, 0, true); // tell the server which weapon we have drawn, so a reconnect restores the same one
 add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
 }
-/* Alt+W in an EVP or PVP-attack game (the West-wall key branches here when Alt is held): a TABBED pop-up to pick
+/* Alt+W in an EVP, PVP-attack, or free-play game (the West-wall key branches here when Alt is held): a TABBED pop-up to pick
 which weapon to draw. Tabs are the weapon classes -- All (every weapon), then Archery, Explosive, Melee -- with
 the weapons listed alphabetically in each and the one in hand marked. Equips your choice via draw_weapon (a no-op
 if you pick the one you already hold), and remembers the tab you were on for next time. Purely local plus the same
@@ -120,13 +120,13 @@ draw_weapon(sel);
 /* The number-row weapon hotkeys, the quick alternative to the Alt+W menu: 1 through 0 then dash and equals
 draw the twelve weapons in alphabetical order -- the same order as the menu's All tab, so 1=axe, 2=bat,
 3=cannon, 4=crossbow, 5=crowbar, 6=feet, 7=firebomb, 8=fist, 9=grenade, 0=hammer, dash=machinegun,
-equals=pistol. Same gating as the menu (an armed EVP player or PVP attacker, never a watcher), and a held Alt
+equals=pistol. Same gating as the menu (an armed EVP player, PVP attacker, or free-play player, never a watcher), and a held Alt
 means the press belongs to an Alt-combo, so the row is ignored then. draw_weapon already refuses the weapon
 in hand, so re-pressing your current weapon's key is a silent no-op (no stacked draws). Called every frame
 from the in-game key loop. */
 void weapon_hotkey_loop()
 {
-if(!in_game or watching or !(game_outside or (game_mode=="pvp" and my_side=="attack")) or current_weapon=="") return;
+if(!in_game or watching or !can_attack() or current_weapon=="") return;
 if(alt_is_down()) return;
 uint[] keys = {KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_EQUALS};
 string[] all = available_weapons();
@@ -163,11 +163,11 @@ string swing_weapon=""; // the weapon the in-flight swing began with, so switchi
 int swing_windup(string w) { if(w=="fist") return 250; if(w=="axe") return 300; if(w=="feet") return 350; if(w=="bat") return 375; if(w=="crowbar") return 450; return 600; } // hammer slowest
 // Per-weapon recovery (ms): the cooldown after a hit before another swing can start.
 int swing_recovery(string w) { if(w=="fist") return 200; if(w=="axe") return 200; if(w=="feet") return 250; if(w=="bat") return 250; if(w=="crowbar") return 325; return 450; } // hammer slowest
-/* Run every frame in an EVP game: drive the tap-to-swing melee. When a windup completes, tells the server to
+/* Run every frame; active for an attacking role (EVP, PVP attacker, free play -- see can_attack): drive the tap-to-swing melee. When a windup completes, tells the server to
 apply the hit. No-op for PVE, spectators, a paused game, or with no weapon in hand. */
 void swingloop()
 {
-if((!game_outside and !(game_mode=="pvp" and my_side=="attack")) or !in_game or watching or game_paused or current_weapon=="" or !is_melee_weapon(current_weapon)) { swinging=false; return; } // EVP, or a PVP attacker: the two sides that swing weapons -- and only MELEE weapons swing here; a drawn ranged weapon is inert until #5 wires firing
+if(!can_attack() or !in_game or watching or game_paused or current_weapon=="" or !is_melee_weapon(current_weapon)) { swinging=false; return; } // EVP, PVP attacker, or free play: the roles that swing weapons -- and only MELEE weapons swing here; a drawn ranged weapon fires in fireloop
 if(swinging)
 {
 if(swingtimer.elapsed >= swing_windup(swing_weapon))
@@ -215,7 +215,7 @@ send(0, "fire "+fdir, 0, true); // the server ray-marches this facing to the tar
 }
 void fireloop()
 {
-if((!game_outside and !(game_mode=="pvp" and my_side=="attack")) or !in_game or watching or game_paused or current_weapon=="" or is_melee_weapon(current_weapon)) return; // ranged weapons only
+if(!can_attack() or !in_game or watching or game_paused or current_weapon=="" or is_melee_weapon(current_weapon)) return; // ranged weapons only (EVP, PVP attacker, free play)
 if(is_reloading) return; // no firing mid-reload, in either mode
 if(my_weapon_firemode == 1)
 {

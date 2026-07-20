@@ -18,6 +18,7 @@ bool solo;        // true = private/unjoinable; false = Open (others in the room
 string mode="pve"; // gameplay mode: "pve" (defend the walls, the original Wallbreaker) or "evp" (attack the walls from outside while bots build them). Set at creation; all EVP gameplay branches on this.
 double reinforce_cap=0; // PVE/PVP only: how far players may reinforce a wall past its full (max) strength, as a multiple -- 2/4/8 = 200/400/800%, 0 = no limit. Chosen at creation, after map size. EVP builder bots ignore this and keep wall_overbuild_cap.
 bool bots_pileup=false; // PVE only: when true, a destroyed wall's attacking bots move onto the walls still standing (the old swarm) instead of leaving the round. Chosen at creation, after the reinforce step.
+bool free_wall_damage=false; // FREE PLAY only: the ricochet lock. false (default) = your weapons only ricochet off walls; the arena menu's "Enable wall damage" (4.4c) flips it true one-way so hits land, and Clear cavern map (4.4c) re-locks it. Ignored by the other modes.
 int[] members;    // peer ids of everyone currently in the cavern
 string phase="idle"; // round phase: idle -> build -> wave -> over -> idle (host begins from idle)
 timer phasetimer;    // times the current phase (drives the build-phase countdown)
