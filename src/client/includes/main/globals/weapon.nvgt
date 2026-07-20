@@ -246,6 +246,7 @@ ready) since the reload clip alone was hard to time. Refuses (with a one-line re
 bool is_reloading=false; // true while a reload plays; blocks firing
 timer reloadtimer;       // measures the reload sound's duration
 int reload_duration=0;   // ms; the reload sound's length, measured when the reload starts
+int reload_slot=-1;      // handle of the playing reload sound, so reloadloop can keep it on us as we move -- a long reload follows the avatar instead of staying where it began; -1 when idle
 void start_reload()
 {
 if(is_reloading) return; // already reloading
@@ -254,8 +255,8 @@ string at = weapon_ammo_type(current_weapon);
 if(my_loaded > 0) { speak("This weapon is already loaded with " + at + " ammo."); return; } // must be fully spent first, so a partial magazine can't be topped up (which would drain the reserve early)
 if(ammo_reserve_for(at) <= 0) { speak("You have no " + at + " ammo left to reload."); return; }
 string cls = weapon_class(current_weapon);
-int slot = p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/reload.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
-reload_duration = int(p.get_sound_length(slot)); // the clip's length in ms drives the timer; a missing clip reads 0 -> instant
+reload_slot = p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/reload.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+reload_duration = int(p.get_sound_length(reload_slot)); // the clip's length in ms drives the timer; a missing clip reads 0 -> instant
 send(0, "step equipment/weapons/"+cls+"/"+current_weapon+"/reload "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the reload
 is_reloading = true;
 reloadtimer.restart();
@@ -264,9 +265,11 @@ reloadtimer.restart();
 void reloadloop()
 {
 if(!is_reloading) return;
+if(reload_slot != -1) p.update_sound_3d(reload_slot, me.x, me.y, me.z); // keep the reload sound on us as we move, so a long reload follows the avatar instead of staying where it started
 if(reloadtimer.elapsed >= reload_duration)
 {
 is_reloading = false;
+reload_slot = -1; // the reload clip has played out
 string cls = weapon_class(current_weapon);
 p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/ping.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // the reload-complete cue: the weapon is loaded and ready (the reload clip alone was hard to time)
 send(0, "step equipment/weapons/"+cls+"/"+current_weapon+"/ping "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the ready-ping in 3D at our spot too
