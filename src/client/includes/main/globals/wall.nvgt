@@ -211,7 +211,9 @@ else if(dir=="north") { minx=0; maxx=s; miny=s; maxy=s; }
 else if(dir=="south") { minx=0; maxx=s; miny=0; maxy=0; }
 else return;
 sound_pool@ wp = wall_impact_pool(); // a PVP defender hears the attacker's bullet ricochet muffled through the wall (crosspool); everyone else on p
-string ricofile = (weapon_class(wname)=="artillery") ? "rico"+random(1,12)+".ogg" : "rico.ogg"; // the guns pick one of 12 ricochet variants (rico1-12); other ranged weapons have a single rico.ogg
+string ricofile = "rico.ogg"; // the explosive weapons have a single rico.ogg
+if(weapon_class(wname)=="artillery") ricofile = "rico"+random(1,12)+".ogg"; // the guns pick one of 12 ricochet variants (rico1-12)
+else if(weapon_class(wname)=="archery") ricofile = "rico"+random(1,2)+".ogg"; // the crossbow picks one of its two ricochet variants (rico1-2)
 int h = wp.play_extended_3d("sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/"+ricofile, me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, 100, false);
 wp.update_sound_3d(h, minx, miny, 0);
 wp.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
