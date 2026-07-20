@@ -1340,8 +1340,8 @@ a free RICOCHET (no ammo spent, no damage, just the bounce). resolve_bullets lan
 timer elapses; the authoritative magazine count goes back either way so the client's optimistic view re-syncs. */
 int gi = get_game_index(players[index].room_id);
 weapon_data@ fwd = get_weapon_data(players[index].weapon);
-bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack"));
-bool armed = attacker and fwd !is null and !fwd.melee and fwd.ammo_type != "" and (games[gi].phase=="build" or games[gi].phase=="wave");
+bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack") or (games[gi].mode=="free"));
+bool armed = attacker and fwd !is null and !fwd.melee and fwd.ammo_type != "" and game_active_play(gi);
 if(armed)
 {
 string face = (parsed.length()>1) ? parsed[1] : ""; // the direction the shooter faces: west/east/north/south
@@ -1380,7 +1380,7 @@ if(dy<0 and cy==0) { tdir="south"; tdist=d; break; }
 }
 }
 }
-bool window = (games[gi].phase=="wave" and games[gi].wave_attacking); // an attack window: shots are live and burn a round, hit or miss
+bool window = games[gi].mode=="free" ? games[gi].free_wall_damage : (games[gi].phase=="wave" and games[gi].wave_attacking); // an attack window: shots are live and burn a round, hit or miss. Free play: live only once "Enable wall damage" is on; until then every shot is a free ricochet.
 bool spend = window and players[index].mag.count(players[index].weapon) > 0; // a live shot with a round chambered spends it wherever it's aimed -- firing into open space during a wave still costs ammo
 bool damaging = spend and (tdir != ""); // ...but it only hurts the wall when one lies in range along the facing
 if(spend) players[index].mag.take(players[index].weapon, 1); // spend one round from THIS weapon's own magazine
@@ -1407,8 +1407,8 @@ into the magazine, up to max_ammo, and re-sync the client's loaded + reserve cou
 when the magazine is empty -- reloading is a full magazine, never a top-up, so a partial mag can't drain the reserve early. */
 int gi = get_game_index(players[index].room_id);
 weapon_data@ rwd = get_weapon_data(players[index].weapon);
-bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack"));
-bool can = attacker and rwd !is null and !rwd.melee and rwd.ammo_type != "" and (games[gi].phase=="build" or games[gi].phase=="wave") and players[index].mag.count(players[index].weapon)==0;
+bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack") or (games[gi].mode=="free"));
+bool can = attacker and rwd !is null and !rwd.melee and rwd.ammo_type != "" and game_active_play(gi) and players[index].mag.count(players[index].weapon)==0;
 if(can)
 {
 int need = rwd.max_ammo - players[index].mag.count(players[index].weapon); // room left in THIS weapon's own magazine
@@ -1501,6 +1501,34 @@ send_to_game(games[gi].id, "wallhit "+dir+" "+wid);
 if(walls[wi].health <= 0) send_to_game(games[gi].id, "walldestroyed "+dir); // downed -> the client re-tiles it to impassable debris (no bots to redistribute in PVP)
 }
 else send_to_game(games[gi].id, "wallrico "+dir+" "+wid); // build/prep or build window: it just ricochets
+}
+}
+}
+}
+else if(games[gi].mode == "free")
+{
+/* FREE PLAY: swing at the border walls from inside the cavern. The weapon only RICOCHETS until the arena's
+"Enable wall damage" is turned on (free_wall_damage, 4.4c); once on, a swing damages the wall like the other
+modes and a downed wall self-heals ~10s later (4.4c). Only while the arena is active. */
+if(game_active_play(gi))
+{
+string dir = wall_in_reach(players[index].x, players[index].y, games[gi].size);
+if(dir != "") // a wall is in reach; otherwise the swing whiffs (silent)
+{
+int wi = border_wall(games[gi].id, dir, games[gi].size);
+if(wi > -1 and walls[wi].health > 0)
+{
+int wid = weapon_id_for_name(parsed[1]);
+if(games[gi].free_wall_damage)
+{
+int dmg = enemy_damage(wid);
+damage_wall(wi, dmg);
+broadcast_wall_strength(games[gi].id);
+send_to_game(games[gi].id, "wallhit "+dir+" "+wid);
+if(walls[wi].health <= 0) send_to_game(games[gi].id, "walldestroyed "+dir); // the self-heal (4.4c) rebuilds it, so it's never permanent here
+else { weapon_data@ wd = get_weapon_data(parsed[1]); if(wd !is null and wd.has_status and wd.status_type == "burn") ignite_wall(gi, dir, wd); } // a flaming melee weapon sets a surviving wall alight
+}
+else send_to_game(games[gi].id, "wallrico "+dir+" "+wid); // locked: the swing just ricochets, no damage
 }
 }
 }
