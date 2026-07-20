@@ -988,6 +988,34 @@ void free_wall_down(int gi, string dir)
 send_to_game(games[gi].id, "walldestroyed "+dir);
 schedule_wall_heal(gi, dir); // it rebuilds ~10s later (4.4c.2), so a solo player is never left with nothing to smash
 }
+/* FREE PLAY: Clear cavern map (the last cavern control, 4.4c.5) -- wipe the arena back to a fresh start. Remove
+every attacker bot and ground item, cancel any pending self-heals, put out any wall fires and drop in-flight
+shots, roll all four walls fresh (a new random 50-100%), and RE-LOCK wall damage (your weapons ricochet again
+until you re-enable it). The clients re-tile every wall solid -- closing any open breach -- and reset the weapon
+to the axe, via the "cavernreset" message. Each player's carried AMMO is emptied too (as when the arena first went active); their
+gathered wood is left alone. */
+void reset_free_cavern(int gi)
+{
+int gameid = games[gi].id;
+clear_enemies(gameid);                 // wipe the attacker bots
+clear_items_broadcast(gameid);         // wipe the ground items and stop their client loops
+for(uint m=0; m<games[gi].members.length(); m++) { int pi = get_player_index(games[gi].members[m]); if(pi>-1) reset_player_ammo(pi); } // empty each player's ammo reserve + mags, like a fresh arena start
+games[gi].heals.resize(0);             // cancel pending self-heals (the walls are being rolled fresh right now)
+games[gi].bullets.resize(0);           // drop any shots still in flight (they'd resolve against the reset walls)
+for(int b=int(games[gi].burns.length())-1; b>=0; b--) send_to_game(gameid, "burnstop "+games[gi].burns[b].dir); // stop each wall fire's client loop
+games[gi].burns.resize(0);
+string[]@ dirs = WALL_DIRS;
+for(uint d=0; d<dirs.length(); d++)
+{
+int wi = border_wall(gameid, dirs[d], games[gi].size);
+if(wi<0) continue;
+walls[wi].health = wall_start_health(walls[wi].maxhealth, walls[wi].maxhealth, true); // a fresh 50-100% roll, like a new arena
+walls[wi].floor = walls[wi].health;
+}
+games[gi].free_wall_damage = false;    // re-lock: weapons ricochet again until Enable wall damage is used
+broadcast_wall_strength(gameid);
+send_to_game(gameid, "cavernreset");   // clients re-tile all four walls solid + reset the weapon to the axe
+}
 /* All walls down: end the round. Clear the bots and wood, drop into the "over" phase, and ask every
 member how they did and whether to play again (roundover). The cavern is NOT reset yet — we wait until
 everyone has answered (players who say no leave to the office; the rest stay), then reset_for_new_round. */

@@ -436,6 +436,7 @@ opts.insert_last("Add cavern bots"); players[index].menu_actions.insert_last("ad
 opts.insert_last("Add cavern items"); players[index].menu_actions.insert_last("additems");
 opts.insert_last("Clear cavern bots"); players[index].menu_actions.insert_last("clearbots");
 opts.insert_last("Clear cavern items"); players[index].menu_actions.insert_last("clearitems");
+opts.insert_last("Clear cavern map"); players[index].menu_actions.insert_last("clearmap");
 send_menu(peer, "cavern", "Cavern controls.", opts);
 }
 /* Run a cavern-control action by its action key (from the cavern menu). Re-validates free/active/host here so a
@@ -457,6 +458,11 @@ else if(act == "clearitems")
 {
 clear_items_broadcast(games[gi].id);
 send(peer, "misc The cavern items have been cleared.", 0, true);
+}
+else if(act == "clearmap")
+{
+reset_free_cavern(gi);
+send(peer, "misc The cavern has been fully reset, wall damage disabled.", 0, true);
 }
 }
 // FREE PLAY: step 2 of Add cavern bots -- pick which wall the bots attack (or all four). The count rides in menu_pending.
