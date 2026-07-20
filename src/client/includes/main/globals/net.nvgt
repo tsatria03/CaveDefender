@@ -1203,6 +1203,12 @@ void netloop_impl()
 			destroy_wall_client(parsed[1]);
 			if(game_mode == "free") add_buffer_item("alerts", "The " + parsed[1] + " wall has just gone down."); // Free play announces both transitions to everyone; the "come back up" mate is added on rebuild (4.4c.2)
 		}
+		else if (parsed[0] == "wallrebuilt" and parsed.length() > 1)
+		{
+			// Free play: a downed wall self-healed. Re-tile the breach back to solid + announce its return.
+			rebuild_wall_client(parsed[1]);
+			if(game_mode == "free") add_buffer_item("alerts", "The " + parsed[1] + " wall has just come back up.");
+		}
 		else if (parsed[0] == "wallbreach" and parsed.length() > 1)
 		{
 			/* A wall that was ALREADY broken before we (re)arrived: "wallbreach <direction>". Re-tile the breach to

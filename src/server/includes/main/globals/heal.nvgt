@@ -1,0 +1,48 @@
+/* FREE PLAY self-healing walls (4.4c.2). Free play has no rounds and no game-over, so a solo player who
+smashes a wall to rubble must never be left staring at a permanent gap -- a downed free-play wall REGROWS on
+its own. When a wall falls (free_wall_down, the one shared wall-down path), it's queued here; heal_tick --
+called each gametick after burn_tick -- rebuilds it free_wall_heal_ms later at a FRESH random 50-100% strength
+(a new roll, like the arena's initial walls), re-tiles the breach back to solid on every client, and announces
+the return. Both transitions are announced to everyone in the game (the "gone down" half is added client-side
+on the walldestroyed message; the "come back up" half on the wallrebuilt message sent here). This mirrors the
+per-game burns list in shape; heals is empty in every other mode, so heal_tick is a no-op for them. */
+
+const int free_wall_heal_ms = 10000; // a downed free-play wall rebuilds this long (10s) after it falls
+
+class wall_heal
+{
+string dir;   // which wall (compass direction) is regrowing
+timer clock;  // time since the wall fell; it rebuilds once this reaches free_wall_heal_ms
+}
+
+// Queue a downed free-play wall to self-heal ~10s later. A no-op if one's already pending for that wall.
+void schedule_wall_heal(int gi, string dir)
+{
+if(gi<0 or gi>=int(games.length())) return;
+for(uint i=0; i<games[gi].heals.length(); i++) if(games[gi].heals[i].dir == dir) return; // already regrowing
+wall_heal h;
+h.dir = dir;
+h.clock.restart();
+games[gi].heals.insert_last(h);
+}
+
+/* Advance one game's pending wall rebuilds; called every gametick. A heal whose clock has reached
+free_wall_heal_ms is removed and its wall rebuilt: a fresh random 50-100% roll, the strength rebroadcast so
+the clients' N/E/S/W readouts update, and "wallrebuilt <dir>" sent so every client re-tiles the breach back to
+solid and announces "The <dir> wall has just come back up." Iterated back-to-front so remove_at is safe. */
+void heal_tick(int gi)
+{
+if(gi<0 or gi>=int(games.length()) or games[gi].heals.length()==0) return;
+for(int i = int(games[gi].heals.length())-1; i>=0; i--)
+{
+if(games[gi].heals[i].clock.elapsed < free_wall_heal_ms) continue; // still regrowing
+string dir = games[gi].heals[i].dir;
+games[gi].heals.remove_at(i);
+int wi = wall_in_dir(games[gi].id, dir, games[gi].size);
+if(wi < 0) continue; // the game/wall is gone: nothing to rebuild
+walls[wi].health = wall_start_health(walls[wi].maxhealth, walls[wi].maxhealth, true); // a fresh 50-100% roll, like the arena's initial walls
+walls[wi].floor = walls[wi].health; // keep the EVP floor field consistent (unused in free)
+broadcast_wall_strength(games[gi].id);
+send_to_game(games[gi].id, "wallrebuilt "+dir); // clients re-tile the breach back to solid + announce the return
+}
+}

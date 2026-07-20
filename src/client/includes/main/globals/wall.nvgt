@@ -263,3 +263,20 @@ if(game_mode == "pvp") spawn_platform(minx, maxx, miny, maxy, "wallwoodpile");
 else spawn_platform(minx, maxx, miny, maxy, "woodpile");
 }
 }
+/* FREE PLAY self-heal (the "wallrebuilt <dir>" message, 4.4c.2): a wall that fell has regrown. Paint the solid
+wallwood span back over the breach, restoring its movement collision (the tile name contains "wall"). Silent by
+design -- the spoken "come back up" announcement carries it, no rebuild sound. Free uses the border-wall geometry
+(PVE side), so there's no PVP ring branch. The strength readouts are resynced by the wallstr message that rides
+alongside; the announcement is added by the message handler. */
+void rebuild_wall_client(string dir)
+{
+if(watching) return; // watchers don't render the arena tiles they'd re-tile
+double s = cavern_size;
+int minx, maxx, miny, maxy;
+if(dir=="west") { minx=0; maxx=0; miny=0; maxy=int(s); }
+else if(dir=="east") { minx=int(s); maxx=int(s); miny=0; maxy=int(s); }
+else if(dir=="north") { minx=0; maxx=int(s); miny=int(s); maxy=int(s); }
+else if(dir=="south") { minx=0; maxx=int(s); miny=0; maxy=0; }
+else return;
+spawn_platform(minx, maxx, miny, maxy, "wallwood"); // repaint the solid wall over the walkable breach
+}
