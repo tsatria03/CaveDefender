@@ -4,6 +4,7 @@ st.load();
 if(st.d.exists("echomode"))
 {
 echomode=st.read_int("echomode");
+audioform_keyboard_echo=echomode; // the global every new form's default echo resets to (see form.reset); set it so the saved mode sticks across all forms, not just the one that happens to be active
 form.set_default_keyboard_echo(echomode);
 }
 if(st.d.exists("menumusvolume"))
