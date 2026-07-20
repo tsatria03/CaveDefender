@@ -360,7 +360,8 @@ bool host = (games[gi].host_peer == peer);
 bool staff = is_staff(players[index].rank);
 string phase = games[gi].phase;
 string status;
-if(phase == "build")
+if(games[gi].mode == "free") status = (phase == "active") ? "The arena is active." : "The arena hasn't started yet."; // Free play: no rounds/waves, just started-or-not
+else if(phase == "build")
 {
 int rem = games[gi].buildduration - int(games[gi].phasetimer.elapsed / 1000);
 if(rem < 0) rem = 0;
@@ -370,7 +371,8 @@ else if(phase == "wave") status = "The enemies are attacking.";
 else status = "Waiting to start.";
 players[index].menu_actions.resize(0);
 string[] opts;
-if(host and phase == "idle" and games[gi].mode != "free") { opts.insert_last("Begin round\tControl plus B."); players[index].menu_actions.insert_last("beginround"); } // Free play gets its own "Begin arena" arena menu in 4.4a.2; suppress the PVE round menu until then
+if(host and phase == "idle" and games[gi].mode != "free") { opts.insert_last("Begin round\tControl plus B."); players[index].menu_actions.insert_last("beginround"); }
+else if(host and phase == "idle" and games[gi].mode == "free") { opts.insert_last("Begin arena\tControl plus B."); players[index].menu_actions.insert_last("beginarena"); } // Free play: start the sandbox (no build phase, no bots or wood granted)
 else if(host and phase == "build" and staff) { opts.insert_last("Skip build phase\tControl plus S."); players[index].menu_actions.insert_last("skipbuild"); }
 // PVP staging (idle): every member picks a side, and the host can also assign anyone; the even-team rule is enforced at Begin round.
 if(games[gi].mode == "pvp" and phase == "idle")
@@ -386,8 +388,8 @@ if(host and !games[gi].solo)
 if(phase == "idle" or phase == "build") { opts.insert_last("Invite to game\tControl plus I."); players[index].menu_actions.insert_last("gameinvite"); } // full games still show it, to report the cap when chosen
 opts.insert_last("Kick from game\tControl plus K."); players[index].menu_actions.insert_last("gamekick"); // always shown; reports "no one to kick" when you're alone
 }
-if(opts.length() == 0) return; // nothing actionable: stay silent and let Tab report the round status
-send_menu(peer, "game", "Round menu. " + status, opts);
+if(opts.length() == 0) return; // nothing actionable: stay silent and let Tab report the status
+send_menu(peer, "game", (games[gi].mode == "free" ? "Arena menu. " : "Round menu. ") + status, opts);
 }
 /* Dispatch a round-menu action by its action key. Shared by the round menu (on_menu_result) and the Ctrl+<key> game
 hotkeys, so both run identical logic; keyed by action NAME, not menu index. beginround/skipbuild ride through the
@@ -395,6 +397,7 @@ client to their own command handlers, which re-validate host/phase/staff; the pi
 void do_game_action(int player_index, int peer, string act)
 {
 if(act == "beginround") send(peer, "runcommand beginround", 0, true);
+else if(act == "beginarena") send(peer, "runcommand beginarena", 0, true); // Free play: start the sandbox
 else if(act == "skipbuild") send(peer, "runcommand skipbuild", 0, true);
 else if(act == "gameinvite") push_game_invite_area(player_index); // pick an area (room/lobby) first
 else if(act == "gamekick") push_game_kick_list(player_index);

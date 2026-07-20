@@ -2052,6 +2052,15 @@ are now reached directly with Enter and Shift+Enter, which the client sends as o
 openmenu only serves the in-game menu; a player in a game has already agreed, so no rules gate is needed here. */
 if(get_game_index(players[index].room_id)>-1) push_game_menu(index);
 }
+else if(parsed[0]=="opencavern" and index>-1)
+{
+/* Free play: Tab opens the Cavern controls (populate/clear the sandbox), server-authoritative. Before the arena
+starts there's nothing to populate, so just say so; the real controls menu arrives in 4.4c. */
+int gi=get_game_index(players[index].room_id);
+if(gi==-1 or games[gi].mode!="free") { }
+else if(games[gi].phase=="idle") send(event.peer_id, "misc The arena hasn't started yet.", 0,true);
+else send(event.peer_id, "misc The cavern controls are coming soon.", 0,true);
+}
 else if(parsed[0]=="openpanel" and index>-1 and parsed.length()>1)
 {
 /* Enter (location panel) and Shift+Enter (account panel) in the lobby or a room jump straight to a panel. The
@@ -2188,11 +2197,26 @@ games[gi].buildduration = build_seconds(games[gi].size);
 set_game_phase(gi, "build");
 }
 }
+else if(games[gi].mode=="free")
+{
+send(event.peer_id, "Use begin arena to start a free play game.", 0,true); // free has no round -- beginarena starts it; defense in depth, since the UI never sends beginround for free
+}
 else
 {
 games[gi].buildduration = build_seconds(games[gi].size);
 set_game_phase(gi, "build");
 }
+}
+else if(parsed[0]=="beginarena" and index>-1)
+{
+/* Free play: start the sandbox. No build phase and nothing granted -- straight into the empty, active arena
+(you stock it via Cavern controls, and weapons ricochet until Enable wall damage). Host-only and free-only. */
+int gi=get_game_index(players[index].room_id);
+if(gi==-1) send(event.peer_id, "You are not in a game.", 0,true);
+else if(games[gi].mode != "free") send(event.peer_id, "That only starts a free play arena.", 0,true);
+else if(games[gi].host_peer != event.peer_id) send(event.peer_id, "Only the host can begin the arena.", 0,true);
+else if(games[gi].phase != "idle") send(event.peer_id, "The arena has already started.", 0,true);
+else set_game_phase(gi, "active");
 }
 else if(parsed[0]=="skipbuild" and index>-1)
 {

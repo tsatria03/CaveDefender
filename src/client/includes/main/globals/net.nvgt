@@ -1585,6 +1585,12 @@ void netloop_impl()
 				else if (game_outside) add_buffer_item("alerts", "Round " + wave_number + ", tear down the walls!");
 				else add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
 			}
+			else if (game_phase == "active" and game_mode == "free")
+			{
+				// Free play: the arena is now live (no rounds/waves). Weapons and cavern controls come online in later slices.
+				p.play_stationary("sounds/ui/misc/arenastart.ogg", false); // placeholder cue for the arena going live (dev adds the .ogg)
+				add_buffer_item("alerts", "The arena is active.");
+			}
 			/* PVP: the attacker draws a weapon at build start (and keeps it across build->wave); defenders reinforce
 			with wood and never auto-arm. Unarmed-only so a re-sent phase during the round doesn't re-draw. */
 			if (game_mode == "pvp" and my_side == "attack" and (game_phase == "build" or game_phase == "wave")) { if (current_weapon == "") equip_weapon("axe"); }
