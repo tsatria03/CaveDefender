@@ -1587,8 +1587,7 @@ void netloop_impl()
 			}
 			else if (game_phase == "active" and game_mode == "free")
 			{
-				// Free play: the arena is now live (no rounds/waves). Weapons and cavern controls come online in later slices.
-				p.play_stationary("sounds/ui/misc/arenastart.ogg", false); // placeholder cue for the arena going live (dev adds the .ogg)
+				// Free play: the arena is now live (no rounds/waves). Weapons and cavern controls come online in later slices. No start cue, by design.
 				add_buffer_item("alerts", "The arena is active.");
 			}
 			/* PVP: the attacker draws a weapon at build start (and keeps it across build->wave); defenders reinforce
