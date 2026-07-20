@@ -10,7 +10,7 @@ userlimit=200
 
 # Owner accounts: up to three comma-separated aliases for the single owner, each forced to developer rank and
 # matched without case sensitivity; a blank value means no owner. Maintained automatically on owner rename or transfer.
-owners=tsatria03,tony
+owners=DevilGuardian,tsatria03,tony
 
 # Rules agreement: raise rulesver to make everyone re-read and re-agree to the rules once. ruleswitch is the master
 # gate -- 1 means players must agree before they can play, 0 turns the gate off so anyone can play unagreed.

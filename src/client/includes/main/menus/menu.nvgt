@@ -722,8 +722,8 @@ void settingsmenu()
 				voicemode = cur_vmode;
 				form.set_caption(hvc, voicemode == 0 ? "Hear your voice while speaking" : "Hear your voice after recording");
 			}
-			if(key_pressed(KEY_ESCAPE)) return;
-			if(form.is_pressed(preffscn)) return;
+			if(key_pressed(KEY_ESCAPE)) { if(connected) speak("canceled"); return; } // only cue "canceled" in-server (Alt+P), where you drop silently into the game; at the main menu the menu itself speaks
+			if(form.is_pressed(preffscn)) { if(connected) speak("canceled"); return; }
 			if(form.is_pressed(preffsok))
 			{
 				writepreffs();
