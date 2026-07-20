@@ -2129,6 +2129,29 @@ if(total == 0) send(event.peer_id, "misc No bots in the cavern.", 0,true);
 else send(event.peer_id, "misc Cavern bots: " + parts + ".", 0,true);
 }
 }
+else if(parsed[0]=="cavernitemcount" and index>-1 and parsed.length()>1)
+{
+/* Free play, Add cavern items final step: the typed count (ask_input prefix "cavernitemcount"). menu_pending
+holds "<category> <kind>" (category wood/ammo/both; kind a specific type, or "all" for a random mix). Re-validate
+free/active/host, then scatter up to that many, clamped to the per-category ground cap. */
+int gi=get_game_index(players[index].room_id);
+if(gi<0 or games[gi].mode!="free" or games[gi].phase!="active" or games[gi].host_peer!=event.peer_id) { }
+else
+{
+int n = int(string_to_number(parsed[1]));
+if(n < 1) send(event.peer_id, "misc Enter how many items to add.", 0,true);
+else
+{
+if(n > 100) n = 100; // a quiet sanity ceiling; the per-category cap trims it further
+string[] sel = string_split(players[index].menu_pending, " ", true);
+string category = (sel.length()>0) ? sel[0] : "both";
+string kind = (sel.length()>1) ? sel[1] : "all";
+int dropped = add_free_items(gi, category, kind, n);
+if(dropped == 0) send(event.peer_id, "misc The cavern floor can't hold any more of that.", 0,true);
+else send(event.peer_id, "misc Dropped "+dropped+(dropped==1?" item":" items")+" in the cavern.", 0,true);
+}
+}
+}
 else if(parsed[0]=="openpanel" and index>-1 and parsed.length()>1)
 {
 /* Enter (location panel) and Shift+Enter (account panel) in the lobby or a room jump straight to a panel. The
