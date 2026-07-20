@@ -35,7 +35,7 @@ for(int b = int(games[gi].bullets.length()) - 1; b >= 0; b--)
 pending_bullet@ bl = games[gi].bullets[b];
 if(bl.flight.elapsed < bl.flight_ms) continue; // still travelling
 games[gi].bullets.remove_at(b);
-if(games[gi].phase != "build" and games[gi].phase != "wave") continue; // the round ended mid-flight: the shot fizzles
+if(!game_active_play(gi)) continue; // the round/arena ended mid-flight: the shot fizzles (build/wave for the round modes, active for free play)
 int wi = wall_in_dir(games[gi].id, bl.dir, games[gi].size);
 if(wi < 0 or walls[wi].health <= 0) continue; // the wall already fell: nothing to hit
 if(bl.damaging)
