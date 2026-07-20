@@ -1454,7 +1454,7 @@ void netloop_impl()
 			current_game_host = parsed[5]; // plain name, for host comparison (parsed[4] is the mode tag)
 			string[] gjl = string_split(message, "\n", true);
 			string ghost = (gjl.length() > 1) ? gjl[1] : parsed[5]; // rank-aware display name for the announcement
-			add_buffer_item("misc", "You are now in " + ghost + "'s " + parsed[3] + " " + (parsed[4] == "evp" ? "EVP" : parsed[4] == "pvp" ? "PVP" : "PVE") + " game.");
+			add_buffer_item("misc", "You are now in " + ghost + "'s " + parsed[3] + " " + (parsed[4] == "evp" ? "EVP" : parsed[4] == "pvp" ? "PVP" : parsed[4] == "free" ? "Free play" : "PVE") + " game.");
 			if (parsed[4] == "pvp") draw_map("pvparena", 0, gsize, 0, gsize); // PVP concentric arena; per-side spawns come later
 				else draw_map("cavern", 0, gsize, 0, gsize, game_outside);
 			// No weapon on entry: EVP players are unarmed until a round starts (handled in the gamephase handler).

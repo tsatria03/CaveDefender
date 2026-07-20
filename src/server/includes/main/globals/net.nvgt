@@ -2054,22 +2054,23 @@ if(get_game_index(players[index].room_id)>-1) push_game_menu(index);
 }
 else if(parsed[0]=="openpanel" and index>-1 and parsed.length()>1)
 {
-/* Enter (location panel) and Shift+Enter (account panel) in the lobby or a room jump straight to a panel:
-the location panel (lobby/room) or the account panel. This is the only way into rooms/games, so it's gated on
-rules agreement; an unagreed player gets the read/agree reminder here (there's no login-time alert). Each panel is
-pushed only in its own context: the account panel in the lobby or a room, the lobby panel only in the lobby, the
-room panel only in a room. A wrong-context press does nothing quietly, matching the other context-specific hotkeys. */
-if(!players[index].agreed)
+/* Enter (location panel) and Shift+Enter (account panel) in the lobby or a room jump straight to a panel. The
+ACCOUNT panel is your own settings (nickname, email, password, muted players) and opens to EVERYONE, even before
+agreeing to the rules, so you can manage your account first. The LOBBY and ROOM panels are how you actually play,
+so those stay gated on rules agreement; an unagreed player gets the read/agree reminder there (there's no login-time
+alert). Each panel is pushed only in its own context: account in the lobby or a room, lobby only in the lobby, room
+only in a room. A wrong-context press does nothing quietly, matching the other context-specific hotkeys. */
+string which = parsed[1];
+if(which == "account")
+{
+if(players[index].room_id==0 or get_room_index(players[index].room_id)>-1) push_account_menu(index);
+}
+else if(!players[index].agreed)
 {
 send(event.peer_id, "misc You must read the server rules before you can play. Type /rules to read them, then /rules agree to continue, or /rules disagree to leave.", 0,true);
 }
-else
-{
-string which = parsed[1];
-if(which == "account" and (players[index].room_id==0 or get_room_index(players[index].room_id)>-1)) push_account_menu(index);
 else if(which == "lobby" and players[index].room_id==0) push_lobby_menu(index);
 else if(which == "room" and get_room_index(players[index].room_id)>-1) push_room_menu(index);
-}
 }
 else if(parsed[0]=="openpausemenu" and index>-1)
 {
@@ -2137,6 +2138,7 @@ bool solo=(parsed[2]=="solo");
 string mode="pve"; // gameplay mode; defaults to the original pve for a missing or unrecognized arg
 if(parsed.length()>3 and parsed[3]=="evp") mode="evp";
 else if(parsed.length()>3 and parsed[3]=="pvp") mode="pvp";
+else if(parsed.length()>3 and parsed[3]=="free") mode="free";
 double rcap = (parsed.length()>4) ? string_to_number(parsed[4]) : 0; // wall reinforce cap multiplier (2/4/8, or 0 = no limit); PVE/PVP only, EVP sends 0
 if(rcap < 0) rcap = 0;
 bool pileup = (parsed.length()>5 and parsed[5]=="1"); // PVE only: a fallen wall's bots pile onto the standing walls (Yes); EVP/PVP send 0

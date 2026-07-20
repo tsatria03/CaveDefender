@@ -173,6 +173,7 @@ string mode_tag(string mode)
 {
 if(mode == "evp") return "EVP";
 if(mode == "pvp") return "PVP";
+if(mode == "free") return "Free play";
 return "PVE";
 }
 // The list of players the host can kick (everyone else actually in the office, not off in a game).
@@ -369,7 +370,7 @@ else if(phase == "wave") status = "The enemies are attacking.";
 else status = "Waiting to start.";
 players[index].menu_actions.resize(0);
 string[] opts;
-if(host and phase == "idle") { opts.insert_last("Begin round\tControl plus B."); players[index].menu_actions.insert_last("beginround"); }
+if(host and phase == "idle" and games[gi].mode != "free") { opts.insert_last("Begin round\tControl plus B."); players[index].menu_actions.insert_last("beginround"); } // Free play gets its own "Begin arena" arena menu in 4.4a.2; suppress the PVE round menu until then
 else if(host and phase == "build" and staff) { opts.insert_last("Skip build phase\tControl plus S."); players[index].menu_actions.insert_last("skipbuild"); }
 // PVP staging (idle): every member picks a side, and the host can also assign anyone; the even-team rule is enforced at Begin round.
 if(games[gi].mode == "pvp" and phase == "idle")
@@ -498,6 +499,7 @@ string[] opts;
 opts.insert_last("EVP (Environment versus player)"); // option 0
 opts.insert_last("PVE (Player versus environment)"); // option 1
 opts.insert_last("PVP (Player versus player)"); // option 2
+opts.insert_last("Free play (Sandbox)"); // option 3 -- the sandbox, listed last
 send_menu(players[index].peer_id, "startgamemode", "Choose a game mode to play.", opts);
 }
 // Start-game cascade, step 2: pick who can play (solo/open), then a size; the choice rides in menu_pending across the two.
@@ -1173,13 +1175,15 @@ else if(act == "stop") confirm_menu(peer, "stopgame", "Are you sure you want to 
 else if(id == "startgamemode")
 {
 if(choice < 0) return; // cancelled the mode picker
-players[player_index].pending_mode = (choice == 0) ? "evp" : (choice == 1) ? "pve" : "pvp"; // option 0 = EVP, 1 = PVE, 2 = PVP
+players[player_index].pending_mode = (choice == 0) ? "evp" : (choice == 1) ? "pve" : (choice == 2) ? "pvp" : "free"; // 0 EVP, 1 PVE, 2 PVP, 3 Free play
 if(players[player_index].pending_mode == "pvp") { players[player_index].menu_pending = "open"; push_start_size(player_index); } // PVP is always multiplayer (1v1 or 2v2) -- skip the solo/open step and force Open
-else push_start_mode(player_index); // on to who-can-play
+else push_start_mode(player_index); // on to who-can-play (Free play shows it too, but its Open pick is stubbed until 4.4d)
 }
 else if(id == "startmode")
 {
 if(choice < 0) return;
+// Free play's Open version isn't built yet (4.4d): the menu still shows it, but picking Open bounces with a coming-soon note.
+if(players[player_index].pending_mode == "free" and choice == 1) { send(peer, "misc The open version of free play is coming soon; choose solo for now.", 0, true); return; }
 players[player_index].menu_pending = (choice == 0) ? "solo" : "open";
 push_start_size(player_index);
 }
@@ -1188,8 +1192,8 @@ else if(id == "startsize")
 if(choice < 0) return;
 int size = (choice == 0) ? 25 : (choice == 1) ? 50 : (choice == 2) ? 75 : 100;
 players[player_index].pending_size = size; // carried across the reinforce step
-if(players[player_index].pending_mode == "evp")
-send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " 0 0", 0, true); // EVP has no reinforce or pile-up step; both unused, pass 0
+if(players[player_index].pending_mode == "evp" or players[player_index].pending_mode == "free")
+send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " 0 0", 0, true); // EVP and Free play have no reinforce or pile-up step; both unused, pass 0
 else
 push_start_reinforce(player_index); // PVE/PVP: ask the wall reinforce limit next
 }

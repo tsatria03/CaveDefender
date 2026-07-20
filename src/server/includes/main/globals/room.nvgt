@@ -49,6 +49,9 @@ return;
 int rid = create_room(players[index].name, peer, priv, pass);
 int cri = get_room_index(rid);
 if(cri>-1) rooms[cri].members.insert_last(peer); // the creator is now inside their new room.
+// Remember this room for the lobby quick-rejoin keys (Ctrl+J public / Ctrl+Shift+J private), just like joining one does, so you can hop straight back into a room you made after you leave it -- private also stores the password to prefill the rejoin box.
+if(priv) { players[index].last_private_room = rid; players[index].last_private_pw = pass; }
+else players[index].last_public_room = rid;
 if(priv) set_saved_private(players[index].name, pass);
 else set_saved_public(players[index].name, true);
 send_yourrooms(peer, players[index].name);
