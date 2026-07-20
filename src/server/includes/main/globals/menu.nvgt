@@ -928,6 +928,20 @@ p = a[a.length() - 1];
 string[] b = string_split(p, "\\", true);
 return b[b.length() - 1];
 }
+/* Sort a list of names alphabetically WITHOUT regard to case, so lowercase names aren't clumped after the
+capitalized ones (the built-in sort_ascending is case-sensitive: it puts A-Z before a-z). Insertion sort by a
+lowercased key -- the lists here (a folder's sub-folders or files) are small, so this is plenty fast. */
+void sort_names_ci(string[]@ a)
+{
+for(uint i=1; i<a.length(); i++)
+{
+string cur = a[i];
+string curl = string_to_lower_case(cur);
+int j = int(i) - 1;
+while(j >= 0 and string_to_lower_case(a[j]) > curl) { a[j+1] = a[j]; j--; }
+a[j+1] = cur;
+}
+}
 /* Push the browse menu for a data folder (developer editdata/viewdata): its sub-folders (drill in) then its files
 (open). A folder or file the dev named directly is handled too -- a bare file path opens straight into the editor.
 The tree is only three levels deep, so drilling never goes far. The menu id carries the mode ("datanav:edit" or
@@ -941,8 +955,8 @@ if(file_exists(full) and !directory_exists(full)) { open_data_file(index, relpat
 if(!directory_exists(full)) { send(peer, "misc There is no data folder or file at that path.", 0, true); return; }
 string[] dirs = find_directories(full + "/*");
 string[] files = find_files(full + "/*");
-dirs.sort_ascending();
-files.sort_ascending();
+sort_names_ci(dirs); // case-insensitive alphabetical, so lowercase names (e.g. amirhossein) aren't clumped after the capitalized ones
+sort_names_ci(files);
 string[] opts;
 players[index].menu_targets.resize(0);
 for(uint i = 0; i < dirs.length(); i++) // folders first, marked so the dev knows they drill in
