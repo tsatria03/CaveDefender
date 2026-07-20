@@ -1,11 +1,11 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Add the ability to view the client docks within the game.
 **Unfinished. Fix issues with weapon reloading sounds not following your movement.
 **Unfinished. Add a free play mode where you can collect wood, destroy walls, or even spawn bots to do 1 or both.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add the ability to view the client docks within the game.
 **Finished. Add a way for players to send bug reports and feedback to the developer.
 **Finished. Fix major attacking issues with the PVP game.
 **Finished. Make the game timers found in the EVP game adjustible.
