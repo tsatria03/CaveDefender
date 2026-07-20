@@ -459,17 +459,33 @@ void handle_bansalltext(string message)
 	int nl = string_contains(message, "\n", 1);
 	if(nl > 0) dockread("All bans", message.substr(nl + 1));
 }
-// Server-sent rules: "rulestext\n<which>\n<content>" -> open it in the doc reader, the same as help.
+/* Server-sent rules: "rulestext <which> <prompt>\n<content>" -> open it in the doc reader, the same as help.
+<prompt> is 1 when this page completes our reading requirement and we haven't agreed yet: on closing it, offer
+the agree menu so we needn't type the command by hand. */
 void handle_rulestext(string message)
 {
 	int nl = string_contains(message, "\n", 1);
-	if(nl > 0)
-	{
-		int sp = string_contains(message, " ", 1); // derive the prefix length from the actual space, not a hand-counted offset
-		string which = message.substr(sp + 1, nl - sp - 1);
-		string content = message.substr(nl + 1);
-		dockread(which + " rules", content);
-	}
+	if(nl < 0) return;
+	string[] hp = string_split(message.substr(0, nl), " ", true); // header: "rulestext <which> <prompt>"
+	string which = (hp.length() > 1) ? hp[1] : "player";
+	bool prompt = (hp.length() > 2 and hp[2] == "1");
+	dockread(which + " rules", message.substr(nl + 1));
+	if(prompt) offer_rules_agreement();
+}
+/* The agree prompt shown after closing the rules page that completes our reading requirement. Yes and No mirror
+the typed /rules agree and /rules disagree exactly; cancel, or escape, just returns to normal, still free to type
+the command by hand. */
+void offer_rules_agreement()
+{
+	setupmenu();
+	m.add_item("yes");
+	m.add_item("no");
+	m.add_item("cancel");
+	m.intro_text = "Do you agree to the game's rules?";
+	int c = m.run();
+	if(c == 0) comparse("/rules agree");
+	else if(c == 1) comparse("/rules disagree");
+	else speak("canceled");
 }
 // A yes/no confirm before running one of the card's staff commands; runs it on Yes, speaks "canceled" otherwise.
 void card_confirm_command(string question, string command)
