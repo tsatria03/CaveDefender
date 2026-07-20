@@ -1355,6 +1355,7 @@ void netloop_impl()
 			typed input). Keeps the decision server-side while reusing the existing command handlers. */
 			if (message.length() > parsed[0].length()+1) send(0, message.substr(parsed[0].length()+1), 0, true);
 		}
+		else if (parsed[0] == "datacancel") speak("canceled"); // the data browser (editdata/viewdata) closed at the root after Escaping up through the folders
 		else if (parsed[0] == "restartnotice" and message.length() > parsed[0].length()+1)
 		{
 			p.play_stationary("sounds/ui/misc/alert.ogg", false);

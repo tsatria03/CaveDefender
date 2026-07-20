@@ -972,6 +972,7 @@ opts.insert_last(nm);
 players[index].menu_targets.insert_last((relpath == "") ? nm : relpath + "/" + nm);
 }
 if(opts.length() == 0) { send(peer, "misc That folder is empty.", 0, true); return; }
+players[index].data_nav_path = relpath; // remember where we are so Escape can walk up one level (see the datanav on_menu_result branch)
 send_menu(peer, "datanav:" + (edit ? "edit" : "view"), (edit ? "Editing " : "Viewing ") + full + ". Choose a folder to open or a file to " + (edit ? "edit." : "view."), opts);
 }
 /* Send one data file to the dev: read-only into the doc viewer (viewdata), or into the editable box (editdata).
@@ -1244,10 +1245,21 @@ push_player_info(player_index, ti);
 }
 else if(id.substr(0, 8) == "datanav:")
 {
-/* A pick in the data browser (developer editdata/viewdata). The chosen target is a folder -> drill in, or a
-file -> open it in the editor/viewer. Mode rides in the id ("datanav:edit"/"datanav:view"). */
-if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+/* A pick in the data browser (developer editdata/viewdata). Mode rides in the id ("datanav:edit"/"datanav:view").
+Escape (choice -1) walks UP one folder level per press, cancelling the browser only once at the data root; a
+chosen folder drills in, a chosen file opens in the editor/viewer. */
 bool edit = (id.substr(8) == "edit");
+if(choice < 0)
+{
+string cur = players[player_index].data_nav_path;
+if(cur == "") { send(peer, "datacancel", 0, true); return; } // already at the data root -> close the browser (the client speaks "canceled")
+string[] segs = string_split(cur, "/", true); // the parent = everything before the last path segment
+string parent = "";
+for(uint k=0; k+1 < segs.length(); k++) parent += (parent=="" ? "" : "/") + segs[k];
+push_data_nav(player_index, parent, edit);
+return;
+}
+if(choice >= int(players[player_index].menu_targets.length())) return; // out of range
 string target = players[player_index].menu_targets[choice];
 if(directory_exists("data/" + target)) push_data_nav(player_index, target, edit); // a folder: show the next level
 else open_data_file(player_index, target, edit); // a file: open it
