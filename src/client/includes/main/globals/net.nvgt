@@ -1209,6 +1209,17 @@ void netloop_impl()
 			rebuild_wall_client(parsed[1]);
 			if(game_mode == "free") add_buffer_item("alerts", "The " + parsed[1] + " wall has just come back up.");
 		}
+		else if (parsed[0] == "cavernreset")
+		{
+			/* Free play: Clear cavern map wiped the arena. Re-tile all four walls back to solid (any open breach
+			closes up; a standing wall is repainted harmlessly) and drop your weapon back to the axe, as if freshly
+			started. Items were already stopped by their removeitem messages; bots have no client state. */
+			rebuild_wall_client("north");
+			rebuild_wall_client("east");
+			rebuild_wall_client("south");
+			rebuild_wall_client("west");
+			if(in_game and !watching) equip_weapon("axe");
+		}
 		else if (parsed[0] == "wallbreach" and parsed.length() > 1)
 		{
 			/* A wall that was ALREADY broken before we (re)arrived: "wallbreach <direction>". Re-tile the breach to
