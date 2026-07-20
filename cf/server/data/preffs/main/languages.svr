@@ -1,6 +1,7 @@
 # Language channels players can pick for grouping chat by language, one per line, written as "Name (Native name)".
 # A player's choice tags their language channel. Blank lines and lines starting with a hash are ignored, so the list
 # can be trimmed to the languages your server actually uses. "Unfiltered (Unfiltered)" opts out of the word filter.
+
 Abkhaz (аҧсуа)
 Afar (Afaraf)
 Afrikaans (Afrikaans)
