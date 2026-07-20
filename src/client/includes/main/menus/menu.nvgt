@@ -73,31 +73,29 @@ void docsmenu(bool music=true)
 page in a music-less menu (the server sends the staff page only to staff). Sends the same wire message /help does. */
 void open_help_shortcut()
 {
+	if(!connected) return; // the help is server-authoritative: with no live server there's nothing to fetch, so do nothing (not even the staff picker), matching a typed /help
 	if(myrank == "player") { send(0, "help player", 0, true); return; }
 	setupmenu(); // no music: this can fire mid-game
 	m.add_item("player help", "player");
 	m.add_item("staff help", "staff");
-	m.add_item("cancel", "cancel");
-	m.intro_text = "Help menu. What help file would you like to view?";
+	m.intro_text = "Help menu. What would you like to view?";
 	int r = m.run();
-	string sel = r < 0 ? "cancel" : m.selected_item_id;
-	if(sel == "cancel") { speak("canceled"); return; }
-	send(0, "help " + sel, 0, true);
+	if(r < 0) { speak("canceled"); return; } // escape backs out; no explicit cancel item
+	send(0, "help " + m.selected_item_id, 0, true);
 }
 /* Shift+U shortcut: open the rules, the mirror of open_help_shortcut. A regular player goes straight to the
 player rules; staff first pick which page. Both rules pages are open to everyone, so this is a convenience only. */
 void open_rules_shortcut()
 {
+	if(!connected) return; // the rules are server-authoritative: with no live server there's nothing to fetch, so do nothing (not even the staff picker), matching a typed /rules
 	if(myrank == "player") { send(0, "rules player", 0, true); return; }
 	setupmenu(); // no music: this can fire mid-game
 	m.add_item("player rules", "player");
 	m.add_item("staff rules", "staff");
-	m.add_item("cancel", "cancel");
-	m.intro_text = "Rules menu. What rule file would you like to view?";
+	m.intro_text = "Rules menu. What would you like to view?";
 	int r = m.run();
-	string sel = r < 0 ? "cancel" : m.selected_item_id;
-	if(sel == "cancel") { speak("canceled"); return; }
-	send(0, "rules " + sel, 0, true);
+	if(r < 0) { speak("canceled"); return; } // escape backs out; no explicit cancel item
+	send(0, "rules " + m.selected_item_id, 0, true);
 }
 void connectionmenu()
 {
