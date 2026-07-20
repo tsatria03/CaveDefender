@@ -373,6 +373,12 @@ players[index].menu_actions.resize(0);
 string[] opts;
 if(host and phase == "idle" and games[gi].mode != "free") { opts.insert_last("Begin round\tControl plus B."); players[index].menu_actions.insert_last("beginround"); }
 else if(host and phase == "idle" and games[gi].mode == "free") { opts.insert_last("Begin arena\tControl plus B."); players[index].menu_actions.insert_last("beginarena"); } // Free play: start the sandbox (no build phase, no bots or wood granted)
+else if(host and phase == "active" and games[gi].mode == "free")
+{
+// Free play, arena live: the FIRST slot lifts the ricochet lock (one-way). Once lifted it turns informational.
+if(!games[gi].free_wall_damage) { opts.insert_last("Enable wall damage\tControl plus B."); players[index].menu_actions.insert_last("enablewalldamage"); }
+else { opts.insert_last("Wall damage enabled"); players[index].menu_actions.insert_last("walldamageon"); }
+}
 else if(host and phase == "build" and staff) { opts.insert_last("Skip build phase\tControl plus S."); players[index].menu_actions.insert_last("skipbuild"); }
 // PVP staging (idle): every member picks a side, and the host can also assign anyone; the even-team rule is enforced at Begin round.
 if(games[gi].mode == "pvp" and phase == "idle")
@@ -398,6 +404,8 @@ void do_game_action(int player_index, int peer, string act)
 {
 if(act == "beginround") send(peer, "runcommand beginround", 0, true);
 else if(act == "beginarena") send(peer, "runcommand beginarena", 0, true); // Free play: start the sandbox
+else if(act == "enablewalldamage") send(peer, "runcommand enablewalldamage", 0, true); // Free play: lift the ricochet lock so your weapons damage the walls
+else if(act == "walldamageon") send(peer, "misc Wall damage is already enabled for this arena.", 0, true); // the informational slot after it's on
 else if(act == "skipbuild") send(peer, "runcommand skipbuild", 0, true);
 else if(act == "gameinvite") push_game_invite_area(player_index); // pick an area (room/lobby) first
 else if(act == "gamekick") push_game_kick_list(player_index);

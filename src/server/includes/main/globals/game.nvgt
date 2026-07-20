@@ -976,6 +976,15 @@ send_to_game(games[gi].id, "walldestroyed "+dir); // members + spectators hear t
 if(games[gi].bots_pileup) redistribute_bots_on_wall(gameid, dir, games[gi].size); // pile-up option (PVE): the fallen wall's bots move onto the walls still standing (the old swarm)
 else remove_bots_on_wall(gameid, dir); // default: the fallen wall's bots leave the round
 }
+/* FREE PLAY: a border wall just hit 0 -- the ONE wall-down path, shared by the player's swing branch (net.nvgt)
+and a damaging bullet (resolve_bullets), so the self-heal (4.4c.2) hooks in a single place. Re-tile the breach
+on every client; the "gone down" alert is added client-side, gated on free mode, so it reaches everyone the
+walldestroyed message does (members + watchers). Free has no builder bots to redistribute and no round to lose,
+so a downed wall just sits as debris here -- until 4.4c.2 rebuilds it. */
+void free_wall_down(int gi, string dir)
+{
+send_to_game(games[gi].id, "walldestroyed "+dir);
+}
 /* All walls down: end the round. Clear the bots and wood, drop into the "over" phase, and ask every
 member how they did and whether to play again (roundover). The cavern is NOT reset yet — we wait until
 everyone has answered (players who say no leave to the office; the rest stay), then reset_for_new_round. */

@@ -1201,6 +1201,7 @@ void netloop_impl()
 		{
 			// A wall fell: "walldestroyed <direction>". Death sound + re-tile the breach to a wood platform.
 			destroy_wall_client(parsed[1]);
+			if(game_mode == "free") add_buffer_item("alerts", "The " + parsed[1] + " wall has just gone down."); // Free play announces both transitions to everyone; the "come back up" mate is added on rebuild (4.4c.2)
 		}
 		else if (parsed[0] == "wallbreach" and parsed.length() > 1)
 		{
