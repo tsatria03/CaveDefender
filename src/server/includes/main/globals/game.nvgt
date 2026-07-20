@@ -44,6 +44,7 @@ timer pvp_desert_timer;   // PVP: times that grace; the empty side forfeits once
 int pvp_desert_count=0;   // PVP: the last forfeit-countdown number already spoken, so each of 5..1 is sent just once.
 pending_bullet@[] bullets; // ranged shots in flight: held from fire until their travel timer elapses, then resolved to a wall hit or ricochet (resolve_bullets, task 5d). Cleared when the round resets.
 wall_burn@[] burns;        // walls set alight by firebombs: each ticks damage during attack windows only, intensifying when re-hit, until it lapses (burn_tick, task 5e). Cleared when the round resets.
+wall_heal@[] heals;        // FREE PLAY only: downed walls waiting to self-heal -- each rebuilds free_wall_heal_ms after it fell (schedule_wall_heal / heal_tick, 4.4c.2). Empty in every other mode.
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl, string md)
 {
 id=gid;
@@ -840,6 +841,7 @@ continue;
 }
 resolve_bullets(int(i)); // land any ranged shots whose travel time has elapsed (a wall hit or a ricochet) -- 5d
 burn_tick(int(i)); // advance any firebomb wall fires (attack-window ticks only) -- 5e
+heal_tick(int(i)); // FREE PLAY: rebuild any downed walls whose ~10s self-heal timer has elapsed -- 4.4c.2 (a no-op when nothing's healing)
 if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
 set_game_phase(int(i), "wave");
 // Heads-up before the first wave: once, wave_warning_seconds before the build phase ends. (PVE only -- EVP has no incoming attacker wave to warn about.)
@@ -984,6 +986,7 @@ so a downed wall just sits as debris here -- until 4.4c.2 rebuilds it. */
 void free_wall_down(int gi, string dir)
 {
 send_to_game(games[gi].id, "walldestroyed "+dir);
+schedule_wall_heal(gi, dir); // it rebuilds ~10s later (4.4c.2), so a solo player is never left with nothing to smash
 }
 /* All walls down: end the round. Clear the bots and wood, drop into the "over" phase, and ask every
 member how they did and whether to play again (roundover). The cavern is NOT reset yet — we wait until
