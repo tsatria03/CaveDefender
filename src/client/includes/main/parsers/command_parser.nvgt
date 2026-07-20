@@ -304,6 +304,22 @@ void comparse(string text, string channel = "global")
 			if(parsed.length() != 1) { syntax_error("/bansall"); return; }
 			send(0, "getbansall", 0, true);
 		}
+		else if(base == "/editdata")
+		{
+			/* Developer file browser: open a server data folder to browse and edit its files in place. Optional
+			single folder/file path (space-free, like preffs/main); no path starts at the data root. The server
+			re-checks developer rank and confines the path to data/. */
+			if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
+			if(parsed.length() > 2) { syntax_error("/editdata, or /editdata followed by a folder path"); return; }
+			send(0, "editdata" + (parsed.length() == 2 ? " " + parsed[1] : ""), 0, true);
+		}
+		else if(base == "/viewdata")
+		{
+			// The read-only twin of /editdata: browse the same data files and open one to read. Developer-only.
+			if(my_rank_level() < 3) { unknown_command(parsed[0]); return; }
+			if(parsed.length() > 2) { syntax_error("/viewdata, or /viewdata followed by a folder path"); return; }
+			send(0, "viewdata" + (parsed.length() == 2 ? " " + parsed[1] : ""), 0, true);
+		}
 		else if(base == "/afk")
 	{
 		/* Go AFK yourself via the local countdown (any key cancels it). Self-only -- staff can no longer put

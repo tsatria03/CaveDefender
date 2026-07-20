@@ -293,6 +293,8 @@ void dispatch_modal(string message)
 	else if(parsed[0]=="reportstext") handle_reportstext(message);
 	else if(parsed[0]=="feedbackstext") handle_feedbackstext(message);
 	else if(parsed[0]=="bansalltext") handle_bansalltext(message);
+	else if(parsed[0]=="viewdatatext") handle_viewdatatext(message);
+	else if(parsed[0]=="editdatatext") handle_editdatatext(message);
 	else if(parsed[0]=="playerinfo") handle_playerinfo(message);
 	else if(parsed[0]=="askinput") handle_askinput(message);
 	else if(parsed[0]=="accountaction") handle_accountaction(message);
@@ -458,6 +460,26 @@ void handle_bansalltext(string message)
 {
 	int nl = string_contains(message, "\n", 1);
 	if(nl > 0) dockread("All bans", message.substr(nl + 1));
+}
+// Server-sent data file for read-only viewing (developer /viewdata): "viewdatatext <name>\n<content>" -> the doc reader.
+void handle_viewdatatext(string message)
+{
+int nl = string_contains(message, "\n", 1);
+if(nl < 0) return;
+string[] hp = string_split(message.substr(0, nl), " ", true); // header: "viewdatatext <name>"
+string title = (hp.length() > 1) ? hp[1] : "data file";
+dockread(title, message.substr(nl + 1));
+}
+/* Server-sent data file for editing (developer /editdata): "editdatatext <relpath>\n<content>" -> the editable box.
+The relpath comes back to us so Save can name the file to the server; dataedit sends "savedata <relpath>". */
+void handle_editdatatext(string message)
+{
+int nl = string_contains(message, "\n", 1);
+if(nl < 0) return;
+string[] hp = string_split(message.substr(0, nl), " ", true); // header: "editdatatext <relpath>"
+string relpath = (hp.length() > 1) ? hp[1] : "";
+if(relpath == "") return;
+dataedit(relpath, message.substr(nl + 1));
 }
 /* Server-sent rules: "rulestext <which> <prompt>\n<content>" -> open it in the doc reader, the same as help.
 <prompt> is 1 when this page completes our reading requirement and we haven't agreed yet: on closing it, offer
@@ -1298,6 +1320,18 @@ void netloop_impl()
 			// Blocking UI (the all-bans reader): defer if another modal is already open.
 			if(netloop_depth>1) net_deferred.insert_last(message);
 			else handle_bansalltext(message);
+		}
+		else if (parsed[0] == "viewdatatext")
+		{
+			// Blocking UI (the read-only data viewer): defer if another modal is already open.
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_viewdatatext(message);
+		}
+		else if (parsed[0] == "editdatatext")
+		{
+			// Blocking UI (the editable data box): defer if another modal is already open.
+			if(netloop_depth>1) net_deferred.insert_last(message);
+			else handle_editdatatext(message);
 		}
 		else if (parsed[0] == "showmenu")
 		{
