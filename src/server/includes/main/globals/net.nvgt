@@ -91,7 +91,13 @@ pf.close();
 void update_peak()
 {
 int n = live_player_count();
-if(n > peak_players) { peak_players = n; peak_when = format_now_stamp(); save_peak(); }
+if(n > peak_players)
+{
+peak_players = n; peak_when = format_now_stamp(); save_peak();
+/* A brand-new all-time record: tell everyone (including the player who just tipped it over) in the alerts buffer
+with the alert cue. Fires from the very first player up, so "a new peak of 1 player" reads right when it's just you. */
+send(0, "alert We've reached a new peak of "+n+(n==1?" player":" players")+"!", 0, true);
+}
 }
 /* --- Player reports (filed with /report, reviewed by staff with /reports), persisted in data/preffs/main/reports.svr ---
 A readable local timestamp for a report, e.g. "July 8, 2026 at 3:42 PM" (month name, 12-hour, no seconds),
