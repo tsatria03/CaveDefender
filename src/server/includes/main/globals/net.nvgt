@@ -1979,6 +1979,56 @@ way to see them all at once; like getreports it takes no name. Anyone below deve
 if(rank_level(players[index].rank) < 3) { }
 else send(event.peer_id, "bansalltext\n"+format_all_bans(), 0, true);
 }
+else if(parsed[0]=="editdata" and index>-1)
+{
+/* Developer file browser: open a data folder to browse and edit its files in place. Anyone below developer is
+silently ignored (the client hides it too). No path = the data root; drilling and the picker run server-side. */
+if(rank_level(players[index].rank) < 3) { }
+else push_data_nav(index, (parsed.length() > 1) ? parsed[1] : "", true);
+}
+else if(parsed[0]=="viewdata" and index>-1)
+{
+// The read-only twin of editdata: browse the same data files and open one to read. Developer-only, silent reject.
+if(rank_level(players[index].rank) < 3) { }
+else push_data_nav(index, (parsed.length() > 1) ? parsed[1] : "", false);
+}
+else if(parsed[0]=="savedata" and index>-1)
+{
+/* Write an edited data file back (developer editdata). "savedata <relpath>\n<content>". Re-check developer rank
+(a modified client could send this without the UI) and re-confine the path. The file's original newline style is
+preserved: if it was CRLF, write CRLF; otherwise LF -- so conf.svr keeps its \r\n while everything else stays \n. */
+if(rank_level(players[index].rank) < 3) { }
+else
+{
+int nl = string_contains(message, "\n", 1);
+if(nl < 0) { }
+else
+{
+string[] hp = string_split(message.substr(0, nl), " ", true); // header: "savedata <relpath>"
+string relpath = (hp.length() > 1) ? hp[1] : "";
+if(!safe_data_path(relpath) or relpath == "") { send(event.peer_id, "misc That file could not be saved.", 0, true); }
+else
+{
+string full = "data/" + relpath;
+bool crlf = false; // detect the file's own line-ending style from its current contents
+if(file_exists(full)) { file rf; if(rf.open(full, "rb")) { string cur = rf.read(); rf.close(); crlf = string_contains(cur, "\r\n", 1) >= 0; } }
+string body = message.substr(nl + 1);
+body = string_replace(body, "\r\n", "\n", true); // normalize to bare \n first (defensive)...
+body = string_replace(body, "\r", "\n", true);
+if(crlf) body = string_replace(body, "\n", "\r\n", true); // ...then apply the file's real style
+file wf;
+if(!wf.open(full, "wb")) { send(event.peer_id, "misc That file could not be saved.", 0, true); }
+else
+{
+wf.write(body);
+wf.close();
+string[] segs = string_split(relpath, "/", true);
+send(event.peer_id, "misc Saved " + segs[segs.length() - 1] + "; restart the server for the change to take effect.", 0, true);
+}
+}
+}
+}
+}
 else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
 {
 on_menu_result(index, parsed[1], int(string_to_number(parsed[2])));

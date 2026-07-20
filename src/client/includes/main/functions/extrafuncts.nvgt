@@ -309,3 +309,31 @@ net_keepalive(); // service the network so a long read (server help/rules, the s
 if (form.is_pressed(dockclose)) return;
 }
 }
+/* The editable sibling of dockread: opens a server data file's contents (developer /editdata) in an editable
+multiline box with Save and Cancel. Save sends the whole text back as "savedata <relpath>"; the server writes it,
+restoring the file's own newline style, and confirms in the misc buffer. Cancel discards. Pumps net_keepalive so a
+long edit doesn't time the connection out, like dockread and the F6 card. The content arrives with \n newlines (the
+server stripped any \r), which is exactly what the box works in. */
+void dataedit(const string&in relpath, const string&in content)
+{
+string[] segs=string_split(relpath, "/", true);
+string base=segs[segs.length()-1]; // last path segment, for the window title
+form.reset();
+form.create_window("Editing "+base,false,false,false);
+int editbox=form.create_input_box("File contents", content, "", 0, false, true, true); // editable, multiline, Enter inserts a newline; Tab reaches the buttons
+int savebtn=form.create_button("&Save", true);
+int cancelbtn=form.create_button("&Cancel", false, true);
+form.focus(editbox);
+while(true)
+{
+wait(5);
+form.monitor();
+net_keepalive();
+if(form.is_pressed(cancelbtn) or key_pressed(KEY_ESCAPE)) { speak("canceled"); return; } // Cancel or Escape discards, matching the editable account forms
+if(form.is_pressed(savebtn))
+{
+send(0, "savedata "+relpath+"\n"+form.get_text(editbox), 0, true); // the server's misc reply is the confirmation, so we don't also announce here
+return;
+}
+}
+}

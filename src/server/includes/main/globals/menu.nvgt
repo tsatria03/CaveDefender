@@ -902,6 +902,77 @@ if(other and vlevel>=1 and tlevel<=vlevel and tlevel>=1 and !is_owner(players[ti
 for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
 send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
 }
+/* --- Developer data-file browser (editdata / viewdata) ---
+A path CONFINED to the server's data/ folder: reject anything that could climb out of it, so a write command
+can never touch code or files outside data/. Empty path = the data root. */
+bool safe_data_path(string relpath)
+{
+if(relpath == "") return true; // the data root
+if(string_contains(relpath, "..", 1) >= 0) return false; // no parent traversal
+if(string_contains(relpath, ":", 1) >= 0) return false;  // no drive letters
+if(string_contains(relpath, "\\", 1) >= 0) return false; // backslashes not allowed; forward slashes only
+if(relpath[0] == "/") return false;                       // no absolute path
+return true;
+}
+/* The last path segment of a name (defensive: find_directories returns bare names on this engine and find_files
+should too, but normalize either way so a full-path result can't double up the stored target). Handles both slashes. */
+string leaf_name(string p)
+{
+string[] a = string_split(p, "/", true);
+p = a[a.length() - 1];
+string[] b = string_split(p, "\\", true);
+return b[b.length() - 1];
+}
+/* Push the browse menu for a data folder (developer editdata/viewdata): its sub-folders (drill in) then its files
+(open). A folder or file the dev named directly is handled too -- a bare file path opens straight into the editor.
+The tree is only three levels deep, so drilling never goes far. The menu id carries the mode ("datanav:edit" or
+"datanav:view") so the choice resolves back to the right action. */
+void push_data_nav(int index, string relpath, bool edit)
+{
+int peer = players[index].peer_id;
+if(!safe_data_path(relpath)) { send(peer, "misc That path is not allowed.", 0, true); return; }
+string full = (relpath == "") ? "data" : "data/" + relpath;
+if(file_exists(full) and !directory_exists(full)) { open_data_file(index, relpath, edit); return; } // a file named outright
+if(!directory_exists(full)) { send(peer, "misc There is no data folder or file at that path.", 0, true); return; }
+string[] dirs = find_directories(full + "/*");
+string[] files = find_files(full + "/*");
+dirs.sort_ascending();
+files.sort_ascending();
+string[] opts;
+players[index].menu_targets.resize(0);
+for(uint i = 0; i < dirs.length(); i++) // folders first, marked so the dev knows they drill in
+{
+string nm = leaf_name(dirs[i]);
+opts.insert_last(nm + ", folder");
+players[index].menu_targets.insert_last((relpath == "") ? nm : relpath + "/" + nm);
+}
+for(uint i = 0; i < files.length(); i++)
+{
+string nm = leaf_name(files[i]);
+opts.insert_last(nm);
+players[index].menu_targets.insert_last((relpath == "") ? nm : relpath + "/" + nm);
+}
+if(opts.length() == 0) { send(peer, "misc That folder is empty.", 0, true); return; }
+send_menu(peer, "datanav:" + (edit ? "edit" : "view"), (edit ? "Editing " : "Viewing ") + full + ". Choose a folder to open or a file to " + (edit ? "edit." : "view."), opts);
+}
+/* Send one data file to the dev: read-only into the doc viewer (viewdata), or into the editable box (editdata).
+CR is stripped so the client's newline-based box shows clean lines; the save step restores the file's own style. */
+void open_data_file(int index, string relpath, bool edit)
+{
+int peer = players[index].peer_id;
+if(!safe_data_path(relpath) or relpath == "") { send(peer, "misc That file is not allowed.", 0, true); return; }
+string full = "data/" + relpath;
+if(!file_exists(full)) { send(peer, "misc That file no longer exists.", 0, true); return; }
+file f;
+if(!f.open(full, "rb")) { send(peer, "misc That file could not be opened.", 0, true); return; }
+string content = f.read();
+f.close();
+content = string_replace(content, "\r", "", true); // strip CR; the box works in \n, and save re-applies the file's real style
+string[] segs = string_split(relpath, "/", true);
+string base = segs[segs.length() - 1];
+if(edit) send(peer, "editdatatext " + relpath + "\n" + content, 0, true); // full path so the client echoes it back on save
+else send(peer, "viewdatatext " + base + "\n" + content, 0, true);
+}
 void on_menu_result(int player_index, string id, int choice)
 {
 if(player_index < 0 or player_index >= int(players.length())) return;
@@ -1149,5 +1220,15 @@ if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) ret
 int ti = get_online_index(players[player_index].menu_targets[choice]); // the chosen username
 if(ti < 0) { send(peer, "This player is no longer online.", 0, true); return; } // logged off since the menu opened
 push_player_info(player_index, ti);
+}
+else if(id.substr(0, 8) == "datanav:")
+{
+/* A pick in the data browser (developer editdata/viewdata). The chosen target is a folder -> drill in, or a
+file -> open it in the editor/viewer. Mode rides in the id ("datanav:edit"/"datanav:view"). */
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+bool edit = (id.substr(8) == "edit");
+string target = players[player_index].menu_targets[choice];
+if(directory_exists("data/" + target)) push_data_nav(player_index, target, edit); // a folder: show the next level
+else open_data_file(player_index, target, edit); // a file: open it
 }
 }
