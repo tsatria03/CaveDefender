@@ -269,6 +269,8 @@ buffercheck();
 				else track_players();
 			}
 		if (!control_is_down() and alt_is_down() and key_pressed(KEY_K)) docsmenu(false); // Alt+K opens the client documentation menu in-session, music-less so it doesn't play over the game; returns back into the game, like Alt+P. !control leaves Ctrl+K for the room/game kick hotkeys, plain K is unused
+			if (shift_is_down() and !control_is_down() and !alt_is_down() and key_pressed(KEY_H)) open_help_shortcut(); // Shift+H: open the help anywhere (player help, or a staff picker menu). While AFK the afk block wakes you on H instead, per design
+			if (shift_is_down() and !control_is_down() and !alt_is_down() and key_pressed(KEY_U)) open_rules_shortcut(); // Shift+U: open the rules anywhere (player rules, or a staff picker menu). While AFK the afk block wakes you on U instead
 			if (in_game and game_outside and !shift_is_down() and !control_is_down() and key_pressed(KEY_B)) track_bots(); // EVP only: locate the builder bots; !shift keeps Shift+B as the buffer menu, !control frees Ctrl+B for the EVP begin-round hotkey
 		if (!control_is_down() and key_pressed(KEY_R)) // !control frees Ctrl+R for the room retrieve-password hotkey; read once: key_pressed is one-shot, so a second read in the same frame misses it
 		{
