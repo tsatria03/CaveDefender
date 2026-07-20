@@ -76,6 +76,22 @@ enemy e(next_enemy_id, gameid, wall, weapon);
 next_enemy_id++;
 enemies.insert_last(e);
 }
+/* FREE PLAY: add `count` fresh attacker bots to ONE wall, each rolling one of the four melee weapons (axe,
+crowbar, hammer, bat -- the same 1-4 the PVE bots use). Unlike fill_walls_to this always ADDS the full count
+(the sandbox host asked for exactly this many); the walls self-heal, so bots on a downed wall simply idle and
+resume when it comes back up. */
+void add_free_bots(int gi, string dir, int count)
+{
+for(int i=0; i<count; i++) spawn_enemy(games[gi].id, dir, random(1, 4));
+}
+/* FREE PLAY: spread `count` attacker bots across the four walls as evenly as possible -- base share on every
+wall, the remainder going one each to the first walls. Used by "All walls -> spread all N across the walls". */
+void spread_free_bots(int gi, int count)
+{
+string[]@ dirs = WALL_DIRS;
+int base = count / 4, rem = count % 4;
+for(uint d=0; d<dirs.length(); d++) add_free_bots(gi, dirs[d], base + (int(d) < rem ? 1 : 0));
+}
 /* Bring every STANDING wall in a game up to `target` bots, adding fresh random-weapon bots to fill any
 shortfall. Walls already at or above target are left alone, and destroyed walls are skipped -- so a fallen
 wall's removed bots are never refilled, and each standing wall just holds its own per-wall target. */
@@ -152,7 +168,11 @@ damage_wall(wi, enemy_damage(enemies[i].weapon));
 broadcast_wall_strength(gid);
 string hit = "wallhit "+enemies[i].wall+" "+enemies[i].weapon;
 send_to_game(gid, hit); // members + spectators hear the strike
-if(walls[wi].health<=0) on_wall_destroyed(gid, gi, enemies[i].wall); // this hit just brought it down
+if(walls[wi].health<=0) // this hit just brought it down
+{
+if(games[gi].mode=="free") free_wall_down(gi, enemies[i].wall); // free: schedule the self-heal and KEEP the bots -- they idle while it's breached, then resume when it comes back up
+else on_wall_destroyed(gid, gi, enemies[i].wall);
+}
 }
 }
 // Remove every bot in a game (when the game ends or the round is over).
