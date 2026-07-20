@@ -1525,7 +1525,7 @@ int dmg = enemy_damage(wid);
 damage_wall(wi, dmg);
 broadcast_wall_strength(games[gi].id);
 send_to_game(games[gi].id, "wallhit "+dir+" "+wid);
-if(walls[wi].health <= 0) send_to_game(games[gi].id, "walldestroyed "+dir); // the self-heal (4.4c) rebuilds it, so it's never permanent here
+if(walls[wi].health <= 0) free_wall_down(gi, dir); // the shared free wall-down path (4.4c.2 self-heal rebuilds it, so it's never permanent here)
 else { weapon_data@ wd = get_weapon_data(parsed[1]); if(wd !is null and wd.has_status and wd.status_type == "burn") ignite_wall(gi, dir, wd); } // a flaming melee weapon sets a surviving wall alight
 }
 else send_to_game(games[gi].id, "wallrico "+dir+" "+wid); // locked: the swing just ricochets, no damage
@@ -2245,6 +2245,23 @@ else if(games[gi].mode != "free") send(event.peer_id, "That only starts a free p
 else if(games[gi].host_peer != event.peer_id) send(event.peer_id, "Only the host can begin the arena.", 0,true);
 else if(games[gi].phase != "idle") send(event.peer_id, "The arena has already started.", 0,true);
 else set_game_phase(gi, "active");
+}
+else if(parsed[0]=="enablewalldamage" and index>-1)
+{
+/* Free play: lift the ricochet lock so the player's OWN weapons damage the border walls (bots always did).
+One-way by design -- there's no turning it back off; only Clear cavern map (4.4c.5) re-locks it on a fresh
+slate. Host-only, free-only, and only once the arena is active. */
+int gi=get_game_index(players[index].room_id);
+if(gi==-1) send(event.peer_id, "You are not in a game.", 0,true);
+else if(games[gi].mode != "free") send(event.peer_id, "That only works in a free play arena.", 0,true);
+else if(games[gi].host_peer != event.peer_id) send(event.peer_id, "Only the host can enable wall damage.", 0,true);
+else if(games[gi].phase != "active") send(event.peer_id, "The arena hasn't started yet.", 0,true);
+else if(games[gi].free_wall_damage) send(event.peer_id, "Wall damage is already enabled.", 0,true);
+else
+{
+games[gi].free_wall_damage = true;
+send(event.peer_id, "Wall damage is now enabled; your weapons will damage the walls.", 0,true);
+}
 }
 else if(parsed[0]=="skipbuild" and index>-1)
 {

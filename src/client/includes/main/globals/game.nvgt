@@ -251,7 +251,13 @@ buffercheck();
 			/* Free play arena hotkey (host only; solo for now): Ctrl+B begins the arena. Enable wall damage, cavern controls, and invite/kick come in later slices. */
 			if (in_game and game_mode=="free" and current_game_host==name and control_is_down())
 			{
-				if (game_phase=="idle" and key_pressed(KEY_B)) send(0, "gameaction beginarena", 0, true); // only before the arena starts, so a wrong-phase press is silent
+				/* Ctrl+B is the arena's one-key control: it begins the arena before it starts, then lifts the
+				ricochet lock once it's active. Read the key ONCE and branch on phase (key_pressed is one-shot). */
+				if (key_pressed(KEY_B))
+				{
+					if (game_phase=="idle") send(0, "gameaction beginarena", 0, true);
+					else if (game_phase=="active") send(0, "gameaction enablewalldamage", 0, true); // the server ignores a repeat once wall damage is on
+				}
 			}
 			/* PVP round hotkeys (in a PVP game): everyone can Ctrl+C choose a side and Ctrl+W watch instead; the host also gets
 			Ctrl+B begin, Ctrl+S skip build, Ctrl+I invite, Ctrl+K kick, Ctrl+A assign. Each key read once, sent by action
