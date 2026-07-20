@@ -94,6 +94,7 @@ if you pick the one you already hold), and remembers the tab you were on for nex
 setweapon/step notices; canceling leaves your weapon unchanged. Pumps the network so the modal doesn't time out. */
 void weapon_menu()
 {
+if(!connected) return; // drawing a weapon is only meaningful with a live server (the draw relay and all combat are server-mediated), so don't open the menu on a dead connection, matching the other server-tied menus
 m.reset();
 m.intro_text = "Weapon menu";
 m.tab_caption = "Category";
