@@ -1588,7 +1588,8 @@ void netloop_impl()
 			}
 			else if (game_phase == "active" and game_mode == "free")
 			{
-				// Free play: the arena is now live (no rounds/waves). Weapons and cavern controls come online in later slices. No start cue, by design.
+				// Free play: the arena is now live (no rounds/waves). Arm with the axe like the other attacking roles; you also keep the wood/reinforce kit (dual toolkit). Ranged weapons start empty until you add and gather ammo. No start cue, by design.
+				if (current_weapon == "") equip_weapon("axe");
 				add_buffer_item("alerts", "The arena is active.");
 			}
 			/* PVP: the attacker draws a weapon at build start (and keeps it across build->wave); defenders reinforce

@@ -958,7 +958,7 @@ int rid = players[pindex].room_id;
 int gi = get_game_index(rid);
 if(gi < 0) return;
 if(games[gi].mode == "evp") return; // EVP: the builder bots gather the wood, not the players
-if(games[gi].phase != "build" and games[gi].phase != "wave") return;
+if(!game_active_play(gi)) return; // only while the game is playable (build/wave, or free play's active arena)
 int px = players[pindex].x;
 int py = players[pindex].y;
 int got = 0;
@@ -999,9 +999,9 @@ void gather_ammo(int pindex, int radius)
 int rid = players[pindex].room_id;
 int gi = get_game_index(rid);
 if(gi < 0) return;
-bool attacker = (games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[pindex].team=="attack");
-if(!attacker) return; // only the attacking side has ammo
-if(games[gi].phase != "build" and games[gi].phase != "wave") return;
+bool attacker = (games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[pindex].team=="attack") or (games[gi].mode=="free");
+if(!attacker) return; // only the attacking side has ammo -- plus free play, which carries both toolkits
+if(!game_active_play(gi)) return; // only while the game is playable (build/wave, or free play's active arena)
 int px = players[pindex].x;
 int py = players[pindex].y;
 int got = 0;
@@ -1429,7 +1429,7 @@ else if(parsed[0]=="reinforce" and index>-1)
 Position-based (not facing-based), so it works from up to wall_reach tiles out in any direction. */
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) {} // not in a game
-else if(games[gi].phase != "build" and games[gi].phase != "wave") send(event.peer_id, "You can only reinforce during a round.", 0,true);
+else if(!game_active_play(gi)) send(event.peer_id, "You can only reinforce while the round or arena is active.", 0,true);
 else if(games[gi].phase == "wave" and games[gi].wave_attacking) send(event.peer_id, games[gi].mode=="pvp" ? "You can't reinforce while the attackers are striking." : "You can't reinforce while the enemies are attacking.", 0,true);
 else if(games[gi].mode=="pvp" and players[index].team != "defend") send(event.peer_id, "Only the defenders reinforce the walls.", 0,true);
 else if(wood_total(players[index].inv) < 1) send(event.peer_id, "You don't have any wood.", 0,true);
