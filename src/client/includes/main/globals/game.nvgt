@@ -248,6 +248,11 @@ buffercheck();
 				if (key_pressed(KEY_I)) send(0, "gameaction gameinvite", 0, true);
 				if (key_pressed(KEY_K)) send(0, "gameaction gamekick", 0, true);
 			}
+			/* Free play arena hotkey (host only; solo for now): Ctrl+B begins the arena. Enable wall damage, cavern controls, and invite/kick come in later slices. */
+			if (in_game and game_mode=="free" and current_game_host==name and control_is_down())
+			{
+				if (game_phase=="idle" and key_pressed(KEY_B)) send(0, "gameaction beginarena", 0, true); // only before the arena starts, so a wrong-phase press is silent
+			}
 			/* PVP round hotkeys (in a PVP game): everyone can Ctrl+C choose a side and Ctrl+W watch instead; the host also gets
 			Ctrl+B begin, Ctrl+S skip build, Ctrl+I invite, Ctrl+K kick, Ctrl+A assign. Each key read once, sent by action
 			name via do_game_action, which re-validates phase/host/staff (side/watch changes only apply pre-round). */
@@ -448,7 +453,7 @@ direction sent here is just a legacy hint it ignores (facing no longer matters).
 			}
 			else send(0, shift_is_down() ? "openpanel account" : (current_room==0 ? "openpanel lobby" : "openpanel room"), 0, true); // lobby/room: Enter jumps straight to the location panel (lobby or room), Shift+Enter to the Account panel -- these replace the old two-item Actions menu chooser
 		}
-		if(key_pressed(KEY_TAB) and in_game) speak_game_status(); // in a game, Tab speaks the current round status
+		if(key_pressed(KEY_TAB) and in_game) { if(game_mode=="free") send(0, "opencavern", 0, true); else speak_game_status(); } // Tab: free play opens the server-side cavern controls (or reports the arena isn't started yet); the other modes speak the round status
 		if(key_pressed(KEY_ESCAPE))
 		{
 			if(in_game) { if(watching) stop_watching_prompt(); else send(0, "openpausemenu", 0, true); continue; } // spectators leave the watch; players get the pause menu
