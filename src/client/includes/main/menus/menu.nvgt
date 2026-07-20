@@ -83,12 +83,12 @@ void open_help_shortcut()
 	if(r < 0) { speak("canceled"); return; } // escape backs out; no explicit cancel item
 	send(0, "help " + m.selected_item_id, 0, true);
 }
-/* Shift+U shortcut: open the rules, the mirror of open_help_shortcut. A regular player goes straight to the
-player rules; staff first pick which page. Both rules pages are open to everyone, so this is a convenience only. */
+/* Shift+U shortcut: open the rules. Unlike the help (whose staff page is staff-only), both rules pages are open
+to everyone, so EVERYONE gets the picker -- a player can read the staff rules too, to see the standards staff are
+held to. The server still gates a player's staff-rules peek behind reading the player rules first. */
 void open_rules_shortcut()
 {
-	if(!connected) return; // the rules are server-authoritative: with no live server there's nothing to fetch, so do nothing (not even the staff picker), matching a typed /rules
-	if(myrank == "player") { send(0, "rules player", 0, true); return; }
+	if(!connected) return; // the rules are server-authoritative: with no live server there's nothing to fetch, so do nothing (not even the picker), matching a typed /rules
 	setupmenu(); // no music: this can fire mid-game
 	m.add_item("player rules", "player");
 	m.add_item("staff rules", "staff");
