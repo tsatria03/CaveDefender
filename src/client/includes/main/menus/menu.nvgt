@@ -44,12 +44,15 @@ m.fade_music();
 		}
 	}
 }
-// Pre-connection documentation reader (offline, so no network keepalive needed): opens each dock in dockread().
-void docsmenu()
+/* The documentation reader: opens each dock (changelog/credits/readme/todo) in dockread(). Used both at the
+main menu (offline) and in-session via Alt+K -- the menu and dockread both pump net_keepalive, so it's safe
+mid-session. music defaults on for the main-menu use; the in-session caller passes false so no menu music
+plays over the game. */
+void docsmenu(bool music=true)
 {
 	while(true)
 	{
-		setupmenu(true);
+		setupmenu(music);
 		m.add_item("changelog", "changelog");
 		m.add_item("credits", "credits");
 		m.add_item("readme", "readme");
@@ -59,7 +62,7 @@ void docsmenu()
 		int mres=m.run();
 		string sel=mres<0?"back":m.selected_item_id;
 		if(sel=="back") { speak("canceled"); return; }
-		m.fade_music();
+		if(music) m.fade_music();
 		if(sel=="changelog") dockread("docks/changelog.txt");
 		else if(sel=="credits") dockread("docks/credits.txt");
 		else if(sel=="readme") dockread("docks/readme.txt");

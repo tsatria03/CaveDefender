@@ -272,6 +272,7 @@ Menus and leaving.
 Enter. In the lobby or a room, open the panel for where you are, the lobby panel or the room panel; in a game you host, open the round menu.
 Shift plus enter. In the lobby or a room, open the account panel, your personal settings in one place.
 Alt plus P. Open your preferences without leaving, the same settings you reach from the main menu; saving or canceling returns you to where you were.
+Alt plus K. Open the documentation menu without leaving, the changelog, credits, readme, and to-do list you also reach from the main menu; closing it returns you to where you were.
 Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the connection menu, asking you to confirm first if that setting is on.
 
 In a game.
