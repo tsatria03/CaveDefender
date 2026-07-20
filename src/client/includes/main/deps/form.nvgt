@@ -2446,6 +2446,8 @@ class audio_form {
 				audioform_keyboard_echo = audioform_change_keyboard_echo(audioform_keyboard_echo, dir);
 				this.set_default_keyboard_echo(audioform_keyboard_echo);
 				speak(audioform_keyboard_echo_string(audioform_keyboard_echo));
+				echomode = audioform_keyboard_echo; // keep the persisted game setting in step with the live echo mode
+				writepreffs(); // save it to settings.cvf, the same way F3 above persists the keyboard-click toggle
 			}
 		}
 		if (@utility_form == null)
