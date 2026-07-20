@@ -1739,6 +1739,7 @@ else
 players[index].agreed=true;
 set_agreed_rules(players[index].name); // persist the current rulesver to rules.usr
 send(event.peer_id, "agreedrules", 0,true); // client clears the prompt and confirms
+send(0, "alert "+afk_prefix(index)+display_name_flagged(index)+" has just agreed to the game's rules.", 0, true); // tell everyone in the alerts buffer, with the alert cue, AFK/rank/nickname aware
 }
 }
 else if(which=="disagree")
@@ -1749,6 +1750,7 @@ else
 {
 // They declined: tell the client (which returns to the connection menu) and drop them, like a normal disconnect.
 send(event.peer_id, "declinedrules", 0,true);
+send(0, "alert "+afk_prefix(index)+display_name_flagged(index)+" has just disagreed to the game's rules.", 0, true); // tell everyone in the alerts buffer, with the alert cue, before they drop, AFK/rank/nickname aware
 send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
 players.remove_at(index);
 verified_logins.delete(""+event.peer_id);
@@ -1778,7 +1780,10 @@ file rf;
 rf.open("docks/rules/"+which+".txt", "rb");
 string content=rf.read();
 rf.close();
-send(event.peer_id, "rulestext "+which+"\n"+content, 0,true);
+/* If this page completes their reading requirement and they haven't agreed yet, tag the message so the client
+offers the agree menu when they close the page: non-staff need only the player rules, staff need both pages. */
+bool prompt = !players[index].agreed and players[index].read_player_rules and (!is_staff(players[index].rank) or players[index].read_staff_rules);
+send(event.peer_id, "rulestext "+which+" "+(prompt?"1":"0")+"\n"+content, 0,true);
 }
 }
 else if(parsed[0]=="where" and index>-1 and parsed.length()>1)
