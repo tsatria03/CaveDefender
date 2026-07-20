@@ -421,6 +421,55 @@ else if(act == "pvpassign") push_pvp_assign_menu(player_index); // host: open th
 }
 }
 
+/* FREE PLAY cavern controls (Tab in an active free arena, 4.4c). The populate/clear console for the sandbox,
+host-only. Items are keyed by action NAME (like the round menu), so later slices can slot in items and the map
+reset in their designed order. This slice (4.4c.3) offers the bot controls; 4.4c.4 adds the item controls and
+4.4c.5 the map reset. */
+void push_cavern_menu(int index)
+{
+int peer = players[index].peer_id;
+int gi = get_game_index(players[index].room_id);
+if(gi < 0) return;
+players[index].menu_actions.resize(0);
+string[] opts;
+opts.insert_last("Add cavern bots"); players[index].menu_actions.insert_last("addbots");
+opts.insert_last("Clear cavern bots"); players[index].menu_actions.insert_last("clearbots");
+send_menu(peer, "cavern", "Cavern controls.", opts);
+}
+/* Run a cavern-control action by its action key (from the cavern menu). Re-validates free/active/host here so a
+stale menu can't act after the arena's gone. "Add cavern bots" opens the count prompt (which cascades to the
+wall and spread menus); "Clear cavern bots" wipes them at once. */
+void do_cavern_action(int player_index, int peer, string act)
+{
+int gi = get_game_index(players[player_index].room_id);
+if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active") return;
+if(games[gi].host_peer != peer) { send(peer, "misc Only the host can control the cavern.", 0, true); return; }
+if(act == "addbots") ask_input(peer, "How many attacker bots?", "cavernbotcount", false); // client returns "cavernbotcount <n>"
+else if(act == "clearbots")
+{
+clear_enemies(games[gi].id);
+send(peer, "misc The cavern bots have been cleared.", 0, true);
+}
+}
+// FREE PLAY: step 2 of Add cavern bots -- pick which wall the bots attack (or all four). The count rides in menu_pending.
+void push_cavern_bot_wall(int index)
+{
+string[] opts;
+opts.insert_last("North wall");
+opts.insert_last("East wall");
+opts.insert_last("South wall");
+opts.insert_last("West wall");
+opts.insert_last("All walls");
+send_menu(players[index].peer_id, "cavernbotwall", "Which wall should they attack?", opts);
+}
+// FREE PLAY: step 3 of Add cavern bots (All walls only) -- spread the count evenly, or put that many on EACH wall. Labels carry the number.
+void push_cavern_bot_spread(int index, int n)
+{
+string[] opts;
+opts.insert_last("Spread all " + n + " across the walls");
+opts.insert_last("Put " + n + " on each wall");
+send_menu(players[index].peer_id, "cavernbotspread", "How should they be placed across the walls?", opts);
+}
 // PVP: the two-option side chooser a player opens with "Choose your side" (sets their OWN side).
 void push_pvp_side_menu(int index)
 {
@@ -1133,6 +1182,47 @@ else if(id == "game")
 {
 if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) return;
 do_game_action(player_index, peer, players[player_index].menu_actions[choice]);
+}
+else if(id == "cavern")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_actions.length())) return; // cancelled
+do_cavern_action(player_index, peer, players[player_index].menu_actions[choice]);
+}
+else if(id == "cavernbotwall")
+{
+// FREE PLAY, Add cavern bots step 2: the target wall (or all four). The count rode in menu_pending from the input prompt.
+if(choice < 0) return; // cancelled
+int gi = get_game_index(players[player_index].room_id);
+if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+int n = int(string_to_number(players[player_index].menu_pending));
+if(n < 1) return;
+if(choice <= 3)
+{
+string dir = (choice == 0) ? "north" : (choice == 1) ? "east" : (choice == 2) ? "south" : "west";
+add_free_bots(gi, dir, n);
+send(peer, "misc " + n + (n == 1 ? " bot" : " bots") + " added to the " + dir + " wall.", 0, true);
+}
+else push_cavern_bot_spread(player_index, n); // All walls -> ask spread-evenly vs on-each
+}
+else if(id == "cavernbotspread")
+{
+// FREE PLAY, Add cavern bots step 3 (All walls): spread the count evenly across the four walls, or put that many on EACH.
+if(choice < 0) return; // cancelled
+int gi = get_game_index(players[player_index].room_id);
+if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+int n = int(string_to_number(players[player_index].menu_pending));
+if(n < 1) return;
+if(choice == 0)
+{
+spread_free_bots(gi, n);
+send(peer, "misc " + n + (n == 1 ? " bot" : " bots") + " spread across the walls.", 0, true);
+}
+else
+{
+string[]@ dirs = WALL_DIRS;
+for(uint d = 0; d < dirs.length(); d++) add_free_bots(gi, dirs[d], n);
+send(peer, "misc " + n + (n == 1 ? " bot" : " bots") + " added to each wall.", 0, true);
+}
 }
 else if(id == "gameinvitearea")
 {

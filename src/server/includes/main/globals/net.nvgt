@@ -2082,12 +2082,52 @@ if(get_game_index(players[index].room_id)>-1) push_game_menu(index);
 }
 else if(parsed[0]=="opencavern" and index>-1)
 {
-/* Free play: Tab opens the Cavern controls (populate/clear the sandbox), server-authoritative. Before the arena
-starts there's nothing to populate, so just say so; the real controls menu arrives in 4.4c. */
+/* Free play: Tab opens the Cavern controls (populate/clear the sandbox), server-authoritative. Nothing to
+populate before the arena starts, so just say so; host-only (solo is always the host, but this guards the
+coming open version, where guests just play in the sandbox the host sets up). */
 int gi=get_game_index(players[index].room_id);
 if(gi==-1 or games[gi].mode!="free") { }
 else if(games[gi].phase=="idle") send(event.peer_id, "misc The arena hasn't started yet.", 0,true);
-else send(event.peer_id, "misc The cavern controls are coming soon.", 0,true);
+else if(games[gi].host_peer != event.peer_id) send(event.peer_id, "misc Only the host can control the cavern.", 0,true);
+else push_cavern_menu(index);
+}
+else if(parsed[0]=="cavernbotcount" and index>-1 and parsed.length()>1)
+{
+/* Free play, Add cavern bots step 1: the typed count comes back here (ask_input prefix "cavernbotcount").
+Re-validate free/active/host, then carry the count in menu_pending into the wall-target menu. */
+int gi=get_game_index(players[index].room_id);
+if(gi<0 or games[gi].mode!="free" or games[gi].phase!="active" or games[gi].host_peer!=event.peer_id) { }
+else
+{
+int n = int(string_to_number(parsed[1]));
+if(n < 1) send(event.peer_id, "misc Enter how many bots to add.", 0,true);
+else
+{
+if(n > 100) n = 100; // a quiet sanity ceiling (bots are positionless, so the real cost is just the assault they mount)
+players[index].menu_pending = "" + n;
+push_cavern_bot_wall(index);
+}
+}
+}
+else if(parsed[0]=="cavernbots" and index>-1)
+{
+/* Free play: the B key asks how many attacker bots are on each wall (they're positionless, "at" a wall like
+PVE enemies, so there's nothing to locate spatially -- a per-wall tally is the readout). Any member may ask. */
+int gi=get_game_index(players[index].room_id);
+if(gi<0 or games[gi].mode!="free") { }
+else
+{
+string[]@ dirs = WALL_DIRS;
+string parts = ""; int total = 0;
+for(uint d=0; d<dirs.length(); d++)
+{
+int c = enemies_on_wall(games[gi].id, dirs[d]);
+total += c;
+if(c > 0) parts += (parts=="" ? "" : ", ") + c + " on the " + dirs[d] + " wall";
+}
+if(total == 0) send(event.peer_id, "misc No bots in the cavern.", 0,true);
+else send(event.peer_id, "misc Cavern bots: " + parts + ".", 0,true);
+}
 }
 else if(parsed[0]=="openpanel" and index>-1 and parsed.length()>1)
 {
