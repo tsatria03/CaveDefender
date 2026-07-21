@@ -16,6 +16,10 @@ message is lowercased; each pattern is matched ANYWHERE via a .*(...).* wrap (re
 bool filter_crash(string message)
 {
 message=string_to_lower_case(message);
+/* Collapse line breaks to spaces so a crash string on its own line is still caught: the .*(...).* wrap below
+matches whole-string and . does not cross a newline, so a multi-line message could otherwise sneak one past. */
+message=string_replace(message, "\r", " ", true);
+message=string_replace(message, "\n", " ", true);
 string[] crash;
 crash.insert_last("\\b(\\w+[bdflmnrvzqh])hes([bcdfgjklmnprtw]\\w+)\\b");
 crash.insert_last("(\\d):(\\d\\d[snrt][tdh])");
@@ -56,6 +60,10 @@ bool filter_chat(string message)
 {
 if(filterstuff==0) return false;
 message=string_to_lower_case(message);
+/* Collapse line breaks to spaces so a banned word on its own line is still caught (a regex rule's .*(...).*
+wrap matches whole-string and . does not cross a newline); the literal-substring branch is unaffected. */
+message=string_replace(message, "\r", " ", true);
+message=string_replace(message, "\n", " ", true);
 string[] filter=load_filter_rules(); // the rules in data/preffs/main/chatfilter.svr, read fresh each call
 for(uint counter=0; counter<filter.length(); counter++)
 {

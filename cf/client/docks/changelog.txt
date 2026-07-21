@@ -1,4 +1,5 @@
 New in 4.5.
+The chat filter now checks every line of a multi-line message, not just the first. A forbidden word typed on a new line was slipping through unfiltered; the whole message is now checked no matter how many lines it spans.
 After you read the message of the day with F2, it now stays in your misc buffer so you can review it again with Alt plus Shift plus C, rather than only hearing it the once. Paired with the new multi-line chat, a developer can now also write a message of the day that runs across several lines.
 Private messages can now span more than one line too, the same way, with Shift plus Enter or Control plus Enter for a new line. A multi-line message sent to someone who is offline is kept whole and delivered intact when they next sign in.
 You can now write a chat message across more than one line: Shift plus Enter, or Control plus Enter, starts a new line while plain Enter still sends, and the Up and Down arrows move between the lines. It works in every chat box, whether you are typing a global, local, staff, or team message.
