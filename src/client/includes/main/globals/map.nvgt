@@ -138,14 +138,20 @@ else if (facing==Backward)
 me.y++;
 }
 /* Turn to face a direction WITHOUT moving -- Shift plus an arrow, so you can aim a weapon (or line up a reinforce)
-in place. Sets facing, which the fire and reinforce keys read, and plays the turn cue for us. A real turn is also
-relayed so room-mates hear us turn in 3D at our spot, reusing the footstep relay (the server turns our "step" into
-a positioned "footstep" for everyone else in the room); pressing the way we already face just re-confirms it for us
-without telling anyone we turned. */
+in place. Does nothing if we already face that way. Sets facing, which the fire and reinforce keys read, and plays
+the turn cue in 3D one tile off in the faced direction, so we hear it in the matching ear (left for left, right for
+right, ahead for forward, behind for backward), the way SimpleFighter's turns do. The turn is also relayed so
+room-mates hear it in 3D at our own spot, reusing the footstep relay (the server turns our "step" into a positioned
+"footstep" for everyone else in the room). */
 void turn_player(int dir)
 {
-bool changed = (facing != dir);
+if(facing==dir) return; // already facing that way: no re-face, no sound
 facing = dir;
-p.play_stationary("sounds/ui/misc/turn.ogg", false);
-if(changed) send(0, "step ui/misc/turn "+int(me.x)+" "+int(me.y), 0, true);
+double sx = me.x, sy = me.y;
+if(dir==Left) sx = me.x-1;
+else if(dir==Right) sx = me.x+1;
+else if(dir==Forward) sy = me.y+1;
+else if(dir==Backward) sy = me.y-1;
+p.play_3d("sounds/ui/misc/turn.ogg", me.x, me.y, me.z, sx, sy, 0, calculate_theta(me_rotation), false);
+send(0, "step ui/misc/turn "+int(me.x)+" "+int(me.y), 0, true);
 }
