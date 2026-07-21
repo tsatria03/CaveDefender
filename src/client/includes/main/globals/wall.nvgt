@@ -71,7 +71,7 @@ weapon's hit sound AND the wall's own hurt creak. Inside (PVE) both are scaled t
 strength as a danger cue (a healthy wall's strikes are quiet, a weakening wall's get loud); outside (EVP)
 they play at constant full volume. Called from the wallhit message. The chosen volume is re-asserted
 after the position updates so they don't stomp it. */
-void play_wall_hit(string dir, int weapon)
+void play_wall_hit(string dir, int weapon, bool constant=false)
 {
 double s = cavern_size;
 double minx, maxx, miny, maxy;
@@ -102,7 +102,7 @@ else wname = "hammer";
 string snd = "equipment/weapons/"+weapon_class(wname)+"/"+wname+"/hit"+random(1,3);
 /* PVE (inside) scales the strike by the wall's strength as a danger cue; EVP (outside) has no such cue —
 you're the attacker, so strikes play at a constant full volume regardless of how battered the wall is. */
-int vol = (game_outside or game_mode=="pvp") ? 0 : wall_strike_volume(wall_percent_for(dir)); // -30 at full strength up to 0 as it falls (PVE inside only); the attacker-facing modes play at constant full volume
+int vol = (game_outside or game_mode=="pvp" or constant) ? 0 : wall_strike_volume(wall_percent_for(dir)); // -30 at full strength up to 0 as it falls (PVE inside only); the attacker-facing modes -- and a free player's own tagged hit -- play at constant full volume
 sound_pool@ wp = wall_impact_pool(); // a PVP defender hears the attacker's strike muffled through the wall (crosspool); everyone else on p
 int h = wp.play_extended_3d("sounds/"+snd+".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, vol, 100, false);
 wp.update_sound_3d(h, minx, miny, 0);

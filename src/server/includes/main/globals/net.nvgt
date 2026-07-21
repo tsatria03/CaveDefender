@@ -1308,8 +1308,8 @@ players[index].weapon=w;
 if(!wd.melee and wd.ammo_type != "")
 {
 int gi = get_game_index(players[index].room_id);
-bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack"));
-if(attacker and (games[gi].phase=="build" or games[gi].phase=="wave"))
+bool attacker = gi>=0 and ((games[gi].mode=="evp") or (games[gi].mode=="pvp" and players[index].team=="attack") or (games[gi].mode=="free"));
+if(attacker and game_active_play(gi)) // build/wave for the round modes, active for free -- so a free player's first ranged draw grants its starter reserve too
 {
 if(players[index].granted_ammo_types.find(wd.ammo_type) < 0)
 {
@@ -1524,7 +1524,7 @@ if(games[gi].free_wall_damage)
 int dmg = enemy_damage(wid);
 damage_wall(wi, dmg);
 broadcast_wall_strength(games[gi].id);
-send_to_game(games[gi].id, "wallhit "+dir+" "+wid);
+send_to_game(games[gi].id, "wallhit "+dir+" "+wid+" self"); // "self" tags a PLAYER's own hit: the client plays it at constant volume, skipping the PVE-style danger cue (the free bots' hits omit the tag and keep the cue, so you can still tell which wall they're threatening)
 if(walls[wi].health <= 0) free_wall_down(gi, dir); // the shared free wall-down path (4.4c.2 self-heal rebuilds it, so it's never permanent here)
 else { weapon_data@ wd = get_weapon_data(parsed[1]); if(wd !is null and wd.has_status and wd.status_type == "burn") ignite_wall(gi, dir, wd); } // a flaming melee weapon sets a surviving wall alight
 }

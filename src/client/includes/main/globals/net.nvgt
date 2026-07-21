@@ -1158,8 +1158,8 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "wallhit" and parsed.length() > 2)
 		{
-			// A wall was struck: "wallhit <direction> <weapon>" -- a bot (PVE) or a player's swing (EVP). Play it in 3D at that wall.
-			play_wall_hit(parsed[1], string_to_number(parsed[2]));
+			// A wall was struck: "wallhit <direction> <weapon> [self]" -- a bot (PVE) or a player's swing (EVP/PVP/free). A trailing "self" (a free player's own hit) plays at constant volume instead of the PVE danger cue.
+			play_wall_hit(parsed[1], string_to_number(parsed[2]), parsed.length() > 3 and parsed[3] == "self");
 		}
 		else if (parsed[0] == "wallplace" and parsed.length() > 2)
 		{

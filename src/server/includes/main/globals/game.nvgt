@@ -374,6 +374,7 @@ for(uint mj=0; mj<games[gi].members.length(); mj++)
 if(games[gi].members[mj]==peer) continue;
 send(games[gi].members[mj], "playerjoinedgame "+display_name_flagged(index), 0,true);
 }
+if(games[gi].mode=="free" and games[gi].phase=="active") grant_free_starter(index); // a joiner of a live open arena gets the same starter wood + ammo slate the host got at Begin arena
 }
 /* The game host invites a player (standing in the game's room OR in the main lobby) into their open game.
 Re-validates, stores the pending invite on the target (a newer invite replaces any older one of either
@@ -648,13 +649,14 @@ fill_walls_to(games[gindex].id, games[gindex].size, games[gindex].wave_bot_targe
 }
 if(phase=="active" and games[gindex].mode=="free")
 {
-/* Free play going live: start every member with a clean, empty ammo slate -- they stock the cavern themselves
-(4.4c), so ranged weapons begin empty and fill only from ammo they add and gather. Wood inventory was already
-cleared on game entry. (Solo for now, so this is just the host; the loop covers the Open version later.) */
+/* Free play going live: hand every member their starter supplies -- a stockpile of wood to reinforce with (like
+PVE) plus a fresh ammo slate that re-grants a ranged weapon's starter reserve on its first draw (like EVP). They
+still stock the cavern's ground wood/ammo themselves (4.4c). (Solo for now, so this is just the host; the loop
+covers the Open version too.) */
 for(uint m=0; m<games[gindex].members.length(); m++)
 {
 int pi=get_player_index(games[gindex].members[m]);
-if(pi>=0) reset_player_ammo(pi);
+if(pi>=0) grant_free_starter(pi);
 }
 }
 // secs = the build countdown when entering build; for an EVP wave it's the round timer (so the client can count down); 0 otherwise.
@@ -997,6 +999,18 @@ void free_wall_down(int gi, string dir)
 {
 send_to_game(games[gi].id, "walldestroyed "+dir);
 schedule_wall_heal(gi, dir); // it rebuilds ~10s later (4.4c.2), so a solo player is never left with nothing to smash
+}
+/* FREE PLAY: hand a player their starting supplies for a live arena -- a fresh ammo slate (empty reserve + mags,
+granted-starter tracking cleared so the first ranged draw re-grants its starter reserve, EVP-style) plus one random
+wood species' starter amount to reinforce with (PVE-style). So a free player opens with wood in hand and ammo
+waiting on their first ranged weapon, the same starting supplies the other modes give. Called at Begin arena for
+every member, and for anyone who joins a live open arena. */
+void grant_free_starter(int pi)
+{
+if(pi < 0) return;
+reset_player_ammo(pi);             // empty ammo + clear the granted-starter tracking (re-arms the on-equip grant)
+give_wood_single(players[pi].inv); // a starting wood stockpile, one random species, its data-driven starter amount
+send_wood_count(pi);
 }
 /* FREE PLAY: Clear cavern map (the last cavern control, 4.4c.5) -- wipe the arena back to a fresh start. Remove
 every attacker bot and ground item, cancel any pending self-heals, put out any wall fires and drop in-flight
