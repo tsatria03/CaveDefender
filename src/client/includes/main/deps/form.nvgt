@@ -119,7 +119,8 @@ funcdef bool kb_echo_update_callback(audio_form@ f, int echo);
 //can make this a member of the audio form class as soon as even one person suggests seriously wanting to change on a form by form basis I guess
 bool audioform_input_disable_ralt = true;
 int audioform_keyboard_echo = textflag_characters;
-int typingSounds = 1; // 1 = typing/keyboard sounds on, 0 = off; toggled with F3 in any input box, saved to settings.cvf. Gates every formpool keyboard sound below.
+int typingSounds = 1; // 1 = typing/keyboard sounds on, 0 = off; toggled with F3 in any input box, saved to settings.cvf. Gates every formpool keyboard sound below, and also whether we broadcast our own keystrokes to nearby players.
+int hearOthersTyping = 1; // 1 = play nearby players' keystroke cues in 3D, 0 = off; toggled with F4 in any input box, saved to settings.cvf. Independent of typingSounds (F3 is your own clicks, F4 is theirs).
 form_background_callback@ audioform_default_background_callback = null;
 //main window class
 class audio_form {
@@ -2440,6 +2441,12 @@ class audio_form {
 					speak(typingSounds == 1 ? "keyboard clicks enabled" : "keyboard clicks disabled");
 					writepreffs();
 				}
+				if (key_pressed(KEY_F4)) {
+					hearOthersTyping = hearOthersTyping == 1 ? 0 : 1;
+					formpool.play_stationary(hearOthersTyping == 1 ? "sounds/ui/misc/toggleon.ogg" : "sounds/ui/misc/toggleoff.ogg", false);
+					speak(hearOthersTyping == 1 ? "others' keyboard clicks enabled" : "others' keyboard clicks disabled");
+					writepreffs();
+				}
 				if (key_repeating(KEY_F2)) {
 				int dir = 1;
 				if (keyboard_modifiers & KEYMOD_SHIFT != 0) dir = -1;
@@ -2854,8 +2861,8 @@ class control {
 						edit(char);
 					else
 						add(char);
-						if(char==" " && typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/space.ogg",false);
-						if(char!=" " && typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/type.ogg",false);
+						if(char==" " && typingSounds==1) { formpool.play_stationary("sounds/ui/keyboard/space.ogg",false); if(password_mask=="") broadcast_typing("space"); }
+						if(char!=" " && typingSounds==1) { formpool.play_stationary("sounds/ui/keyboard/type.ogg",false); if(password_mask=="") broadcast_typing("type"); }
 						if(char!=" " && char.is_upper() && typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/cap.ogg",false);
 				}
 				if ((clipboard_flags & clipboard_flag_cut > 0) && (keyboard_modifiers & KEYMOD_CTRL > 0) && (key_repeating(KEY_X)) && password_mask == "")
@@ -3655,7 +3662,7 @@ class control {
 			sel_end = -1;
 			if (speak_deleted)
 				speak("selection deleted");
-			if(typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false);
+			if(typingSounds==1) { formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false); if(password_mask=="") broadcast_typing("delete"); }
 			return;
 		} else if (from_start == 0 && cursor > 0) {
 			int old_cursor = cursor;
@@ -3664,7 +3671,7 @@ class control {
 				cursor = text.length() - 1;
 			if (speak_deleted)
 				speak(input_box_speak(find_appropriate_character(text.substr(cursor, 4)), true) + (delete_speech_text != "" ? " " + delete_speech_text : ""), true);
-			if(typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false);
+			if(typingSounds==1) { formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false); if(password_mask=="") broadcast_typing("delete"); }
 			text = text.substr(0, cursor) + text.substr(old_cursor);
 		} else if (from_start == 1) {
 			string del_char = "Blank";
@@ -3673,7 +3680,7 @@ class control {
 			text = text.substr(0, cursor) + text.substr(cursor + utf8size(text.substr(cursor, 1)));
 			if (speak_deleted)
 				speak(input_box_speak(find_appropriate_character(del_char), true), true);
-			if(typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false);
+			if(typingSounds==1) { formpool.play_stationary("sounds/ui/keyboard/delete.ogg",false); if(password_mask=="") broadcast_typing("delete"); }
 		}
 	}
 	void move_left() {
@@ -3704,7 +3711,7 @@ class control {
 		add("\n");
 		if (echo_flag != textflag_none)
 			speak("New Line", true);
-		if(typingSounds==1) formpool.play_stationary("sounds/ui/keyboard/return.ogg",false);
+		if(typingSounds==1) { formpool.play_stationary("sounds/ui/keyboard/return.ogg",false); if(password_mask=="") broadcast_typing("return"); }
 
 	}
 	int current_line_start_position(bool word = false) {

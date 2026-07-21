@@ -80,6 +80,7 @@ save_last_account();
 while(true)
 {
 game();
+in_world=false;   // left the world (exit/kick/drop); stop any stray typing broadcasts until we respawn
 voice_shutdown(); // release the mic whenever game() returns; the next entry (including after a reconnect) reopens it on demand
 if(kicked)
 {
@@ -1078,6 +1079,11 @@ void netloop_impl()
 				hear nearby players start and stop talking, not just their voice. (Message mode instead wraps the cues
 				around the recorded clip's playback, receiver-side in recfuncts, so no live cue arrives for it.) */
 				if(parsed[1] != name) play_voice_cue_at(string_to_number(parsed[2]), string_to_number(parsed[3]), parsed[4]);
+			}
+			else if (parsed[0] == "typecue" and parsed.length() > 4)
+			{
+				// A nearby player typed a key: play the matching keyboard click in 3D at their spot, if we're set to hear others' typing (F4). The server already skips our own keystrokes.
+				if(hearOthersTyping==1 and parsed[1] != name) play_type_cue_at(string_to_number(parsed[2]), string_to_number(parsed[3]), parsed[4]);
 			}
 			else if (parsed[0] == "botspawn" and parsed.length() > 3)
 		{

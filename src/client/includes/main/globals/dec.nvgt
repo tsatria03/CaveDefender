@@ -32,6 +32,7 @@ bool current_room_private=false; // whether the room we're in is private (contro
 string current_room_host=""; // host name of the room we're in, so we know whether we host it
 bool have_public_room=false, have_private_room=false; // whether we own a saved public/private room
 bool in_game=false; // true while we're inside a game cavern (Escape/Enter open the game menu)
+bool in_world=false; // true once we've spawned into a shared space (lobby/room/game) and false back on the pre-login screens; gates typing-cue broadcasts so keystrokes on the connection/login boxes never go out
 bool game_outside=false; // true while the current game is EVP (the outdoor variant): drives the gravel/exterior map and the no-volume-scaling wall strikes; false for the original PVE (inside the cave). Set on entering a game, cleared on leaving.
 string game_mode=""; // the current game's mode ("pve"/"evp"/"pvp"), set on entering a game; gates PVP-only features like team chat. Stale when not in a game, but in_game guards those uses.
 string my_side=""; // in a PVP game, our assigned side for the round ("attack"/"defend"), set by the server's yourside message and reset on entering a game; drives our per-side spawn, weapon arming, and controls. Empty in PVE/EVP.

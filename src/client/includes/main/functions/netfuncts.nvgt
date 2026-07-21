@@ -19,6 +19,15 @@ if(encrypting) return string_decrypt(event.message, "rscs123");
 else return event.message;
 }
 
+/* Tell the server we just typed a key so nearby players hear it in 3D, keyed off form.nvgt's typing sounds.
+Only fires once we're spawned in a shared space (in_world), so keystrokes on the connection/login boxes never
+go out; masked fields are already excluded by the callers. Unreliable on channel 0 -- a dropped click is
+harmless, and the server relays it to our room at our position (skipping us and anyone ignoring us). */
+void broadcast_typing(string key)
+{
+if(!in_world) return;
+send(0, "typecue " + key, 0, false);
+}
 /* True when this client is the server's own host machine (connected to localhost). Used to keep the
 connection-status chatter (lost/reconnected) for the hoster only; remote players reconnect silently. */
 bool is_hoster()

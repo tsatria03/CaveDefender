@@ -1293,6 +1293,20 @@ send(players[i].peer_id, cue, 0, true);
 }
 }
 }
+else if(parsed[0]=="typecue" and index>-1 and parsed.length()==2 and (parsed[1]=="type" or parsed[1]=="space" or parsed[1]=="delete" or parsed[1]=="return"))
+{
+/* Relay a keystroke click to everyone sharing the typist's space, positioned at them, so nearby players hear
+them typing in 3D (like the mic-key voicecue). Same routing: same room, skip self, skip a listener who ignores
+the typist. The key is validated to the fixed cue set above so a crafted value can't become a bad sound path.
+Unreliable: these come fast and a dropped click is harmless. */
+string cue="typecue "+players[index].name+" "+players[index].x+" "+players[index].y+" "+parsed[1];
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].peer_id==event.peer_id or players[i].room_id!=players[index].room_id) continue;
+if(player_ignores(int(i), players[index].name)) continue; // listener has the typist on their personal ignore list
+send(players[i].peer_id, cue, 0, false);
+}
+}
 else if(parsed[0]=="setweapon" and index>-1 and parsed.length()>1)
 {
 /* The attacker's client tells us which weapon it just drew, so we can restore the same one on a reconnect.
