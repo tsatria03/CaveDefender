@@ -5,6 +5,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add the ability to face a certain direction without having to walk to do so.
 **Finished. Add a free play mode, a solo or open sandbox where you stock a cavern with bots and items and both attack and defend the walls at once.
 **Finished. Make a weapon's reload sound follow you as you move instead of staying where you began reloading.
 **Finished. Add the ability to view the client docks within the game.
