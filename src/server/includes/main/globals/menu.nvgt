@@ -391,7 +391,7 @@ if(games[gi].members.length() > 1) { opts.insert_last("Watch instead\tControl pl
 joinable and has a free slot; kick shows whenever there's someone other than the host to remove. */
 if(host and !games[gi].solo)
 {
-if(phase == "idle" or phase == "build") { opts.insert_last("Invite to game\tControl plus I."); players[index].menu_actions.insert_last("gameinvite"); } // full games still show it, to report the cap when chosen
+if(game_joinable(gi)) { opts.insert_last("Invite to game\tControl plus I."); players[index].menu_actions.insert_last("gameinvite"); } // shows whenever the game is joinable (a free arena stays joinable while active); full games still show it, to report the cap when chosen
 opts.insert_last("Kick from game\tControl plus K."); players[index].menu_actions.insert_last("gamekick"); // always shown; reports "no one to kick" when you're alone
 }
 if(opts.length() == 0) return; // nothing actionable: stay silent and let Tab report the status
@@ -1379,13 +1379,11 @@ else if(id == "startgamemode")
 if(choice < 0) return; // cancelled the mode picker
 players[player_index].pending_mode = (choice == 0) ? "evp" : (choice == 1) ? "pve" : (choice == 2) ? "pvp" : "free"; // 0 EVP, 1 PVE, 2 PVP, 3 Free play
 if(players[player_index].pending_mode == "pvp") { players[player_index].menu_pending = "open"; push_start_size(player_index); } // PVP is always multiplayer (1v1 or 2v2) -- skip the solo/open step and force Open
-else push_start_mode(player_index); // on to who-can-play (Free play shows it too, but its Open pick is stubbed until 4.4d)
+else push_start_mode(player_index); // on to who-can-play (every mode but PVP picks solo or open here, free play included)
 }
 else if(id == "startmode")
 {
 if(choice < 0) return;
-// Free play's Open version isn't built yet (4.4d): the menu still shows it, but picking Open bounces with a coming-soon note.
-if(players[player_index].pending_mode == "free" and choice == 1) { send(peer, "misc The open version of free play is coming soon; choose solo for now.", 0, true); return; }
 players[player_index].menu_pending = (choice == 0) ? "solo" : "open";
 push_start_size(player_index);
 }
