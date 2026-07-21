@@ -222,11 +222,13 @@ return write_field(name, "ignored", joined);
 /* --- Offline private messages: queued by /pm to an offline player, delivered at their next login ---
 Stored in offline_pm's.usr, one message per line, TAB-delimited: <sender username>\t<message>. Tabs because the
 message is free text (a username can't contain one) and it's the last field, rejoined on read. Unlimited: every
-message is kept until the recipient signs in, when they are all delivered and the file cleared. */
+message is kept until the recipient signs in, when they are all delivered and the file cleared.
+A multi-line PM would collide with the newline record separator, so the body's newlines are stored as carriage
+returns (the input box only ever inserts \n, never \r) and turned back into newlines on delivery. */
 void add_offline_pm(string recipient, string sender, string message)
 {
 string existing = read_field(recipient, "offline_pm's", "");
-string entry = sender + "\t" + message;
+string entry = sender + "\t" + string_replace(message, "\n", "\r", true); // encode body newlines so they don't split records
 write_field(recipient, "offline_pm's", (existing == "") ? entry : existing + "\n" + entry);
 }
 // The raw queued offline PMs for a recipient ("" if none), one per line; the caller parses each and then clears them.

@@ -761,7 +761,7 @@ if(lines[i].trim_whitespace() == "") continue;
 string[] parts = string_split(lines[i], "\t", true);
 if(parts.length() < 2) continue;
 string sender = parts[0];
-string msg = string_join(parts, "\t", 1, parts.length()); // rejoin the message (may contain tabs), everything after the sender
+string msg = string_replace(string_join(parts, "\t", 1, parts.length()), "\r", "\n", true); // rejoin the message (may contain tabs), everything after the sender; decode the newlines we stored as carriage returns
 string sdisp = read_field(sender, "nickname", sender); // the sender's current display name, or their username if none/deleted
 send(players[index].peer_id, "offlinepm " + sender + "\nOffline PM from " + sdisp + ": " + msg, 0, true);
 }
@@ -1152,7 +1152,7 @@ send(event.peer_id, "ping_response", 0, true);
 }
 else if(parsed[0]=="/getmotd")
 {
-send(event.peer_id, "Message of the Day: " + motd, 0, true);
+send(event.peer_id, "misc Message of the Day: " + motd, 0, true); // misc buffer: spoken on F2 and left there to review (Alt+Shift+C), in case the MOTD spans several lines
 }
 else if(message=="/serveruptime")
 {

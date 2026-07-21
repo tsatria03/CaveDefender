@@ -3,7 +3,7 @@ to type a gamestop or gamestart command; any other command or a plain chat messa
 but starting or stopping the game works while it's frozen. */
 void frozen_chat_input(string title, string prompt)
 {
-	string msg=vd.input_box(title, prompt, "");
+	string msg=vd.input_box(title, prompt, "", multiline: true);
 	if(msg=="") { speak("canceled"); return; }
 	string low=string_to_lower_case(msg.trim_whitespace());
 	if(low=="/gamestop" or low=="/gp" or low=="/gamestart" or low=="/gs") comparse(msg);
@@ -87,28 +87,28 @@ buffercheck();
 			was suspended on the gamepaused message, so everything else is skipped by the continue below. */
 			if(key_pressed(KEY_SLASH))
 			{
-				string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "");
+				string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg);
 				else speak("canceled");
 				continue;
 			}
 			if(key_pressed(KEY_APOSTROPHE) and myrank != "player")
 			{
-				string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "");
+				string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "staff");
 				else speak("canceled");
 				continue;
 			}
 			if(!watching and game_mode == "pvp" and key_pressed(KEY_SEMICOLON))
 			{
-				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "");
+				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "team");
 				else speak("canceled");
 				continue;
 			}
 			if(key_pressed(KEY_BACKSLASH) and !shift_is_down())
 			{
-				string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "");
+				string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "local");
 				else speak("canceled");
 				continue;
@@ -156,28 +156,28 @@ buffercheck();
 			held, since shift+backslash is the buffer export combo). */
 			if(key_pressed(KEY_SLASH))
 			{
-				string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "");
+				string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg);
 				else speak("canceled");
 				continue;
 			}
 			if(in_game and !watching and game_mode == "pvp" and key_pressed(KEY_SEMICOLON))
 			{
-				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "");
+				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "team");
 				else speak("canceled");
 				continue;
 			}
 			if(key_pressed(KEY_BACKSLASH) and !shift_is_down())
 			{
-				string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "");
+				string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "local");
 				else speak("canceled");
 				continue;
 			}
 			if(key_pressed(KEY_APOSTROPHE) and myrank != "player")
 			{
-				string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "");
+				string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "staff");
 				else speak("canceled");
 				continue;
@@ -422,25 +422,25 @@ buffercheck();
 		}
 		if(key_pressed(KEY_SLASH))
 		{
-			string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "");
+			string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "", multiline: true);
 			if(msg!="") comparse(msg);
 			else speak("canceled");
 		}
 		if(key_pressed(KEY_APOSTROPHE) and myrank != "player")
 		{
-			string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "");
+			string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "", multiline: true);
 			if(msg!="") comparse(msg, "staff");
 			else speak("canceled");
 		}
 		if(in_game and !watching and game_mode == "pvp" and key_pressed(KEY_SEMICOLON))
 			{
-				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "");
+				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "team");
 				else speak("canceled");
 			}
 			if(key_pressed(KEY_BACKSLASH))
 		{
-			string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "");
+			string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "", multiline: true);
 			if(msg!="") comparse(msg, "local");
 			else speak("canceled");
 		}

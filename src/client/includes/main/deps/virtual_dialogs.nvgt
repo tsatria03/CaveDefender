@@ -129,13 +129,15 @@ break;
 this.destroy_window();
 return result;
 }
-string input_box(const string title, const string text, const string default_text = "", string disallowed_chars="", string char_disallowed_description="This character is not allowed.", const int flags = 0)
+string input_box(const string title, const string text, const string default_text = "", string disallowed_chars="", string char_disallowed_description="This character is not allowed.", const int flags = 0, bool multiline = false)
 {
 string result;
 int text_box, ok_button, cancel_button;
 this.form.reset();
 this.create_dialog(title);
-text_box = this.form.create_input_box(text, default_text);
+/* multiline_enter is false so plain Enter still submits (activates OK) while Shift or Ctrl+Enter inserts a line
+break; used by the chat boxes so a message can span several lines. Up/Down navigate the lines. */
+text_box = this.form.create_input_box(text, default_text, multiline: multiline, multiline_enter: false);
 ok_button = this.form.create_button("&OK", true);
 cancel_button = this.form.create_button("&Cancel", cancel = true);
 this.form.focus(text_box);
