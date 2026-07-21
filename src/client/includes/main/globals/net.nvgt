@@ -613,7 +613,7 @@ void handle_playerinfo(string message)
 	// Dispatch the chosen action. Each routes through comparse to the existing slash command, which re-validates.
 	if(action == "pm")
 	{
-		string pm = vd.input_box("Private message to " + uname, "Type your private message.", "");
+		string pm = vd.input_box("Private message to " + uname, "Type your private message.", "", multiline: true);
 		if(pm != "") comparse("/pm " + uname + " " + pm);
 		else speak("canceled");
 	}
