@@ -8,6 +8,7 @@ After you read the message of the day with F2, it now stays in your misc buffer 
 Private messages can now span more than one line too, the same way, with Shift plus Enter or Control plus Enter for a new line. A multi-line message sent to someone who is offline is kept whole and delivered intact when they next sign in.
 You can now write a chat message across more than one line: Shift plus Enter, or Control plus Enter, starts a new line while plain Enter still sends, and the Up and Down arrows move between the lines. It works in every chat box, whether you are typing a global, local, staff, or team message.
 In free play, the message that a wall has gone down or come back up now rings the alert sound as it speaks, so you catch the moment even if you were not listening for the words.
+Updated the todo list file with the latest bug fix and feature improvements made to the game.
 New in 4.4.
 You now start a free play arena with a stockpile of wood to reinforce with, and get your starter ammo the first time you draw a ranged weapon, the same starting supplies the other modes already give. Before, a free arena began completely empty, so you had nothing in hand until you gathered it.
 In free play, the walls you attack yourself no longer start quiet and grow louder as they weaken, the way they do while you are defending; your own hits now play at a steady, full volume. The bots you spawn still swell louder as a wall weakens, so that cue keeps telling you which wall they are wearing down.
