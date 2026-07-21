@@ -521,7 +521,7 @@ bool can_attack()
 }
 bool can_defend()
 {
-	return game_mode=="free" or (can_defend());
+	return game_mode=="free" or (!game_outside and !(game_mode=="pvp" and my_side=="attack"));
 }
 /* Tab in a game: speak the current round status. Enter now opens the game menu, so Tab is free to read
 out where the round stands -- the build countdown, or whether the enemies are attacking or resting. */
