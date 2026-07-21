@@ -2415,7 +2415,7 @@ else if(games[gi].members.length() >= 4)
 {
 send(event.peer_id, "That game is full.", 0,true);
 }
-else if(games[gi].phase != "idle" and games[gi].phase != "build")
+else if(!game_joinable(gi))
 {
 send(event.peer_id, "That game is already in progress.", 0,true);
 }

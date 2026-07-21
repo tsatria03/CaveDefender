@@ -346,6 +346,16 @@ send(peer, "gameleft", 0, true);
 set_room_scope(pi, players[pi].pregame_room); // back to where they came from: a room member to the room, a lobby invitee to the lobby
 }
 }
+/* Whether others may still JOIN a game: the pre-round staging (idle) and the build phase for the round modes,
+plus a free-play arena while it's live -- a free arena sits in "active" indefinitely and its sandbox stays open
+to newcomers (a free idle game is covered by the generic idle case). Shared by the joingame command, game
+invites, and the arena menu's Invite option, so all three agree on what "joinable" means. */
+bool game_joinable(int gi)
+{
+if(gi<0 or gi>=int(games.length())) return false;
+if(games[gi].phase=="idle" or games[gi].phase=="build") return true;
+return games[gi].mode=="free" and games[gi].phase=="active";
+}
 /* Perform the actual join of player `index` into games[gi] (caller has already validated): add them as a
 member, tell their client, scope them into the cavern, and cue the members already inside. Shared by the
 joingame command and an accepted game invite. */
@@ -401,7 +411,7 @@ if(gi < 0) { players[index].invite_game = 0; send(peer, "misc That game is no lo
 if(players[index].room_id != games[gi].parent_room and players[index].room_id != 0) { send(peer, "misc You can only accept a game invite from its room or the lobby.", 0, true); return; }
 if(games[gi].solo) { players[index].invite_game = 0; send(peer, "misc That game is no longer open.", 0, true); return; }
 if(games[gi].members.length() >= 4) { players[index].invite_game = 0; send(peer, "misc That game is full.", 0, true); return; }
-if(games[gi].phase != "idle" and games[gi].phase != "build") { players[index].invite_game = 0; send(peer, "misc That game is already in progress.", 0, true); return; }
+if(!game_joinable(gi)) { players[index].invite_game = 0; send(peer, "misc That game is already in progress.", 0, true); return; }
 string inviter = players[index].invite_from;
 players[index].invite_game = 0; // consume the invite before joining
 join_game_now(index, gi);
