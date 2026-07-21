@@ -375,9 +375,9 @@ if(host and phase == "idle" and games[gi].mode != "free") { opts.insert_last("Be
 else if(host and phase == "idle" and games[gi].mode == "free") { opts.insert_last("Begin arena\tControl plus B."); players[index].menu_actions.insert_last("beginarena"); } // Free play: start the sandbox (no build phase, no bots or wood granted)
 else if(host and phase == "active" and games[gi].mode == "free")
 {
-// Free play, arena live: the FIRST slot lifts the ricochet lock (one-way). Once lifted it turns informational.
+/* Free play, arena live: offer the one-way "Enable wall damage" lock-lift only while it's still off. Once it's on
+this adds nothing, so a solo arena's menu goes empty and Enter does nothing (an open arena still shows invite/kick). */
 if(!games[gi].free_wall_damage) { opts.insert_last("Enable wall damage\tControl plus B."); players[index].menu_actions.insert_last("enablewalldamage"); }
-else { opts.insert_last("Wall damage enabled"); players[index].menu_actions.insert_last("walldamageon"); }
 }
 else if(host and phase == "build" and staff) { opts.insert_last("Skip build phase\tControl plus S."); players[index].menu_actions.insert_last("skipbuild"); }
 // PVP staging (idle): every member picks a side, and the host can also assign anyone; the even-team rule is enforced at Begin round.
@@ -395,7 +395,7 @@ if(game_joinable(gi)) { opts.insert_last("Invite to game\tControl plus I."); pla
 opts.insert_last("Kick from game\tControl plus K."); players[index].menu_actions.insert_last("gamekick"); // always shown; reports "no one to kick" when you're alone
 }
 if(opts.length() == 0) return; // nothing actionable: stay silent and let Tab report the status
-send_menu(peer, "game", (games[gi].mode == "free" ? "Arena menu. " : "Round menu. ") + status, opts);
+send_menu(peer, "game", (games[gi].mode == "free") ? "Arena menu." : ("Round menu. " + status), opts);
 }
 /* Dispatch a round-menu action by its action key. Shared by the round menu (on_menu_result) and the Ctrl+<key> game
 hotkeys, so both run identical logic; keyed by action NAME, not menu index. beginround/skipbuild ride through the
