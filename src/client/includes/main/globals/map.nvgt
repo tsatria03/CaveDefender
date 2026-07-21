@@ -16,8 +16,8 @@ vector me;
 /* Draws one of the named maps at any size. The bounds (minx..maxx, miny..maxy) set the overall
 grid: the outer ring is the wall border, and the floor is laid one tile inside it. The player
 spawns at the center, so the same call works for a 25x25, 50x50, or 100x100 map.
-`outside` switches the cavern from its inside look (concrete floor, cavern_int ambience) to the EVP
-outdoor look (gravel floor, cavern_ext ambience); the wallwood border and cavern music are unchanged.
+`outside` switches the cavern from its inside look (concrete floor, cavern_int ambience and music) to the EVP
+outdoor look (gravel floor, cavern_ext ambience and music); the wallwood border is unchanged.
 Ignored by the non-cavern maps. */
 void draw_map(string mapname, double minx=0, double maxx=50, double miny=0, double maxy=50, bool outside=false)
 {
@@ -49,15 +49,15 @@ if(mapname=="office")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallgeneric");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "marble");
-spawn_ambience(minx, maxx, miny, maxy, "office", ambvolume); // sounds/ambience/office.ogg across the whole office.
-spawn_music(minx, maxx, miny, maxy, "office", musvolume); // sounds/music/office.ogg across the whole office (add the file).
+spawn_ambience(minx, maxx, miny, maxy, "room", ambvolume); // sounds/ambience/room.ogg across the whole office.
+spawn_music(minx, maxx, miny, maxy, "room", musvolume); // sounds/music/room.ogg across the whole office.
 }
 if(mapname=="cavern")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallwood");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, outside ? "gravel" : "concrete"); // EVP plays on gravel outside; PVE on the rocky cave floor inside.
 spawn_ambience(minx, maxx, miny, maxy, outside ? "cavern_ext" : "cavern_int", ambvolume); // outdoor vs interior ambience bed.
-spawn_music(minx, maxx, miny, maxy, "cavern", musvolume); // sounds/music/cavern.ogg across the whole cavern (shared by both modes).
+spawn_music(minx, maxx, miny, maxy, outside ? "cavern_ext" : "cavern_int", musvolume); // outdoor vs interior music track, matching the ambience.
 if(!outside) spawn_cave_reverb(minx, maxx, miny, maxy); // the enclosed interior reverberates; the open-air exterior (gravel) stays dry.
 }
 if(mapname=="pvparena")
@@ -82,7 +82,13 @@ spawn_ambience(minx, maxx, wmax, maxy, "cavern_ext", ambvolume);   // exterior n
 spawn_ambience(minx, maxx, miny, wmin, "cavern_ext", ambvolume);   // exterior south strip (below the ring)
 spawn_ambience(minx, wmin, wmin, wmax, "cavern_ext", ambvolume);   // exterior west strip (left of the ring, between the strips above/below)
 spawn_ambience(wmax, maxx, wmin, wmax, "cavern_ext", ambvolume);   // exterior east strip (right of the ring)
-spawn_music(minx, maxx, miny, maxy, "cavern", musvolume);
+/* Music split the same way as the ambience above, so you hear the interior track inside the ring and the outdoor
+track out in the exterior band, never both -- the four strips tile the frame around the ring without covering it. */
+spawn_music(wmin, wmax, wmin, wmax, "cavern_int", musvolume);      // interior: the enclosed cave
+spawn_music(minx, maxx, wmax, maxy, "cavern_ext", musvolume);      // exterior north strip (above the ring)
+spawn_music(minx, maxx, miny, wmin, "cavern_ext", musvolume);      // exterior south strip (below the ring)
+spawn_music(minx, wmin, wmin, wmax, "cavern_ext", musvolume);      // exterior west strip (left of the ring, between the strips above/below)
+spawn_music(wmax, maxx, wmin, wmax, "cavern_ext", musvolume);      // exterior east strip (right of the ring)
 }
 if(mapname=="cavern2")
 {
@@ -93,7 +99,7 @@ outdoor ambience, and a wallwoodpile border to match the outdoor arena; PVE (ins
 spawn_platform(minx, maxx, miny, maxy, outside ? "wallwoodpile" : "wallcrate"); // indestructible deck border
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, outside ? "gravel" : "concrete"); // deck floor matches the mode's arena
 spawn_ambience(minx, maxx, miny, maxy, outside ? "cavern_ext" : "cavern_int", ambvolume);
-spawn_music(minx, maxx, miny, maxy, "cavern", musvolume);
+spawn_music(minx, maxx, miny, maxy, outside ? "cavern_ext" : "cavern_int", musvolume);
 if(!outside) spawn_cave_reverb(minx, maxx, miny, maxy); // the inside (concrete) deck reverberates; the outdoor (gravel) deck stays dry.
 }
 }
