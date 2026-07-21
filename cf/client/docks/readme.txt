@@ -14,7 +14,7 @@ If you use more than one account on this computer, Account storage keeps them fo
 
 The server rules.
 
-The first time you sign in you must read the server's rules and agree to them before you can play. Type /rules to read the player rules, then /rules agree to enter the lobby, or /rules disagree to leave. Everyone must read the player rules to agree; staff must read both the player and staff rules, and may open the staff rules only after reading their own. You only agree once, and are asked again just if the server's rules are later updated. You can reread the rules at any time with /rules, or /rules player and /rules staff to read either page.
+The first time you sign in you must read the server's rules and agree to them before you can play. Type /rules to read the player rules, then close the page for a quick menu asking whether you agree: yes enters the lobby, no leaves, the same as typing /rules agree or /rules disagree, which still work too. Everyone must read the player rules to agree; staff must read both the player and staff rules, and may open the staff rules only after reading their own. You only agree once, and are asked again just if the server's rules are later updated. You can reread the rules at any time with /rules, or /rules player and /rules staff to read either page.
 
 Moving around.
 
@@ -32,6 +32,10 @@ Global chat is also divided into language channels. You only hear global message
 One of the channels is named Unfiltered. It works like any other channel, in that you only hear global chat from people who have also chosen it, but it is the one channel where the word filter is switched off for global chat. Unfiltered is meant for talking freely, including adult or NSFW topics, so pick it only if you are happy to both read and write that kind of language. No one is ever put there automatically, and you can leave it any time by choosing another channel with /channel.
 
 You can run any command from any chat you have access to.
+
+Any chat box holds more than one line. Press Shift plus Enter, or Control plus Enter, to start a new line while plain Enter still sends, and the up and down arrows move between the lines you have written. This works in every chat box, private messages included, so you can lay out a longer message across several lines.
+
+You can also hear the people around you typing. When someone nearby is writing in a chat box you hear their keyboard from where they stand, so you can tell who is composing a message, and walking away fades it like any other sound; your own typing is heard the same way by others. F3 in any text box turns your own keyboard clicks on or off and also sets whether others hear you, and F4 in any text box turns hearing other people's typing on or off.
 
 Chat filtering.
 
@@ -161,7 +165,7 @@ Free play.
 
 Free play is a sandbox, a mode with no rounds, no timer, no score, and no winning or losing, meant for practicing, learning the controls, or just messing about. It is the one mode where you both attack and defend at once: every weapon and the wood and reinforce kit are all live together, so you can smash a wall down and then gather wood and build it back up yourself. Choose free play when you pick your game mode, then solo for a private cavern of your own or open to let others join, and a map size.
 
-You start in an empty cave with the four walls standing at their usual random strengths, but nothing else, no bots, no wood, no ammo. You stock the cavern and decide when your weapons start to bite through two menus: enter for the state of the arena, and tab for the things in it.
+You start in an empty cave with the four walls standing at their usual random strengths, but the floor bare, no bots, no wood, and no ammo lying about. You still begin carrying the same starter wood the other modes give, and your starter ammo arrives the first time you draw a ranged weapon, so you are not empty-handed. You stock the cavern and decide when your weapons start to bite through two menus: enter for the state of the arena, and tab for the things in it.
 
 Press enter for the arena menu. Before you have started it offers begin arena, or control plus B, which opens the sandbox for play. At first your weapons only ricochet off the walls, a safe setup window while you gather ammo and wood, spawn bots, and get into position; nothing you swing or fire does any damage yet. When you are ready, open the arena menu again and choose enable wall damage, or press control plus B a second time, and your weapons begin to hurt the walls for real. This is a one way switch: once wall damage is on it stays on until you reset the cavern, so there is never any doubt whether your hits are landing.
 
@@ -212,8 +216,8 @@ These run lobby or room actions directly without opening the menu first. These f
 
 Control plus C. Create a public room.
 Control plus shift plus C. Create a private room.
-Control plus J. Rejoin the last public room you joined this session.
-Control plus shift plus J. Rejoin the last private room you joined this session, with its password already filled in.
+Control plus J. Rejoin the last public room you joined or created this session.
+Control plus shift plus J. Rejoin the last private room you joined or created this session, with its password already filled in.
 
 While inside a room, these run the room menu's actions without opening it first.
 
@@ -245,6 +249,15 @@ Backslash. Open local chat.
 Apostrophe. Open staff chat. Staff only.
 Semicolon. Open team chat. Player versus player only.
 
+Text boxes.
+
+These work while you are typing in any text box, such as a chat box.
+
+Shift plus Enter, or Control plus Enter. Start a new line instead of sending; plain Enter still sends, and the up and down arrows then move between your lines.
+F2. Cycle how your typing is read back: characters, words, both, or nothing. Saved between sessions.
+F3. Turn your own keyboard clicks on or off, which also sets whether nearby players hear you type. Saved.
+F4. Turn hearing other players' typing on or off. Saved.
+
 Glancing around.
 
 P. Locate the other players around you, nearest first, by direction and distance.
@@ -270,7 +283,7 @@ End. Lower the ambience volume.
 
 Voice chat.
 
-O. Talk over voice chat. With hold to talk on, hold O to talk; with it off, press O to start talking and press it again to stop.
+O. Talk over voice chat. With hold to talk on, hold O to talk; with it off, press O to start talking and press it again to stop. In preferences, Voice chat mode sets whether your voice streams live as you speak or sends as one recorded message others hear when you finish.
 
 The message buffers.
 
