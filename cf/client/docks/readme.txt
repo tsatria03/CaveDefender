@@ -196,6 +196,11 @@ Right arrow. Step right.
 Up arrow. Step forward.
 Down arrow. Step backward.
 
+Shift plus left arrow. Turn to face left without moving, for aiming a weapon in place.
+Shift plus right arrow. Turn to face right without moving.
+Shift plus up arrow. Turn to face forward without moving.
+Shift plus down arrow. Turn to face backward without moving.
+
 Alt. Held while moving, switches between walking and running; which way round depends on your auto-running setting.
 Alt plus letter R. Toggle auto-running on or off, saved between sessions.
 

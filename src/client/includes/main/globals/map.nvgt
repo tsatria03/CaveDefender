@@ -137,3 +137,15 @@ me.y--;
 else if (facing==Backward)
 me.y++;
 }
+/* Turn to face a direction WITHOUT moving -- Shift plus an arrow, so you can aim a weapon (or line up a reinforce)
+in place. Sets facing, which the fire and reinforce keys read, and plays the turn cue for us. A real turn is also
+relayed so room-mates hear us turn in 3D at our spot, reusing the footstep relay (the server turns our "step" into
+a positioned "footstep" for everyone else in the room); pressing the way we already face just re-confirms it for us
+without telling anyone we turned. */
+void turn_player(int dir)
+{
+bool changed = (facing != dir);
+facing = dir;
+p.play_stationary("sounds/ui/misc/turn.ogg", false);
+if(changed) send(0, "step ui/misc/turn "+int(me.x)+" "+int(me.y), 0, true);
+}

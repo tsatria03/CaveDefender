@@ -331,28 +331,35 @@ buffercheck();
 		fireloop();  // ...and ranged firing (Space) for a drawn ranged weapon; melee vs ranged are mutually exclusive, so only one reads Space per frame.
 		reloadloop(); // ...and complete a Shift+R reload once its sound has played out.
 		bulletloop(); // ...and slide every travelling bullet's whoosh toward its wall (everyone in the game, not just the shooter, hears these).
-		if (key_down(KEY_LEFT) and movetimer.elapsed>=movetime)
+		/* Shift plus an arrow turns you to face that way WITHOUT moving -- aim a weapon (or line up a reinforce) in
+		place. key_pressed so it's one turn per press; the plain-arrow walking below now requires Shift to be up, so a
+		Shift+arrow only turns. Arrows aren't read anywhere else (buffers use comma/period/brackets), so this is safe. */
+		if(shift_is_down() and key_pressed(KEY_LEFT)) turn_player(Left);
+		else if(shift_is_down() and key_pressed(KEY_RIGHT)) turn_player(Right);
+		else if(shift_is_down() and key_pressed(KEY_UP)) turn_player(Forward);
+		else if(shift_is_down() and key_pressed(KEY_DOWN)) turn_player(Backward);
+		if (key_down(KEY_LEFT) and !shift_is_down() and movetimer.elapsed>=movetime)
 		{
 			facing=Left;
 			movetimer.restart();
 			me.x--;
 			playstep();
 		}
-		if (key_down(KEY_RIGHT) and movetimer.elapsed>=movetime)
+		if (key_down(KEY_RIGHT) and !shift_is_down() and movetimer.elapsed>=movetime)
 		{
 			facing=Right;
 			movetimer.restart();
 			me.x++;
 			playstep();
 		}
-		if (key_down(KEY_UP) and movetimer.elapsed>=movetime)
+		if (key_down(KEY_UP) and !shift_is_down() and movetimer.elapsed>=movetime)
 		{
 			facing=Forward;
 			movetimer.restart();
 			me.y++;
 			playstep();
 		}
-		if (key_down(KEY_DOWN) and movetimer.elapsed>=movetime)
+		if (key_down(KEY_DOWN) and !shift_is_down() and movetimer.elapsed>=movetime)
 		{
 			facing=Backward;
 			movetimer.restart();
