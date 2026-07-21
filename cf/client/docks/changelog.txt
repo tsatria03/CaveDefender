@@ -1,4 +1,5 @@
 New in 4.5.
+You can now hear nearby players typing in 3D: when someone types in a chat box, their keyboard clicks play at their position, so you can tell who is writing and simply walk away if you would rather not hear it. Press F4 in any text box to toggle hearing others' typing, and your existing F3 keyboard-clicks toggle now also decides whether other players can hear you.
 The chat filter now checks every line of a multi-line message, not just the first. A forbidden word typed on a new line was slipping through unfiltered; the whole message is now checked no matter how many lines it spans.
 After you read the message of the day with F2, it now stays in your misc buffer so you can review it again with Alt plus Shift plus C, rather than only hearing it the once. Paired with the new multi-line chat, a developer can now also write a message of the day that runs across several lines.
 Private messages can now span more than one line too, the same way, with Shift plus Enter or Control plus Enter for a new line. A multi-line message sent to someone who is offline is kept whole and delivered intact when they next sign in.

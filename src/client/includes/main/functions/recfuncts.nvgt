@@ -220,6 +220,16 @@ void play_voice_cue_at(double cx, double cy, string onoff)
 	else p.play_3d("sounds/" + cuefile + ".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
 }
 
+/* Play a nearby player's keystroke click one-shot in 3D at (cx,cy), routed like footsteps and the voice cues:
+crosspool (muffled through the wall) for a cross-wall PVP source, otherwise p. Driven by the typecue relay so
+players hear each other typing; key is one of type/space/delete/return, already validated on the server. */
+void play_type_cue_at(double cx, double cy, string key)
+{
+	string cuefile = "ui/keyboard/" + key;
+	if(game_mode == "pvp" and pvp_crosswall(cx, cy)) crosspool.play_3d("sounds/" + cuefile + ".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
+	else p.play_3d("sounds/" + cuefile + ".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
+}
+
 // Decode a whole "m" voice-message blob and start it as one fixed-position 3D clip for this listener.
 void play_remote_message(int sx, int sy, string blob)
 {

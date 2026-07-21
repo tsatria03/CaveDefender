@@ -15,6 +15,7 @@ void game()
 	justregistered=false;
 	send(0, "welcome", 0,true);
 	draw_map("lobby");
+	in_world=true;            // we're now present in a shared space, so our typing may broadcast to nearby players
 	pinging=false;
 	players.resize(0);
 	current_room=0;
