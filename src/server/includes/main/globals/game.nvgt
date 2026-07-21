@@ -1000,16 +1000,18 @@ schedule_wall_heal(gi, dir); // it rebuilds ~10s later (4.4c.2), so a solo playe
 }
 /* FREE PLAY: Clear cavern map (the last cavern control, 4.4c.5) -- wipe the arena back to a fresh start. Remove
 every attacker bot and ground item, cancel any pending self-heals, put out any wall fires and drop in-flight
-shots, roll all four walls fresh (a new random 50-100%), and RE-LOCK wall damage (your weapons ricochet again
-until you re-enable it). The clients re-tile every wall solid -- closing any open breach -- and reset the weapon
-to the axe, via the "cavernreset" message. Each player's carried AMMO is emptied too (as when the arena first went active); their
+shots, roll all four walls fresh (a new random 50-100%), and RE-LOCK wall damage (weapons ricochet again until
+it's re-enabled). The clients re-tile every wall solid -- closing any open breach -- via the "cavernreset" message.
+The shared world (walls, the damage lock, bots, ground items) resets for EVERYONE, but the personal fresh start --
+weapon back to the axe and AMMO emptied -- is the HOST's alone: in an open arena a guest keeps the gear they're
+holding (they only see the world reset around them and their swings ricochet again from the re-lock). The host's
 gathered wood is left alone. */
 void reset_free_cavern(int gi)
 {
 int gameid = games[gi].id;
 clear_enemies(gameid);                 // wipe the attacker bots
 clear_items_broadcast(gameid);         // wipe the ground items and stop their client loops
-for(uint m=0; m<games[gi].members.length(); m++) { int pi = get_player_index(games[gi].members[m]); if(pi>-1) reset_player_ammo(pi); } // empty each player's ammo reserve + mags, like a fresh arena start
+int hi = get_player_index(games[gi].host_peer); if(hi>-1) reset_player_ammo(hi); // empty the HOST's ammo reserve + mags (their personal fresh start); in an open arena a guest's carried gear is left alone
 games[gi].heals.resize(0);             // cancel pending self-heals (the walls are being rolled fresh right now)
 games[gi].bullets.resize(0);           // drop any shots still in flight (they'd resolve against the reset walls)
 for(int b=int(games[gi].burns.length())-1; b>=0; b--) send_to_game(gameid, "burnstop "+games[gi].burns[b].dir); // stop each wall fire's client loop

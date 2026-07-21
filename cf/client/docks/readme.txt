@@ -1,6 +1,6 @@
 Welcome to CaveDefender!
 
-CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in the player versus player mode, take one side of the walls and fight other players across them. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help. For the full list of the keys the game uses, see the keyboard commands section near the end of this readme.
+CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in the player versus player mode, take one side of the walls and fight other players across them, or, in free play, stock your own sandbox cavern and both attack and defend the walls at once. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help. For the full list of the keys the game uses, see the keyboard commands section near the end of this readme.
 
 Connecting and signing in.
 
@@ -79,7 +79,7 @@ Anyone in a room can invite someone to it. Choose Invite to room from the room m
 
 Games.
 
-Inside a room you can start a game, choosing a game mode, then who can play, then a map size, and finally, in this mode, a wall reinforce limit and whether the enemy bots pile onto the remaining walls when one is destroyed, both explained below. Others can join your open games while a game still has room. There are three modes. This section describes the original, player versus environment, or PVE, where you defend four walls that each start at a random strength; the other two, environment versus player and player versus player, each have their own section below. If you host the game, press enter for the round menu, where you begin the round.
+Inside a room you can start a game, choosing a game mode, then who can play, then a map size, and finally, in this mode, a wall reinforce limit and whether the enemy bots pile onto the remaining walls when one is destroyed, both explained below. Others can join your open games while a game still has room. There are four modes. This section describes the original, player versus environment, or PVE, where you defend four walls that each start at a random strength; the other three, environment versus player, player versus player, and free play, each have their own section below. If you host the game, press enter for the round menu, where you begin the round.
 
 If your game is open, that menu also has Invite to game and Kick from game, which are the same idea as the room's Invite to room and Kick from room but one step further in.
 
@@ -157,6 +157,26 @@ Because the two sides are genuinely separated by the walls, you hear across them
 
 Team chat, on the semicolon key, lets you talk privately to your own side; see the chat channels section above.
 
+Free play.
+
+Free play is a sandbox, a mode with no rounds, no timer, no score, and no winning or losing, meant for practicing, learning the controls, or just messing about. It is the one mode where you both attack and defend at once: every weapon and the wood and reinforce kit are all live together, so you can smash a wall down and then gather wood and build it back up yourself. Choose free play when you pick your game mode, then solo for a private cavern of your own or open to let others join, and a map size.
+
+You start in an empty cave with the four walls standing at their usual random strengths, but nothing else, no bots, no wood, no ammo. You stock the cavern and decide when your weapons start to bite through two menus: enter for the state of the arena, and tab for the things in it.
+
+Press enter for the arena menu. Before you have started it offers begin arena, or control plus B, which opens the sandbox for play. At first your weapons only ricochet off the walls, a safe setup window while you gather ammo and wood, spawn bots, and get into position; nothing you swing or fire does any damage yet. When you are ready, open the arena menu again and choose enable wall damage, or press control plus B a second time, and your weapons begin to hurt the walls for real. This is a one way switch: once wall damage is on it stays on until you reset the cavern, so there is never any doubt whether your hits are landing.
+
+Press tab for the cavern controls, where you populate and clear the sandbox. It opens only once the arena has started, and only for the host; in an open cavern everyone else simply plays in the sandbox the host sets up.
+
+Add cavern bots asks how many attacker bots you want, then which wall they attack, north, east, south, west, or all walls. They are the same wall smashers as the other modes, each swinging one of the four melee weapons, and there is no limit on how many you spawn. If you choose all walls, a third question asks whether to spread that many evenly across the four walls or to put that many on each. The bots hammer the walls whether or not your own wall damage is on, so you can set them loose and defend against them. Press b to hear how many bots are on each wall.
+
+Add cavern items drops wood, ammo, or both onto the floor for you to gather. You pick which, then the kind, any one wood kind or all wood, any one ammo kind or all ammo, then how many; both simply drops a mix of the two. The pieces scatter across the floor as they do in the other modes, up to the same per-map ground limit, so a small cavern holds fewer than a large one.
+
+Clear cavern bots removes every bot at once, and clear cavern items removes every dropped piece. Clear cavern map wipes the whole thing, bots, items, and all, rolls the four walls fresh, locks wall damage again, and hands you the axe with empty ammo, as if you had just begun. In an open cavern that reset restores the world for everyone but empties only the host's own weapon and ammo, so a guest keeps what they are carrying.
+
+Any wall you or your bots smash all the way down does not stay broken; it builds itself back up about ten seconds later at a fresh random strength, so there is always something to break. Everyone in the cavern is told the moment a wall goes down and again when it comes back up.
+
+Because both toolkits are live, all the attacker keys and all the defender keys work here at once. Gather wood and reinforce the walls as a defender does in the other modes, and swing or fire your weapons and gather ammo as an attacker does; the wall strength keys, the locate keys, and the rest all behave as they do elsewhere.
+
 Watching games.
 
 You can also watch a game instead of playing it. Choose watch game from the room menu to see every game in the room, including single-player games and games already in progress, and pick one; up to four people can watch a game at once.
@@ -205,7 +225,7 @@ Control plus L. Leave the room.
 
 Round menu shortcuts. These run the round menu's actions without opening it, and only do something when the action is actually available to you. Every menu that has these shortcuts, the lobby, room, and round menus, also shows each item's shortcut beside it, so you can learn them by opening the menu too. Once you know the keys, you can hide these labels by turning off Read keyboard shortcuts in menus on the Menu tab of preferences.
 
-Control plus B. Begin the round. Host only.
+Control plus B. Begin the round, or in free play begin the arena and then, once it is running, enable wall damage. Host only.
 Control plus S. Skip the build phase. Staff host only.
 Control plus I. Invite a player to the game. Host of an open game.
 Control plus K. Kick a player from the game. Host of an open game.
@@ -269,7 +289,7 @@ Shift plus B. Open the Buffer menu, which gathers everything you can do with the
 
 Menus and leaving.
 
-Enter. In the lobby or a room, open the panel for where you are, the lobby panel or the room panel; in a game you host, open the round menu.
+Enter. In the lobby or a room, open the panel for where you are, the lobby panel or the room panel; in a game you host, open the round menu, or the arena menu in free play.
 Shift plus enter. In the lobby or a room, open the account panel, your personal settings in one place.
 Alt plus P. Open your preferences without leaving, the same settings you reach from the main menu; saving or canceling returns you to where you were.
 Alt plus K. Open the documentation menu without leaving, the changelog, credits, readme, and todo list you also reach from the main menu; closing it returns you to where you were.
@@ -281,27 +301,27 @@ In a game.
 
 These work while you are in a game.
 
-Tab. Hear the current round status.
+Tab. Hear the current round status; in free play, the host opens the cavern controls instead.
 
 N, E, S, or W. Hear the strength of the north, east, south, or west wall.
 T. Hear a summary of all four walls.
-I. Hear how much wood you are carrying, broken down by kind. For defenders, that is PVE and PVP; not while watching.
-D. Locate the wood lying around you, nearest first, with each piece's kind. For defenders, that is PVE and PVP; not while watching.
+I. Hear how much wood you are carrying, broken down by kind. For defenders, that is PVE, PVP, and free play; not while watching.
+D. Locate the wood lying around you, nearest first, with each piece's kind. For defenders, that is PVE, PVP, and free play; not while watching.
 
-Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. Defenders only, in PVE and PVP.
+Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. Defenders only, in PVE, PVP, and free play.
 
-B. Locate the builder bots, nearest first. EVP only.
+B. Locate the bots, nearest first: the builder bots in EVP, or the cavern bots you spawned in free play.
 
-Alt plus W. Open the weapon menu to draw any of your weapons, in tabs by kind. For attackers, that is EVP and PVP.
-Number row, 1 through 0 then dash and equals. Draw a weapon directly, in alphabetical order matching the weapon menu's All tab. For attackers only, the same as Alt plus W.
+Alt plus W. Open the weapon menu to draw any of your weapons, in tabs by kind. For attackers, that is EVP, PVP, and free play.
+Number row, 1 through 0 then dash and equals. Draw a weapon directly, in alphabetical order matching the weapon menu's All tab. For attackers, that is EVP, PVP, and free play, the same as Alt plus W.
 
-Spacebar. Swing a drawn melee weapon at the nearest wall, or fire a drawn ranged weapon at the wall you face, once per press; the machine gun instead fires continuously while it is held. For attackers, that is EVP and PVP.
+Spacebar. Swing a drawn melee weapon at the nearest wall, or fire a drawn ranged weapon at the wall you face, once per press; the machine gun instead fires continuously while it is held. For attackers, that is EVP, PVP, and free play.
 
-Shift plus R. Reload the drawn ranged weapon from your reserve once it is empty; a ping sounds when it is loaded. For attackers, that is EVP and PVP.
+Shift plus R. Reload the drawn ranged weapon from your reserve once it is empty; a ping sounds when it is loaded. For attackers, that is EVP, PVP, and free play.
 
-X. Hear the drawn ranged weapon's ammo, how many rounds are loaded and how many are in reserve. For attackers, that is EVP and PVP.
+X. Hear the drawn ranged weapon's ammo, how many rounds are loaded and how many are in reserve. For attackers, that is EVP, PVP, and free play.
 
-A. Locate the ammo lying around you, nearest first, with each one's kind. For attackers, that is EVP and PVP.
+A. Locate the ammo lying around you, nearest first, with each one's kind. For attackers, that is EVP, PVP, and free play.
 
 Connection problems.
 
