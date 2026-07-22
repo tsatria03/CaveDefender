@@ -1,5 +1,10 @@
 ####These are the things that need to be finished for future versions of the game.
 
+**Unfinished. Make it so you can pause solo and open free play games, just like you can with the other modes.
+**Unfinished. Add builder bots to the cavern controls menu.
+**Unfinished. Make it so you are able to set spawning of attacker bots upon the wall being brought back up in the cavern controls menu.
+**Unfinished. Make it so you are able to continuesly spawn any item in the cavern controls menu.
+**Unfinished. Make it so guests in the free play mode can also access the cavern controls menu.
 **Unfinished. Add a server-wide leaderboard showing the top PVE and EVP best rounds and PVP win-loss records already stored on each account.
 **Unfinished. Add a learn sounds option for the EVP and PVE game modes so players can have an idea on how the modes work when being played.
 
