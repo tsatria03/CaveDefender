@@ -81,3 +81,26 @@ kept `"CLAUDE_CODE_ENABLE_TASKS": "1"` (native-Tasks path).
    `CLAUDE_CODE_ENABLE_TASKS` to `0` for legacy TodoWrite.
 Unverified: that 2.1.216 / 2.1.141 are real published npm versions (not checked against
 the registry from-session); if npm 404s, find the nearest real version.
+
+**Update 2026-07-22 (re-downgrade).** Dev downgraded again; installed CLI is now
+**2.1.216** and the downgrade STUCK (auto-updater stays disabled — `DISABLE_AUTOUPDATER=1`
+is working). BUT `CLAUDE_CODE_ENABLE_TASKS` had **gone missing from settings.json `env`**
+after the re-downgrade (only `DISABLE_AUTOUPDATER` remained), and `todoFeatureEnabled: true`
+was present at top level but is NOT the gate (already ruled out, item 4). In the running
+session the checklist tools (`TaskCreate`/`TaskUpdate`/`TaskList`/`TaskGet`) and `TodoWrite`
+were still absent (ToolSearch found only the unrelated `TaskOutput`/`TaskStop` background-task
+controls). **Re-added `"CLAUDE_CODE_ENABLE_TASKS": "1"` to `env`** — pending a fresh-session
+test, since env only reloads on a full CC relaunch. Next session: `env | grep
+CLAUDE_CODE_ENABLE_TASKS` to confirm it's live, then try creating a task. If still absent
+with the var live on 2.1.216 → it's the isTTY/terminal gate, fall back to ≤2.1.141 + `=0`.
+
+**RESOLVED 2026-07-22 — do not re-investigate.** Dev created a fresh session with
+`CLAUDE_CODE_ENABLE_TASKS=1` live and the checklist task tools were STILL absent. That rules
+out env flags and version (2.1.216) as the cause and confirms the **`process.stdout.isTTY`
+gate** tripped by the dev's screen-reader terminal setup — there is no upstream fix. Stop
+trying to enable native Tasks/TodoWrite. **Standing decision: written task lists live as
+`aidocks/` memory files** (e.g. [[user-facing-improvements]], [[internal-code-improvements]]) —
+numbered, ranked, worked one at a time, each entry deleted as it lands per
+[[delete-completed-tasks]]. Do NOT use the player-facing `cf/client/docks/todo list.txt`
+for internal dev tasks (that file is one-sentence player-facing features per
+[[todo-list-one-sentence]]).

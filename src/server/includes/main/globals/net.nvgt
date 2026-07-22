@@ -291,6 +291,12 @@ if(read_field(name, "email") == "")
 send(event.peer_id, "error: this account predates the required email and can no longer be used; please create a new account.", 0,true);
 return;
 }
+/* Identity is confirmed, so canonicalize name to the account's on-disk casing. Existence/password/email/ban
+checks are all case-insensitive, but the roster adopt loop below (players[i].name==name), verified_logins, and
+the spawn_player dedupe (players[i].name==vname) compare case-SENSITIVELY. Without this, logging in as "bob"
+while a session is held as "Bob" fails to adopt that session and spawns a duplicate roster entry. Reading the
+stored username here makes every downstream comparison agree on one casing. */
+name = read_field(name, "username", name);
 int64 bu = get_ban_until(name);
 string breason = get_ban_reason(name);
 string bsuffix = (breason == "") ? "" : " Reason: " + breason;

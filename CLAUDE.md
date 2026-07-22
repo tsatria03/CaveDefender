@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. **It is a dispatcher:** it orients you to what the project is and its shape, then points to focused memory files (`[[name]]`) for the deep detail. When you start work on an area, read its linked memory first.
 
+**Memory location:** all memory files (`[[name]]` links and the `MEMORY.md` index) live in the repo's **`aidocks/`** directory (`aidocks/<name>.md`). Read memory from there, and write any new or updated memory files there — not the `~/.claude` memory store. `aidocks/MEMORY.md` is the index; add a one-line pointer there for every new memory.
+
 ## What this is
 
 CaveDefender is an **online**, audio-only game written in **NVGT** (Non-Visual Game Toolkit, an AngelScript-based engine). All code is `.nvgt`. There is no visual rendering — output is screen-reader speech plus HRTF spatial audio through NVGT's `sound_pool`.
