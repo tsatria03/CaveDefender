@@ -1,3 +1,5 @@
+New in 4.6.
+Fixed signing in with different capitalization than your account's name showing you on the server twice. Typing your name as bob when it was registered as Bob used to leave a second copy of you in the player lists; the server now recognizes it as the same account and takes over your existing session instead.
 New in 4.5.
 Turning to face a direction now plays its sound positioned that way, so facing left comes from your left ear, right from your right, forward from ahead, and backward from behind, instead of playing flat in both ears. Pressing the turn key for the direction you already face now does nothing, rather than sounding the turn again.
 You can now turn to face a direction without walking: hold Shift and press an arrow key to face that way on the spot, handy for aiming a weapon at a different wall without stepping toward it. A turn plays a sound for you, and nearby players hear it in 3D at your position, so everyone can tell when someone turns to take aim.

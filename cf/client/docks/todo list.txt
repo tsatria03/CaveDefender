@@ -1,5 +1,6 @@
 ####These are the things that need to be finished for future versions of the game.
 
+**Unfinished. Make it so you can't start an open free play game with yourself, just like with other modes.
 **Unfinished. Make it so you can pause solo and open free play games, just like you can with the other modes.
 **Unfinished. Add builder bots to the cavern controls menu.
 **Unfinished. Make it so you are able to set spawning of attacker bots upon the wall being brought back up in the cavern controls menu.
