@@ -1271,9 +1271,7 @@ if(n < 1) return;
 if(choice <= 3)
 {
 string dir = (choice == 0) ? "north" : (choice == 1) ? "east" : (choice == 2) ? "south" : "west";
-add_free_bots(gi, dir, n);
-send(peer, "misc " + n + (n == 1 ? " attacker bot" : " attacker bots") + " added to the " + dir + " wall.", 0, true);
-players[player_index].menu_pending = dir; // remember the wall these bots are on for the recovery prompt
+players[player_index].menu_pending = n + " one " + dir; // carry count + target wall; the bots are NOT spawned until the recovery answer, so they don't start attacking mid-setup
 push_cavern_bot_recovery(player_index); // "Do you want these bots to spawn upon wall recovery?"
 }
 else push_cavern_bot_spread(player_index, n); // All walls -> ask spread-evenly vs on-each
@@ -1286,29 +1284,46 @@ int gi = get_game_index(players[player_index].room_id);
 if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
 int n = int(string_to_number(players[player_index].menu_pending));
 if(n < 1) return;
-if(choice == 0)
-{
-spread_free_bots(gi, n);
-send(peer, "misc " + n + (n == 1 ? " attacker bot" : " attacker bots") + " spread across the walls.", 0, true);
-}
-else
-{
-string[]@ dirs = WALL_DIRS;
-for(uint d = 0; d < dirs.length(); d++) add_free_bots(gi, dirs[d], n);
-send(peer, "misc " + n + (n == 1 ? " attacker bot" : " attacker bots") + " added to each wall.", 0, true);
-}
-players[player_index].menu_pending = "west east north south"; // an All-walls add touches every wall, so the recovery choice applies to all four
+players[player_index].menu_pending = n + (choice == 0 ? " spread" : " each"); // carry count + placement (spread evenly / on each); the bots are spawned after the recovery answer, not now, so they don't attack mid-setup
 push_cavern_bot_recovery(player_index); // "Do you want these bots to spawn upon wall recovery?"
 }
 else if(id == "cavernbotrecovery")
 {
-// FREE PLAY (item 4): the recovery choice for the attacker bots just added. The affected wall dirs rode in menu_pending.
-if(choice < 0) return; // cancelled: the bots are already added; leave each wall's current recovery setting as it was
+/* FREE PLAY (item 4): the FINAL step of Add cavern attacker bots. The selection rode in menu_pending as
+"<count> one <dir>", "<count> spread", or "<count> each". The bots are spawned HERE, not in the earlier steps,
+so they don't start attacking while this prompt is still open. Then the recovery choice is recorded for the
+wall(s) they landed on. */
+if(choice < 0) return; // cancelled the whole add: nothing was spawned yet, so just drop it
 int gi = get_game_index(players[player_index].room_id);
 if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+string[] p = string_split(players[player_index].menu_pending, " ", true);
+if(p.length() < 2) return;
+int n = int(string_to_number(p[0]));
+if(n < 1) return;
+string mode = p[1];
+string bots = (n == 1) ? " attacker bot" : " attacker bots";
+string[]@ dirs = WALL_DIRS;
+string[] affected;
+if(mode == "one" and p.length() >= 3)
+{
+add_free_bots(gi, p[2], n);
+affected.insert_last(p[2]);
+send(peer, "misc " + n + bots + " added to the " + p[2] + " wall.", 0, true);
+}
+else if(mode == "spread")
+{
+spread_free_bots(gi, n);
+for(uint d = 0; d < dirs.length(); d++) affected.insert_last(dirs[d]);
+send(peer, "misc " + n + bots + " spread across the walls.", 0, true);
+}
+else if(mode == "each")
+{
+for(uint d = 0; d < dirs.length(); d++) { add_free_bots(gi, dirs[d], n); affected.insert_last(dirs[d]); }
+send(peer, "misc " + n + bots + " added to each wall.", 0, true);
+}
+else return;
 bool on = (choice == 0); // 0 = Yes (respawn on recovery), 1 = No (leave when the wall falls)
-string[] walls = string_split(players[player_index].menu_pending, " ", true);
-for(uint w = 0; w < walls.length(); w++) set_wall_recovery(gi, walls[w], on);
+for(uint w = 0; w < affected.length(); w++) set_wall_recovery(gi, affected[w], on);
 send(peer, on ? "misc Those bots will return each time their wall recovers." : "misc Those bots will leave when their wall falls.", 0, true);
 }
 else if(id == "cavernitemtype")
