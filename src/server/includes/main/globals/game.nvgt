@@ -127,6 +127,7 @@ return -1;
 }
 // Up to this many spectators may watch one game at once, mirroring the 4-player join cap.
 const int spectator_cap=4;
+const int game_capacity=4; // max players (game members) in one game; the four-walls "4" is a separate literal, not this
 // How many spectators are currently watching a game (players with room_id == the game id and spectating).
 int spectator_count(int gameid)
 {
@@ -387,7 +388,7 @@ int peer = players[inviter_index].peer_id;
 int gi = get_game_index(players[inviter_index].room_id);
 if(gi < 0) { send(peer, "You are not in a game.", 0, true); return; }
 if(games[gi].host_peer != peer) { send(peer, "Only the host can invite players to the game.", 0, true); return; }
-if(games[gi].members.length() >= 4) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // filled up while the list was open
+if(games[gi].members.length() >= game_capacity) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // filled up while the list was open
 int ti = get_online_index(target_name);
 if(ti < 0) { send(peer, "misc That player is no longer online.", 0, true); return; }
 if(players[ti].room_id != games[gi].parent_room and players[ti].room_id != 0) { send(peer, "misc That player is no longer available to invite.", 0, true); return; } // must still be in this game's room or the lobby
@@ -411,7 +412,7 @@ int gi = get_game_index(players[index].invite_game);
 if(gi < 0) { players[index].invite_game = 0; send(peer, "misc That game is no longer available.", 0, true); return; }
 if(players[index].room_id != games[gi].parent_room and players[index].room_id != 0) { send(peer, "misc You can only accept a game invite from its room or the lobby.", 0, true); return; }
 if(games[gi].solo) { players[index].invite_game = 0; send(peer, "misc That game is no longer open.", 0, true); return; }
-if(games[gi].members.length() >= 4) { players[index].invite_game = 0; send(peer, "misc That game is full.", 0, true); return; }
+if(games[gi].members.length() >= game_capacity) { players[index].invite_game = 0; send(peer, "misc That game is full.", 0, true); return; }
 if(!game_joinable(gi)) { players[index].invite_game = 0; send(peer, "misc That game is already in progress.", 0, true); return; }
 string inviter = players[index].invite_from;
 players[index].invite_game = 0; // consume the invite before joining
