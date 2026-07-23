@@ -444,9 +444,8 @@ string[] opts;
 opts.insert_last("Add cavern attacker bots"); players[index].menu_actions.insert_last("addbots");
 opts.insert_last("Add cavern builder bots"); players[index].menu_actions.insert_last("addbuilders");
 opts.insert_last("Add cavern items"); players[index].menu_actions.insert_last("additems");
-// Clearing and the full reset are HOST-ONLY, so guests only see the add options above. (6b gives guests a partial bot clear.)
-if(ishost)
-{
+// Clearing attacker bots, builder bots, and items is available to EVERYONE (6b): the host clears all at once, a
+// guest clears a capped amount (20 bots / 5 items). The counts still show on each option label as you browse.
 string clbots_label = "Clear cavern attacker bots";
 string clbots_tally = cavern_attacker_tally(games[gi].id); // per-wall spread shown right on the option, e.g. "...: 4 on the west wall."
 if(clbots_tally != "") clbots_label += ": " + clbots_tally + ".";
@@ -459,8 +458,8 @@ string clitems_label = "Clear cavern items";
 string clitems_tally = cavern_item_tally(games[gi].id);
 if(clitems_tally != "") clitems_label += ": " + clitems_tally + ".";
 opts.insert_last(clitems_label); players[index].menu_actions.insert_last("clearitems");
-opts.insert_last("Clear cavern map"); players[index].menu_actions.insert_last("clearmap");
-}
+// The full reset (and Enable wall damage, from the arena menu) stays HOST-ONLY.
+if(ishost) { opts.insert_last("Clear cavern map"); players[index].menu_actions.insert_last("clearmap"); }
 send_menu(peer, "cavern", "Cavern controls.", opts);
 }
 /* Run a cavern-control action by its action key (from the cavern menu). Re-validates free/active/host here so a
@@ -471,8 +470,8 @@ void do_cavern_action(int player_index, int peer, string act)
 int gi = get_game_index(players[player_index].room_id);
 if(!can_use_cavern(gi, player_index)) return; // not a live free arena, or a spectator watching from a deck
 bool ishost = (games[gi].host_peer == peer);
-// Clearing and the full reset are HOST-ONLY; a guest may only add. (6b relaxes clearbots/clearbuilders for guests.)
-if((act == "clearbots" or act == "clearbuilders" or act == "clearitems" or act == "clearmap") and !ishost) { send(peer, "misc Only the host can do that.", 0, true); return; }
+// The full reset is HOST-ONLY. Clearing bots/builders/items is open to guests too, but as a CAPPED partial clear (below).
+if(act == "clearmap" and !ishost) { send(peer, "misc Only the host can reset the cavern.", 0, true); return; }
 if(act == "addbots") ask_input(peer, "How many attacker bots?", "cavernbotcount", false); // client returns "cavernbotcount <n>"
 else if(act == "addbuilders")
 {
@@ -483,20 +482,32 @@ else ask_input(peer, "How many builder bots?", "cavernbuildercount", false); // 
 else if(act == "additems") push_cavern_item_type(player_index); // What item? -> kind -> How many?
 else if(act == "clearbots")
 {
+if(!ishost) ask_input(peer, "How many attacker bots to clear?", "clearbotcount", false); // guest: capped partial clear (clearbotcount handler)
+else
+{
 clear_enemies(games[gi].id);
 games[gi].recover_walls.resize(0); // item 4: the attacker bots are gone, so drop every wall's "spawn on recovery" setting
 send(peer, "misc The cavern attacker bots have been cleared.", 0, true);
 }
+}
 else if(act == "clearbuilders")
+{
+if(!ishost) ask_input(peer, "How many builder bots to clear?", "clearbuildercount", false); // guest: capped partial clear
+else
 {
 clear_builders(games[gi].id);
 send(peer, "misc The cavern builder bots have been cleared.", 0, true);
 }
+}
 else if(act == "clearitems")
+{
+if(!ishost) ask_input(peer, "How many items to clear?", "clearitemcount", false); // guest: capped partial clear
+else
 {
 clear_items_broadcast(games[gi].id);
 games[gi].item_rules.resize(0); // item 5: stop all continuous spawning too, so cleared items don't immediately respawn
 send(peer, "misc The cavern items have been cleared.", 0, true);
+}
 }
 else if(act == "clearmap")
 {

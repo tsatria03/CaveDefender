@@ -213,3 +213,13 @@ void clear_enemies(int gameid)
 for(int i=int(enemies.length())-1; i>=0; i--)
 if(@enemies[i]!=null and enemies[i].game_id==gameid) enemies.remove_at(i);
 }
+/* FREE PLAY (item 6b): remove up to `n` of a game's attacker bots, indiscriminate (back-to-front). Attacker bots are
+positionless, so no client message is needed -- the player just hears fewer wall hits. Returns how many were removed.
+Used by the guest partial-clear (the host clears all via clear_enemies). */
+int clear_enemies_up_to(int gameid, int n)
+{
+int removed = 0;
+for(int i=int(enemies.length())-1; i>=0 and removed<n; i--)
+if(@enemies[i]!=null and enemies[i].game_id==gameid) { enemies.remove_at(i); removed++; }
+return removed;
+}
