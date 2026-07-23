@@ -1090,7 +1090,7 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "botspawn" and parsed.length() > 3)
 		{
-			// An EVP builder bot appeared (or its position on join): "botspawn <id> <x> <y>". Roster only, no sound.
+			// A builder bot appeared (EVP or free play), or its position on join: "botspawn <id> <x> <y>". Roster only, no sound.
 			set_clientbot(string_to_number(parsed[1]), string_to_number(parsed[2]), string_to_number(parsed[3]));
 		}
 		else if (parsed[0] == "botstep" and parsed.length() > 3)

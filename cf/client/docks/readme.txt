@@ -171,11 +171,13 @@ Press enter for the arena menu. Before you have started it offers begin arena, o
 
 Press tab for the cavern controls, where you populate and clear the sandbox. It opens only once the arena has started, and only for the host; in an open cavern everyone else simply plays in the sandbox the host sets up.
 
-Add cavern bots asks how many attacker bots you want, then which wall they attack, north, east, south, west, or all walls. They are the same wall smashers as the other modes, each swinging one of the four melee weapons, and there is no limit on how many you spawn. If you choose all walls, a third question asks whether to spread that many evenly across the four walls or to put that many on each. The bots hammer the walls whether or not your own wall damage is on, so you can set them loose and defend against them. Press b to hear how many bots are on each wall.
+Add cavern attacker bots asks how many you want, up to a hundred at a time, then which wall they attack, north, east, south, west, or all walls. They are the same wall smashers as the other modes, each swinging one of the four melee weapons. If you choose all walls, a third question asks whether to spread that many evenly across the four walls or to put that many on each. The bots hammer the walls whether or not your own wall damage is on, so you can set them loose and defend against them. You are told how many were on each wall when you clear them.
+
+Add cavern builder bots asks how many builders you want, up to a hundred, and adds that many to the cavern. They are the same wall defenders as in environment versus player: they roam the cave, pick up the wood you have dropped on the floor, and carry it to whichever wall is weakest, mending it up to four times its full strength. Because they build with wood off the ground, you cannot add any until there is wood down for them to pick up, so drop some cavern items first. Press b to locate the builder bots, nearest first, the same way you do in environment versus player.
 
 Add cavern items drops wood, ammo, or both onto the floor for you to gather. You pick which, then the kind, any one wood kind or all wood, any one ammo kind or all ammo, then how many; both simply drops a mix of the two. The pieces scatter across the floor as they do in the other modes, up to the same per-map ground limit, so a small cavern holds fewer than a large one.
 
-Clear cavern bots removes every bot at once, and clear cavern items removes every dropped piece. Clear cavern map wipes the whole thing, bots, items, and all, rolls the four walls fresh, locks wall damage again, and hands you the axe with empty ammo, as if you had just begun. In an open cavern that reset restores the world for everyone but empties only the host's own weapon and ammo, so a guest keeps what they are carrying.
+Clear cavern attacker bots removes every attacker bot at once and tells you how many were on each wall as they go, and clear cavern builder bots does the same for the builders. Clear cavern items removes every dropped piece. Clear cavern map wipes the whole thing, bots, items, and all, rolls the four walls fresh, locks wall damage again, and hands you the axe with empty ammo, as if you had just begun. In an open cavern that reset restores the world for everyone but empties only the host's own weapon and ammo, so a guest keeps what they are carrying.
 
 Any wall you or your bots smash all the way down does not stay broken; it builds itself back up about ten seconds later at a fresh random strength, so there is always something to break. Everyone in the cavern is told the moment a wall goes down and again when it comes back up.
 
@@ -328,7 +330,7 @@ D. Locate the wood lying around you, nearest first, with each piece's kind. For 
 
 Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. Defenders only, in PVE, PVP, and free play.
 
-B. Locate the bots, nearest first: the builder bots in EVP, or the cavern bots you spawned in free play.
+B. Locate the builder bots, nearest first, in both environment versus player and free play.
 
 Alt plus W. Open the weapon menu to draw any of your weapons, in tabs by kind. For attackers, that is EVP, PVP, and free play.
 Number row, 1 through 0 then dash and equals. Draw a weapon directly, in alphabetical order matching the weapon menu's All tab. For attackers, that is EVP, PVP, and free play, the same as Alt plus W.

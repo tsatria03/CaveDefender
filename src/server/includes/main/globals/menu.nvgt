@@ -432,18 +432,18 @@ int gi = get_game_index(players[index].room_id);
 if(gi < 0) return;
 players[index].menu_actions.resize(0);
 string[] opts;
-opts.insert_last("Add cavern bots"); players[index].menu_actions.insert_last("addbots");
-opts.insert_last("Add cavern builders"); players[index].menu_actions.insert_last("addbuilders");
+opts.insert_last("Add cavern attacker bots"); players[index].menu_actions.insert_last("addbots");
+opts.insert_last("Add cavern builder bots"); players[index].menu_actions.insert_last("addbuilders");
 opts.insert_last("Add cavern items"); players[index].menu_actions.insert_last("additems");
-opts.insert_last("Clear cavern bots"); players[index].menu_actions.insert_last("clearbots");
-opts.insert_last("Clear cavern builders"); players[index].menu_actions.insert_last("clearbuilders");
+opts.insert_last("Clear cavern attacker bots"); players[index].menu_actions.insert_last("clearbots");
+opts.insert_last("Clear cavern builder bots"); players[index].menu_actions.insert_last("clearbuilders");
 opts.insert_last("Clear cavern items"); players[index].menu_actions.insert_last("clearitems");
 opts.insert_last("Clear cavern map"); players[index].menu_actions.insert_last("clearmap");
 send_menu(peer, "cavern", "Cavern controls.", opts);
 }
 /* Run a cavern-control action by its action key (from the cavern menu). Re-validates free/active/host here so a
-stale menu can't act after the arena's gone. "Add cavern bots" opens the count prompt (which cascades to the
-wall and spread menus); "Clear cavern bots" wipes them at once. */
+stale menu can't act after the arena's gone. "Add cavern attacker bots" opens the count prompt (which cascades to
+the wall and spread menus); "Clear cavern attacker bots" wipes them at once. Builder bots have their own add/clear. */
 void do_cavern_action(int player_index, int peer, string act)
 {
 int gi = get_game_index(players[player_index].room_id);
@@ -459,8 +459,10 @@ else ask_input(peer, "How many builder bots?", "cavernbuildercount", false); // 
 else if(act == "additems") push_cavern_item_type(player_index); // What item? -> kind -> How many?
 else if(act == "clearbots")
 {
+string tally = cavern_attacker_tally(games[gi].id); // capture the per-wall spread BEFORE clearing (the old B-key tally, now reported here)
 clear_enemies(games[gi].id);
-send(peer, "misc The cavern bots have been cleared.", 0, true);
+if(tally == "") send(peer, "misc There were no attacker bots to clear.", 0, true);
+else send(peer, "misc The cavern attacker bots have been cleared: " + tally + ".", 0, true);
 }
 else if(act == "clearbuilders")
 {
@@ -1260,7 +1262,7 @@ if(choice <= 3)
 {
 string dir = (choice == 0) ? "north" : (choice == 1) ? "east" : (choice == 2) ? "south" : "west";
 add_free_bots(gi, dir, n);
-send(peer, "misc " + n + (n == 1 ? " bot" : " bots") + " added to the " + dir + " wall.", 0, true);
+send(peer, "misc " + n + (n == 1 ? " attacker bot" : " attacker bots") + " added to the " + dir + " wall.", 0, true);
 }
 else push_cavern_bot_spread(player_index, n); // All walls -> ask spread-evenly vs on-each
 }
@@ -1275,13 +1277,13 @@ if(n < 1) return;
 if(choice == 0)
 {
 spread_free_bots(gi, n);
-send(peer, "misc " + n + (n == 1 ? " bot" : " bots") + " spread across the walls.", 0, true);
+send(peer, "misc " + n + (n == 1 ? " attacker bot" : " attacker bots") + " spread across the walls.", 0, true);
 }
 else
 {
 string[]@ dirs = WALL_DIRS;
 for(uint d = 0; d < dirs.length(); d++) add_free_bots(gi, dirs[d], n);
-send(peer, "misc " + n + (n == 1 ? " bot" : " bots") + " added to each wall.", 0, true);
+send(peer, "misc " + n + (n == 1 ? " attacker bot" : " attacker bots") + " added to each wall.", 0, true);
 }
 }
 else if(id == "cavernitemtype")

@@ -2165,7 +2165,7 @@ if(gi<0 or games[gi].mode!="free" or games[gi].phase!="active" or games[gi].host
 else
 {
 int n = int(string_to_number(parsed[1]));
-if(n < 1) send(event.peer_id, "misc Enter how many bots to add.", 0,true);
+if(n < 1) send(event.peer_id, "misc Enter how many attacker bots to add.", 0,true);
 else
 {
 if(n > 100) n = 100; // a quiet sanity ceiling (bots are positionless, so the real cost is just the assault they mount)
@@ -2192,26 +2192,6 @@ if(n > 100) n = 100; // same ceiling as attacker bots
 spawn_builders(games[gi].id, n);
 send(event.peer_id, "misc "+n+(n==1?" builder bot":" builder bots")+" added to the cavern.", 0,true);
 }
-}
-}
-else if(parsed[0]=="cavernbots" and index>-1)
-{
-/* Free play: the B key asks how many attacker bots are on each wall (they're positionless, "at" a wall like
-PVE enemies, so there's nothing to locate spatially -- a per-wall tally is the readout). Any member may ask. */
-int gi=get_game_index(players[index].room_id);
-if(gi<0 or games[gi].mode!="free") { }
-else
-{
-string[]@ dirs = WALL_DIRS;
-string parts = ""; int total = 0;
-for(uint d=0; d<dirs.length(); d++)
-{
-int c = enemies_on_wall(games[gi].id, dirs[d]);
-total += c;
-if(c > 0) parts += (parts=="" ? "" : ", ") + c + " on the " + dirs[d] + " wall";
-}
-if(total == 0) send(event.peer_id, "misc No bots in the cavern.", 0,true);
-else send(event.peer_id, "misc Cavern bots: " + parts + ".", 0,true);
 }
 }
 else if(parsed[0]=="cavernitemcount" and index>-1 and parsed.length()>1)

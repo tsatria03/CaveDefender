@@ -36,6 +36,20 @@ for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==gameid and enemies[i].wall==dir) n++;
 return n;
 }
+/* A readable per-wall tally of a game's attacker bots (e.g. "3 on the north wall, 2 on the east wall"), or "" if
+none. Free play shows this when clearing the cavern's attacker bots -- where the old B-key tally now lives (B in
+free play locates the builder bots instead, like EVP). */
+string cavern_attacker_tally(int gameid)
+{
+string[]@ dirs = WALL_DIRS;
+string parts = "";
+for(uint d=0; d<dirs.length(); d++)
+{
+int c = enemies_on_wall(gameid, dirs[d]);
+if(c > 0) parts += (parts=="" ? "" : ", ") + c + " on the " + dirs[d] + " wall";
+}
+return parts;
+}
 /* Remove every bot that was attacking a now-destroyed wall. They are NOT moved onto the walls still standing --
 that old redistribution piled all four walls' bots onto the last survivor (~36-44 by round 18-21), swarming a
 single wall and wiping even a 400%-reinforced one in seconds. Now a fallen wall's attackers simply leave, so

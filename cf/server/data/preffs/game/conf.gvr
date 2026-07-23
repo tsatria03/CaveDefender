@@ -36,4 +36,4 @@ evproundtime_small=25:75
 evproundtime_medium=50:120
 evproundtime_big=75:180
 evproundtime_large=100:180
-evproundbonus=10
+evproundbonus=0
