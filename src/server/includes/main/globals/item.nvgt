@@ -341,6 +341,22 @@ n++;
 }
 return n;
 }
+/* FREE PLAY (item 6b): remove up to `n` of a game's ground items, indiscriminate, broadcasting each removal.
+Returns how many were removed. Used by the guest partial-clear (the host clears all via clear_items_broadcast).
+Continuous rules are NOT touched -- a partial clear just thins the floor; the host's full clear is what stops
+continuous spawning. */
+int clear_items_up_to(int gameid, int n)
+{
+int removed = 0;
+for(int i=int(items.length())-1; i>=0 and removed<n; i--)
+{
+if(@items[i]==null or items[i].room_id!=gameid) continue;
+send_to_game(gameid, "removeitem "+items[i].id);
+items.remove_at(i);
+removed++;
+}
+return removed;
+}
 // Remove an item by its id (on pickup).
 void remove_item(int id)
 {

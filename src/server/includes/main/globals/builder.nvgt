@@ -64,6 +64,22 @@ send_to_game(gameid, "botclear"); // clients drop this game's bot roster
 for(int i=int(builders.length())-1; i>=0; i--)
 if(@builders[i]!=null and builders[i].game_id==gameid) builders.remove_at(i);
 }
+/* FREE PLAY (item 6b): remove up to `n` of a game's builder bots, indiscriminate. Builders ARE on the client bot
+roster (for the B locator) and there's no per-bot remove message, so after trimming we drop the whole roster and
+re-send the survivors. Returns how many were removed. Used by the guest partial-clear (the host clears all). */
+int clear_builders_up_to(int gameid, int n)
+{
+int removed = 0;
+for(int i=int(builders.length())-1; i>=0 and removed<n; i--)
+if(@builders[i]!=null and builders[i].game_id==gameid) { builders.remove_at(i); removed++; }
+if(removed > 0)
+{
+send_to_game(gameid, "botclear"); // wipe the client roster...
+for(uint i=0; i<builders.length(); i++)
+if(@builders[i]!=null and builders[i].game_id==gameid) send_to_game(gameid, "botspawn "+builders[i].id+" "+builders[i].x+" "+builders[i].y); // ...then re-add the survivors
+}
+return removed;
+}
 /* The STANDING wall in a game with the LOWEST health (the most urgent to repair), or "" if none stand.
 Builders never rebuild a fallen wall (health 0) -- once a wall breaks it stays a breach, so the attackers
 can clear walls one at a time and the round is won when the last one falls. */

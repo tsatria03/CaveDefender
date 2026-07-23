@@ -2218,6 +2218,60 @@ push_cavern_item_continuous(index); // "Do you want these items to spawn continu
 }
 }
 }
+else if(parsed[0]=="clearbotcount" and index>-1 and parsed.length()>1)
+{
+// FREE PLAY (item 6b): a guest's capped partial clear of attacker bots (the host clears all with no prompt).
+int gi=get_game_index(players[index].room_id);
+if(!can_use_cavern(gi, index)) { }
+else
+{
+int n = int(string_to_number(parsed[1]));
+if(n < 1) send(event.peer_id, "misc Enter how many attacker bots to clear.", 0,true);
+else
+{
+if(n > 20) n = 20; // guest partial-clear ceiling for bots
+int removed = clear_enemies_up_to(games[gi].id, n);
+if(removed == 0) send(event.peer_id, "misc There were no attacker bots to clear.", 0,true);
+else send(event.peer_id, "misc Cleared "+removed+(removed==1?" attacker bot":" attacker bots")+".", 0,true);
+}
+}
+}
+else if(parsed[0]=="clearbuildercount" and index>-1 and parsed.length()>1)
+{
+// FREE PLAY (item 6b): a guest's capped partial clear of builder bots.
+int gi=get_game_index(players[index].room_id);
+if(!can_use_cavern(gi, index)) { }
+else
+{
+int n = int(string_to_number(parsed[1]));
+if(n < 1) send(event.peer_id, "misc Enter how many builder bots to clear.", 0,true);
+else
+{
+if(n > 20) n = 20; // guest partial-clear ceiling for bots
+int removed = clear_builders_up_to(games[gi].id, n);
+if(removed == 0) send(event.peer_id, "misc There were no builder bots to clear.", 0,true);
+else send(event.peer_id, "misc Cleared "+removed+(removed==1?" builder bot":" builder bots")+".", 0,true);
+}
+}
+}
+else if(parsed[0]=="clearitemcount" and index>-1 and parsed.length()>1)
+{
+// FREE PLAY (item 6b): a guest's capped partial clear of ground items (cap 5; the host clears all with no prompt).
+int gi=get_game_index(players[index].room_id);
+if(!can_use_cavern(gi, index)) { }
+else
+{
+int n = int(string_to_number(parsed[1]));
+if(n < 1) send(event.peer_id, "misc Enter how many items to clear.", 0,true);
+else
+{
+if(n > 5) n = 5; // guest partial-clear ceiling for items
+int removed = clear_items_up_to(games[gi].id, n);
+if(removed == 0) send(event.peer_id, "misc There were no items to clear.", 0,true);
+else send(event.peer_id, "misc Cleared "+removed+(removed==1?" item":" items")+".", 0,true);
+}
+}
+}
 else if(parsed[0]=="openpanel" and index>-1 and parsed.length()>1)
 {
 /* Enter (location panel) and Shift+Enter (account panel) in the lobby or a room jump straight to a panel. The
