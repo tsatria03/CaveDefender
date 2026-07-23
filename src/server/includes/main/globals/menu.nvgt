@@ -1352,7 +1352,7 @@ int gi = get_game_index(players[player_index].room_id);
 if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
 if(choice == 0) { players[player_index].menu_pending = "ammo"; push_cavern_item_kind(player_index, "ammo"); }
 else if(choice == 1) { players[player_index].menu_pending = "wood"; push_cavern_item_kind(player_index, "wood"); }
-else { players[player_index].menu_pending = "both all"; ask_input(peer, "How many items?", "cavernitemcount", false); } // Both: no kind step
+else { players[player_index].menu_pending = "both all"; ask_input(peer, "How many items?", "cavernitemcount", false, false, "" + cavern_item_max(gi, "both")); } // Both: no kind step; prefill the max the floor can hold
 }
 else if(id == "cavernitemkind")
 {
@@ -1381,7 +1381,7 @@ else if(choice == 3) kind = "pine";
 else kind = "all";
 }
 players[player_index].menu_pending = category + " " + kind;
-ask_input(peer, "How many items?", "cavernitemcount", false); // client returns "cavernitemcount <n>"
+ask_input(peer, "How many items?", "cavernitemcount", false, false, "" + cavern_item_max(gi, category)); // prefill the max the floor can hold for this category (wood or ammo cap by map size); client returns "cavernitemcount <n>"
 }
 else if(id == "cavernitemcontinuous")
 {

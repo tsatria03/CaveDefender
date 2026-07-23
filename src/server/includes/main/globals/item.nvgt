@@ -238,6 +238,16 @@ if(w > 0) parts += w + " wood";
 if(a > 0) parts += (parts=="" ? "" : ", ") + a + " ammo";
 return parts;
 }
+/* FREE PLAY: the most items of a category the cavern floor can hold at this map size -- the per-category ground
+cap(s). Used to prefill the "How many items?" box with the maximum, since the item limit is map-size dependent
+(attacker/builder bots use a flat 100, so their count boxes aren't prefilled). */
+int cavern_item_max(int gi, string category)
+{
+int s = games[gi].size;
+if(category == "ammo") return ammo_cap(s);
+if(category == "wood") return wood_cap(s);
+return wood_cap(s) + ammo_cap(s); // "both": the wood and ammo ceilings combined
+}
 const int cavern_item_maintain_ms = 1000; // FREE PLAY (item 5): how often a continuous-spawn rule tops the ground back up to its target
 /* FREE PLAY (item 5): a continuous-spawn rule -- keep `target` items of this category/kind on the cavern floor,
 replenishing as they're picked up (maintain_cavern_items). category "wood"/"ammo"/"both"; kind a specific type or "all". */
