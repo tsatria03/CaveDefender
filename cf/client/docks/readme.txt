@@ -1,6 +1,6 @@
 Welcome to CaveDefender!
 
-CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in the player versus player mode, take one side of the walls and fight other players across them, or, in free play, stock your own sandbox cavern and both attack and defend the walls at once. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help. For the full list of the keys the game uses, see the keyboard commands section near the end of this readme.
+CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in free play, stock your own sandbox cavern and both attack and defend the walls at once. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help. For the full list of the keys the game uses, see the keyboard commands section near the end of this readme.
 
 Connecting and signing in.
 
@@ -25,7 +25,6 @@ Chat channels.
 Slash opens global chat, which everyone on the server hears.
 Backslash opens local chat, which only the people sharing your current space hear, whether that is the lobby or your room.
 Apostrophe opens staff chat, which only staff can send to or hear; as a regular player you can't use it.
-Semicolon opens team chat, which reaches only your own side and works only in a player versus player game: attackers hear other attackers, defenders hear other defenders. In the other modes everyone in a game is on one team, so team chat would just repeat local chat, and the semicolon key does nothing there.
 
 Global chat is also divided into language channels. You only hear global messages from people on the same language channel as you, so each language has its own conversation. Local chat, private messages, and staff chat all reach across channels, so local chat reaches everyone sharing your space whatever channel they are on. Choose your language with /channel, everyone starts on English, and your choice is saved for next time.
 
@@ -57,7 +56,7 @@ The players menu.
 
 Press F6 anywhere to open the players menu, a list of everyone on the server shown by their away status, rank, name, and current language channel, the same people the /who command reads out.
 
-Choose a player to open a read-only information card about them, showing their username, nickname, pronouns, when they became a member, language channel, rank, whether they are away, where they are, the lobby, a room, or a game, the version of the game they are running, their player versus player win and loss record, their best round in both the cave defender and environment versus player modes, and how many warnings they have. Staff also see the player's email and mute status. Press escape or close to leave the card.
+Choose a player to open a read-only information card about them, showing their username, nickname, pronouns, when they became a member, language channel, rank, whether they are away, where they are, the lobby, a room, or a game, the version of the game they are running, their best round in both the cave defender and environment versus player modes, and how many warnings they have. Staff also see the player's email and mute status. Press escape or close to leave the card.
 
 The card can also show a Mute this player checkbox, with the Alt plus M shortcut, and a Private message this player button, with Alt plus P, though each appears only when it applies to the player you are viewing, as described below.
 
@@ -83,7 +82,7 @@ Anyone in a room can invite someone to it. Choose Invite to room from the room m
 
 Games.
 
-Inside a room you can start a game, choosing a game mode, then who can play, then a map size, and finally, in this mode, a wall reinforce limit and whether the enemy bots pile onto the remaining walls when one is destroyed, both explained below. Others can join your open games while a game still has room. There are four modes. This section describes the original, player versus environment, or PVE, where you defend four walls that each start at a random strength; the other three, environment versus player, player versus player, and free play, each have their own section below. If you host the game, press enter for the round menu, where you begin the round.
+Inside a room you can start a game, choosing a game mode, then who can play, then a map size, and finally, in this mode, a wall reinforce limit and whether the enemy bots pile onto the remaining walls when one is destroyed, both explained below. Others can join your open games while a game still has room. There are three modes. This section describes the original, player versus environment, or PVE, where you defend four walls that each start at a random strength; the other two, environment versus player and free play, each have their own section below. If you host the game, press enter for the round menu, where you begin the round.
 
 If your game is open, that menu also has Invite to game and Kick from game, which are the same idea as the room's Invite to room and Kick from room but one step further in.
 
@@ -141,26 +140,6 @@ Bring every wall down and you clear the round; the cavern is rebuilt and the nex
 
 Whenever you finish a game having cleared more rounds than your best ever, you earn a bonus of ammo for beating your record, a little of every kind added to your reserve when your next game begins. It is the attacker's version of the defenders' bonus starting wood, and the game over screen tells you when you have earned it.
 
-Player versus player.
-
-Player versus player, or PVP, is the wall fight with people on both sides instead of bots. One team attacks the four walls from outside, the other defends them from inside, and nobody ever crosses the walls. Choose PVP when you pick your game mode at the start; it is always an open game.
-
-The map is laid out as a bullseye, not two halves side by side. The defenders hold a square of open floor in the very center. Around that center sits the ring of four walls, one on each side, north, east, south, and west, and those walls are the front line. Around the walls, filling the rest of the arena out to an indestructible outer boundary, is the attackers' area. So the defenders are penned inside the ring while the attackers roam the band outside it; the walls stand between them, and neither side can pass through to the other. On a bigger map the whole arena grows, the center square and the outer band along with it.
-
-Teams are always even: one on one with two players, or two on two with four. You cannot start a lopsided match. When an odd number is waiting, someone can step aside to watch so the rest play even, or you can wait for one more to fill the second pair. Before the round starts each player picks a side from the round menu, attack or defend, and the host can assign anyone's side as well. The host cannot begin until every player is assigned and the two sides are even; if they are not, the game tells you what is missing.
-
-When the host begins, a build phase opens. Each side is taken to its place: the defenders to the center, handed ten to twenty starter wood, and the attackers out to the exterior with a weapon in hand. You are told which side you are on. The defenders gather and shore up the walls while the attackers get into position, but no wall can be hurt yet.
-
-The attack phase begins, and like the reverse mode it alternates between attack windows and build windows, game wide, with the two sides never acting on the walls at the same time. During an attack window the attackers smash the walls with their weapons, exactly as in environment versus player, the same five tile reach, heavier weapons hitting harder but swinging slower, while the defenders can only gather wood, not place it. During a build window the roles flip: the defenders reinforce the walls from the inside, each placed piece adding its wood kind's strength, while the attackers' swings only ricochet and do no damage. Gathering wood off the ground is allowed at any time; only placing it is held to the build windows. Tab tells you which window you are in and reads out the clock, which, as in the reverse mode, counts down only while the attackers can act.
-
-A wall you have battered but not destroyed can still be repaired, up to the reinforce limit the host chose when starting the match, whether that is two hundred, four hundred, or eight hundred percent of a wall's full strength, or no limit at all. A wall smashed all the way to nothing, though, is gone for good: it cannot be rebuilt, and it leaves impassable rubble in its place. That rubble is not a walkable gap, so even with a wall down the attackers still cannot step through into the center; they simply hear the wall they broke as a pile of debris when they bump it. Keeping every wall above zero is the defenders' whole job.
-
-The attackers win by bringing all four walls down. The defenders win by keeping at least one wall standing until the clock runs out. When the match ends, a results screen names the winning side and, for you, how many walls fell or held, along with your own contribution, the damage you dealt as an attacker or the wood you placed as a defender. Every player is then asked whether to play again. Playing again returns everyone to the center to pick sides fresh, and the match waits there until the teams can be filled evenly again; choosing no leaves to your room. Each match you finish also adds to a win and loss record kept on your account, with the whole winning side gaining a win and the whole losing side a loss.
-
-Because the two sides are genuinely separated by the walls, you hear across them as if through stone. Sounds from the far side of the ring, the other team's footsteps and weapon swings, the wood being placed, even their voices, all reach you muffled, while everything on your own side stays clear. The defenders' interior also carries the cave's reverb, so it rings like the enclosed space it is, while the attackers' exterior stays open and dry.
-
-Team chat, on the semicolon key, lets you talk privately to your own side; see the chat channels section above.
-
 Free play.
 
 Free play is a sandbox, a mode with no rounds, no timer, no score, and no winning or losing, meant for practicing, learning the controls, or just messing about. It is the one mode where you both attack and defend at once: every weapon and the wood and reinforce kit are all live together, so you can smash a wall down and then gather wood and build it back up yourself. Choose free play when you pick your game mode, then solo for a private cavern of your own or open to let others join, and a map size.
@@ -189,7 +168,7 @@ You can also watch a game instead of playing it. Choose watch game from the room
 
 You float on a deck above the cavern and roam it freely while the whole battle plays out below you, and the players are told you are watching. You are only an observer, so you carry no wood, cannot reinforce, and the enemies ignore you, but you hear everything and can still chat and use voice with the players.
 
-Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. When you watch an environment versus player game, the deck sits out on the gravel to match, and the b key locates the builder bots as well. When you watch a player versus player game, you choose whether to observe from the indoor deck above the defenders or the outdoor deck above the attackers. Press escape to stop watching and return to the room.
+Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. When you watch an environment versus player game, the deck sits out on the gravel to match, and the b key locates the builder bots as well. Press escape to stop watching and return to the room.
 
 Keyboard commands.
 
@@ -240,16 +219,12 @@ Control plus B. Begin the round, or in free play begin the arena and then, once 
 Control plus S. Skip the build phase. Staff host only.
 Control plus I. Invite a player to the game. Host of an open game.
 Control plus K. Kick a player from the game. Host of an open game.
-Control plus C. Choose your side. Player versus player only.
-Control plus A. Assign players to sides. Player versus player host only.
-Control plus W. Watch instead. Player versus player only.
 
 Chat.
 
 Slash. Open global chat.
 Backslash. Open local chat.
 Apostrophe. Open staff chat. Staff only.
-Semicolon. Open team chat. Player versus player only.
 
 Text boxes.
 
@@ -325,23 +300,23 @@ Tab. Hear the current round status; in free play, the host opens the cavern cont
 
 N, E, S, or W. Hear the strength of the north, east, south, or west wall.
 T. Hear a summary of all four walls.
-I. Hear how much wood you are carrying, broken down by kind. For defenders, that is PVE, PVP, and free play; not while watching.
-D. Locate the wood lying around you, nearest first, with each piece's kind. For defenders, that is PVE, PVP, and free play; not while watching.
+I. Hear how much wood you are carrying, broken down by kind. For defenders, that is PVE and free play; not while watching.
+D. Locate the wood lying around you, nearest first, with each piece's kind. For defenders, that is PVE and free play; not while watching.
 
-Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. Defenders only, in PVE, PVP, and free play.
+Shift plus enter. Reinforce the nearest wall in reach with one piece of wood; hold to keep placing. Defenders only, in PVE and free play.
 
 B. Locate the builder bots, nearest first, in both environment versus player and free play.
 
-Alt plus W. Open the weapon menu to draw any of your weapons, in tabs by kind. For attackers, that is EVP, PVP, and free play.
-Number row, 1 through 0 then dash and equals. Draw a weapon directly, in alphabetical order matching the weapon menu's All tab. For attackers, that is EVP, PVP, and free play, the same as Alt plus W.
+Alt plus W. Open the weapon menu to draw any of your weapons, in tabs by kind. For attackers, that is EVP and free play.
+Number row, 1 through 0 then dash and equals. Draw a weapon directly, in alphabetical order matching the weapon menu's All tab. For attackers, that is EVP and free play, the same as Alt plus W.
 
-Spacebar. Swing a drawn melee weapon at the nearest wall, or fire a drawn ranged weapon at the wall you face, once per press; the machine gun instead fires continuously while it is held. For attackers, that is EVP, PVP, and free play.
+Spacebar. Swing a drawn melee weapon at the nearest wall, or fire a drawn ranged weapon at the wall you face, once per press; the machine gun instead fires continuously while it is held. For attackers, that is EVP and free play.
 
-Shift plus R. Reload the drawn ranged weapon from your reserve once it is empty; a ping sounds when it is loaded. For attackers, that is EVP, PVP, and free play.
+Shift plus R. Reload the drawn ranged weapon from your reserve once it is empty; a ping sounds when it is loaded. For attackers, that is EVP and free play.
 
-X. Hear the drawn ranged weapon's ammo, how many rounds are loaded and how many are in reserve. For attackers, that is EVP, PVP, and free play.
+X. Hear the drawn ranged weapon's ammo, how many rounds are loaded and how many are in reserve. For attackers, that is EVP and free play.
 
-A. Locate the ammo lying around you, nearest first, with each one's kind. For attackers, that is EVP, PVP, and free play.
+A. Locate the ammo lying around you, nearest first, with each one's kind. For attackers, that is EVP and free play.
 
 Connection problems.
 
