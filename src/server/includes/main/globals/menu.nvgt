@@ -689,8 +689,8 @@ void push_start_gamemode(int index)
 string[] opts;
 opts.insert_last("EVP (Environment versus player)"); // option 0
 opts.insert_last("PVE (Player versus environment)"); // option 1
-opts.insert_last("PVP (Player versus player)"); // option 2
-opts.insert_last("Free play (Sandbox)"); // option 3 -- the sandbox, listed last
+//opts.insert_last("PVP (Player versus player)"); // TEMPORARILY HIDDEN pending the PVP recode -- uncomment this AND restore the "pvp" branch in the startgamemode result handler to bring it back; all PVP game logic is untouched
+opts.insert_last("Free play (Sandbox)"); // option 2 -- the sandbox, listed last (was 3 before PVP was hidden)
 send_menu(players[index].peer_id, "startgamemode", "Choose a game mode to play.", opts);
 }
 // Start-game cascade, step 2: pick who can play (solo/open), then a size; the choice rides in menu_pending across the two.
@@ -1056,11 +1056,13 @@ body += "AFK: " + (players[ti].afk ? "Yes" : "No") + "\r\n";
 body += "Agreed to rules: " + (players[ti].agreed ? "Yes" : "No") + "\r\n"; // rules-agreement status; shown to everyone since you can't invite an unagreed player anyway
 body += "Location: " + (player_ignores(ti, players[viewer_index].name) ? "Private." : player_location_phrase(ti)) + "\r\n"; // hidden when this player has personally muted the viewer, matching /where (staff viewers are exempt via player_ignores)
 body += "Client version: " + format_float(players[ti].version, "", 0, 1); // fixed one decimal so 3.0 reads "3.0" not "3", and the float->double precision tail (2.9000000954) is rounded off too
-/* Public records, shown to everyone (a little profile): the PVP lifetime tally, the PVE personal-best round, and
-the warning count. Warnings used to be staff-only; they're now visible to all so a player can see their own too. */
-int wins = get_wins(players[ti].name);
-int losses = get_losses(players[ti].name);
-body += "\r\nPVP record: " + wins + (wins==1 ? " win" : " wins") + ", " + losses + (losses==1 ? " loss" : " losses");
+/* Public records, shown to everyone (a little profile): the PVE personal-best round and the warning count.
+Warnings used to be staff-only; they're now visible to all so a player can see their own too. */
+/* PVP record HIDDEN while PVP is out of the start-game menu (see push_start_gamemode) -- don't surface a stat for a
+mode players can't play. Uncomment these three lines to restore it when PVP comes back. */
+//int wins = get_wins(players[ti].name);
+//int losses = get_losses(players[ti].name);
+//body += "\r\nPVP record: " + wins + (wins==1 ? " win" : " wins") + ", " + losses + (losses==1 ? " loss" : " losses");
 body += "\r\nPVE best round: " + get_pve_best_round(players[ti].name);
 body += "\r\nEVP best round: " + get_evp_best_round(players[ti].name);
 body += "\r\nWarnings: " + warning_count(players[ti].name);
@@ -1507,8 +1509,8 @@ else if(act == "stop") confirm_menu(peer, "stopgame", "Are you sure you want to 
 else if(id == "startgamemode")
 {
 if(choice < 0) return; // cancelled the mode picker
-players[player_index].pending_mode = (choice == 0) ? "evp" : (choice == 1) ? "pve" : (choice == 2) ? "pvp" : "free"; // 0 EVP, 1 PVE, 2 PVP, 3 Free play
-if(players[player_index].pending_mode == "pvp") { players[player_index].menu_pending = "open"; push_start_size(player_index); } // PVP is always multiplayer (1v1 or 2v2) -- skip the solo/open step and force Open
+players[player_index].pending_mode = (choice == 0) ? "evp" : (choice == 1) ? "pve" : "free"; // 0 EVP, 1 PVE, 2 Free play (PVP option temporarily hidden from the menu -- see push_start_gamemode; to restore, re-add the "pvp" branch here: (choice == 2) ? "pvp" : "free")
+if(players[player_index].pending_mode == "pvp") { players[player_index].menu_pending = "open"; push_start_size(player_index); } // PVP is always multiplayer (1v1 or 2v2) -- skip the solo/open step and force Open (dead while PVP is hidden, kept intact for the restore)
 else push_start_mode(player_index); // on to who-can-play (every mode but PVP picks solo or open here, free play included)
 }
 else if(id == "startmode")

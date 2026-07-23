@@ -806,9 +806,11 @@ int stat = (players[pi].team=="attack") ? players[pi].pvp_damage : players[pi].p
 players[pi].pending_results = "pvpresult "+winner+" "+down+" "+players[pi].team+" "+stat;
 send(games[gi].members[m], players[pi].pending_results, 0, true);
 /* Persistent per-account tally: the winning side each gain a win, the losing side a loss (watchers, who
-aren't members, get nothing). Counted once here, at the decisive end of the match. */
-if(players[pi].team == winner) set_wins(players[pi].name, get_wins(players[pi].name) + 1);
-else set_losses(players[pi].name, get_losses(players[pi].name) + 1);
+aren't members, get nothing). Counted once here, at the decisive end of the match. HIDDEN while PVP is out of the
+start-game menu (see push_start_gamemode): these are the only writers of pvpwins.usr / pvplosses.usr, so leaving
+them commented means those account files are never created. Uncomment to restore when PVP comes back. */
+//if(players[pi].team == winner) set_wins(players[pi].name, get_wins(players[pi].name) + 1);
+//else set_losses(players[pi].name, get_losses(players[pi].name) + 1);
 }
 string wname = (winner=="attack") ? "attackers" : "defenders";
 for(uint s=0; s<players.length(); s++)
