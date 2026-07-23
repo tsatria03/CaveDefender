@@ -27,7 +27,7 @@ We can't just lower the pool volume each frame: the pool re-applies distance-bas
 handle.set_position), which would wipe our fade. So start_burn_fade FREEZES the item (stationary=true) -- the pool
 then stops repositioning/re-voluming it -- and we slide the raw handle volume down ourselves from v0, the loop's
 volume at the moment it froze, so there's no jump. Freezing costs nothing over a 400ms fade (the fire barely moves). */
-const double burn_fade_ms = 400;   // how long a burning loop takes to fade out when its fire ends
+const double burn_fade_ms = 1000;  // how long a burning loop takes to fade out when its fire ends
 const double burn_fade_drop = 50;  // decibels dropped across that window (from v0); a 50 dB fall is effectively silent
 class fading_burn
 {
@@ -127,7 +127,7 @@ burnpool.destroy_sound(slot); // fully faded (or gone): drop the loop
 fading_burns.remove_at(i);
 continue;
 }
-burnpool.items[slot].handle.volume = fading_burns[i].v0 - burn_fade_drop * frac; // slide down from v0; the frozen item won't be re-volumed by the pool
+burnpool.items[slot].handle.set_volume(fading_burns[i].v0 - burn_fade_drop * frac); // slide down from v0 using the pool's own volume setter (set_volume, not the .volume property, which doesn't take on this looping sound); the frozen item won't be re-volumed by the pool
 }
 }
 /* A wave swung to a REST window (attackers can't hurt the walls, and the server pauses the burn damage): silence
