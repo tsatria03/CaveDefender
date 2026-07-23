@@ -2245,7 +2245,7 @@ int gi=get_game_index(players[index].room_id);
 if(gi>-1)
 {
 bool ishost=(games[gi].host_peer==players[index].peer_id);
-bool active=(games[gi].phase=="build" or games[gi].phase=="wave");
+bool active=(games[gi].phase=="build" or games[gi].phase=="wave" or (games[gi].mode=="free" and games[gi].phase=="active")); // free play runs in the "active" phase, so include it so its host can pause too
 if(ishost and active) { pause_game(gi); push_pause_menu(index); }
 else push_leave_menu(index);
 }

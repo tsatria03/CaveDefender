@@ -9,8 +9,7 @@ Design decisions agreed with the dev for the unfinished Free Play todo items (`c
 
 **BUILT in 4.6 — item 1 (open free-play needs 2+ to start).** Added the `!games[gi].solo and games[gi].members.length() < 2` guard to the `beginarena` handler (`server/net.nvgt`), message "You can't begin an arena with yourself." Changelog'd. Done.
 
-**Pause solo AND open free-play games (todo).** Reuse the other modes' pause exactly — no new system.
-- **Impl:** pause is triggered by `openpausemenu` (`server/net.nvgt:2240`), gated by `bool active=(phase=="build" or phase=="wave")` (line 2248). Free-play games run in phase **`"active"`**, which that check misses, so a free host's escape falls through to the plain leave menu. Extend the gate to include free's active phase, e.g. `... or (games[gi].mode=="free" and games[gi].phase=="active")`, then it reuses `pause_game`/`push_pause_menu`/auto-resume unchanged. Bots already freeze (`enemy_attacks` skips paused games); **verify the wall self-heal timers (heal.nvgt heal_tick) also freeze under `pause_game`** when building. Pause menu options (Resume/Leave/Stop) are fine as-is for free — no free-specific changes.
+**BUILT in 4.6 — item 2 (pause free play).** Extended the `openpausemenu` gate (`server/net.nvgt`) to include free's `"active"` phase, and added heal-clock freeze/thaw to `pause_game`/`resume_game` (`game.nvgt`) so a breached wall's self-heal doesn't complete during a pause (the clock kept running before — pause_game didn't touch it). Client already sends `openpausemenu` + handles `gamepaused` mode-agnostically, so server-only. Changelog'd. Done.
 
 **Add builder bots to cavern controls (todo).** Reuse `spawn_builders(gameid, count)` (`builder.nvgt:40`) — builders roam and auto-target the weakest standing wall, so NO wall picker; the menu just asks **"how many builder bots?"**.
 - **Count cap: 100** (match the free-play attacker-bot ceiling at `net.nvgt:2171`).

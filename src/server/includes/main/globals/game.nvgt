@@ -683,6 +683,7 @@ for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.pause();
 for(uint i=0; i<builders.length(); i++)
 if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.pause();
+for(uint h=0; h<games[gi].heals.length(); h++) games[gi].heals[h].clock.pause(); // FREE PLAY: freeze each downed wall's self-heal countdown so a breach doesn't rebuild while paused (no-op in other modes -- heals is empty there)
 send_to_game(games[gi].id, "gamepaused"); // members + spectators freeze together
 }
 /* Unfreeze a paused game: resume every timer where it left off (so a half-elapsed build phase keeps its
@@ -700,6 +701,7 @@ for(uint i=0; i<enemies.length(); i++)
 if(@enemies[i]!=null and enemies[i].game_id==games[gi].id) enemies[i].attacktimer.resume();
 for(uint i=0; i<builders.length(); i++)
 if(@builders[i]!=null and builders[i].game_id==games[gi].id) builders[i].movetimer.resume();
+for(uint h=0; h<games[gi].heals.length(); h++) games[gi].heals[h].clock.resume(); // FREE PLAY: resume each self-heal countdown where it left off (mirrors the pause above)
 send_to_game(games[gi].id, "gameresumed"); // members + spectators unfreeze together
 }
 /* Developer world-stop. freeze_world halts the entire server as one true pause: every game's simulation is
