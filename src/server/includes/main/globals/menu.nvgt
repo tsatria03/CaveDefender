@@ -425,16 +425,28 @@ else if(act == "pvpassign") push_pvp_assign_menu(player_index); // host: open th
 host-only. Items are keyed by action NAME (like the round menu), so later slices can slot in items and the map
 reset in their designed order. This slice (4.4c.3) offers the bot controls; 4.4c.4 adds the item controls and
 4.4c.5 the map reset. */
+/* FREE PLAY (item 6): may this player use the cavern controls at all? True for any live free-arena participant --
+the host OR a guest playing in it -- but NOT a spectator watching from a deck. Additive actions and (6b) the partial
+bot clears use this; the host-only actions (clear items, clear map, enable wall damage) check host_peer on top. */
+bool can_use_cavern(int gi, int index)
+{
+return gi >= 0 and index >= 0 and games[gi].mode == "free" and games[gi].phase == "active" and !players[index].spectating;
+}
 void push_cavern_menu(int index)
 {
 int peer = players[index].peer_id;
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) return;
+bool ishost = (games[gi].host_peer == peer);
 players[index].menu_actions.resize(0);
 string[] opts;
+// Additive actions: any member (host or guest) may stock the sandbox with attacker bots, builder bots, and items.
 opts.insert_last("Add cavern attacker bots"); players[index].menu_actions.insert_last("addbots");
 opts.insert_last("Add cavern builder bots"); players[index].menu_actions.insert_last("addbuilders");
 opts.insert_last("Add cavern items"); players[index].menu_actions.insert_last("additems");
+// Clearing and the full reset are HOST-ONLY, so guests only see the add options above. (6b gives guests a partial bot clear.)
+if(ishost)
+{
 string clbots_label = "Clear cavern attacker bots";
 string clbots_tally = cavern_attacker_tally(games[gi].id); // per-wall spread shown right on the option, e.g. "...: 4 on the west wall."
 if(clbots_tally != "") clbots_label += ": " + clbots_tally + ".";
@@ -448,6 +460,7 @@ string clitems_tally = cavern_item_tally(games[gi].id);
 if(clitems_tally != "") clitems_label += ": " + clitems_tally + ".";
 opts.insert_last(clitems_label); players[index].menu_actions.insert_last("clearitems");
 opts.insert_last("Clear cavern map"); players[index].menu_actions.insert_last("clearmap");
+}
 send_menu(peer, "cavern", "Cavern controls.", opts);
 }
 /* Run a cavern-control action by its action key (from the cavern menu). Re-validates free/active/host here so a
@@ -456,8 +469,10 @@ the wall and spread menus); "Clear cavern attacker bots" wipes them at once. Bui
 void do_cavern_action(int player_index, int peer, string act)
 {
 int gi = get_game_index(players[player_index].room_id);
-if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active") return;
-if(games[gi].host_peer != peer) { send(peer, "misc Only the host can control the cavern.", 0, true); return; }
+if(!can_use_cavern(gi, player_index)) return; // not a live free arena, or a spectator watching from a deck
+bool ishost = (games[gi].host_peer == peer);
+// Clearing and the full reset are HOST-ONLY; a guest may only add. (6b relaxes clearbots/clearbuilders for guests.)
+if((act == "clearbots" or act == "clearbuilders" or act == "clearitems" or act == "clearmap") and !ishost) { send(peer, "misc Only the host can do that.", 0, true); return; }
 if(act == "addbots") ask_input(peer, "How many attacker bots?", "cavernbotcount", false); // client returns "cavernbotcount <n>"
 else if(act == "addbuilders")
 {
@@ -1283,7 +1298,7 @@ else if(id == "cavernbotwall")
 // FREE PLAY, Add cavern bots step 2: the target wall (or all four). The count rode in menu_pending from the input prompt.
 if(choice < 0) return; // cancelled
 int gi = get_game_index(players[player_index].room_id);
-if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+if(!can_use_cavern(gi, player_index)) return; // item 6: any member (host or guest) may run the add flow; not a spectator
 int n = int(string_to_number(players[player_index].menu_pending));
 if(n < 1) return;
 if(choice <= 3)
@@ -1299,7 +1314,7 @@ else if(id == "cavernbotspread")
 // FREE PLAY, Add cavern bots step 3 (All walls): spread the count evenly across the four walls, or put that many on EACH.
 if(choice < 0) return; // cancelled
 int gi = get_game_index(players[player_index].room_id);
-if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+if(!can_use_cavern(gi, player_index)) return; // item 6: any member (host or guest) may run the add flow; not a spectator
 int n = int(string_to_number(players[player_index].menu_pending));
 if(n < 1) return;
 players[player_index].menu_pending = n + (choice == 0 ? " spread" : " each"); // carry count + placement (spread evenly / on each); the bots are spawned after the recovery answer, not now, so they don't attack mid-setup
@@ -1313,7 +1328,7 @@ so they don't start attacking while this prompt is still open. Then the recovery
 wall(s) they landed on. */
 if(choice < 0) return; // cancelled the whole add: nothing was spawned yet, so just drop it
 int gi = get_game_index(players[player_index].room_id);
-if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+if(!can_use_cavern(gi, player_index)) return; // item 6: any member (host or guest) may run the add flow; not a spectator
 string[] p = string_split(players[player_index].menu_pending, " ", true);
 if(p.length() < 2) return;
 int n = int(string_to_number(p[0]));
@@ -1349,7 +1364,7 @@ else if(id == "cavernitemtype")
 // FREE PLAY, Add cavern items step 1: Ammo/Wood go to a kind picker; Both skips straight to the count (a random mix).
 if(choice < 0) return; // cancelled
 int gi = get_game_index(players[player_index].room_id);
-if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+if(!can_use_cavern(gi, player_index)) return; // item 6: any member (host or guest) may run the add flow; not a spectator
 if(choice == 0) { players[player_index].menu_pending = "ammo"; push_cavern_item_kind(player_index, "ammo"); }
 else if(choice == 1) { players[player_index].menu_pending = "wood"; push_cavern_item_kind(player_index, "wood"); }
 else { players[player_index].menu_pending = "both all"; ask_input(peer, "How many items?", "cavernitemcount", false, false, "" + cavern_item_max(gi, "both")); } // Both: no kind step; prefill the max the floor can hold
@@ -1360,7 +1375,7 @@ else if(id == "cavernitemkind")
 "<category> <kind>" (kind "all" = a random mix) so the count handler knows both. Option order is set by push_cavern_item_kind. */
 if(choice < 0) return; // cancelled
 int gi = get_game_index(players[player_index].room_id);
-if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+if(!can_use_cavern(gi, player_index)) return; // item 6: any member (host or guest) may run the add flow; not a spectator
 string category = players[player_index].menu_pending;
 string kind = "all";
 if(category == "ammo")
@@ -1390,7 +1405,7 @@ The drop happens HERE (deferred from cavernitemcount), so nothing appears until 
 continuous rule so the floor keeps that many of the category/kind (maintain_cavern_items), cleared by Clear cavern items. */
 if(choice < 0) return; // cancelled: nothing dropped yet, abandon the add
 int gi = get_game_index(players[player_index].room_id);
-if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+if(!can_use_cavern(gi, player_index)) return; // item 6: any member (host or guest) may run the add flow; not a spectator
 string[] p = string_split(players[player_index].menu_pending, " ", true);
 if(p.length() < 3) return;
 string cat = p[0]; string kind = p[1]; int n = int(string_to_number(p[2]));

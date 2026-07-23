@@ -2148,12 +2148,12 @@ if(get_game_index(players[index].room_id)>-1) push_game_menu(index);
 else if(parsed[0]=="opencavern" and index>-1)
 {
 /* Free play: Tab opens the Cavern controls (populate/clear the sandbox), server-authoritative. Nothing to
-populate before the arena starts, so just say so; host-only (solo is always the host, but this guards the
-coming open version, where guests just play in the sandbox the host sets up). */
+populate before the arena starts, so just say so. Item 6: any member (host or guest) may open it -- the menu shows
+guests only the add options -- but a spectator watching from a deck can't. */
 int gi=get_game_index(players[index].room_id);
 if(gi==-1 or games[gi].mode!="free") { }
 else if(games[gi].phase=="idle") send(event.peer_id, "misc The arena hasn't started yet.", 0,true);
-else if(games[gi].host_peer != event.peer_id) send(event.peer_id, "misc Only the host can control the cavern.", 0,true);
+else if(players[index].spectating) { } // watchers on a deck don't control the cavern
 else push_cavern_menu(index);
 }
 else if(parsed[0]=="cavernbotcount" and index>-1 and parsed.length()>1)
@@ -2161,7 +2161,7 @@ else if(parsed[0]=="cavernbotcount" and index>-1 and parsed.length()>1)
 /* Free play, Add cavern bots step 1: the typed count comes back here (ask_input prefix "cavernbotcount").
 Re-validate free/active/host, then carry the count in menu_pending into the wall-target menu. */
 int gi=get_game_index(players[index].room_id);
-if(gi<0 or games[gi].mode!="free" or games[gi].phase!="active" or games[gi].host_peer!=event.peer_id) { }
+if(!can_use_cavern(gi, index)) { } // item 6: any member (host or guest) may run the add flow; not a spectator
 else
 {
 int n = int(string_to_number(parsed[1]));
@@ -2180,7 +2180,7 @@ else if(parsed[0]=="cavernbuildercount" and index>-1 and parsed.length()>1)
 free/active/host, re-require ground wood (builders carry it to the walls), clamp to 100, then spawn them.
 Builders roam and auto-target the weakest standing wall, so there's no wall/spread step like attacker bots. */
 int gi=get_game_index(players[index].room_id);
-if(gi<0 or games[gi].mode!="free" or games[gi].phase!="active" or games[gi].host_peer!=event.peer_id) { }
+if(!can_use_cavern(gi, index)) { } // item 6: any member (host or guest) may run the add flow; not a spectator
 else
 {
 int n = int(string_to_number(parsed[1]));
@@ -2200,7 +2200,7 @@ else if(parsed[0]=="cavernitemcount" and index>-1 and parsed.length()>1)
 holds "<category> <kind>" (category wood/ammo/both; kind a specific type, or "all" for a random mix). Re-validate
 free/active/host, then scatter up to that many, clamped to the per-category ground cap. */
 int gi=get_game_index(players[index].room_id);
-if(gi<0 or games[gi].mode!="free" or games[gi].phase!="active" or games[gi].host_peer!=event.peer_id) { }
+if(!can_use_cavern(gi, index)) { } // item 6: any member (host or guest) may run the add flow; not a spectator
 else
 {
 int n = int(string_to_number(parsed[1]));
