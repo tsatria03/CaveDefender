@@ -1,3 +1,5 @@
+New in 4.7.
+In environment versus player, the cavern walls now fortify gradually across the build phase, climbing in real time toward this round's target strength as the bots reinforce them. Previously the walls appeared to sit at a low level through the whole build phase and only jumped to the round's true strength the instant the wave began, which made it look like the bots were stuck and not building at all.
 New in 4.6.
 When you clear bots or items as a guest in a free play cavern, the how many box now starts filled in with the most you can clear at once, your cap or everything present if there is less, so you can simply accept it.
 Guests in an open free play arena can now use the cavern controls too, not just the host. Everyone can add attacker bots, builder bots, and items, and clear them: the host clears all at once, while a guest clears up to twenty bots or five items at a time. Only the host can reset the whole cavern or switch on wall damage.

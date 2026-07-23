@@ -1,16 +1,16 @@
 ---
 name: dont-touch-version-txt
-description: "Never edit build/version.txt unless the dev explicitly says so — they set the version number by hand, sometimes to match another server for connection testing."
+description: "Bump build/version.txt to match each new changelog version block; the dev only overrides it to test against someone else's server, and it's their call whether to change it back."
 metadata: 
   node_type: memory
   type: feedback
   originSessionId: 08cf857d-410c-46d7-a1c0-4e573399708d
 ---
 
-Do NOT edit `build/version.txt` on your own — **not even when opening a new changelog version block** (the [[changelog-rules]] used to imply a bump was required; it isn't your call).
+**Updated rule (2026-07, supersedes the old "never touch it"):** when you open a new `New in X.Y.` changelog block, **bump `build/version.txt` to that same X.Y** as part of the change. Keep the two in lockstep — a new changelog version should always be reflected in version.txt.
 
-The dev sets the version number by hand and sometimes changes it for reasons unrelated to the changelog — e.g. temporarily setting it to **another server's version to test connecting to a server someone else hosts** (the login version check must match, so the version string decides which servers the game will join).
+The ONE reason the dev sets version.txt to something else is to **test connecting to another server someone else hosts** (the login version check must match, so the version string decides which servers the game will join). That's their manual override, and it's their call whether to change it back — don't undo it or re-bump on top of it.
 
-**Why:** an unasked-for bump silently changes which servers the game can connect to, breaking the dev's live testing.
+**Why:** the dev asked for the version to track the changelog automatically so they don't have to bump it by hand each release; the only exception is their deliberate cross-server test.
 
-**How to apply:** when a new `New in X.Y.` changelog block needs a version, or you think `version.txt` looks stale/wrong, **flag it and let the dev set it** — never write the file yourself unless they explicitly ask. (Learned 2026-07 after I bumped 3.5→3.7 while the dev had deliberately set 3.5 to test against someone's 3.5 server.)
+**How to apply:** new changelog block → set version.txt to match, mention it in the Files changed list. If version.txt already holds a value that looks like a deliberate mismatch (e.g. it's LOWER than the latest changelog block, suggesting a cross-server test in progress), flag it and ask before changing rather than assuming. See [[changelog-rules]].

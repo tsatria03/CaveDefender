@@ -39,6 +39,7 @@ timer wave_cycletimer;    // times the current attack or rest segment of the wav
 int wave_cycle=0;         // ms per attack/rest segment (half the build phase); set when the wave begins
 int evp_rounds_cleared=0; // EVP: how many rounds the attackers have cleared this game -- the score.
 int evp_round_secs=0;     // EVP: the current wave's time limit in seconds (the round timer; wavetimer counts against it).
+double[] evp_fortify_from; // EVP only: each wall's strength captured at BUILD START (indexed by WALL_DIRS order), so evp_build_fortify_tick can ramp it smoothly toward this round's fortify target across the build phase. Filled when the EVP build begins; empty otherwise.
 bool pvp_deserted=false;  // PVP: a whole side has no live player and the forfeit grace is running (the match is paused meanwhile).
 timer pvp_desert_timer;   // PVP: times that grace; the empty side forfeits once this reaches pvp_forfeit_seconds.
 int pvp_desert_count=0;   // PVP: the last forfeit-countdown number already spoken, so each of 5..1 is sent just once.
@@ -553,6 +554,16 @@ if(games[gindex].mode=="evp")
 /* EVP: the bots defend. Spawn the wall-builders now (more each round cleared -- the escalation) -- they
 reinforce through the build phase and keep repairing through the wave. Players carry no wood in EVP. */
 spawn_builders(games[gindex].id, evp_builders_for_round(games[gindex].evp_rounds_cleared));
+/* Snapshot each wall's starting strength so evp_build_fortify_tick can ramp it smoothly toward this round's
+fortify target across the build phase (the walls visibly climb to the round's goal instead of snapping at wave
+start). Indexed by WALL_DIRS order, matching the tick's iteration. */
+games[gindex].evp_fortify_from.resize(0);
+string[]@ bdirs = WALL_DIRS;
+for(uint bd=0; bd<bdirs.length(); bd++)
+{
+int bwi = border_wall(games[gindex].id, bdirs[bd], games[gindex].size);
+games[gindex].evp_fortify_from.insert_last(bwi<0 ? 0.0 : walls[bwi].health);
+}
 /* Reset the attackers' ammo (reserve, magazines, and the granted-starter tracking) only when a fresh GAME
 begins (no rounds cleared yet). Clearing a round keeps everything -- loaded rounds, reserve, and the
 already-granted flags -- so ammo carries across rounds the way the drawn weapon already does. */
@@ -608,9 +619,11 @@ games[gindex].wave_cycletimer.restart();
 games[gindex].wave_cycle = games[gindex].buildduration * 1000 / 2;
 /* Guarantee this round's fortification: back every standing wall up to a per-round target that climbs each
 cleared round, so the defence is provably tougher round over round (the wall % keeps rising) instead of
-plateauing at whatever the build-phase wood supply happened to allow. The bots' build-phase work already
-counts (their cap is this same target); this only tops up any shortfall so a slow build can't leave the round
-soft. Standing walls only -- a breach stays a breach. Set the floor too, so it's the wave's repair ceiling. */
+plateauing at whatever the build-phase wood supply happened to allow. In a normal build this is now a NO-OP --
+evp_build_fortify_tick has already ramped the walls up to this same target over the build phase (visibly, in
+real time). It stays here as the SAFETY NET for a SKIPPED build (Ctrl+S): with no ramp, this is what backs the
+walls up so the round isn't left soft. Standing walls only -- a breach stays a breach. Set the floor too, so
+it's the wave's repair ceiling. */
 double fmult = evp_fortify_mult(games[gindex].evp_rounds_cleared);
 string[]@ fdirs = WALL_DIRS;
 for(uint fw=0; fw<fdirs.length(); fw++)
@@ -815,6 +828,42 @@ if(atk==0 and def==0) { end_game(gi); return; } // everyone's gone -> no winner
 end_pvp_match(gi, (atk>0) ? "attack" : "defend"); // the side still standing wins by forfeit
 }
 // Called every server tick: advance any finished build phase to the wave, and drop wood in active games.
+/* EVP build phase: ramp each wall's strength smoothly from its build-start snapshot (evp_fortify_from) up to this
+round's fortify target across the build duration, so players watching the build see the walls climb to the round's
+goal in REAL TIME instead of the old invisible snap at wave start. The bots' own wood placements ride on top --
+whichever is higher wins, so this never pulls a wall the bots have already pushed higher back down. By build's end
+frac hits 1.0 so every standing wall lands exactly on the target, and the wave-start guarantee becomes a no-op
+(it still covers a SKIPPED build). Standing walls only; broadcasts only when an integer percent actually changes,
+so it's ~one update per percent rather than every tick. A no-op unless this is an EVP game mid-build with a
+captured snapshot. */
+void evp_build_fortify_tick(int gi)
+{
+if(gi<0 or gi>=int(games.length())) return;
+if(games[gi].mode!="evp" or games[gi].phase!="build") return;
+if(games[gi].evp_fortify_from.length()==0) return; // no snapshot captured (guard; the build branch always fills it)
+double dur = games[gi].buildduration * 1000.0;
+if(dur<=0) return;
+double frac = games[gi].phasetimer.elapsed / dur;
+if(frac>1.0) frac=1.0;
+double target_mult = evp_fortify_mult(games[gi].evp_rounds_cleared);
+string[]@ dirs = WALL_DIRS;
+bool changed=false;
+for(uint d=0; d<dirs.length() and d<games[gi].evp_fortify_from.length(); d++)
+{
+int wi = border_wall(games[gi].id, dirs[d], games[gi].size);
+if(wi<0 or walls[wi].health<=0) continue; // skip a missing/fallen wall (walls don't fall during build, but guard)
+double target = walls[wi].maxhealth * target_mult;
+double guaranteed = games[gi].evp_fortify_from[d] + (target - games[gi].evp_fortify_from[d]) * frac;
+if(walls[wi].health < guaranteed)
+{
+int before = int(walls[wi].health / walls[wi].maxhealth * 100);
+walls[wi].health = guaranteed;
+if(walls[wi].floor < guaranteed) walls[wi].floor = guaranteed; // keep the wave repair ceiling in step with the fortification
+if(int(walls[wi].health / walls[wi].maxhealth * 100) != before) changed=true;
+}
+}
+if(changed) broadcast_wall_strength(games[gi].id);
+}
 void gametick()
 {
 if(world_frozen) return; // developer world-stop: no round logic advances until /unfreeze
@@ -861,6 +910,7 @@ resolve_bullets(int(i)); // land any ranged shots whose travel time has elapsed 
 burn_tick(int(i)); // advance any firebomb wall fires (attack-window ticks only) -- 5e
 heal_tick(int(i)); // FREE PLAY: rebuild any downed walls whose ~10s self-heal timer has elapsed -- 4.4c.2 (a no-op when nothing's healing)
 maintain_cavern_items(int(i)); // FREE PLAY (item 5): top up any "spawn continuously" item rules toward their target (a no-op when there are none)
+evp_build_fortify_tick(int(i)); // EVP: ramp the walls toward this round's fortify target across the build phase so the climb is visible (a no-op outside an EVP build)
 if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
 set_game_phase(int(i), "wave");
 // Heads-up before the first wave: once, wave_warning_seconds before the build phase ends. (PVE only -- EVP has no incoming attacker wave to warn about.)

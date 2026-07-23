@@ -39,6 +39,8 @@ void show_server_menu(string message)
 	only cancels at the root, so don't auto-say "canceled" here -- going up would clip it. The server sends a
 	"datacancel" that speaks it when the browser actually closes. */
 	bool isdatanav = (string_left(menuid, 8) == "datanav:");
-	if((choice < 0 or (isconfirm and choice != 0)) and !isdatanav) speak("canceled");
+	// The pause menu (id "pause") and its non-host counterpart (id "leavemenu"): escaping resumes/closes the game rather than cancelling anything, so stay silent.
+	bool ispause = (menuid == "pause" or menuid == "leavemenu");
+	if((choice < 0 or (isconfirm and choice != 0)) and !isdatanav and !ispause) speak("canceled");
 	send(0, "menuresult " + menuid + " " + choice, 0, true);
 }
