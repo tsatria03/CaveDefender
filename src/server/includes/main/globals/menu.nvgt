@@ -435,7 +435,10 @@ string[] opts;
 opts.insert_last("Add cavern attacker bots"); players[index].menu_actions.insert_last("addbots");
 opts.insert_last("Add cavern builder bots"); players[index].menu_actions.insert_last("addbuilders");
 opts.insert_last("Add cavern items"); players[index].menu_actions.insert_last("additems");
-opts.insert_last("Clear cavern attacker bots"); players[index].menu_actions.insert_last("clearbots");
+string clbots_label = "Clear cavern attacker bots";
+string clbots_tally = cavern_attacker_tally(games[gi].id); // per-wall spread shown right on the option, e.g. "...: 4 on the west wall."
+if(clbots_tally != "") clbots_label += ": " + clbots_tally + ".";
+opts.insert_last(clbots_label); players[index].menu_actions.insert_last("clearbots");
 opts.insert_last("Clear cavern builder bots"); players[index].menu_actions.insert_last("clearbuilders");
 opts.insert_last("Clear cavern items"); players[index].menu_actions.insert_last("clearitems");
 opts.insert_last("Clear cavern map"); players[index].menu_actions.insert_last("clearmap");
@@ -459,11 +462,9 @@ else ask_input(peer, "How many builder bots?", "cavernbuildercount", false); // 
 else if(act == "additems") push_cavern_item_type(player_index); // What item? -> kind -> How many?
 else if(act == "clearbots")
 {
-string tally = cavern_attacker_tally(games[gi].id); // capture the per-wall spread BEFORE clearing (the old B-key tally, now reported here)
 clear_enemies(games[gi].id);
 games[gi].recover_walls.resize(0); // item 4: the attacker bots are gone, so drop every wall's "spawn on recovery" setting
-if(tally == "") send(peer, "misc There were no attacker bots to clear.", 0, true);
-else send(peer, "misc The cavern attacker bots have been cleared: " + tally + ".", 0, true);
+send(peer, "misc The cavern attacker bots have been cleared.", 0, true);
 }
 else if(act == "clearbuilders")
 {
@@ -505,8 +506,8 @@ the wall recovers? The affected wall dirs ride in menu_pending (one dir, or "wes
 void push_cavern_bot_recovery(int index)
 {
 string[] opts;
-opts.insert_last("Yes, respawn them each time the wall recovers");
-opts.insert_last("No, they leave when the wall falls");
+opts.insert_last("Yes");
+opts.insert_last("No");
 send_menu(players[index].peer_id, "cavernbotrecovery", "Do you want these bots to spawn upon wall recovery?", opts);
 }
 // FREE PLAY: step 1 of Add cavern items -- what to drop. Wood and Ammo go on to a kind picker; Both skips it (a random mix).

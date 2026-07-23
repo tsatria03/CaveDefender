@@ -2389,7 +2389,7 @@ else if(games[gi].free_wall_damage) send(event.peer_id, "Wall damage is already 
 else
 {
 games[gi].free_wall_damage = true;
-send(event.peer_id, "Wall damage is now enabled; your weapons will damage the walls.", 0,true);
+send(event.peer_id, "misc Wall damage is now enabled; your weapons will damage the walls.", 0,true);
 }
 }
 else if(parsed[0]=="skipbuild" and index>-1)

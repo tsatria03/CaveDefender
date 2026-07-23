@@ -4,6 +4,7 @@
 - [Verify code while fixing](verify-code-while-fixing.md) — when fixing, read the surrounding code carefully, confirm the finding's line numbers/claims are actually true (they drift), and catch/flag adjacent errors; don't blindly patch the reported spot
 - [Confirm before implementing](confirm-before-implementing.md) — treat design discussion as a question, never a green light; a `?` means respond and wait, don't edit
 - [Ignore terminal commands](ignore-terminal-commands.md) — the user's local shell commands (bash-input/local-command blocks like cls) aren't instructions to me; never act on them unless explicitly asked
+- [Yes/no menu labels](yes-no-menu-labels.md) — for a yes/no menu, label the two items just "Yes" and "No" (Yes first); put the context in the question line, not the option labels
 - [Input prompt: form vs dialog](input-prompt-form-vs-dialog.md) — one field uses a virtual dialog; more than one field uses a real tabbable audio form, not a chain of sequential dialogs
 - [Virtual dialogs form backend](virtual-dialogs-form-backend.md) — vd class is a front-end over form.nvgt's audio_form; keyboard typing sounds live only in form.nvgt and play in every input box, so gating/toggling them there covers the whole game
 - [List modified files](list-modified-files.md) — end every editing turn with a "Files changed:" list, bare filenames tagged with client or server (dev reviews via screen reader)
