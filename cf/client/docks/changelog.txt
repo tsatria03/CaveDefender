@@ -1,4 +1,5 @@
 New in 4.6.
+When you clear bots or items as a guest in a free play cavern, the how many box now starts filled in with the most you can clear at once, your cap or everything present if there is less, so you can simply accept it.
 Guests in an open free play arena can now use the cavern controls too, not just the host. Everyone can add attacker bots, builder bots, and items, and clear them: the host clears all at once, while a guest clears up to twenty bots or five items at a time. Only the host can reset the whole cavern or switch on wall damage.
 When you add items to a free play cavern, the how many box now starts prefilled with the most that map's floor can hold, so you can accept it to stock the floor to the brim or type a smaller number; the amount depends on map size, which is why only the item box is filled in and the bot boxes are not.
 When you add items to a free play cavern, you are now asked whether they should spawn continuously. Answer yes and the game keeps that many of them on the floor, replacing what you gather until you clear the cavern items; answer no and they drop just once, as before.
