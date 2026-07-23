@@ -152,6 +152,15 @@ then the new wall strengths and a hit event (wall + weapon) go out to the game s
 3D hit sound. A bot whose wall was just destroyed is removed on that hit (on_wall_destroyed), so none linger. */
 void enemy_attacks()
 {
+/* Walls brought down this tick, recorded as (game index, wall dir) pairs and handled AFTER the loop rather than
+inline. on_wall_destroyed -> remove_bots_on_wall deletes MULTIPLE enemies[] entries at arbitrary indices; doing
+that mid-loop would shift the array under our forward index (skipping bots), and a back-to-front loop would read
+out of bounds when the array shrinks below the counter. The downed wall's bots are already inert (the
+walls[wi].health<=0 guard below skips them from here on), so deferring the breach handling changes nothing this
+tick -- it just keeps the array stable while we iterate. Each wall crosses to <=0 exactly once (once down, the
+guard skips every later bot on it), so no wall is recorded twice. */
+int[] downed_gi;
+string[] downed_dir;
 for(uint i=0; i<enemies.length(); i++)
 {
 if(@enemies[i]==null) continue;
@@ -168,11 +177,20 @@ damage_wall(wi, enemy_damage(enemies[i].weapon));
 broadcast_wall_strength(gid);
 string hit = "wallhit "+enemies[i].wall+" "+enemies[i].weapon;
 send_to_game(gid, hit); // members + spectators hear the strike
-if(walls[wi].health<=0) // this hit just brought it down
+if(walls[wi].health<=0) // this hit just brought it down: record it, handle it after the loop
 {
-if(games[gi].mode=="free") free_wall_down(gi, enemies[i].wall); // free: schedule the self-heal and KEEP the bots -- they idle while it's breached, then resume when it comes back up
-else on_wall_destroyed(gid, gi, enemies[i].wall);
+downed_gi.insert_last(gi);
+downed_dir.insert_last(enemies[i].wall);
 }
+}
+/* Now the iteration is done, replay the breaches. The games[] list is untouched during this function, so every
+recorded gi is still valid. free play keeps the bots (they idle, then resume when the wall self-heals); every
+other mode removes or redistributes the fallen wall's bots -- safe now that nothing else is walking enemies[]. */
+for(uint d=0; d<downed_gi.length(); d++)
+{
+int gi = downed_gi[d];
+if(games[gi].mode=="free") free_wall_down(gi, downed_dir[d]);
+else on_wall_destroyed(games[gi].id, gi, downed_dir[d]);
 }
 }
 // Remove every bot in a game (when the game ends or the round is over).
