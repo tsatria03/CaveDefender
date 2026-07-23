@@ -45,6 +45,7 @@ int pvp_desert_count=0;   // PVP: the last forfeit-countdown number already spok
 pending_bullet@[] bullets; // ranged shots in flight: held from fire until their travel timer elapses, then resolved to a wall hit or ricochet (resolve_bullets, task 5d). Cleared when the round resets.
 wall_burn@[] burns;        // walls set alight by firebombs: each ticks damage during attack windows only, intensifying when re-hit, until it lapses (burn_tick, task 5e). Cleared when the round resets.
 wall_heal@[] heals;        // FREE PLAY only: downed walls waiting to self-heal -- each rebuilds free_wall_heal_ms after it fell (schedule_wall_heal / heal_tick, 4.4c.2). Empty in every other mode.
+string[] recover_walls;    // FREE PLAY only (item 4): walls whose attacker bots RESPAWN when the wall recovers ("spawn on wall recovery" = Yes -> bots kept through the breach and resume). A wall NOT listed drops its attacker bots when it falls. Set per add-attacker-bots action; cleared on Clear cavern attacker bots / Clear cavern map.
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl, string md)
 {
 id=gid;
@@ -998,9 +999,24 @@ and a damaging bullet (resolve_bullets), so the self-heal (4.4c.2) hooks in a si
 on every client; the "gone down" alert is added client-side, gated on free mode, so it reaches everyone the
 walldestroyed message does (members + watchers). Free has no builder bots to redistribute and no round to lose,
 so a downed wall just sits as debris here -- until 4.4c.2 rebuilds it. */
+/* FREE PLAY (item 4): does this wall respawn its attacker bots when it recovers? A wall listed in the game's
+recover_walls has "spawn on wall recovery" ON, so its bots are kept through the breach and resume when it rebuilds;
+a wall NOT listed drops its attacker bots the moment it falls. Set per add-attacker-bots action (the recovery prompt). */
+bool wall_recovers(int gi, string dir)
+{
+for(uint i=0; i<games[gi].recover_walls.length(); i++) if(games[gi].recover_walls[i]==dir) return true;
+return false;
+}
+void set_wall_recovery(int gi, string dir, bool on)
+{
+for(uint i=0; i<games[gi].recover_walls.length(); i++)
+if(games[gi].recover_walls[i]==dir) { if(!on) games[gi].recover_walls.remove_at(i); return; }
+if(on) games[gi].recover_walls.insert_last(dir);
+}
 void free_wall_down(int gi, string dir)
 {
 send_to_game(games[gi].id, "walldestroyed "+dir);
+if(!wall_recovers(gi, dir)) remove_bots_on_wall(games[gi].id, dir); // item 4: recovery OFF for this wall -> its attacker bots leave now instead of resuming when it rebuilds (safe: free_wall_down is never called mid enemy-attack loop)
 schedule_wall_heal(gi, dir); // it rebuilds ~10s later (4.4c.2), so a solo player is never left with nothing to smash
 }
 /* FREE PLAY: hand a player their starting supplies for a live arena -- a fresh ammo slate (empty reserve + mags,
@@ -1030,6 +1046,7 @@ clear_enemies(gameid);                 // wipe the attacker bots
 clear_items_broadcast(gameid);         // wipe the ground items and stop their client loops
 int hi = get_player_index(games[gi].host_peer); if(hi>-1) reset_player_ammo(hi); // empty the HOST's ammo reserve + mags (their personal fresh start); in an open arena a guest's carried gear is left alone
 games[gi].heals.resize(0);             // cancel pending self-heals (the walls are being rolled fresh right now)
+games[gi].recover_walls.resize(0);     // item 4: forget every wall's "spawn on recovery" setting (its attacker bots are gone too)
 games[gi].bullets.resize(0);           // drop any shots still in flight (they'd resolve against the reset walls)
 for(int b=int(games[gi].burns.length())-1; b>=0; b--) send_to_game(gameid, "burnstop "+games[gi].burns[b].dir); // stop each wall fire's client loop
 games[gi].burns.resize(0);

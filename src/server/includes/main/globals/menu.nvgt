@@ -461,6 +461,7 @@ else if(act == "clearbots")
 {
 string tally = cavern_attacker_tally(games[gi].id); // capture the per-wall spread BEFORE clearing (the old B-key tally, now reported here)
 clear_enemies(games[gi].id);
+games[gi].recover_walls.resize(0); // item 4: the attacker bots are gone, so drop every wall's "spawn on recovery" setting
 if(tally == "") send(peer, "misc There were no attacker bots to clear.", 0, true);
 else send(peer, "misc The cavern attacker bots have been cleared: " + tally + ".", 0, true);
 }
@@ -498,6 +499,15 @@ string[] opts;
 opts.insert_last("Spread all " + n + " across the walls");
 opts.insert_last("Put " + n + " on each wall");
 send_menu(players[index].peer_id, "cavernbotspread", "How should they be placed across the walls?", opts);
+}
+/* FREE PLAY (item 4): final step of Add cavern attacker bots -- do the wall(s) these bots are on respawn them when
+the wall recovers? The affected wall dirs ride in menu_pending (one dir, or "west east north south" for an All add). */
+void push_cavern_bot_recovery(int index)
+{
+string[] opts;
+opts.insert_last("Yes, respawn them each time the wall recovers");
+opts.insert_last("No, they leave when the wall falls");
+send_menu(players[index].peer_id, "cavernbotrecovery", "Do you want these bots to spawn upon wall recovery?", opts);
 }
 // FREE PLAY: step 1 of Add cavern items -- what to drop. Wood and Ammo go on to a kind picker; Both skips it (a random mix).
 void push_cavern_item_type(int index)
@@ -1263,6 +1273,8 @@ if(choice <= 3)
 string dir = (choice == 0) ? "north" : (choice == 1) ? "east" : (choice == 2) ? "south" : "west";
 add_free_bots(gi, dir, n);
 send(peer, "misc " + n + (n == 1 ? " attacker bot" : " attacker bots") + " added to the " + dir + " wall.", 0, true);
+players[player_index].menu_pending = dir; // remember the wall these bots are on for the recovery prompt
+push_cavern_bot_recovery(player_index); // "Do you want these bots to spawn upon wall recovery?"
 }
 else push_cavern_bot_spread(player_index, n); // All walls -> ask spread-evenly vs on-each
 }
@@ -1285,6 +1297,19 @@ string[]@ dirs = WALL_DIRS;
 for(uint d = 0; d < dirs.length(); d++) add_free_bots(gi, dirs[d], n);
 send(peer, "misc " + n + (n == 1 ? " attacker bot" : " attacker bots") + " added to each wall.", 0, true);
 }
+players[player_index].menu_pending = "west east north south"; // an All-walls add touches every wall, so the recovery choice applies to all four
+push_cavern_bot_recovery(player_index); // "Do you want these bots to spawn upon wall recovery?"
+}
+else if(id == "cavernbotrecovery")
+{
+// FREE PLAY (item 4): the recovery choice for the attacker bots just added. The affected wall dirs rode in menu_pending.
+if(choice < 0) return; // cancelled: the bots are already added; leave each wall's current recovery setting as it was
+int gi = get_game_index(players[player_index].room_id);
+if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+bool on = (choice == 0); // 0 = Yes (respawn on recovery), 1 = No (leave when the wall falls)
+string[] walls = string_split(players[player_index].menu_pending, " ", true);
+for(uint w = 0; w < walls.length(); w++) set_wall_recovery(gi, walls[w], on);
+send(peer, on ? "misc Those bots will return each time their wall recovers." : "misc Those bots will leave when their wall falls.", 0, true);
 }
 else if(id == "cavernitemtype")
 {
