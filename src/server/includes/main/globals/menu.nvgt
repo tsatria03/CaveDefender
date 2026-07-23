@@ -482,7 +482,12 @@ else ask_input(peer, "How many builder bots?", "cavernbuildercount", false); // 
 else if(act == "additems") push_cavern_item_type(player_index); // What item? -> kind -> How many?
 else if(act == "clearbots")
 {
-if(!ishost) ask_input(peer, "How many attacker bots to clear?", "clearbotcount", false); // guest: capped partial clear (clearbotcount handler)
+if(!ishost)
+{
+int avail = enemies_in(games[gi].id);
+if(avail <= 0) send(peer, "misc There are no attacker bots to clear.", 0, true);
+else ask_input(peer, "How many attacker bots to clear?", "clearbotcount", false, false, "" + (avail < 20 ? avail : 20)); // guest: capped partial clear, box prefilled with the most they can clear
+}
 else
 {
 clear_enemies(games[gi].id);
@@ -492,7 +497,12 @@ send(peer, "misc The cavern attacker bots have been cleared.", 0, true);
 }
 else if(act == "clearbuilders")
 {
-if(!ishost) ask_input(peer, "How many builder bots to clear?", "clearbuildercount", false); // guest: capped partial clear
+if(!ishost)
+{
+int avail = builders_in(games[gi].id);
+if(avail <= 0) send(peer, "misc There are no builder bots to clear.", 0, true);
+else ask_input(peer, "How many builder bots to clear?", "clearbuildercount", false, false, "" + (avail < 20 ? avail : 20)); // guest: capped partial clear, box prefilled with the most they can clear
+}
 else
 {
 clear_builders(games[gi].id);
@@ -501,7 +511,12 @@ send(peer, "misc The cavern builder bots have been cleared.", 0, true);
 }
 else if(act == "clearitems")
 {
-if(!ishost) ask_input(peer, "How many items to clear?", "clearitemcount", false); // guest: capped partial clear
+if(!ishost)
+{
+int avail = wood_count_in(games[gi].id) + ammo_count_in(games[gi].id);
+if(avail <= 0) send(peer, "misc There are no items to clear.", 0, true);
+else ask_input(peer, "How many items to clear?", "clearitemcount", false, false, "" + (avail < 5 ? avail : 5)); // guest: capped partial clear, box prefilled with the most they can clear
+}
 else
 {
 clear_items_broadcast(games[gi].id);
