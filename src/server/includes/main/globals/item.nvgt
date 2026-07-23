@@ -227,6 +227,61 @@ for(uint i=0; i<items.length(); i++)
 if(@items[i]!=null and items[i].room_id==room_id and is_ammo(items[i].type)) n++;
 return n;
 }
+/* FREE PLAY: a readable count of the ground items in a cavern (e.g. "5 wood, 3 ammo"), or "" if none. Appended to
+the "Clear cavern items" menu option, the way the attacker-bot tally rides on "Clear cavern attacker bots". */
+string cavern_item_tally(int room_id)
+{
+int w = wood_count_in(room_id);
+int a = ammo_count_in(room_id);
+string parts = "";
+if(w > 0) parts += w + " wood";
+if(a > 0) parts += (parts=="" ? "" : ", ") + a + " ammo";
+return parts;
+}
+const int cavern_item_maintain_ms = 1000; // FREE PLAY (item 5): how often a continuous-spawn rule tops the ground back up to its target
+/* FREE PLAY (item 5): a continuous-spawn rule -- keep `target` items of this category/kind on the cavern floor,
+replenishing as they're picked up (maintain_cavern_items). category "wood"/"ammo"/"both"; kind a specific type or "all". */
+class cavern_item_rule
+{
+string category;
+string kind;
+int target;
+cavern_item_rule(string c, string k, int t) { category=c; kind=k; target=t; }
+}
+/* Count the ground items in a cavern matching a rule's category/kind, so maintenance knows how many to top up.
+"both" counts wood+ammo; "all"/"" counts the whole category; a specific kind counts just that item type. */
+int count_items_of(int room_id, string category, string kind)
+{
+if(category == "both") return wood_count_in(room_id) + ammo_count_in(room_id);
+if(kind == "all" or kind == "") return (category == "ammo") ? ammo_count_in(room_id) : wood_count_in(room_id);
+int n=0;
+for(uint i=0; i<items.length(); i++)
+if(@items[i]!=null and items[i].room_id==room_id and items[i].type==kind) n++;
+return n;
+}
+/* FREE PLAY (item 5): every cavern_item_maintain_ms, top each continuous-spawn rule's category/kind back up to its
+target on the ground (bounded by the per-category ground cap inside add_free_items). Called from gametick for a free
+arena (after the paused check, so a paused arena doesn't refill); a no-op when there are no rules. */
+void maintain_cavern_items(int gi)
+{
+if(games[gi].mode != "free" or games[gi].item_rules.length() == 0) return;
+if(games[gi].item_maintain_timer.elapsed < cavern_item_maintain_ms) return;
+games[gi].item_maintain_timer.restart();
+for(uint r=0; r<games[gi].item_rules.length(); r++)
+{
+cavern_item_rule@ rule = games[gi].item_rules[r];
+int have = count_items_of(games[gi].id, rule.category, rule.kind);
+if(have < rule.target) add_free_items(gi, rule.category, rule.kind, rule.target - have);
+}
+}
+/* Add or replace a continuous-spawn rule: a fresh choice for the SAME category+kind overrides its target rather than
+stacking a second rule. Used by the Add cavern items "spawn continuously?" prompt. */
+void set_cavern_item_rule(int gi, string category, string kind, int target)
+{
+for(uint r=0; r<games[gi].item_rules.length(); r++)
+if(games[gi].item_rules[r].category==category and games[gi].item_rules[r].kind==kind) { games[gi].item_rules[r].target=target; return; }
+games[gi].item_rules.insert_last(cavern_item_rule(category, kind, target));
+}
 /* FREE PLAY: scatter up to `count` ground items into a free arena, each at a random interior floor tile, and
 announce each to the clients (the same "spawnitem" the drop tick sends). `category` is "wood", "ammo", or "both";
 `kind` is a specific type ("oak"/"arrow"/...) or "all"/"" for a random mix within the category. Respects the

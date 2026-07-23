@@ -2211,9 +2211,10 @@ if(n > 100) n = 100; // a quiet sanity ceiling; the per-category cap trims it fu
 string[] sel = string_split(players[index].menu_pending, " ", true);
 string category = (sel.length()>0) ? sel[0] : "both";
 string kind = (sel.length()>1) ? sel[1] : "all";
-int dropped = add_free_items(gi, category, kind, n);
-if(dropped == 0) send(event.peer_id, "misc The cavern floor can't hold any more of that.", 0,true);
-else send(event.peer_id, "misc Dropped "+dropped+(dropped==1?" item":" items")+" in the cavern.", 0,true);
+/* Item 5: don't drop yet. Carry the selection and ask "spawn continuously?" first, so nothing appears until the
+host answers (same deferral as the attacker-bots recovery prompt). The drop happens in the cavernitemcontinuous handler. */
+players[index].menu_pending = category + " " + kind + " " + n;
+push_cavern_item_continuous(index); // "Do you want these items to spawn continuously?"
 }
 }
 }
