@@ -122,6 +122,7 @@ buffercheck();
 		beaconloop();
 		reloadfollowloop(); // keep other players' in-flight reload sounds on their moving spots (third-person mirror of the local reload fix)
 		voiceloop();
+		burnfadeloop(); // advance any wall fire that's fading out after its burn ended (a no-op when nothing is fading)
 		update_ambiences(me.x, me.y);
 		update_musics(me.x, me.y);
 		/* AFK: during the countdown any key cancels it; once away, any key wakes us. Handled before the

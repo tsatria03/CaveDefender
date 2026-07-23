@@ -18,6 +18,19 @@ int slot = -1; // its sustained burning-loop handle on burnpool
 }
 client_burn@[] client_burns;
 
+/* A burning loop that's fading OUT after its fire ended, rather than being cut dead. stop_wall_burn hands the loop's
+handle here and plays the burnstop cue over it; burnfadeloop() (per frame, from the in-game loop) walks the loop's
+volume down to silence over burn_fade_ms, so the sustained fire smoothly melts into the fire-out sound instead of
+stopping abruptly, then destroys the handle. dir is kept so a wall re-igniting mid-fade can drop its own stale fade. */
+const double burn_fade_ms = 400; // how long a burning loop takes to fade to silence when its fire ends
+class fading_burn
+{
+string dir;
+int slot;   // the burning-loop handle on burnpool, now fading
+timer clock; // times this fade against burn_fade_ms
+}
+fading_burn@[] fading_burns;
+
 int find_client_burn(string dir)
 {
 for(uint i=0; i<client_burns.length(); i++) if(client_burns[i].dir == dir) return int(i);
@@ -56,6 +69,7 @@ void start_wall_burn(string dir)
 {
 play_wall_fire(dir, "burnstart.ogg", false);
 if(find_client_burn(dir) >= 0) return; // already burning: don't stack a second loop
+cancel_burn_fade(dir); // a fresh fire on a wall still fading out from a previous burn: drop the stale fade so the two loops don't overlap
 client_burn cb;
 cb.dir = dir;
 cb.slot = play_wall_fire(dir, "burning.ogg", true);
@@ -67,10 +81,43 @@ void stop_wall_burn(string dir)
 int i = find_client_burn(dir);
 if(i >= 0)
 {
-if(client_burns[i].slot != -1) burnpool.destroy_sound(client_burns[i].slot);
+if(client_burns[i].slot != -1) start_burn_fade(dir, client_burns[i].slot); // hand the loop to a fade rather than cutting it dead
 client_burns.remove_at(i);
 }
-play_wall_fire(dir, "burnstop.ogg", false);
+play_wall_fire(dir, "burnstop.ogg", false); // the fire-out cue plays OVER the fading loop, so the fire melts smoothly into it
+}
+// Begin fading a burning loop out to silence over burn_fade_ms (burnfadeloop advances it). Cancels any existing fade on the same wall first.
+void start_burn_fade(string dir, int slot)
+{
+cancel_burn_fade(dir);
+fading_burn fb;
+fb.dir = dir;
+fb.slot = slot;
+fb.clock.restart();
+fading_burns.insert_last(fb);
+}
+// Cancel (and destroy) any in-progress fade on a wall -- used on re-ignition and on clear so a stale fade can't linger.
+void cancel_burn_fade(string dir)
+{
+for(int i=int(fading_burns.length())-1; i>=0; i--)
+if(fading_burns[i].dir == dir) { burnpool.destroy_sound(fading_burns[i].slot); fading_burns.remove_at(i); }
+}
+/* Per frame (from the in-game loop): walk each fading burn loop's base volume from full (0) down to silent (-50)
+across burn_fade_ms, then destroy it. We set the START volume; the pool keeps layering 3D distance on top, so a
+fading fire still moves and attenuates with position as it dies. A no-op when nothing is fading. */
+void burnfadeloop()
+{
+for(int i=int(fading_burns.length())-1; i>=0; i--)
+{
+double frac = fading_burns[i].clock.elapsed / burn_fade_ms;
+if(frac >= 1.0)
+{
+burnpool.destroy_sound(fading_burns[i].slot); // fully faded: drop the loop
+fading_burns.remove_at(i);
+continue;
+}
+burnpool.update_sound_start_values(fading_burns[i].slot, 0, -50.0 * frac, 100); // 0 -> -50 base volume; positioning rides on top
+}
 }
 /* A wave swung to a REST window (attackers can't hurt the walls, and the server pauses the burn damage): silence
 every wall fire until the next attack window by stopping its loop, but KEEP the client_burn entry so we know to
@@ -90,4 +137,6 @@ void clear_client_burns()
 {
 for(uint i=0; i<client_burns.length(); i++) if(client_burns[i].slot != -1) burnpool.destroy_sound(client_burns[i].slot);
 client_burns.resize(0);
+for(uint i=0; i<fading_burns.length(); i++) burnpool.destroy_sound(fading_burns[i].slot); // also drop any loops still fading out, so none leak on a map switch / round reset
+fading_burns.resize(0);
 }
