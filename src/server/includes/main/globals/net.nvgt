@@ -445,6 +445,18 @@ wait(5);
 }
 exit();
 }
+/* Server-initiated logout for moderation/account actions (ban, kick, changepass, delchar, rename). Revokes the
+peer's authenticated identity IMMEDIATELY so a modified client that ignores the leave message can't re-send
+spawn_player and re-seat itself, then soft-disconnects the socket. disconnect_peer_softly is enet_peer_disconnect_later,
+which flushes the already-queued "banned"/"kicked"/etc. reason packet to a vanilla client before dropping it (a
+forceful disconnect would discard that reason). Held sessions carry a negative sentinel peer with no socket, so
+those are skipped -- their real socket was already dropped and their verified_logins entry cleared at drop time. */
+void force_logout(int peer)
+{
+if(peer < 0) return;
+verified_logins.delete(""+peer);
+net.disconnect_peer_softly(peer);
+}
 /* Carries out a ban that has already passed the rank and target checks, shared by /ban (permanent) and
 /tempban (timed). dur is the length in whole seconds (0 = permanent); reason is "" when none was given.
 Records the ban with its reason, drops the target from the roster, tells them (with the reason), announces
@@ -465,6 +477,7 @@ string tdisp = display_name_flagged(ti);
 set_ban(realname, until, reason);
 players.remove_at(ti);
 send(tpeer, "banned " + dur + (reason == "" ? "" : " " + reason), 0, true);
+force_logout(tpeer); // sever the socket + revoke identity so a modified client can't ignore the ban and re-spawn
 for(uint i=0; i<players.length(); i++)
 {
 send(players[i].peer_id, "banannounce " + realname + " " + trank + " " + tnick, 0, true);
@@ -1218,6 +1231,20 @@ if(world_frozen) send(event.peer_id, "worldfreeze\nThe game is currently frozen.
 }
 else if(existing<0)
 {
+/* Defense in depth: refuse to seat a banned account even if this peer is still verified. perform_ban now
+force-logs-out the peer, so this shouldn't trigger in practice, but re-checking here means spawn_player never
+trusts that login() already gated the ban. Same semantics as login(): -1 = not banned, 0 = permanent, >0 = timed
+until that epoch (a lapsed timed ban is cleared and allowed through). */
+int64 sbu = get_ban_until(vname);
+if(sbu == 0 or (sbu > 0 and now_epoch() < sbu))
+{
+string sreason = get_ban_reason(vname);
+send(event.peer_id, "banned "+(sbu==0 ? 0 : int(sbu - now_epoch()))+(sreason=="" ? "" : " "+sreason), 0, true);
+force_logout(event.peer_id);
+}
+else
+{
+if(sbu > 0) clear_ban(vname); // a timed ban that has since lapsed: clear it, as login() does
 spawn_player(event.peer_id, vname, string_to_number(parsed[2]));
 index=get_player_index(event.peer_id);
 players[index].rank=get_rank(players[index].name);
@@ -1273,6 +1300,7 @@ send(event.peer_id, pos_msg(int(i)), 0,true);
 }
 deliver_offline_pms(index); // hand over any private messages left for them while they were offline
 if(world_frozen) send(event.peer_id, "worldfreeze\nThe game is currently frozen.", 0, true); // joined during a developer world-stop: freeze them on arrival (no fresh "X has frozen" line -- that already happened)
+}
 }
 }
 }
@@ -1874,6 +1902,7 @@ int tpeer = players[index].peer_id;
 send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0, true); // announce them offline now
 send(tpeer, "passchanged", 0, true); // the client updates its saved password and returns to the connection menu
 players.remove_at(index); // free the slot now so the ensuing disconnect doesn't hold it; disconnect cleans up rooms/games/verified_logins
+force_logout(tpeer); // don't wait on the client to leave: revoke identity + drop the socket so a modified client can't stay on the old password's session
 }
 }
 else if(parsed[0]=="changepassadmin" and index>-1 and parsed.length()==3)
@@ -1897,6 +1926,7 @@ notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" reset "+afk_p
 send(0, "offline "+players[ti].name+" "+players[ti].rank+" "+players[ti].nickname, 0, true);
 send(tpeer, "passreset", 0, true); // the target is logged out; their saved password stays as-is
 players.remove_at(ti);
+force_logout(tpeer); // enforce the logout server-side so a modified client can't keep playing on the reset account
 }
 }
 }
@@ -1919,6 +1949,7 @@ remove_from_online_ignores(acct);
 players.remove_at(index);
 for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "chardeleted "+dname+" has deleted their account.", 0, true);
 send(tpeer, "delchardone", 0, true);
+force_logout(tpeer); // the account no longer exists: revoke identity + drop the socket so a modified client can't keep a session on it
 }
 }
 }
@@ -1950,6 +1981,7 @@ send(event.peer_id, "misc You deleted "+tflagged+"'s account.", 0, true);
 notify_staff_audit(aname+" deleted "+dname+"'s account.", -1);
 for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "chardeleted "+dname+"'s account has been deleted.", 0, true);
 send(tpeer, "delcharkicked", 0, true);
+force_logout(tpeer); // the account no longer exists: revoke identity + drop the socket so a modified client can't keep a session on it
 }
 }
 }
@@ -2966,6 +2998,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                 send(0, "offline "+oldname+" "+oldrank+" "+oldnick, 0, true);
                                 send(tpeer, "renamed "+newname, 0, true);
                                 players.remove_at(ti);
+                                force_logout(tpeer); // enforce the logout server-side so a modified client can't keep a session under the old name
                             }
                         }
                     }
@@ -3014,6 +3047,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                             if(reason_dropped) reason = "";
                             players.remove_at(kick_index);
                             send(kpeer, "kicked"+(reason == "" ? "" : " "+reason), 0, true);
+                            force_logout(kpeer); // sever the socket + revoke identity so a modified client can't ignore the kick and stay on
                             for(uint i=0; i<players.length(); i++)
                             {
                                 send(players[i].peer_id, "kickannounce "+kname+" "+krank+" "+knick, 0, true);
@@ -3055,6 +3089,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         handle_disconnect_rooms(targets[t]);
                         int pj = get_player_index(targets[t]); // re-find: the teardown can shift indices
                         if(pj > -1) players.remove_at(pj);
+                        force_logout(targets[t]); // live targets: sever socket + revoke identity (the helper skips held sessions' negative sentinel peers)
                         kicked_count++;
                     }
                     if(kicked_count == 0) send(event.peer_id, "misc There is no one to kick.", 0, true);
