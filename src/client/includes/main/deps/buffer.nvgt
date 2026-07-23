@@ -250,7 +250,7 @@ speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
 void copy_buffer_item()
 {
-if(buffers[bufferpos].items.length()<=0)
+if(bufferpos < 0 || bufferpos >= int(buffers.length()) || buffers[bufferpos].items.length()<=0)
 {
 speak("There's nothing to copy in this buffer.");
 return;

@@ -93,10 +93,10 @@ if(!strict) filter="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ12345678
 else filter="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_";
 filter+=additional;
 bool found=false;
-for(int counter=0; counter<message.length(); counter++)
+for(int counter=0; counter<int(message.length()); counter++)
 {
 found=false;
-for(int search=0; search<filter.length(); search++)
+for(int search=0; search<int(filter.length()); search++)
 {
 if(message[counter]==filter[search])
 {

@@ -1308,6 +1308,19 @@ else if(parsed[0]=="move" and parsed.length()>2 and index>-1)
 {
 players[index].x=string_to_number(parsed[1]);
 players[index].y=string_to_number(parsed[2]);
+/* Bounds-clamp to the map grid when the player is in a game, so a modified client can't assert a position off
+the grid -- every wall reach/gather/attack check trusts this position. This ONLY rejects out-of-grid coordinates;
+it deliberately does NOT police teleporting within the map (placement/movement stays client-authoritative by
+design, e.g. the PVP side-spawn). Lobby and room spaces (room_id isn't a game) are left alone -- no walls to exploit. */
+int gmi = get_game_index(players[index].room_id);
+if(gmi > -1)
+{
+int gsz = games[gmi].size;
+if(players[index].x < 0) players[index].x = 0;
+else if(players[index].x > gsz) players[index].x = gsz;
+if(players[index].y < 0) players[index].y = 0;
+else if(players[index].y > gsz) players[index].y = gsz;
+}
 broadcast_pos(index); // no-op for spectators (guarded), so watchers aren't tracked as players
 if(!players[index].spectating) { gather_wood(index, 5); gather_ammo(index, 5); } // auto-grab nearby wood (defenders) and ammo (attackers); each self-gates by role, and a watcher picks up neither
 }
@@ -2851,9 +2864,12 @@ if(event.type == event_receive && event.channel == 1 && !world_frozen) // world-
     {
         motd = string_replace(get_event_message(), "/motd ", "", true);
         file f;
-        f.open("data/preffs/main/motd.svr", "w");
-        f.write(motd);
-        f.close();
+        if(f.open("data/preffs/main/motd.svr", "w")) // guard the write like write_field does; the MOTD is already live in memory either way
+        {
+            f.write(motd);
+            f.close();
+        }
+        else send(event.peer_id, "misc The new message of the day is active now but could not be saved to disk, so it will reset if the server restarts.", 0, true);
         send(event.peer_id, "misc Message of the Day has been changed to: " + motd, 0, true); // actor: first-person confirmation in misc
         send(0, "play newmotd.ogg", 0, true); // everyone hears the dedicated new-MOTD cue
         string motdnotice = afk_prefix(index) + display_name_flagged(index) + " has changed the Message of the Day to: " + motd; // AFK + flag/nickname-aware (commands can be issued while AFK)
