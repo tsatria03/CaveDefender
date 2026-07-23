@@ -439,8 +439,14 @@ string clbots_label = "Clear cavern attacker bots";
 string clbots_tally = cavern_attacker_tally(games[gi].id); // per-wall spread shown right on the option, e.g. "...: 4 on the west wall."
 if(clbots_tally != "") clbots_label += ": " + clbots_tally + ".";
 opts.insert_last(clbots_label); players[index].menu_actions.insert_last("clearbots");
-opts.insert_last("Clear cavern builder bots"); players[index].menu_actions.insert_last("clearbuilders");
-opts.insert_last("Clear cavern items"); players[index].menu_actions.insert_last("clearitems");
+string clbuild_label = "Clear cavern builder bots";
+int nbuild = builders_in(games[gi].id); // builders roam, so a plain count rather than a per-wall spread
+if(nbuild > 0) clbuild_label += ": " + nbuild + (nbuild == 1 ? " bot" : " bots") + ".";
+opts.insert_last(clbuild_label); players[index].menu_actions.insert_last("clearbuilders");
+string clitems_label = "Clear cavern items";
+string clitems_tally = cavern_item_tally(games[gi].id);
+if(clitems_tally != "") clitems_label += ": " + clitems_tally + ".";
+opts.insert_last(clitems_label); players[index].menu_actions.insert_last("clearitems");
 opts.insert_last("Clear cavern map"); players[index].menu_actions.insert_last("clearmap");
 send_menu(peer, "cavern", "Cavern controls.", opts);
 }
@@ -474,6 +480,7 @@ send(peer, "misc The cavern builder bots have been cleared.", 0, true);
 else if(act == "clearitems")
 {
 clear_items_broadcast(games[gi].id);
+games[gi].item_rules.resize(0); // item 5: stop all continuous spawning too, so cleared items don't immediately respawn
 send(peer, "misc The cavern items have been cleared.", 0, true);
 }
 else if(act == "clearmap")
@@ -542,6 +549,16 @@ opts.insert_last("Pine");    // 3
 opts.insert_last("All wood");// 4 -> a random mix
 }
 send_menu(players[index].peer_id, "cavernitemkind", "Which kind?", opts);
+}
+/* FREE PLAY (item 5): final step of Add cavern items -- do these items keep respawning on the floor, or drop once?
+The category/kind/count ride in menu_pending; the drop itself happens in the cavernitemcontinuous handler, so nothing
+appears until this is answered. */
+void push_cavern_item_continuous(int index)
+{
+string[] opts;
+opts.insert_last("Yes");
+opts.insert_last("No");
+send_menu(players[index].peer_id, "cavernitemcontinuous", "Do you want these items to spawn continuously?", opts);
 }
 // PVP: the two-option side chooser a player opens with "Choose your side" (sets their OWN side).
 void push_pvp_side_menu(int index)
@@ -1365,6 +1382,27 @@ else kind = "all";
 }
 players[player_index].menu_pending = category + " " + kind;
 ask_input(peer, "How many items?", "cavernitemcount", false); // client returns "cavernitemcount <n>"
+}
+else if(id == "cavernitemcontinuous")
+{
+/* FREE PLAY (item 5): the final Add cavern items step. The selection rode in menu_pending as "<category> <kind> <count>".
+The drop happens HERE (deferred from cavernitemcount), so nothing appears until this is answered. Yes also records a
+continuous rule so the floor keeps that many of the category/kind (maintain_cavern_items), cleared by Clear cavern items. */
+if(choice < 0) return; // cancelled: nothing dropped yet, abandon the add
+int gi = get_game_index(players[player_index].room_id);
+if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active" or games[gi].host_peer != peer) return;
+string[] p = string_split(players[player_index].menu_pending, " ", true);
+if(p.length() < 3) return;
+string cat = p[0]; string kind = p[1]; int n = int(string_to_number(p[2]));
+if(n < 1) return;
+int dropped = add_free_items(gi, cat, kind, n);
+if(choice == 0) // Yes -> keep this many of the category/kind on the floor from now on
+{
+set_cavern_item_rule(gi, cat, kind, n);
+send(peer, "misc Those items will keep spawning on the floor until you clear the cavern items.", 0, true);
+}
+else if(dropped == 0) send(peer, "misc The cavern floor can't hold any more of that.", 0, true);
+else send(peer, "misc Dropped " + dropped + (dropped == 1 ? " item" : " items") + " in the cavern.", 0, true);
 }
 else if(id == "gameinvitearea")
 {

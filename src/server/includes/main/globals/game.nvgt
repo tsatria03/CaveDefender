@@ -46,6 +46,8 @@ pending_bullet@[] bullets; // ranged shots in flight: held from fire until their
 wall_burn@[] burns;        // walls set alight by firebombs: each ticks damage during attack windows only, intensifying when re-hit, until it lapses (burn_tick, task 5e). Cleared when the round resets.
 wall_heal@[] heals;        // FREE PLAY only: downed walls waiting to self-heal -- each rebuilds free_wall_heal_ms after it fell (schedule_wall_heal / heal_tick, 4.4c.2). Empty in every other mode.
 string[] recover_walls;    // FREE PLAY only (item 4): walls whose attacker bots RESPAWN when the wall recovers ("spawn on wall recovery" = Yes -> bots kept through the breach and resume). A wall NOT listed drops its attacker bots when it falls. Set per add-attacker-bots action; cleared on Clear cavern attacker bots / Clear cavern map.
+cavern_item_rule@[] item_rules; // FREE PLAY only (item 5): active "spawn continuously" rules -- each keeps `target` items of its category/kind on the floor (maintain_cavern_items). Cleared on Clear cavern items / Clear cavern map.
+timer item_maintain_timer;      // FREE PLAY only (item 5): paces maintain_cavern_items so continuous refills aren't instant/spammy.
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl, string md)
 {
 id=gid;
@@ -858,6 +860,7 @@ continue;
 resolve_bullets(int(i)); // land any ranged shots whose travel time has elapsed (a wall hit or a ricochet) -- 5d
 burn_tick(int(i)); // advance any firebomb wall fires (attack-window ticks only) -- 5e
 heal_tick(int(i)); // FREE PLAY: rebuild any downed walls whose ~10s self-heal timer has elapsed -- 4.4c.2 (a no-op when nothing's healing)
+maintain_cavern_items(int(i)); // FREE PLAY (item 5): top up any "spawn continuously" item rules toward their target (a no-op when there are none)
 if(games[i].phase=="build" and games[i].phasetimer.elapsed >= games[i].buildduration*1000)
 set_game_phase(int(i), "wave");
 // Heads-up before the first wave: once, wave_warning_seconds before the build phase ends. (PVE only -- EVP has no incoming attacker wave to warn about.)
@@ -1047,6 +1050,7 @@ clear_items_broadcast(gameid);         // wipe the ground items and stop their c
 int hi = get_player_index(games[gi].host_peer); if(hi>-1) reset_player_ammo(hi); // empty the HOST's ammo reserve + mags (their personal fresh start); in an open arena a guest's carried gear is left alone
 games[gi].heals.resize(0);             // cancel pending self-heals (the walls are being rolled fresh right now)
 games[gi].recover_walls.resize(0);     // item 4: forget every wall's "spawn on recovery" setting (its attacker bots are gone too)
+games[gi].item_rules.resize(0);        // item 5: stop every "spawn continuously" rule (the items are being wiped)
 games[gi].bullets.resize(0);           // drop any shots still in flight (they'd resolve against the reset walls)
 for(int b=int(games[gi].burns.length())-1; b>=0; b--) send_to_game(gameid, "burnstop "+games[gi].burns[b].dir); // stop each wall fire's client loop
 games[gi].burns.resize(0);
