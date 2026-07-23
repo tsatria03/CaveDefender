@@ -1,4 +1,5 @@
 New in 4.6.
+You can no longer begin an open free play arena by yourself; like the other game modes, an open arena now needs at least two players before it can start, while a solo arena still begins on its own.
 Banning or kicking a player now cuts their connection right away instead of trusting their game to leave on its own. Someone who had tampered with their game to ignore a ban or kick could previously stay on and keep playing; the server now drops them and refuses to let that account back in while the ban stands. The same applies when your account is deleted, renamed, or has its password reset from another device.
 Fixed signing in with different capitalization than your account's name showing you on the server twice. Typing your name as bob when it was registered as Bob used to leave a second copy of you in the player lists; the server now recognizes it as the same account and takes over your existing session instead.
 New in 4.5.
