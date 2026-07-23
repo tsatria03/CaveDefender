@@ -1382,8 +1382,7 @@ send(peer, "misc " + n + bots + " added to each wall.", 0, true);
 }
 else return;
 bool on = (choice == 0); // 0 = Yes (respawn on recovery), 1 = No (leave when the wall falls)
-for(uint w = 0; w < affected.length(); w++) set_wall_recovery(gi, affected[w], on);
-send(peer, on ? "misc Those bots will return each time their wall recovers." : "misc Those bots will leave when their wall falls.", 0, true);
+for(uint w = 0; w < affected.length(); w++) set_wall_recovery(gi, affected[w], on); // set silently; the "N attacker bots added..." message above is the only confirmation
 }
 else if(id == "cavernitemtype")
 {
@@ -1437,12 +1436,8 @@ if(p.length() < 3) return;
 string cat = p[0]; string kind = p[1]; int n = int(string_to_number(p[2]));
 if(n < 1) return;
 int dropped = add_free_items(gi, cat, kind, n);
-if(choice == 0) // Yes -> keep this many of the category/kind on the floor from now on
-{
-set_cavern_item_rule(gi, cat, kind, n);
-send(peer, "misc Those items will keep spawning on the floor until you clear the cavern items.", 0, true);
-}
-else if(dropped == 0) send(peer, "misc The cavern floor can't hold any more of that.", 0, true);
+if(choice == 0) set_cavern_item_rule(gi, cat, kind, n); // Yes -> keep this many on the floor from now on (set silently; the drop count below is the only confirmation, either way)
+if(dropped == 0) send(peer, "misc The cavern floor can't hold any more of that.", 0, true);
 else send(peer, "misc Dropped " + dropped + (dropped == 1 ? " item" : " items") + " in the cavern.", 0, true);
 }
 else if(id == "gameinvitearea")
