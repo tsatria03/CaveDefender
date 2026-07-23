@@ -21,12 +21,19 @@ client_burn@[] client_burns;
 /* A burning loop that's fading OUT after its fire ended, rather than being cut dead. stop_wall_burn hands the loop's
 handle here and plays the burnstop cue over it; burnfadeloop() (per frame, from the in-game loop) walks the loop's
 volume down to silence over burn_fade_ms, so the sustained fire smoothly melts into the fire-out sound instead of
-stopping abruptly, then destroys the handle. dir is kept so a wall re-igniting mid-fade can drop its own stale fade. */
-const double burn_fade_ms = 400; // how long a burning loop takes to fade to silence when its fire ends
+stopping abruptly, then destroys the handle. dir is kept so a wall re-igniting mid-fade can drop its own stale fade.
+
+We can't just lower the pool volume each frame: the pool re-applies distance-based volume every update (via
+handle.set_position), which would wipe our fade. So start_burn_fade FREEZES the item (stationary=true) -- the pool
+then stops repositioning/re-voluming it -- and we slide the raw handle volume down ourselves from v0, the loop's
+volume at the moment it froze, so there's no jump. Freezing costs nothing over a 400ms fade (the fire barely moves). */
+const double burn_fade_ms = 400;   // how long a burning loop takes to fade out when its fire ends
+const double burn_fade_drop = 50;  // decibels dropped across that window (from v0); a 50 dB fall is effectively silent
 class fading_burn
 {
 string dir;
-int slot;   // the burning-loop handle on burnpool, now fading
+int slot;    // the burning-loop item (slot) on burnpool, now frozen and fading
+double v0;   // the loop's volume when the fade began, so we fade DOWN from it rather than popping to full
 timer clock; // times this fade against burn_fade_ms
 }
 fading_burn@[] fading_burns;
@@ -90,9 +97,12 @@ play_wall_fire(dir, "burnstop.ogg", false); // the fire-out cue plays OVER the f
 void start_burn_fade(string dir, int slot)
 {
 cancel_burn_fade(dir);
+if(slot < 0 or slot >= int(burnpool.items.length()) or @burnpool.items[slot].handle == null) { burnpool.destroy_sound(slot); return; } // nothing valid to fade -- just make sure it's gone
 fading_burn fb;
 fb.dir = dir;
 fb.slot = slot;
+fb.v0 = burnpool.items[slot].handle.volume; // remember the loop's current (distance-attenuated) volume so the fade starts there, not at full
+burnpool.items[slot].stationary = true;     // freeze it: the pool now stops re-applying distance volume, so our fade sticks
 fb.clock.restart();
 fading_burns.insert_last(fb);
 }
@@ -102,21 +112,22 @@ void cancel_burn_fade(string dir)
 for(int i=int(fading_burns.length())-1; i>=0; i--)
 if(fading_burns[i].dir == dir) { burnpool.destroy_sound(fading_burns[i].slot); fading_burns.remove_at(i); }
 }
-/* Per frame (from the in-game loop): walk each fading burn loop's base volume from full (0) down to silent (-50)
-across burn_fade_ms, then destroy it. We set the START volume; the pool keeps layering 3D distance on top, so a
-fading fire still moves and attenuates with position as it dies. A no-op when nothing is fading. */
+/* Per frame (from the in-game loop): slide each fading (frozen) burn loop's volume down from v0 by burn_fade_drop
+across burn_fade_ms, then destroy it. The item was made stationary in start_burn_fade so the pool no longer re-volumes
+it, letting this write stick. A no-op when nothing is fading. */
 void burnfadeloop()
 {
 for(int i=int(fading_burns.length())-1; i>=0; i--)
 {
+int slot = fading_burns[i].slot;
 double frac = fading_burns[i].clock.elapsed / burn_fade_ms;
-if(frac >= 1.0)
+if(frac >= 1.0 or slot < 0 or slot >= int(burnpool.items.length()) or @burnpool.items[slot].handle == null)
 {
-burnpool.destroy_sound(fading_burns[i].slot); // fully faded: drop the loop
+burnpool.destroy_sound(slot); // fully faded (or gone): drop the loop
 fading_burns.remove_at(i);
 continue;
 }
-burnpool.update_sound_start_values(fading_burns[i].slot, 0, -50.0 * frac, 100); // 0 -> -50 base volume; positioning rides on top
+burnpool.items[slot].handle.volume = fading_burns[i].v0 - burn_fade_drop * frac; // slide down from v0; the frozen item won't be re-volumed by the pool
 }
 }
 /* A wave swung to a REST window (attackers can't hurt the walls, and the server pauses the burn damage): silence
