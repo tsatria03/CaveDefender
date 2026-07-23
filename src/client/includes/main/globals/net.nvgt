@@ -306,6 +306,7 @@ leave; the reply goes back as playagain yes/no and the server waits until everyo
 void handle_roundover(string message)
 {
 	string[] parsed = string_split(message, " ", true);
+	if(parsed.length() < 2) return; // malformed/truncated packet: degrade quietly instead of indexing past the end
 	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
 	int secs = string_to_number(parsed[1]);
 	int collected = (parsed.length() > 2) ? string_to_number(parsed[2]) : 0;
@@ -339,6 +340,7 @@ prompt. Play again -> back to staging with the sides cleared (the host re-picks 
 void handle_pvp_result(string message)
 {
 	string[] parsed = string_split(message, " ", true);
+	if(parsed.length() < 3) return; // malformed/truncated packet: degrade quietly instead of indexing past the end
 	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
 	string winner = parsed[1]; // "attack" or "defend"
 	int down = string_to_number(parsed[2]);
@@ -372,6 +374,7 @@ game the host begins; no -> leave to the room. */
 void handle_evp_over(string message)
 {
 	string[] parsed = string_split(message, " ", true);
+	if(parsed.length() < 2) return; // malformed/truncated packet: degrade quietly instead of indexing past the end
 	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
 	int cleared = string_to_number(parsed[1]);
 	int milestone = (parsed.length() > 2) ? string_to_number(parsed[2]) : 0; // new personal best (0 = not a new best); a new best earned bonus ammo
