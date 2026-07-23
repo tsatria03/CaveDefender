@@ -126,7 +126,7 @@ int gid = builders[i].game_id;
 int gi = get_game_index(gid);
 if(gi<0) continue;
 if(games[gi].paused) continue; // frozen by the host; builders wait (their timers are paused too)
-if(games[gi].phase!="build" and games[gi].phase!="wave") continue; // only work during a round
+if(games[gi].phase!="build" and games[gi].phase!="wave" and !(games[gi].mode=="free" and games[gi].phase=="active")) continue; // EVP: only during a round; FREE play: any time (it runs in the "active" phase)
 if(builders[i].movetimer.elapsed < builders[i].movespeed) continue; // not time for this bot's next beat yet
 int s = games[gi].size;
 /* EVP attack/rest cycle: builders may PLACE wood (repair walls) during the build phase and the wave's REST
@@ -143,12 +143,17 @@ builders[i].placing=false;
 int wi = border_wall(gid, builders[i].target_wall, s);
 if(wi>-1 and walls[wi].health>0)
 {
-repair_wall(wi, wood_reinforce_value(builders[i].carried_type), true, evp_fortify_mult(games[gi].evp_rounds_cleared)); // repair up to THIS round's fortify target (climbs each cleared round), so bots can build the walls past the old fixed ceiling
+double capm = (games[gi].mode=="free") ? wall_overbuild_cap : evp_fortify_mult(games[gi].evp_rounds_cleared); // FREE play: build up to the 400% overbuild ceiling; EVP: this round's fortify target (climbs each cleared round)
+repair_wall(wi, wood_reinforce_value(builders[i].carried_type), true, capm);
 /* EVP damage ratchet (see lower_wall_floor): during the build phase the bots fortify freely, so the wall's
 repair ceiling rises with the work; during a wave rest they may only restore up to that ceiling, never
-past the permanent damage the attackers have already done. */
+past the permanent damage the attackers have already done. FREE play has no floor mechanic, so this is
+skipped there -- builders just reinforce up to the 400% cap. */
+if(games[gi].mode=="evp")
+{
 if(games[gi].phase=="build") { if(walls[wi].health > walls[wi].floor) walls[wi].floor = walls[wi].health; }
 else if(walls[wi].health > walls[wi].floor) walls[wi].health = walls[wi].floor;
+}
 broadcast_wall_strength(gid);
 send_to_game(gid, "wallplace "+builders[i].target_wall+" "+builders[i].carried_type); // the repair is heard across the whole wall the bot mended, not just at the bot's spot
 builders[i].carrying=false;

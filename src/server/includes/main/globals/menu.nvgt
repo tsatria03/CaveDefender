@@ -433,8 +433,10 @@ if(gi < 0) return;
 players[index].menu_actions.resize(0);
 string[] opts;
 opts.insert_last("Add cavern bots"); players[index].menu_actions.insert_last("addbots");
+opts.insert_last("Add cavern builders"); players[index].menu_actions.insert_last("addbuilders");
 opts.insert_last("Add cavern items"); players[index].menu_actions.insert_last("additems");
 opts.insert_last("Clear cavern bots"); players[index].menu_actions.insert_last("clearbots");
+opts.insert_last("Clear cavern builders"); players[index].menu_actions.insert_last("clearbuilders");
 opts.insert_last("Clear cavern items"); players[index].menu_actions.insert_last("clearitems");
 opts.insert_last("Clear cavern map"); players[index].menu_actions.insert_last("clearmap");
 send_menu(peer, "cavern", "Cavern controls.", opts);
@@ -448,11 +450,22 @@ int gi = get_game_index(players[player_index].room_id);
 if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "active") return;
 if(games[gi].host_peer != peer) { send(peer, "misc Only the host can control the cavern.", 0, true); return; }
 if(act == "addbots") ask_input(peer, "How many attacker bots?", "cavernbotcount", false); // client returns "cavernbotcount <n>"
+else if(act == "addbuilders")
+{
+// Builders carry GROUND wood to the walls, so refuse to add any until there's wood down to pick up.
+if(wood_count_in(games[gi].id) <= 0) send(peer, "misc You need wood on the ground before builder bots can be added.", 0, true);
+else ask_input(peer, "How many builder bots?", "cavernbuildercount", false); // client returns "cavernbuildercount <n>"
+}
 else if(act == "additems") push_cavern_item_type(player_index); // What item? -> kind -> How many?
 else if(act == "clearbots")
 {
 clear_enemies(games[gi].id);
 send(peer, "misc The cavern bots have been cleared.", 0, true);
+}
+else if(act == "clearbuilders")
+{
+clear_builders(games[gi].id);
+send(peer, "misc The cavern builder bots have been cleared.", 0, true);
 }
 else if(act == "clearitems")
 {
