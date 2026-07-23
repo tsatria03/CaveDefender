@@ -229,7 +229,7 @@ void push_game_invite_area(int index)
 int peer = players[index].peer_id;
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) return;
-if(games[gi].members.length() >= 4) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full
+if(games[gi].members.length() >= game_capacity) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full
 string[] opts;
 opts.insert_last("Lobby");     // option 0
 opts.insert_last("Your room"); // option 1
@@ -245,7 +245,7 @@ int peer = players[index].peer_id;
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) return;
 int wantroom = from_lobby ? 0 : games[gi].parent_room;
-if(games[gi].members.length() >= 4) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full
+if(games[gi].members.length() >= game_capacity) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full
 players[index].menu_targets.resize(0);
 string[] opts;
 for(uint i = 0; i < players.length(); i++)
@@ -300,7 +300,7 @@ if(games[i].parent_room != rid) continue;
 if(mode == "join")
 {
 if(games[i].solo and games[i].host != players[index].name) continue; // others can't join a solo game
-if(games[i].members.length() >= 4) continue;                          // full
+if(games[i].members.length() >= game_capacity) continue;                          // full
 }
 else if(!staff and games[i].host != players[index].name) continue;      // stop: non-staff only their own
 players[index].menu_targets.insert_last("" + games[i].id);

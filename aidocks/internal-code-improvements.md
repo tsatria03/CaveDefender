@@ -7,7 +7,7 @@ metadata:
 
 Player-invisible work from the full 360 review at v4.5 — nothing here changes what a normal player sees in the game, so none of it earns a changelog line (per [[changelog-rules]]). Two groups, numbered continuously so any item is unambiguous to pick. Fix one at a time and delete each entry as it lands (per [[delete-completed-tasks]]). Player-visible bugs (all cleared) live in [[user-facing-improvements]]. Line numbers were accurate at review time — re-locate by symbol if the file has shifted. Related: [[deferred-dedup-refactors]], [[include-tree]], [[command-parser-conventions]], [[networking-protocol]].
 
-**Cleared in 4.6 (quick-wins pass):** copy_buffer_item bounds guard, the three result-handler token guards (roundover/pvpresult/evpover), the unchecked MOTD write, and the filterchar signed/unsigned compare. Removed below.
+**Cleared in 4.6 (quick-wins pass):** copy_buffer_item bounds guard, the three result-handler token guards (roundover/pvpresult/evpover), the unchecked MOTD write, the filterchar signed/unsigned compare, and the player-cap constant (`game_capacity=4` in `game.nvgt`, replacing the bare `4` at 6 verified member-cap sites — NOT the "4 walls" literals). Removed below.
 
 ## Correctness & robustness (invisible in normal play)
 
@@ -35,6 +35,4 @@ Player-invisible work from the full 360 review at v4.5 — nothing here changes 
 
 **11. Already-tracked debt, still unpaid** (in [[deferred-dedup-refactors]]): promote/demote twins (`server/net.nvgt:3062-3103` vs `3104-3145`) and client preset menus `addserver`/`addaccount`, `loadservermenu`/`loadaccountmenu` (`client/menus/menu.nvgt:318-680`). Decide pay-down vs. keep-deferring.
 
-**12. Name the player-cap constant.** Bare `4` is repeated as the game player cap across `server/menu.nvgt:232,248,303,390,414` and `server/game.nvgt:390,414,777`; add `const int game_capacity = 4;` beside the existing `spectator_cap` and use it everywhere. Quick win.
-
-**13. Hoist mode/phase/side string literals to named consts.** `"pve"/"evp"/"pvp"/"free"`, `"idle"/"build"/"wave"/"over"`, `"attack"/"defend"` are compared as raw strings dozens of times in `game.nvgt`; a typo silently misroutes. Change the *comparisons* only — emitted wire strings must stay identical across sides per [[networking-protocol]]. Quick win.
+**12. Hoist mode/phase/side string literals to named consts.** `"pve"/"evp"/"pvp"/"free"`, `"idle"/"build"/"wave"/"over"`, `"attack"/"defend"` are compared as raw strings dozens of times in `game.nvgt`; a typo silently misroutes. Change the *comparisons* only — emitted wire strings must stay identical across sides per [[networking-protocol]]. Quick win.
