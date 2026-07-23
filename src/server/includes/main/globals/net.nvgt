@@ -2372,6 +2372,7 @@ if(gi==-1) send(event.peer_id, "You are not in a game.", 0,true);
 else if(games[gi].mode != "free") send(event.peer_id, "That only starts a free play arena.", 0,true);
 else if(games[gi].host_peer != event.peer_id) send(event.peer_id, "Only the host can begin the arena.", 0,true);
 else if(games[gi].phase != "idle") send(event.peer_id, "The arena has already started.", 0,true);
+else if(!games[gi].solo and games[gi].members.length() < 2) send(event.peer_id, "You can't begin an arena with yourself.", 0,true); // an OPEN arena needs 2+ players, like the other modes' beginround guard (net.nvgt ~2339); a solo arena starts alone
 else set_game_phase(gi, "active");
 }
 else if(parsed[0]=="enablewalldamage" and index>-1)
