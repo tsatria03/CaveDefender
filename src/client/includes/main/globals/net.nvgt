@@ -366,8 +366,9 @@ void handle_pvp_result(string message)
 	if(again == 0) { send(0, "playagain yes", 0, true); speak("Waiting to pick sides again."); }
 	else send(0, "playagain no", 0, true);
 }
-/* EVP game over (a loss): "evpover <rounds-cleared> <milestone> [type:amount ...]". The only loss is the round timer
-running out. Show the results and the play-again prompt, mirroring handle_roundover; the score is rounds cleared. A
+/* EVP game over (a loss): "evpover <rounds-cleared> <collected> <milestone> [type:amount ...]". The only loss is the round timer
+running out. Show the results and the play-again prompt, mirroring handle_roundover; the score is rounds cleared and
+<collected> is the ammo gathered this game (shown like PVE's collected wood). A
 non-zero milestone means a new personal best, which earned bonus ammo for the next game -- the trailing "type:amount"
 pairs (one per ammo type) are the exact rolled amounts, named in the milestone dialog. Play again -> a fresh round-1
 game the host begins; no -> leave to the room. */
@@ -377,18 +378,20 @@ void handle_evp_over(string message)
 	if(parsed.length() < 2) return; // malformed/truncated packet: degrade quietly instead of indexing past the end
 	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
 	int cleared = string_to_number(parsed[1]);
-	int milestone = (parsed.length() > 2) ? string_to_number(parsed[2]) : 0; // new personal best (0 = not a new best); a new best earned bonus ammo
+	int collected = (parsed.length() > 2) ? string_to_number(parsed[2]) : 0; // ammo gathered this whole EVP game (mirror of PVE's collected wood)
+	int milestone = (parsed.length() > 3) ? string_to_number(parsed[3]) : 0; // new personal best (0 = not a new best); a new best earned bonus ammo
 	pause_objects(); // silence lingering loops behind the results dialog and play-again prompt
 	string why = "You ran out of time before bringing the walls down.";
 	string results = "Game over! You cleared " + cleared + (cleared == 1 ? " round.\r\n" : " rounds.\r\n");
+	results += "Collected ammo: " + collected + ".\r\n";
 	results += why + "\r\n";
 	results += "Press enter to continue.";
 	dlgmessage(results);
-	// Milestone: a fresh personal-best round earned bonus starting ammo for the next game (the attackers' bonus wood). The trailing pairs (parsed[3..]) name the exact rolled amount of each ammo type, e.g. "12 arrow ammo, 5 gas ammo, ..., and 14 normal ammo".
+	// Milestone: a fresh personal-best round earned bonus starting ammo for the next game (the attackers' bonus wood). The trailing pairs (parsed[4..]) name the exact rolled amount of each ammo type, e.g. "12 arrow ammo, 5 gas ammo, ..., and 14 normal ammo".
 	if(milestone > 0)
 	{
 		string bonus_list = "";
-		for(uint i = 3; i < parsed.length(); i++)
+		for(uint i = 4; i < parsed.length(); i++)
 		{
 			string[] kv = string_split(parsed[i], ":", true);
 			if(kv.length() != 2) continue;

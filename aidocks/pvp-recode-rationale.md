@@ -1,0 +1,39 @@
+---
+name: pvp-recode-rationale
+description: Why PVP was pulled from the menu in 4.7 and what the from-scratch recode must fix — the dev's reasons cross-checked against the current code (the inset-ring map split is the core issue; muffle/weapons already fixed)
+metadata:
+  type: project
+---
+
+Why the dev hid PVP in 4.7 (see [[game-mode-pvp]] for the removal mechanics) and what a from-scratch recode should address. Captured 2026-07 after cross-checking the dev's recollections against the code as it actually stands. The todo item is "Recode the PVP game from scratch."
+
+**Reason 1 — the map is split unevenly; this is the CORE problem (CONFIRMED in code).**
+PVP is the ONLY mode that subdivides one grid into unequal regions:
+- PVE / EVP / Free play (`draw_map "cavern"`, server `spawn_border_walls`): the four destructible walls are on the OUTER BORDER (0 and `size`); the whole `size × size` grid is ONE shared arena; all four walls sit on the true edges.
+- PVP (`draw_map "pvparena"`, server `spawn_ring_walls`, geometry `wmin=size/4`, `wmax=3·size/4`): the four walls are an INSET RING. That carves the grid into a center interior for defenders (~`size/2` per side ≈ ONE QUARTER of the area; e.g. ~49×49 on a 100 map) and a surrounding band for attackers (~THREE QUARTERS of the area, ring-shaped). So each side gets a fraction of the map, the two sides' fractions are unequal, and the walls are NOT at the border. This is the dev's "weirdly split, everyone got a fraction, walls not where they're supposed to be" recollection — verified.
+- **Recode direction the dev wants:** make PVP look like the other three — the full `size × size` grid with all four walls on the border, both sides equal room (the free-play layout is the model everyone liked).
+
+**Reason 2 — old wall/sound/weapon/muffle bugs; MOSTLY ALREADY FIXED (verified).**
+- Muffle/reverb: FIXED. Git `50265b2` (cross-wall through-stone muffle + interior reverb), `fa31b04` (PVP ambience split to match), `a4a9102` (voice effects in all modes). Resolved in current code.
+- Weapons: WORK. Attacking is shared code — melee (`ring_wall_in_reach`), ranged (inward ray at the ring, `net.nvgt` ~1424-1433), ammo — all branch on `mode=="pvp" && team=="attack"` down the same EVP paths. No broken weapon logic remains.
+- "Only one wall attackable / sounds on the wrong wall": NO hard bug found in the code today — ring coords match exactly across server (`spawn_ring_walls`), client tiles (`draw_map "pvparena"`), and every sound span (`play_wall_hit`/bullet/burn), and all four directions are handled. Assessment: either an older bug since fixed, OR a UX artifact of the inset ring (the walls are sides of a CENTRAL square, so N/E/S/W are disorienting and reaching another wall means walking around the band — "feels like only one wall works"). Minor rough edge worth noting: ring corners overlap two wall objects, and `wall_at` returns the first match (insertion order west,east,north,south), so a corner cell is attributed to one wall — not a hard break but a sign the ring geometry is fiddly.
+
+**Reason 3 — nobody played it (dev's observation, not code-measurable).** Consistent with the above: PVP is the structural outlier; the symmetric full-grid, border-wall layout of PVE/EVP/free (esp. free play) is what players preferred.
+
+**Bottom line for the recode:** the muffle/weapon complaints are already handled, so the recode is really about the LAYOUT. Everything else (round rhythm, reinforce limits, cross-wall audio, forfeit/reconnect) already works and can likely be reused. All current PVP logic is intact but unstartable — see [[game-mode-pvp]] for exactly what's commented out and how to restore.
+
+**What to RECODE vs KEEP (it is NOT all of PVP — only the spatial layer):**
+- RECODE (the geometry + its audio zoning, ~a third of the PVP-specific code): server `spawn_ring_walls`; client `draw_map("pvparena")` tiling + the ambience/music/reverb region strips; the three ring reach helpers `ring_wall` / `ring_wall_in_reach` / `ring_wall_in_reach_inside`; the PVP branch of the ranged-fire ray (`net.nvgt` ~1424-1433); per-side spawn placement; the cross-wall audio region test (`pvp_inside_ring` / `crosspool`).
+- KEEP (mode-agnostic or reusable): staging (side pick attack/defend, even-teams enforcement, host assignment, watcher stepping aside); round rhythm (build/prep → attack/build windows on the frozen attacking-seconds clock); combat mechanics (melee, ranged, ammo, reinforce) — just re-point them at the new geometry's reach helpers; wall lifecycle (damage/repair/destroy/floor-ratchet); win-loss + results + persistent records; desertion→forfeit + reconnect restore; team chat.
+- So: recode the ARENA and its audio zoning, re-point combat at the new reach helpers, keep every shared system.
+
+**KEY FACT (corrected 2026-07):** physical separation of the two teams is OPTIONAL, not required. Weapons only ever damage WALLS, never players — verified `bullet.nvgt:7` ("Bullets NEVER hit players… they pass harmlessly through") and there is no player-health system anywhere. So attackers can't hurt defenders regardless of where they stand, which means a FULLY SHARED full-grid arena is viable. (An earlier note here called separation a hard constraint — that was wrong.) The original inset ring's separation was a design CHOICE for the siege feel + the through-the-wall muffled audio, not a mechanical necessity. So the real recode decision is about FEEL, not feasibility.
+
+**Layout options (dev to choose; the first recode decision — everything downstream flows from it):**
+- **Option A — Rebalance the existing ring (cheapest).** Keep the concentric ring, just move `wmin`/`wmax` so interior AREA = exterior AREA. Fixes the ¼-vs-¾ unfairness with almost no code (mostly constants + audio-zone bounds). Downside: a concentric layout can equalize AREA or make the two regions' WIDTHS comparable, not both — equal area leaves the attacker a fairly THIN surrounding band (~0.15·size wide) vs a big interior square (~0.71·size), so it still doesn't FEEL symmetric, and the "walls are a disorienting central ring" issue remains.
+- **Option B — the dev picked "B" 2026-07; it splits into two flavors now that separation is known to be optional:**
+  - **B1 — Shared full grid (simplest, most like the other modes).** Both teams in ONE full-size cavern with the four walls on the border — literally the PVE/EVP/free layout. Attackers batter the walls, defenders repair, everyone has the whole map. Reuses the existing cavern map + border reach helpers directly (least new geometry code). Trade: drops the outside/inside siege split AND the cross-wall muffled audio (no wall between the teams, so they hear each other clearly); the sides are told apart by role (weapon+ammo vs wood+reinforce) + team chat, not location. This is the closest match to what the dev liked about free play.
+  - **B2 — Scaled concentric ring (keeps separation).** Attackers outside, defenders inside, but sized big and equal so neither is cramped. Keeps the siege identity and the through-the-wall muffle that's already built. Trade: bigger total map; walls still a central ring.
+  - Decision pending: B1 vs B2 is a FEEL call — shared full grid (B1) vs keep the two separated sides + cross-wall audio (B2).
+- **Option C — Reconceive the layout entirely (most work).** Abandon concentric for something like two mirrored territories or a different wall arrangement, to remove the attacker's disorientation. Biggest rewrite, reuses the geometry layer least, and risks losing the four-cardinal-walls identity — only worth it if the concentric feel itself is the thing to kill.
+- Inherent tradeoff to decide: concentric preserves the four-wall identity but can't make both regions equal in area AND width; a non-concentric layout can be truly symmetric but drifts from the "four walls of a square" core.

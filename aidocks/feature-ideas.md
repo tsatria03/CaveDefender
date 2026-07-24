@@ -1,0 +1,77 @@
+---
+name: feature-ideas
+description: Living backlog of candidate FEATURE ideas for CaveDefender (to fill the PVP gap + general enhancements) — maintain it whenever the dev promotes an idea to the todo or asks me to brainstorm new ones
+metadata:
+  type: project
+---
+
+Living backlog of feature ideas for CaveDefender. Started 2026-07 after PVP was pulled from the menu (the game needs engaging content in its place — see [[pvp-recode-rationale]]). These are CANDIDATES to pick from, NOT commitments; the durable committed list is `cf/client/docks/todo list.txt`.
+
+**MAINTENANCE — dev's standing instruction (2026-07): keep this file current.** Update it whenever:
+- (a) the dev PROMOTES an idea to the todo list as Unfinished → move it from Candidates to "Promoted to todo" here (with a one-line note), and
+- (b) the dev asks me to brainstorm → add the new ideas under Candidates.
+Also drop an idea from Candidates once it ships (it becomes changelog/todo-Finished history).
+
+## Candidate ideas (not yet on the todo)
+Filling the PVP void = give the co-op/solo modes the competition, depth, and replay value PVP provided, WITHOUT needing a live opponent.
+
+**Competition & progression (closest substitutes for PVP's draw):**
+- **Achievements / milestones** — per-account goals (reach round 20, place N lifetime wood, clear a Large map, survive an EVP round without losing a wall, etc.) that fire an alert + sound and show on the info card. Reuses the existing per-account records + buffer/alert infra. Long-term chase.
+- **Difficulty selector at game start** (PVE/EVP) — casual → brutal, scaling bot count/speed/wall strength. Broadens appeal and gives the leaderboard natural tiers.
+
+**Combat depth (make waves less samey):**
+- **Enemy variety** — attacker bots are one flavor today; add types (a fast/weak runner, a slow/tank, maybe a ranged "spitter"). Instantly deepens every PVE/EVP wave. Highest-impact combat idea.
+- **Defender traps/tools** — a placeable that slows or damages attacking bots, giving PVE defenders active counterplay beyond repairing walls.
+- **Power-up drops** — occasional temporary buffs (rapid reload, double wood, a damage window) for moment-to-moment excitement.
+
+**Social / co-op:**
+- **Co-op scaling + shared team score** — waves scale with player count and the group shares a best-round record, rewarding playing together (the social pull PVP had).
+
+## Promoted to todo (already committed on the todo list)
+- **Server-wide leaderboard** (todo: "top PVE and EVP best rounds… already stored on each account"). The clearest PVP replacement — asynchronous competition. Design fleshed out below.
+- **Learn-sounds / practice mode for EVP and PVE** (todo) — onboarding for an audio-only game; lets newcomers learn a mode safely, then graduate to the real thing. High accessibility value.
+
+## Design notes
+
+### Leaderboard (FULLY SKETCHED with the dev 2026-07 — ready to build when promoted; all 3 decisions + sub-question closed)
+- Command: `/leaderboard <MODE>` + alias `/lb <MODE>`. MODE is CASE-SENSITIVE, must be UPPERCASE (dev's call): `/lb PVE`, `/lb EVP`. No arg → a small PVE/EVP picker menu; bad arg → a one-line hint of valid modes. It's a new slash command → follow [[new-command-checklist]] (client router, server handler, both /help pages, identical wire strings, changelog). Verify `/lb` doesn't clash with an existing alias when building.
+- Modes: PVE and EVP only (both round-based). PVP excluded (hidden); Free play excluded (no score).
+- Tracks: BEST ROUND reached per mode — the sort key, descending. Data already stored: `pvebestround.usr`, `evpbestround.usr`. No new gameplay data needed. Built ON DEMAND: walk `data/players/`, read the one field per account, sort. Tiny files, cheap; cache only if account count gets large. Server-wide & persistent (ranks everyone who ever played, online or not).
+- Presented as a MENU (server-pushed `show_server_menu`, dev's call — NOT the read-in-place page): title e.g. "Cave defender leaderboard — best rounds"; ONE ROW PER account that has a record — "1. Alice — round 24"; the viewer's own row tagged "7. You (Charlie) — round 11"; empty board → "No rounds cleared yet — be the first." Names = nickname/display like /who; identity = username. Skip zero/absent.
+- Updates + NEW "leaderboards" buffer: hook the existing game-over best-round write (`set_pve_best_round` / `set_evp_best_round`). On a new personal best, compute the new rank and broadcast an announcement to a NEW client buffer category "leaderboards" (reviewable + MUTABLE like alerts/misc, so anyone can silence it). Wording (dev-confirmed 2026-07): RANK-UP announcement, broadcast to EVERYONE's leaderboards buffer, third person: "<name> has reached rank <N> on the <MODE> game leaderboard!" — e.g. "bob has reached rank 4 on the EVP game leaderboard!" / "bob has reached rank 4 on the PVE game leaderboard!" (MODE shown as EVP / PVE, uppercase). The SAME text goes to everyone; only the SOUND differs per listener (achiever = lbrank.ogg, everyone else = lbupdate.ogg). One sentence per [[one-sentence-game-messages]]. A new best that does NOT change rank produces NO leaderboard announcement (the end-of-game results screen already covers it) — the rank-up line is the ONLY leaderboard announcement.
+- Sounds (dev placeholder names 2026-07; wire code to these, dev adds the .ogg later — [[sound-placeholders]]). Ranking is by HIGHEST ROUND REACHED, NOT finish time/speed, so the ONLY leaderboard event is a RANK CHANGE (someone climbing the board). Two-sound model:
+  - `lbrank.ogg` — plays to YOU (the achiever) when your new best round moves you UP in rank on the board.
+  - `lbupdate.ogg` — plays to EVERYONE ELSE when the board changes because someone climbed.
+  - `lbrecord.ogg` REMOVED (dev, 2026-07): a personal best that does NOT change your rank triggers NO leaderboard sound/announcement. That moment is already celebrated by the normal end-of-game results screen (the milestone wood/ammo bonus for beating your best round), so the leaderboard stays quiet rather than double-announcing.
+- OPEN DECISIONS (resolve ONE AT A TIME per [[ask-one-question-at-a-time]]):
+  1. DECIDED (dev, 2026-07): EVERY personal best broadcasts to EVERYONE's leaderboards buffer. The buffer is mutable, so players who don't want it can silence it. (Rejected the top-10-only-to-everyone option.)
+  2. DECIDED (dev, 2026-07): YES, store the date. WHERE: a SEPARATE per-account field file next to the number, per the accounts one-value-per-file convention — `pvebestrounddate.usr` + `evpbestrounddate.usr` (NOT crammed into `pvebestround.usr`, and NOT in peak.svr which is a global server file that can afford 2 lines). Written at the same game-over moment via `write_field`; mirror `get/set_pve_best_round` with a `_date` variant. Keeps the number file a pure number (existing 23 single-line files stay valid; missing date = "unknown", sorts after dated ones in a tie). Date FORMAT (dev-confirmed 2026-07): `YYYY-MM-DD HH:MM` (e.g. `2026-07-21 20:52`) — human-readable AND string-sortable, so first-to-reach tie-breaks are a plain string compare with NO date parsing. Format to something friendlier for display ("set July 20") when shown. (Chose this over peak.svr's "MM/DD/YYYY at H:MM PM" style precisely to avoid a parse step on ties.)
+  3. DECIDED (dev, 2026-07): YES — selecting a player's row on the board opens THAT player's info card (the board doubles as a look-up), reusing the existing card flow (same card the F6 players menu opens). WRINKLE to resolve at build time: the board is server-wide and includes OFFLINE accounts, but the current info card is built from the LIVE roster (`players[]`) and shows online-only fields (location, away, version). So opening a card works cleanly for ONLINE rows. OFFLINE rows DECIDED (dev, 2026-07): selecting one just says the player is offline, reusing the EXISTING offline-target message the slash commands already use (don't invent a new string — match what e.g. player-targeting commands say when the target isn't online). Online rows open the full card; offline rows report offline.
+- Ties (same round): broken by the stored date (first-to-reach wins); missing date sorts after dated ones.
+
+### Total-wood board (extension — dev shaping 2026-07; navigation structure AGREED)
+- Idea: PVE gets a SECOND leaderboard, TOTAL WOOD gathered (lifetime), alongside Best round, so players compete on gathering too.
+- New persistent per-account stat: `totalwood.usr` (dev-approved name) — lifetime wood gathered. Does NOT exist yet: current `wood_collected` (`player.nvgt:37`) is PER-GAME and RESET at each build start (not lifetime, not global). So this is genuinely NEW stored data (unlike the round boards, which reuse existing `pvebestround`/`evpbestround` files).
+- Navigation (dev-AGREED 2026-07): boards become a two-level pick, and BOTH modes have TWO boards. `/lb PVE` → a BOARD-PICKER menu ("Best round" / "Total wood"). `/lb EVP` → a board picker ("Best round" / "Total ammo"). `/lb` alone → mode picker (PVE/EVP) → board picker. Optional power-user direct args: `/lb PVE wood` / `/lb PVE round` / `/lb EVP ammo` / `/lb EVP round`.
+- Announcements name the BOARD, not just the mode: "bob has reached rank 4 on the PVE total wood leaderboard!" vs "...on the PVE best round leaderboard!" Same sounds (lbrank to you, lbupdate to others); a rank change on EITHER board fires its own announcement.
+- Wood board: sorted by total wood descending; same row format ("1. Alice — 1,240 wood") and same selectable-row-opens-card behavior as the round boards.
+- Scope DECIDED (dev, 2026-07): `totalwood` counts PVE ONLY. Free play is EXCLUDED from all leaderboard tracking (round and wood) — it's a sandbox where you can spawn your own wood/items via cavern controls, so counting it would be free cheating. General rule: NO free-play activity ever feeds any leaderboard.
+- Accumulation timing DECIDED (dev, 2026-07): at GAME OVER — add that game's `wood_collected` to `totalwood.usr` once the game ends, NOT per-pickup. Per-pickup would fire wood-rank-change announcements repeatedly mid-gathering (rank climbs way too fast / buffer spam); game-over keeps it one calm update per game, matching best round.
+
+### Total-ammo board (EVP — dev added 2026-07, the mirror of Total wood)
+- EVP gets a SECOND board, TOTAL AMMO gathered (lifetime), alongside Best round — the attacker mirror of PVE's total wood. Final board layout: PVE = Best round + Total wood; EVP = Best round + Total ammo (both modes two boards each).
+- "Total ammo" = every ammo PIECE gathered across all ranged / non-melee weapons (arrows, powder, gas, grenades, normal ammo — melee use none), each piece = 1 regardless of type, exactly like total wood sums the 4 wood kinds.
+- New persistent per-account stat: `totalammo.usr` (dev-approved name). Accumulates at GAME OVER (add the game's ammo gathered once), EVP ONLY, free play excluded — identical rules to `totalwood`.
+- IMPLEMENTATION REALITY — bigger than the wood mirror because EVP tracks NO gathered figure today (only PVE has `wood_collected` + a "collected wood" results line). Needs THREE new pieces: (a) a per-game `ammo_collected` counter on the player, mirroring `wood_collected` — reset at EVP build start, incremented on each ammo pickup (mirror the wood increment at `net.nvgt:1004`); (b) a NEW "collected ammo" line on the EVP results screen — the `evpover` message (`game.nvgt:1263`) plus the client results dialog — so EVP's game-over shows collected ammo like PVE shows collected wood (dev explicitly wants this dialog); (c) accumulate `ammo_collected` into `totalammo.usr` at game over.
+- Everything else identical to the wood board: sorted by total ammo desc, row format "1. Alice — 1,240 ammo", selectable rows open cards, board-named announcement "bob has reached rank 4 on the EVP total ammo leaderboard!", same lbrank/lbupdate sounds.
+- Ties on the wood/ammo boards break ALPHABETICALLY (the `*date.usr` first-to-reach tie-break is best-round-only; a running gather total has no meaningful "first reached" moment).
+
+### Build order (sections) + changelog note
+- The EVP "collected ammo" results dialog gets its OWN changelog entry — the PVE "collected wood" dialog has one (changelog 2.5: "The game over screen now lays out your results in full: the wood you gathered, the rounds you completed, and how long you survived."), so ammo mirrors it as a standalone entry. Dev wants this built in sections.
+- Suggested independently-shippable sections (each roughly its own changelog entry):
+  1. Leaderboard core — `/leaderboard` + `/lb`, mode picker + board picker, read + sort + display the PVE/EVP BEST-ROUND boards as menus, selectable rows → card (online) / offline msg. Reuses existing `pvebestround`/`evpbestround`. Follows [[new-command-checklist]].
+  2. Dated records — `*bestrounddate.usr` (`YYYY-MM-DD HH:MM`), written at game over; tie-break first-to-reach + "set on" display. (Can fold into 1.)
+  3. Leaderboards buffer + announcements + sounds — new MUTABLE "leaderboards" buffer, rank-change broadcast "…reached rank N on the <MODE> <BOARD> leaderboard!", `lbrank` (you) / `lbupdate` (others).
+  4. Total wood board (PVE) — `totalwood.usr`, game-over accumulation (PVE only, free play excluded), the Total-wood board + its board-picker entry + wood announcements. NO results-screen change ("collected wood" already exists).
+  5. EVP collected-ammo dialog — BUILT in 4.7 (awaiting dev test). Added `int ammo_collected` to the player struct (`player.nvgt`), reset on a fresh EVP game (`game.nvgt` build branch, `evp_rounds_cleared==0` loop, so it accrues across the game like PVE wood), incremented in `gather_ammo` (`net.nvgt`). `evpover` wire format gained a `<collected>` field after `<cleared>` (server `game.nvgt` end_evp_loss; client `handle_evp_over` shifted milestone→parsed[3] and bonus pairs→parsed[4..], added "Collected ammo: X." to the results dialog, mirroring PVE's "Collected wood: X."). Own changelog entry (4.7) + readme EVP game-over line updated. NOTE: `ammo_collected` is what section 6's `totalammo` will accumulate at game over.
+  6. Total ammo board (EVP) — `totalammo.usr`, game-over accumulation (EVP only), the Total-ammo board + its board-picker entry + ammo announcements. Depends on section 5's counter.
