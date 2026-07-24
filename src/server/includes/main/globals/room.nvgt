@@ -100,6 +100,7 @@ string jtype = rooms[ri].is_private?"private":"public";
 string jposs = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
 string jwhere = (players[index].name == rooms[ri].host) ? jposs+" own "+jtype+" room" : display_name_flagged_for(rooms[ri].host)+"'s "+jtype+" room";
 broadcast_event(display_name_flagged(index)+" joined "+jwhere+".", peer);
+cue_room_others(rooms[ri].id, peer, "joinroom.ogg"); // others already in the room hear the newcomer arrive (the joiner hears it client-side off roomjoined)
 players[index].room_move_timer.restart(); // start the cooldown so the next join/leave must wait room_move_cooldown
 return true;
 }
@@ -194,6 +195,17 @@ for(uint j=0; j<rooms[i].members.length(); j++)
 if(rooms[i].members[j]==peer) { rooms[i].members.remove_at(j); return; }
 }
 }
+}
+/* Play a room cue (joinroom.ogg / leaveroom.ogg) to every CURRENT member of a room except skippeer, so others
+already in the room hear someone arrive or leave -- the room-scoped mirror of the server-wide online/offline cues,
+non-positional. `file` is a ui/misc name. The actor hears their OWN cue client-side (off roomjoined/roomleft), so
+callers pass the actor's peer as skippeer on join; on leave the actor is already removed, so pass -1. */
+void cue_room_others(int roomid, int skippeer, string file)
+{
+int ri = get_room_index(roomid);
+if(ri < 0) return;
+for(uint k=0; k<rooms[ri].members.length(); k++)
+if(rooms[ri].members[k] != skippeer) send(rooms[ri].members[k], "play "+file, 0, true);
 }
 /* Called when a peer disconnects from the server. Every room they host closes (up to one public and
 one private), and any remaining members in those rooms are sent back to the lobby. They are also

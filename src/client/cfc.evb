@@ -3409,8 +3409,56 @@
                           </File>
                           <File>
                             <Type>2</Type>
+                            <Name>joinroom.ogg</Name>
+                            <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\sounds\ui\misc\joinroom.ogg</File>
+                            <ActiveX>False</ActiveX>
+                            <ActiveXInstall>False</ActiveXInstall>
+                            <Action>0</Action>
+                            <OverwriteDateTime>False</OverwriteDateTime>
+                            <OverwriteAttributes>False</OverwriteAttributes>
+                            <PassCommandLine>False</PassCommandLine>
+                            <HideFromDialogs>0</HideFromDialogs>
+                          </File>
+                          <File>
+                            <Type>2</Type>
                             <Name>kick.ogg</Name>
                             <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\sounds\ui\misc\kick.ogg</File>
+                            <ActiveX>False</ActiveX>
+                            <ActiveXInstall>False</ActiveXInstall>
+                            <Action>0</Action>
+                            <OverwriteDateTime>False</OverwriteDateTime>
+                            <OverwriteAttributes>False</OverwriteAttributes>
+                            <PassCommandLine>False</PassCommandLine>
+                            <HideFromDialogs>0</HideFromDialogs>
+                          </File>
+                          <File>
+                            <Type>2</Type>
+                            <Name>lbrank.ogg</Name>
+                            <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\sounds\ui\misc\lbrank.ogg</File>
+                            <ActiveX>False</ActiveX>
+                            <ActiveXInstall>False</ActiveXInstall>
+                            <Action>0</Action>
+                            <OverwriteDateTime>False</OverwriteDateTime>
+                            <OverwriteAttributes>False</OverwriteAttributes>
+                            <PassCommandLine>False</PassCommandLine>
+                            <HideFromDialogs>0</HideFromDialogs>
+                          </File>
+                          <File>
+                            <Type>2</Type>
+                            <Name>lbupdate.ogg</Name>
+                            <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\sounds\ui\misc\lbupdate.ogg</File>
+                            <ActiveX>False</ActiveX>
+                            <ActiveXInstall>False</ActiveXInstall>
+                            <Action>0</Action>
+                            <OverwriteDateTime>False</OverwriteDateTime>
+                            <OverwriteAttributes>False</OverwriteAttributes>
+                            <PassCommandLine>False</PassCommandLine>
+                            <HideFromDialogs>0</HideFromDialogs>
+                          </File>
+                          <File>
+                            <Type>2</Type>
+                            <Name>leaveroom.ogg</Name>
+                            <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\sounds\ui\misc\leaveroom.ogg</File>
                             <ActiveX>False</ActiveX>
                             <ActiveXInstall>False</ActiveXInstall>
                             <Action>0</Action>

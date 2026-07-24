@@ -2332,7 +2332,8 @@ else if(parsed[0]=="leaveroom" and index>-1)
 // The same silent room-move cooldown as joining: too soon after the last join/leave, ignore it (no message).
 if(players[index].room_id != 0 and players[index].room_move_timer.elapsed >= room_move_cooldown)
 {
-int lri=get_room_index(players[index].room_id);
+int lroomid = players[index].room_id; // capture before set_room_scope clears it, so we can cue the members who stay
+int lri=get_room_index(lroomid);
 string lhost = (lri>-1) ? rooms[lri].host : "";
 string ltype = (lri>-1 and rooms[lri].is_private) ? "private" : "public";
 remove_member(event.peer_id);
@@ -2341,6 +2342,7 @@ set_room_scope(index, 0);
 string lposs = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
 string lwhere = (lhost=="") ? "a room" : (players[index].name==lhost ? lposs+" own "+ltype+" room" : display_name_flagged_for(lhost)+"'s "+ltype+" room");
 broadcast_event(display_name_flagged(index)+" left "+lwhere+".", event.peer_id);
+cue_room_others(lroomid, -1, "leaveroom.ogg"); // members who stay hear you leave (you're already removed, so no skip)
 players[index].room_move_timer.restart(); // start the cooldown so the next join/leave must wait room_move_cooldown
 }
 }
@@ -2654,6 +2656,7 @@ set_room_scope(index, 0);
 string lposs = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
 string lwhere = (players[index].name==lhost) ? lposs+" own "+ltype+" room" : display_name_flagged_for(lhost)+"'s "+ltype+" room";
 broadcast_event(display_name_flagged(index)+" left "+lwhere+".", event.peer_id);
+cue_room_others(rooms[ri].id, -1, "leaveroom.ogg"); // members who stay hear you leave your own room (you're already removed)
 }
 else if(get_player_index(targetpeer)>-1 and players[get_player_index(targetpeer)].room_id != rooms[ri].id)
 {
@@ -2670,6 +2673,7 @@ send(targetpeer, "roomkicked "+hostname+" "+kind+"\n"+display_name_flagged_for(h
 if(tpi>-1) set_room_scope(tpi, 0);
 send(event.peer_id, "misc You kicked "+tdisp+".", 0,true); // kicker: first-person
 broadcast_event(tdisp+" was kicked from "+display_name_flagged_for(hostname)+"'s "+kind+" room.", event.peer_id, targetpeer); // everyone else
+cue_room_others(rooms[ri].id, -1, "leaveroom.ogg"); // members who stay (including the kicker) hear the kicked player leave -- the kicked player themselves gets roomkicked (kick.ogg), not this
 }
 }
 }
