@@ -27,6 +27,10 @@ Filling the PVP void = give the co-op/solo modes the competition, depth, and rep
 **Social / co-op:**
 - **Co-op scaling + shared team score** — waves scale with player count and the group shares a best-round record, rewarding playing together (the social pull PVP had).
 
+## Rejected (considered and dropped -- don't re-propose without a new angle)
+- **PVE survival-time leaderboard** (was a todo, dropped 2026-07-24). A "longest single-game survival" board would rank almost identically to BEST ROUND, because PVE rounds advance on a TIMER (each attack burst flips on `wave_cycle = buildduration/2`, `wave_number++` at game.nvgt:1016), not on skill -- so round reached is just floor(survival time / segment length). The only divergence is (a) within-round precision and (b) longer build durations inflating wall-clock survival (a config artifact, mildly gameable), neither worth a board that shadows best round. If "more to compete on" is still wanted, a genuinely different metric (fastest-to-reach-round-N speedrun, wood-per-minute efficiency) or surfacing survival time as info on the player card would serve better than a survival ranking.
+  - DEFERRED, not rejected (2026-07-24): the TOTAL lifetime survival version (sum of every PVE game's survival seconds) is NOT redundant with best round -- it's a cumulative engagement stat, the mirror of total wood (accumulate `secs` at end_round_loss, PVE only, free play excluded, alphabetical ties, hours-aware duration formatter). Dev skipped it "for now" to avoid a SECOND grind board on PVE alongside total wood. Near-trivial to build if revived (clone the total-wood board).
+
 ## Promoted to todo (already committed on the todo list)
 - **Server-wide leaderboard** (todo: "top PVE and EVP best rounds… already stored on each account"). The clearest PVP replacement — asynchronous competition. Design fleshed out below.
 - **Learn-sounds / practice mode for EVP and PVE** (todo) — onboarding for an audio-only game; lets newcomers learn a mode safely, then graduate to the real thing. High accessibility value.
