@@ -1,6 +1,9 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Refactor the player versus player map so both sides share an equal, full-size arena instead of the lopsided ring split, reusing the rest of the mode.
+**Unfinished. Fix some leaderboard related messages and scoring.
+**Unfinished. Fix the join and leave sounds for rooms not always playing.
+**Unfinished. Add survived time to the PVE leaderboard.
+**Unfinished. Refacter the player versus player map so both sides share an equal, full-size arena instead of the lopsided ring split, reusing the rest of the mode.
 **Unfinished. Add a learn sounds option for the EVP and PVE game modes so players can have an idea on how the modes work when being played.
 
 ##These are the things that are already finished from earlier versions of the game.
