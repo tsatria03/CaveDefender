@@ -1108,32 +1108,60 @@ players[index].menu_targets.insert_last("EVP");
 string[] opts = {"PVE", "EVP"};
 send_menu(players[index].peer_id, "lbmode", "Choose a game leaderboard to view.", opts);
 }
+/* True when best-round entry A outranks entry B: a higher round always wins; on an equal round the record set
+FIRST wins (earlier "YYYY-MM-DD HH:MM" stamp, a plain string compare), a dated record beats an undated legacy one,
+and with nothing left to separate them it falls to the name alphabetically (case-insensitive). */
+bool lb_outranks(int va, string da, string na, int vb, string db, string nb)
+{
+if(va != vb) return va > vb;
+bool ha = (da != ""), hb = (db != "");
+if(ha != hb) return ha; // the one with a date ranks above the one without
+if(ha and hb and da != db) return da < db; // earlier stamp = reached first = higher
+return string_to_lower_case(na) < string_to_lower_case(nb);
+}
+/* A stored "YYYY-MM-DD HH:MM" stamp as a friendly "Month D, YYYY" for display (e.g. "July 20, 2026"), matching the
+"Member since" date style. Empty or malformed stamps (legacy records with no date) return "" so the row just omits
+the "set" clause. */
+string friendly_date(string stamp)
+{
+string[] parts = string_split(stamp, " ", true);
+if(parts.length() < 1 or parts[0] == "") return "";
+string[] ymd = string_split(parts[0], "-", true);
+if(ymd.length() < 3) return "";
+int mo = int(string_to_number(ymd[1]));
+if(mo < 1 or mo > 12) return "";
+string[] months = {"", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
+return months[mo] + " " + int(string_to_number(ymd[2])) + ", " + ymd[0];
+}
 /* Build and push one best-round board (mode = "PVE" or "EVP") to a player. Walks every account folder, reads that
-mode's best-round field, drops the zeros/absent, sorts highest first (equal rounds break alphabetically for now --
-the dated first-to-reach tie-break arrives with the date records), and lists one row per ranked account. The
-viewer's own row is tagged "You". Usernames ride in menu_targets so picking a row opens that player's info card
+mode's best-round field plus its date, drops the zeros/absent, sorts highest first (equal rounds broken by who
+reached that round first, via the stored date), and lists one row per ranked account with when the record was set.
+The viewer's own row is tagged "You". Usernames ride in menu_targets so picking a row opens that player's info card
 when they're online, or reports them offline, exactly like the F6 players list. */
 void push_leaderboard(int index, string mode)
 {
 int peer = players[index].peer_id;
 string field = (mode == "PVE") ? "pvebestround" : "evpbestround";
+string datefield = (mode == "PVE") ? "pvebestrounddate" : "evpbestrounddate";
 string[] dirs = find_directories("data/players/*");
 string[] names;
 int[] vals;
+string[] dates;
 for(uint i=0; i<dirs.length(); i++)
 {
 int v = int(string_to_number(read_field(dirs[i], field, "0")));
 if(v <= 0) continue; // never cleared a round in that mode: off the board
 names.insert_last(dirs[i]);
 vals.insert_last(v);
+dates.insert_last(read_field(dirs[i], datefield, "")); // "" for legacy records set before the date was tracked
 }
-// Insertion sort: value descending, then name ascending (case-insensitive), so equal rounds read alphabetically.
+// Insertion sort by rank (see lb_outranks): round desc, then first-to-reach by date, then name.
 for(uint i=1; i<names.length(); i++)
 {
-string cn = names[i]; int cv = vals[i]; string cl = string_to_lower_case(cn);
+string cn = names[i]; int cv = vals[i]; string cd = dates[i];
 int j = int(i) - 1;
-while(j >= 0 and (vals[j] < cv or (vals[j] == cv and string_to_lower_case(names[j]) > cl))) { names[j+1] = names[j]; vals[j+1] = vals[j]; j--; }
-names[j+1] = cn; vals[j+1] = cv;
+while(j >= 0 and lb_outranks(cv, cd, cn, vals[j], dates[j], names[j])) { names[j+1] = names[j]; vals[j+1] = vals[j]; dates[j+1] = dates[j]; j--; }
+names[j+1] = cn; vals[j+1] = cv; dates[j+1] = cd;
 }
 if(names.length() == 0) { send(peer, "misc No "+mode+" rounds have been cleared yet, so be the first to make the leaderboard.", 0, true); return; }
 players[index].menu_targets.resize(0);
@@ -1143,7 +1171,8 @@ for(uint i=0; i<names.length(); i++)
 {
 string who = display_name_flagged_for(names[i]);
 bool isme = (string_to_lower_case(names[i]) == myname);
-opts.insert_last((i+1) + ". " + (isme ? "You (" + who + ")" : who) + ", round " + vals[i]);
+string fd = friendly_date(dates[i]);
+opts.insert_last("" + (i+1) + ". " + (isme ? "You (" + who + ")" : who) + ", round " + vals[i] + (fd == "" ? "" : ", set " + fd));
 players[index].menu_targets.insert_last(names[i]);
 }
 send_menu(peer, "lbboard", "Cave defender " + mode + " leaderboard, best rounds, " + names.length() + (names.length()==1 ? " player ranked." : " players ranked."), opts);

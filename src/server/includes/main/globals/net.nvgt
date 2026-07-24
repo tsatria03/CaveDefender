@@ -60,6 +60,9 @@ string ampm = (h < 12) ? "AM" : "PM";
 int h12 = h % 12; if(h12 == 0) h12 = 12;  // 0 and 12 both read as 12
 return pad2(DATE_MONTH) + "/" + pad2(DATE_DAY) + "/" + DATE_YEAR + " at " + h12 + ":" + pad2(TIME_MINUTE) + " " + ampm;
 }
+/* The current local moment as a string-SORTABLE "YYYY-MM-DD HH:MM" (24-hour), used for the leaderboard best-round
+date stamps: a plain string compare on this format is chronological, so tie-breaks need no date parsing. */
+string leaderboard_stamp() { return "" + DATE_YEAR + "-" + pad2(DATE_MONTH) + "-" + pad2(DATE_DAY) + " " + pad2(TIME_HOUR) + ":" + pad2(TIME_MINUTE); }
 // Players currently LIVE (connected, not on a 45s reconnect hold) -- the server-wide count the peak tracks.
 int live_player_count()
 {

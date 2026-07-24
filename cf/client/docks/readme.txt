@@ -68,7 +68,7 @@ If you are staff, the card also shows action buttons for the things your rank le
 
 The leaderboard.
 
-Type /lb to see the server-wide leaderboard, which ranks every account by its best round in a game mode from highest to lowest, whether or not that player is currently online. With /lb on its own you pick a mode, PVE or EVP, from a menu; you can also name it directly in capitals, such as /lb PVE or /lb EVP. Only players who have cleared at least one round in that mode appear, and your own row is marked with your name so you can find yourself. Choosing a row opens that player's information card if they are online, the same card the players menu opens, or tells you they are offline.
+Type /lb to see the server-wide leaderboard, which ranks every account by its best round in a game mode from highest to lowest, whether or not that player is currently online. With /lb on its own you pick a mode, PVE or EVP, from a menu; you can also name it directly in capitals, such as /lb PVE or /lb EVP. Only players who have cleared at least one round in that mode appear, and your own row is marked with your name so you can find yourself. Each row also tells you when that best round was reached. No two players ever share a rank: when two people have the same best round, the one who reached it first holds the higher place, and the other must push on to a further round to climb past them, so there are never any ties. Choosing a row opens that player's information card if they are online, the same card the players menu opens, or tells you they are offline.
 
 The account and location panels.
 
