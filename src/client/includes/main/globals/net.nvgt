@@ -946,6 +946,16 @@ void netloop_impl()
 			already been played for everyone (e.g. the MOTD change, where newmotd.ogg is the common cue). */
 			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
+		else if (parsed[0] == "lbannounce" and parsed.length() > 2)
+		{
+			/* Someone climbed a leaderboard. Format: "lbannounce <flag> <text>", flag 1 = it's you (play lbrank),
+			0 = someone else (play lbupdate). The text is the same third-person line for everyone; only the cue
+			differs. Into the mutable "leaderboards" buffer -- a muted buffer means no cue and no speech. */
+			int lb = get_buffer_index("leaderboards");
+			bool lbmuted = (lb > -1 and buffers[lb].muted);
+			if(!lbmuted) p.play_stationary(parsed[1] == "1" ? "sounds/ui/misc/lbrank.ogg" : "sounds/ui/misc/lbupdate.ogg", false);
+			add_buffer_item("leaderboards", message.substr(parsed[0].length()+1 + parsed[1].length()+1));
+		}
 		else if (parsed[0] == "flagswitch" and parsed.length() > 1)
 		{
 			/* A staff member flipped their attention flag: everyone hears the sound and gets the alert.

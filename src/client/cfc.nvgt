@@ -41,6 +41,7 @@ create_buffer("private chats");
 create_buffer("staff chats");
 create_buffer("misc");
 create_buffer("player events");
+create_buffer("leaderboards"); // mutable (silenceable) buffer for leaderboard rank-up announcements
 if (!directory_exists(preffsPath)) directory_create(preffsPath);
 readpreffs();
 load_last_account(); // load the last-used (active) account so the connection menu can offer "Sign in as <username>" right away

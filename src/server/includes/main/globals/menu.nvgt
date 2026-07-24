@@ -1133,20 +1133,15 @@ if(mo < 1 or mo > 12) return "";
 string[] months = {"", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 return months[mo] + " " + int(string_to_number(ymd[2])) + ", " + ymd[0];
 }
-/* Build and push one best-round board (mode = "PVE" or "EVP") to a player. Walks every account folder, reads that
-mode's best-round field plus its date, drops the zeros/absent, sorts highest first (equal rounds broken by who
-reached that round first, via the stored date), and lists one row per ranked account with when the record was set.
-The viewer's own row is tagged "You". Usernames ride in menu_targets so picking a row opens that player's info card
-when they're online, or reports them offline, exactly like the F6 players list. */
-void push_leaderboard(int index, string mode)
+/* Read and rank one best-round board (mode = "PVE" or "EVP") into the three parallel arrays passed by handle: every
+account's username, best round, and date stamp, boarded accounts only (round > 0), already sorted best-first by
+lb_outranks. Shared by the board display and the rank lookup so both see identical ordering. */
+void build_board(string mode, string[]@ names, int[]@ vals, string[]@ dates)
 {
-int peer = players[index].peer_id;
 string field = (mode == "PVE") ? "pvebestround" : "evpbestround";
 string datefield = (mode == "PVE") ? "pvebestrounddate" : "evpbestrounddate";
+names.resize(0); vals.resize(0); dates.resize(0);
 string[] dirs = find_directories("data/players/*");
-string[] names;
-int[] vals;
-string[] dates;
 for(uint i=0; i<dirs.length(); i++)
 {
 int v = int(string_to_number(read_field(dirs[i], field, "0")));
@@ -1163,6 +1158,33 @@ int j = int(i) - 1;
 while(j >= 0 and lb_outranks(cv, cd, cn, vals[j], dates[j], names[j])) { names[j+1] = names[j]; vals[j+1] = vals[j]; dates[j+1] = dates[j]; j--; }
 names[j+1] = cn; vals[j+1] = cv; dates[j+1] = cd;
 }
+}
+/* The 1-based rank of one account on a best-round board, or 0 if it isn't on the board (round 0). Used at game over
+to tell whether a new personal best actually MOVED the player up, which is the only thing that fires an announcement. */
+int board_rank(string mode, string username)
+{
+string[] names; int[] vals; string[] dates;
+build_board(mode, names, vals, dates);
+string want = string_to_lower_case(username);
+for(uint i=0; i<names.length(); i++) if(string_to_lower_case(names[i]) == want) return int(i) + 1;
+return 0;
+}
+/* Announce a leaderboard rank-up to EVERYONE (third person, same text for all), each listener hearing their own cue:
+the player who climbed hears lbrank, everyone else hears lbupdate. board is the board's name, e.g. "best round". The
+client adds the line to its mutable "leaderboards" buffer. send() drops held sessions on its own. */
+void announce_rankup(int achiever, string mode, string board, int rank)
+{
+string text = display_name_flagged_for(players[achiever].name) + " has reached rank " + rank + " on the " + mode + " " + board + " leaderboard!";
+for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "lbannounce " + (int(i)==achiever ? "1" : "0") + " " + text, 0, true);
+}
+/* Build and push one best-round board (mode = "PVE" or "EVP") to a player. Uses build_board for the ranked data, then
+lists one row per ranked account with when the record was set; the viewer's own row is tagged "You". Usernames ride in
+menu_targets so picking a row opens that player's info card when they're online, or reports them offline. */
+void push_leaderboard(int index, string mode)
+{
+int peer = players[index].peer_id;
+string[] names; int[] vals; string[] dates;
+build_board(mode, names, vals, dates);
 if(names.length() == 0) { send(peer, "misc No "+mode+" rounds have been cleared yet, so be the first to make the leaderboard.", 0, true); return; }
 players[index].menu_targets.resize(0);
 string[] opts;
