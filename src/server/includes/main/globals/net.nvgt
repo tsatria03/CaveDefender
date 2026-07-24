@@ -2697,11 +2697,11 @@ send(event.peer_id, "misc This player is not in your room.", 0,true);
 }
 else if(targetpeer==event.peer_id)
 {
-// Kicking yourself = leaving your own room. Mirror the leaveroom path: drop out to the lobby and tell everyone.
+// Kicking yourself out of your own room via the KICK menu: it drops you to the lobby like leaving, but plays the kick cue (the plain Leave option still plays leaveroom).
 string lhost = rooms[ri].host;
 string ltype = rooms[ri].is_private ? "private" : "public";
 remove_member(event.peer_id);
-send(event.peer_id, "roomleft", 0,true);
+send(event.peer_id, "roomleft kicked", 0,true); // "kicked" flag: you used the kick-yourself action, so the client plays the KICK cue for you, not the plain leaveroom
 set_room_scope(index, 0);
 string lposs = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
 string lwhere = (players[index].name==lhost) ? lposs+" own "+ltype+" room" : display_name_flagged_for(lhost)+"'s "+ltype+" room";
@@ -2752,9 +2752,10 @@ send(event.peer_id, "misc This player is not in your game.", 0,true);
 }
 else if(targetpeer==event.peer_id)
 {
-// Kicking yourself = leaving your own game. Mirror the leavegame path (host migration / game-end handled by leave_game).
+// Kicking yourself out of the game via the KICK menu: leaves like normal (host migration / game-end handled by leave_game), but plays the kick cue for you.
 broadcast_event(display_name_flagged(index)+" left the game.", event.peer_id);
 leave_game(event.peer_id);
+send(event.peer_id, "play kick.ogg", 0,true); // you used the kick-yourself action, so play the kick cue for you -- leave_game's gameleft is otherwise silent
 }
 else
 {

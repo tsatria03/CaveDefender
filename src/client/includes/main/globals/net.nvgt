@@ -1473,7 +1473,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "roomleft")
 		{
-			roompool.play_stationary("sounds/ui/misc/leaveroom.ogg", false); // your own cue for leaving a room; a room-kick sends "roomkicked" instead (kick.ogg), so a kicked player never plays this -- only kick.ogg. On roompool so the immediately-following draw_map / busy p can't drop it
+			roompool.play_stationary((parsed.length() > 1 and parsed[1] == "kicked") ? "sounds/ui/misc/kick.ogg" : "sounds/ui/misc/leaveroom.ogg", false); // leaving a room plays leaveroom; kicking YOURSELF out via the kick menu (roomleft kicked) plays the kick cue instead. Someone else kicking you sends roomkicked (also kick.ogg). On roompool so the following draw_map / busy p can't drop it
 			clear_players();
 			current_room = 0;
 			current_room_private = false;
