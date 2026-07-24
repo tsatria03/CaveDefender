@@ -8,6 +8,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Fix not being able to do anything after a host leaves from a game.
 **Finished. Fix some leaderboard related messages and scoring.
 **Finished. Add a server-wide leaderboard showing the top PVE and EVP best rounds and PVP win-loss records already stored on each account.
 **Finished. Make a wall fire's burning loop fade out as its fire-out sound plays over it when the fire ends, instead of cutting off abruptly.

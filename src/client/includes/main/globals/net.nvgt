@@ -1483,6 +1483,16 @@ void netloop_impl()
 			lastx = int(me.x);
 			lasty = int(me.y);
 		}
+		else if (parsed[0] == "gamehost" and parsed.length() > 1)
+		{
+			/* The game migrated its host (the old one left or dropped). Adopt the new host name so our host check
+			stays accurate -- otherwise, if we're the new host, the round menu and host hotkeys would still think the
+			old host is in charge and lock us out. Plain name drives the check; the display name (line 2) labels the notice. */
+			current_game_host = parsed[1];
+			string[] ghl = string_split(message, "\n", true);
+			string hdisp = (ghl.length() > 1) ? ghl[1] : parsed[1];
+			add_buffer_item("misc", (parsed[1] == name) ? "You are now the host of the game." : hdisp + " is now the host of the game.");
+		}
 		else if (parsed[0] == "gamejoined" and parsed.length() > 5)
 		{
 			p.play_stationary("sounds/ui/misc/joingame.ogg", false); // personal cue: you entered a game
