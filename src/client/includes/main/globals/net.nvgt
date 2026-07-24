@@ -1459,7 +1459,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "roomjoined" and parsed.length() > 3)
 		{
-			roompool.play_stationary("sounds/ui/misc/joinroom.ogg", false); // your own cue for entering a room (others already in it get a server-sent joinroom cue); fires on every join path -- on roompool so the immediately-following draw_map / busy p can't drop it
+			if(parsed.length() <= 4 or parsed[4] != "created") roompool.play_stationary("sounds/ui/misc/joinroom.ogg", false); // your own cue for ENTERING a room; a room you just CREATED skips it (the server sends roomcreate.ogg instead). Others already in a room you join get a server-sent joinroom cue. On roompool so the immediately-following draw_map / busy p can't drop it
 			clear_players();
 			current_room = string_to_number(parsed[1]);
 			current_room_private = (parsed[2] == "private");
@@ -1820,6 +1820,7 @@ void netloop_impl()
 			current_room = 0;
 			current_room_private = false;
 			current_room_host = "";
+			roompool.play_stationary("sounds/ui/misc/leaveroom.ogg", false); // your room (yours, or one staff deleted) is gone, so you are leaving it -- play the leave cue, like any other room exit
 			string[] rdl = string_split(message, "\n", true);
 			string rdhost = (rdl.length() > 1) ? rdl[1] : parsed[1]; // rank-aware host name; fall back to the plain username
 			add_buffer_item("misc", rdhost + "'s " + parsed[2] + " room has been deleted.");
