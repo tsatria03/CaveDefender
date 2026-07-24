@@ -546,8 +546,10 @@ return false;
 }
 /* Put a dropped session on hold for the grace window instead of tearing it down: announce them offline (the
 same connections-buffer notice as a normal disconnect) and strip their presence from the space they're in,
-but KEEP their roster entry, game/room membership, host status, and inventory. Their dead peer id is swapped
-for a unique negative sentinel so a recycled enet peer can't collide with the held slot. The netloop poll
+but KEEP their roster entry, game/room membership, inventory, and room host status. A hosted GAME's host role is
+the exception -- it migrates to a live member immediately (see below) so the game isn't frozen for the whole hold.
+Their dead peer id is swapped for a unique negative sentinel so a recycled enet peer can't collide with the held
+slot. The netloop poll
 runs the real teardown once held_timer passes reconnect_grace_ms; a reconnect (login) restores them first. */
 void begin_hold(int index)
 {
@@ -572,6 +574,22 @@ int oldpeer=players[index].peer_id;
 int sentinel=next_held_id; next_held_id--;
 verified_logins.delete(""+oldpeer); // the reconnect sets a fresh verified_logins entry for the new peer
 rebind_peer(oldpeer, sentinel);
+/* Hand a hosted GAME off to a live member right now, rather than leaving it host-frozen for the whole hold:
+with host_peer parked on the held (sentinel) session, no live player passes the host checks, so an idle game
+couldn't be started and a running one couldn't be paused or stopped until the grace ran out. Migrate to a live
+member and tell the game; if the dropped host reconnects, restore_scope re-sends the current host, so they come
+back as a regular member. A solo/all-held game has no live member to hand to and simply stays parked. (Rooms are
+left alone -- a room belongs to its owner account and is recreated for them on sign-in.) */
+for(uint g=0; g<games.length(); g++)
+{
+if(games[g].host_peer!=sentinel) continue;
+int nh=first_live_member(int(g));
+if(nh==-1) continue;
+games[g].host_peer=nh;
+int npi=get_player_index(nh);
+if(npi>-1) games[g].host=players[npi].name;
+announce_game_host(int(g));
+}
 }
 /* Send a peer the CURRENT phase of a game for a mid-round arrival (join, spectate, or reconnect restore): the
 accurate remaining time -- the build countdown, or an EVP wave's remaining round-timer seconds that the

@@ -129,6 +129,23 @@ if(p>-1 and !players[p].held) return games[gi].members[k];
 }
 return -1;
 }
+/* Tell a game's live members who its host is now. Called right after a host migration: each client gates the round
+menu and the host hotkeys on being the host (current_game_host == its own name), so without this the new host's
+client would still think the old host is in charge and lock them out of starting or doing anything in the game. The
+plain name drives that host check; the AFK/flag/nickname-aware display name (on a second line, like gamejoined)
+labels the notice. */
+void announce_game_host(int gi)
+{
+if(gi<0 or gi>=int(games.length())) return;
+int hpi=get_player_index(games[gi].host_peer);
+if(hpi<0) return; // the current host_peer isn't a live player (e.g. a held slot mid reconnect-hold); nothing to announce yet
+string line="gamehost "+players[hpi].name+"\n"+afk_prefix(hpi)+display_name_flagged(hpi);
+for(uint m=0; m<games[gi].members.length(); m++)
+{
+int pi=get_player_index(games[gi].members[m]);
+if(pi>-1 and !players[pi].held) send(players[pi].peer_id, line, 0, true);
+}
+}
 // Up to this many spectators may watch one game at once, mirroring the 4-player join cap.
 const int spectator_cap=4;
 const int game_capacity=4; // max players (game members) in one game; the four-walls "4" is a separate literal, not this
@@ -264,7 +281,7 @@ games[gi].members.remove_at(mi);
 if(games[gi].host_peer == peer) // hand the host off to a live player if the leaver hosted
 {
 int nh = first_live_member(gi);
-if(nh != -1) { games[gi].host_peer = nh; int npi = get_player_index(nh); if(npi>-1) games[gi].host = players[npi].name; }
+if(nh != -1) { games[gi].host_peer = nh; int npi = get_player_index(nh); if(npi>-1) games[gi].host = players[npi].name; announce_game_host(gi); }
 }
 players[index].team = ""; // no longer a player, so no side
 players[index].spectating = true;
@@ -339,7 +356,7 @@ else
 if(games[gi].host_peer==peer)
 {
 int nh=first_live_member(gi); // migrate to a LIVE member, never a held slot
-if(nh!=-1){ games[gi].host_peer=nh; int npi=get_player_index(nh); if(npi>-1) games[gi].host=players[npi].name; }
+if(nh!=-1){ games[gi].host_peer=nh; int npi=get_player_index(nh); if(npi>-1) games[gi].host=players[npi].name; announce_game_host(gi); }
 if(games[gi].paused) resume_game(gi); // the host who paused is gone; don't leave the rest frozen
 }
 // A "no" answer (or any leave) during the post-round wait can leave the rest all answered; start anew.
@@ -469,7 +486,7 @@ else
 if(games[i].host_peer==peer)
 {
 int nh=first_live_member(int(i)); // migrate to a LIVE member, never a held slot
-if(nh!=-1){ games[i].host_peer=nh; int npi=get_player_index(nh); if(npi>-1) games[i].host=players[npi].name; }
+if(nh!=-1){ games[i].host_peer=nh; int npi=get_player_index(nh); if(npi>-1) games[i].host=players[npi].name; announce_game_host(int(i)); }
 if(games[i].paused) resume_game(i); // host who paused disconnected; unfreeze the remaining players
 }
 // A member dropping during the post-round wait can leave the rest all answered; start the next round.

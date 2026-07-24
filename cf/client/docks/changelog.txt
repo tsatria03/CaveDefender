@@ -1,4 +1,6 @@
 New in 4.8.
+When a game host's connection drops, the game no longer sits frozen waiting on them: hosting passes to another player right away, so an idle game can still be started and a running one still paused or stopped. If the dropped host reconnects, they come back as a regular player.
+Fixed the new host of a game being unable to start the round or use any host controls after the previous host left an open game. Hosting now passes cleanly to another player, who is told they are the host, instead of the game staying stuck as though the old host were still in charge.
 Names on the leaderboards now appear the same way as everywhere else in the game, showing a player's nickname, their rank if they are staff, and an away marker when they are AFK. Your own row is no longer singled out, so it simply lists your name like every other row.
 A best round's date is no longer shown on the leaderboard, so each row now reads as simply the rank, the player, and the round they reached.
 The leaderboards now give each standing to a single player. When your best round, or your total wood or ammo, matches someone already listed, you no longer share the board with them: whoever reached that place first keeps it, and you appear only once you push past it.
