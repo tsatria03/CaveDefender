@@ -87,6 +87,14 @@ int get_pve_best_round(string name) { return int(string_to_number(read_field(nam
 bool set_pve_best_round(string name, int round) { return write_field(name, "pvebestround", "" + round); }
 int get_evp_best_round(string name) { return int(string_to_number(read_field(name, "evpbestround", "0"))); }
 bool set_evp_best_round(string name, int round) { return write_field(name, "evpbestround", "" + round); }
+/* Lifetime gathered totals for the (upcoming) gather leaderboards: totalwood.usr = every wood piece ever picked
+up off the ground in PVE, totalammo.usr = every ammo piece ever gathered in EVP. Accumulated once at game over by
+adding that game's collected figure (PVE-only for wood, EVP-only for ammo; free play is never counted). Both
+default to 0, so the file is only written once the player has actually gathered something. */
+int get_total_wood(string name) { return int(string_to_number(read_field(name, "totalwood", "0"))); }
+bool add_total_wood(string name, int amount) { return write_field(name, "totalwood", "" + (get_total_wood(name) + amount)); }
+int get_total_ammo(string name) { return int(string_to_number(read_field(name, "totalammo", "0"))); }
+bool add_total_ammo(string name, int amount) { return write_field(name, "totalammo", "" + (get_total_ammo(name) + amount)); }
 /* PVP lifetime record (pvpwins.usr / pvplosses.usr): the running count of player-versus-player matches this
 account's side won or lost. Incremented once at the end of each match (the winning side gains a win, the losing
 side a loss; watchers get nothing). File-per-field like every other account value, so a host can read them by hand. */
