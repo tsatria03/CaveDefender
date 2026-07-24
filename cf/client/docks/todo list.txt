@@ -1,11 +1,11 @@
 ####These are the things that need to be finished for future versions of the game.
 
 **Unfinished. Refactor the player versus player map so both sides share an equal, full-size arena instead of the lopsided ring split, reusing the rest of the mode.
-**Unfinished. Add a server-wide leaderboard showing the top PVE and EVP best rounds and PVP win-loss records already stored on each account.
 **Unfinished. Add a learn sounds option for the EVP and PVE game modes so players can have an idea on how the modes work when being played.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a server-wide leaderboard showing the top PVE and EVP best rounds and PVP win-loss records already stored on each account.
 **Finished. Make a wall fire's burning loop fade out as its fire-out sound plays over it when the fire ends, instead of cutting off abruptly.
 **Finished. Make the walls fortify visibly toward the round's goal across the build phase in environment versus player, instead of snapping to it when the wave starts.
 **Finished. Make it so guests in the free play mode can also access the cavern controls menu.
