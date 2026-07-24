@@ -1137,14 +1137,20 @@ int pi = get_player_index(games[gi].members[m]);
 if(pi < 0) continue;
 players[pi].playagain_answered = false; // start everyone "awaiting an answer"
 int collected = players[pi].wood_collected;
-if(collected > 0) add_total_wood(players[pi].name, collected); // accumulate this game's gathered wood into the lifetime total (gather-leaderboard prep; PVE-only by virtue of this being the PVE end path)
+if(collected > 0)
+{
+int wr_old = board_rank("PVE", "wood", players[pi].name); // total-wood rank before this game's haul is added
+add_total_wood(players[pi].name, collected); // accumulate this game's gathered wood into the PVE lifetime total (free play never reaches this PVE end path)
+int wr_new = board_rank("PVE", "wood", players[pi].name);
+if(wr_new > 0 and (wr_old == 0 or wr_new < wr_old)) announce_rankup(pi, "PVE", "total wood", wr_new); // announce only a genuine climb on the wood board
+}
 /* Milestone: beating your personal-best round grants a one-time 20-40 wood bonus (added to next round's
 starting stockpile) and updates the record. Matching or falling short of your best grants nothing. */
 int bonus = 0, milestone = 0;
 string bonussize = "none"; // the single random wood species the bonus will be granted as; rolled now so the results message can name it
 if(rounds > get_pve_best_round(players[pi].name))
 {
-int lb_old = board_rank("PVE", players[pi].name); // rank with the OLD best (0 = wasn't on the board yet), captured before the write
+int lb_old = board_rank("PVE", "round", players[pi].name); // rank with the OLD best (0 = wasn't on the board yet), captured before the write
 bonussize = random_wood_type();
 bonus = wood_bonus_amount(bonussize); // that species' data-driven bonus amount
 milestone = rounds;
@@ -1152,7 +1158,7 @@ set_pve_best_round(players[pi].name, rounds);
 set_pve_best_round_date(players[pi].name, leaderboard_stamp()); // stamp WHEN this best was reached, for the leaderboard's first-to-reach tie-break
 players[pi].pending_bonus_wood = bonus;
 players[pi].pending_bonus_size = bonussize;
-int lb_new = board_rank("PVE", players[pi].name); // rank with the NEW best
+int lb_new = board_rank("PVE", "round", players[pi].name); // rank with the NEW best
 if(lb_new > 0 and (lb_old == 0 or lb_new < lb_old)) announce_rankup(pi, "PVE", "best round", lb_new); // only a genuine climb (debut, or passing someone) announces; a new best that doesn't move you stays quiet
 }
 // roundover <survival-seconds> <wood-collected> <rounds-reached> <bonus-wood> <milestone-round> <bonus-size> (bonus/milestone 0 and size "none" = no milestone).
@@ -1259,19 +1265,25 @@ int milestone = 0;
 string bonus = ""; // the rolled per-type bonus amounts as "type:amount" pairs; stored for the grant and named in the results message
 if(cleared > get_evp_best_round(players[pi].name))
 {
-int lb_old = board_rank("EVP", players[pi].name); // rank with the OLD best (0 = wasn't on the board yet), captured before the write
+int lb_old = board_rank("EVP", "round", players[pi].name); // rank with the OLD best (0 = wasn't on the board yet), captured before the write
 set_evp_best_round(players[pi].name, cleared);
 set_evp_best_round_date(players[pi].name, leaderboard_stamp()); // stamp WHEN this best was reached, for the leaderboard's first-to-reach tie-break
 string[] at = ammo_types();
 for(uint k=0; k<at.length(); k++) bonus += (bonus.is_empty() ? "" : " ") + at[k] + ":" + ammo_bonus_amount(at[k]); // roll each amount NOW so the message can name it and the grant hands out these exact figures
 players[pi].pending_bonus_ammo = bonus;
 milestone = cleared;
-int lb_new = board_rank("EVP", players[pi].name); // rank with the NEW best
+int lb_new = board_rank("EVP", "round", players[pi].name); // rank with the NEW best
 if(lb_new > 0 and (lb_old == 0 or lb_new < lb_old)) announce_rankup(pi, "EVP", "best round", lb_new); // only a genuine climb announces
 }
 players[pi].playagain_answered = false; // awaiting the play-again answer
 int collected = players[pi].ammo_collected; // ammo gathered this whole EVP game, shown on the results screen (mirror of PVE's collected wood)
-if(collected > 0) add_total_ammo(players[pi].name, collected); // accumulate this game's gathered ammo into the lifetime total (gather-leaderboard prep; EVP-only by virtue of this being the EVP end path)
+if(collected > 0)
+{
+int ar_old = board_rank("EVP", "ammo", players[pi].name); // total-ammo rank before this game's haul is added
+add_total_ammo(players[pi].name, collected); // accumulate this game's gathered ammo into the EVP lifetime total (free play never reaches this EVP end path)
+int ar_new = board_rank("EVP", "ammo", players[pi].name);
+if(ar_new > 0 and (ar_old == 0 or ar_new < ar_old)) announce_rankup(pi, "EVP", "total ammo", ar_new); // announce only a genuine climb on the ammo board
+}
 players[pi].pending_results = "evpover "+cleared+" "+collected+" "+milestone+(bonus.is_empty() ? "" : " "+bonus); // <cleared> <collected> <milestone> [type:amount ...] (milestone 0 = no new best, no pairs); kept so a reconnect during the results screen can re-show this prompt
 send(games[gi].members[m], players[pi].pending_results, 0, true); // client: results dialog + play-again
 }

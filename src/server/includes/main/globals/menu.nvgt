@@ -1098,15 +1098,15 @@ for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
 send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
 }
 /* --- Leaderboard (server-wide, persistent) ---
-Ranks every account by a stored round record, online or not. Built ON DEMAND (no live state): walk the account
-folders, read the one field, sort. The pick-a-mode step when no mode was typed. */
+Ranks every account by a stored record, online or not. Built ON DEMAND (no live state): walk the account folders,
+read the one field, sort. The pick-a-mode step when no mode was typed; picking a mode then opens its board picker. */
 void push_leaderboard_modes(int index)
 {
 players[index].menu_targets.resize(0);
 players[index].menu_targets.insert_last("PVE");
 players[index].menu_targets.insert_last("EVP");
 string[] opts = {"PVE", "EVP"};
-send_menu(players[index].peer_id, "lbmode", "Choose a game leaderboard to view.", opts);
+send_menu(players[index].peer_id, "lbmode", "Choose a game mode.", opts);
 }
 /* True when best-round entry A outranks entry B: a higher round always wins; on an equal round the record set
 FIRST wins (earlier "YYYY-MM-DD HH:MM" stamp, a plain string compare), a dated record beats an undated legacy one,
@@ -1133,24 +1133,40 @@ if(mo < 1 or mo > 12) return "";
 string[] months = {"", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
 return months[mo] + " " + int(string_to_number(ymd[2])) + ", " + ymd[0];
 }
-/* Read and rank one best-round board (mode = "PVE" or "EVP") into the three parallel arrays passed by handle: every
-account's username, best round, and date stamp, boarded accounts only (round > 0), already sorted best-first by
-lb_outranks. Shared by the board display and the rank lookup so both see identical ordering. */
-void build_board(string mode, string[]@ names, int[]@ vals, string[]@ dates)
+/* The storage field for a (mode, board) pair. board is "round", "wood", or "ammo": round is the per-mode best-round
+record, wood the PVE lifetime wood total, ammo the EVP lifetime ammo total. */
+string board_field(string mode, string board)
 {
-string field = (mode == "PVE") ? "pvebestround" : "evpbestround";
-string datefield = (mode == "PVE") ? "pvebestrounddate" : "evpbestrounddate";
+if(board == "wood") return "totalwood";
+if(board == "ammo") return "totalammo";
+return (mode == "PVE") ? "pvebestround" : "evpbestround";
+}
+// The board's display name, for menu titles and rank-up announcements ("best round" / "total wood" / "total ammo").
+string board_label(string board)
+{
+if(board == "wood") return "total wood";
+if(board == "ammo") return "total ammo";
+return "best round";
+}
+/* Read and rank one board into the three parallel arrays passed by handle: every account's username, its value on
+that board, and (best-round boards only) its date stamp, boarded accounts only (value > 0), sorted best-first by
+lb_outranks. The gather boards (wood/ammo) have no date, so every date is "" and lb_outranks naturally settles their
+equal-value ties alphabetically. Shared by the board display and the rank lookup so both see identical ordering. */
+void build_board(string mode, string board, string[]@ names, int[]@ vals, string[]@ dates)
+{
+string field = board_field(mode, board);
+string datefield = (board == "round") ? ((mode == "PVE") ? "pvebestrounddate" : "evpbestrounddate") : ""; // no first-to-reach date for a running gather total
 names.resize(0); vals.resize(0); dates.resize(0);
 string[] dirs = find_directories("data/players/*");
 for(uint i=0; i<dirs.length(); i++)
 {
 int v = int(string_to_number(read_field(dirs[i], field, "0")));
-if(v <= 0) continue; // never cleared a round in that mode: off the board
+if(v <= 0) continue; // nothing recorded on this board: off it
 names.insert_last(dirs[i]);
 vals.insert_last(v);
-dates.insert_last(read_field(dirs[i], datefield, "")); // "" for legacy records set before the date was tracked
+dates.insert_last(datefield == "" ? "" : read_field(dirs[i], datefield, "")); // "" for gather boards and for legacy records set before the date was tracked
 }
-// Insertion sort by rank (see lb_outranks): round desc, then first-to-reach by date, then name.
+// Insertion sort by rank (see lb_outranks): value desc, then first-to-reach by date (round boards), then name.
 for(uint i=1; i<names.length(); i++)
 {
 string cn = names[i]; int cv = vals[i]; string cd = dates[i];
@@ -1159,12 +1175,12 @@ while(j >= 0 and lb_outranks(cv, cd, cn, vals[j], dates[j], names[j])) { names[j
 names[j+1] = cn; vals[j+1] = cv; dates[j+1] = cd;
 }
 }
-/* The 1-based rank of one account on a best-round board, or 0 if it isn't on the board (round 0). Used at game over
-to tell whether a new personal best actually MOVED the player up, which is the only thing that fires an announcement. */
-int board_rank(string mode, string username)
+/* The 1-based rank of one account on a board, or 0 if it isn't on it (value 0). Used at game over to tell whether a
+new best round or a fresh gather total actually MOVED the player up, the only thing that fires an announcement. */
+int board_rank(string mode, string board, string username)
 {
 string[] names; int[] vals; string[] dates;
-build_board(mode, names, vals, dates);
+build_board(mode, board, names, vals, dates);
 string want = string_to_lower_case(username);
 for(uint i=0; i<names.length(); i++) if(string_to_lower_case(names[i]) == want) return int(i) + 1;
 return 0;
@@ -1177,15 +1193,32 @@ void announce_rankup(int achiever, string mode, string board, int rank)
 string text = display_name_flagged_for(players[achiever].name) + " has reached rank " + rank + " on the " + mode + " " + board + " leaderboard!";
 for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "lbannounce " + (int(i)==achiever ? "1" : "0") + " " + text, 0, true);
 }
-/* Build and push one best-round board (mode = "PVE" or "EVP") to a player. Uses build_board for the ranked data, then
-lists one row per ranked account with when the record was set; the viewer's own row is tagged "You". Usernames ride in
-menu_targets so picking a row opens that player's info card when they're online, or reports them offline. */
-void push_leaderboard(int index, string mode)
+/* Push a mode's board picker: every mode has two boards -- best round, plus total wood for PVE or total ammo for EVP.
+The chosen board code ("round"/"wood"/"ammo") rides in menu_targets and comes back to push_leaderboard. */
+void push_board_picker(int index, string mode)
+{
+players[index].menu_targets.resize(0);
+string[] opts;
+opts.insert_last("Best round"); players[index].menu_targets.insert_last("round");
+if(mode == "PVE") { opts.insert_last("Total wood"); players[index].menu_targets.insert_last("wood"); }
+else { opts.insert_last("Total ammo"); players[index].menu_targets.insert_last("ammo"); }
+send_menu(players[index].peer_id, "lbboardpick:" + mode, "Choose a " + mode + " leaderboard to view.", opts);
+}
+/* Build and push one board (mode = "PVE"/"EVP", board = "round"/"wood"/"ammo") to a player. Uses build_board for the
+ranked data, then lists one row per ranked account -- best-round rows carry when the record was set, gather rows the
+total gathered; the viewer's own row is tagged "You". Usernames ride in menu_targets so picking a row opens that
+player's info card when they're online, or reports them offline. */
+void push_leaderboard(int index, string mode, string board)
 {
 int peer = players[index].peer_id;
 string[] names; int[] vals; string[] dates;
-build_board(mode, names, vals, dates);
-if(names.length() == 0) { send(peer, "misc No "+mode+" rounds have been cleared yet, so be the first to make the leaderboard.", 0, true); return; }
+build_board(mode, board, names, vals, dates);
+if(names.length() == 0)
+{
+string what = (board == "round") ? (mode + " rounds have been cleared") : (mode + " " + (board == "wood" ? "wood" : "ammo") + " has been gathered");
+send(peer, "misc No " + what + " yet, so be the first to make the leaderboard.", 0, true);
+return;
+}
 players[index].menu_targets.resize(0);
 string[] opts;
 string myname = string_to_lower_case(players[index].name);
@@ -1193,11 +1226,13 @@ for(uint i=0; i<names.length(); i++)
 {
 string who = display_name_flagged_for(names[i]);
 bool isme = (string_to_lower_case(names[i]) == myname);
-string fd = friendly_date(dates[i]);
-opts.insert_last("" + (i+1) + ". " + (isme ? "You (" + who + ")" : who) + ", round " + vals[i] + (fd == "" ? "" : ", set " + fd));
+string valphrase = (board == "round") ? ("round " + vals[i]) : ("collected " + vals[i] + (board == "wood" ? " wood" : " ammo"));
+string fd = (board == "round") ? friendly_date(dates[i]) : ""; // "set" clause is best-round only
+opts.insert_last("" + (i+1) + ". " + (isme ? "You (" + who + ")" : who) + ", " + valphrase + (fd == "" ? "" : ", set " + fd));
 players[index].menu_targets.insert_last(names[i]);
 }
-send_menu(peer, "lbboard", "Cave defender " + mode + " leaderboard, best rounds, " + names.length() + (names.length()==1 ? " player ranked." : " players ranked."), opts);
+string title = "Cave defender " + mode + " leaderboard, " + (board == "round" ? "best rounds" : board_label(board)) + ", " + names.length() + (names.length()==1 ? " player ranked." : " players ranked.");
+send_menu(peer, "lbboard", title, opts);
 }
 /* --- Developer data-file browser (editdata / viewdata) ---
 A path CONFINED to the server's data/ folder: reject anything that could climb out of it, so a write command
@@ -1662,7 +1697,12 @@ push_player_info(player_index, ti);
 else if(id == "lbmode")
 {
 if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
-push_leaderboard(player_index, players[player_index].menu_targets[choice]); // chose PVE or EVP: show that board
+push_board_picker(player_index, players[player_index].menu_targets[choice]); // chose PVE or EVP: now pick which of that mode's boards
+}
+else if(id.substr(0, 12) == "lbboardpick:")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+push_leaderboard(player_index, id.substr(12), players[player_index].menu_targets[choice]); // mode rides in the id, board code in menu_targets
 }
 else if(id == "lbboard")
 {

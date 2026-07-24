@@ -86,12 +86,14 @@ void comparse(string text, string channel = "global")
 	}
 	else if(base == "/lb" or base == "/leaderboard")
 	{
-		/* Server-wide best-round leaderboard. Bare command opens a PVE/EVP picker; an explicit uppercase mode
-		(/lb PVE, /lb EVP) opens that board directly. The mode value is validated server-side, so we only check
-		the argument count and forward it with its case intact. */
-		if(parsed.length() > 2) { syntax_error("/lb, /lb PVE, or /lb EVP"); return; }
-		if(parsed.length() == 2) send(0, "leaderboard "+parsed[1], 0, true);
-		else send(0, "leaderboard", 0, true);
+		/* Server-wide leaderboards. Bare command opens a PVE/EVP mode picker; a mode alone opens that mode's board
+		picker; a mode plus a board name (round, wood, or ammo) opens it directly, e.g. /lb PVE wood. The mode and
+		board are validated server-side, so we only check the argument count and forward them with case intact. */
+		if(parsed.length() > 3) { syntax_error("/lb, /lb PVE, or a board like /lb PVE wood"); return; }
+		string req = "leaderboard";
+		if(parsed.length() >= 2) req += " " + parsed[1];
+		if(parsed.length() >= 3) req += " " + parsed[2];
+		send(0, req, 0, true);
 	}
 	else if(base == "/where")
 	{
