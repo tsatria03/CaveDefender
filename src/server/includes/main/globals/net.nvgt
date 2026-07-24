@@ -1044,6 +1044,7 @@ if(players[m].room_id == rid) send(players[m].peer_id, "removeitem "+iid, 0, tru
 }
 if(got > 0)
 {
+players[pindex].ammo_collected += got; // running tally of ground ammo pickups this EVP game, reported at game over (mirror of wood_collected)
 send(players[pindex].peer_id, "play_item "+picked_type+" take", 0, true);
 for(uint wm=0; wm<players.length(); wm++)
 if(players[wm].room_id == rid and players[wm].peer_id != players[pindex].peer_id)

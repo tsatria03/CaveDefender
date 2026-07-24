@@ -572,6 +572,7 @@ for(uint m=0; m<games[gindex].members.length(); m++)
 {
 int pi=get_player_index(games[gindex].members[m]);
 if(pi<0) continue;
+players[pi].ammo_collected = 0; // fresh EVP game: start a clean ground-pickup ammo tally (accrues across this game's rounds, reported at game over) -- mirrors PVE wood_collected
 reset_player_ammo(pi);
 if(players[pi].pending_bonus_ammo != "") grant_ammo_bonus(pi); // milestone reward from beating your best EVP round last game: a bonus of every ammo type, added after the reset
 }
@@ -1260,7 +1261,8 @@ players[pi].pending_bonus_ammo = bonus;
 milestone = cleared;
 }
 players[pi].playagain_answered = false; // awaiting the play-again answer
-players[pi].pending_results = "evpover "+cleared+" "+milestone+(bonus.is_empty() ? "" : " "+bonus); // <cleared> <milestone> [type:amount ...] (milestone 0 = no new best, no pairs); kept so a reconnect during the results screen can re-show this prompt
+int collected = players[pi].ammo_collected; // ammo gathered this whole EVP game, shown on the results screen (mirror of PVE's collected wood)
+players[pi].pending_results = "evpover "+cleared+" "+collected+" "+milestone+(bonus.is_empty() ? "" : " "+bonus); // <cleared> <collected> <milestone> [type:amount ...] (milestone 0 = no new best, no pairs); kept so a reconnect during the results screen can re-show this prompt
 send(games[gi].members[m], players[pi].pending_results, 0, true); // client: results dialog + play-again
 }
 for(uint s=0; s<players.length(); s++)
