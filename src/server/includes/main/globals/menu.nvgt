@@ -1192,7 +1192,7 @@ if(id == "lobby")
 /* Rules gate: normally the lobby menu is only pushed after agreement (openmenu gates it), but the Ctrl+C/J lobby
 hotkeys send this menuresult directly, bypassing openmenu -- so re-check here, or an unagreed player could
 create or join a room through a hotkey. Same message the openmenu lobby path shows. */
-if(!players[player_index].agreed) { send(peer, "misc You must read the server rules before you can play. Type /rules to read them, then /rules agree to continue, or /rules disagree to leave.", 0,true); return; }
+if(!players[player_index].agreed) { send(peer, "misc You must read the server rules before you can play. Type /rules to read them, then agree from the menu that appears when you close the page.", 0,true); return; }
 if(choice == 0) do_create_room(player_index, peer, false, ""); // Create a public room
 else if(choice == 1) ask_input(peer, "Enter a password for your room (at least 6 characters). Others will need it to join.", "createroom private", true, true);
 else if(choice == 2) push_join_list(player_index, false); // Join a public room

@@ -2,7 +2,7 @@ Staff rules.
 
 These are the expectations for staff: moderators, administrators, and developers. They are in addition to the player rules, which apply to you as well. Being staff is a responsibility, and players judge the server by how you act.
 
-As staff, you must read and agree to both the player rules and these staff rules before you can play: read each page with /rules player and /rules staff, then type /rules agree to accept both and enter the lobby, or /rules disagree to leave. You only agree once, and are asked again only if the rules are updated.
+As staff, you must read and agree to both the player rules and these staff rules before you can play: read each page with /rules player and /rules staff, then agree from the menu that appears when you close the last page to accept both and enter the lobby, or decline there to leave. You only agree once, and are asked again only if the rules are updated.
 
 1. Lead by example.
 

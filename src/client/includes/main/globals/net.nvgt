@@ -501,9 +501,10 @@ void handle_rulestext(string message)
 	dockread(which + " rules", message.substr(nl + 1));
 	if(prompt) offer_rules_agreement();
 }
-/* The agree prompt shown after closing the rules page that completes our reading requirement. Yes and No mirror
-the typed /rules agree and /rules disagree exactly; cancel, or escape, just returns to normal, still free to type
-the command by hand. */
+/* The agree prompt shown after closing the rules page that completes our reading requirement. This menu is the
+ONLY way to answer the rules gate (the typed /rules agree and /rules disagree commands were removed); Yes and No
+send the answer to the server directly, and cancel or escape just returns to normal -- re-reading /rules brings
+this menu back, so you can always get here again. */
 void offer_rules_agreement()
 {
 	setupmenu();
@@ -512,8 +513,8 @@ void offer_rules_agreement()
 	m.add_item("cancel");
 	m.intro_text = "Do you agree to the game's rules?";
 	int c = m.run();
-	if(c == 0) comparse("/rules agree");
-	else if(c == 1) comparse("/rules disagree");
+	if(c == 0) send(0, "rules agree", 0, true);
+	else if(c == 1) send(0, "rules disagree", 0, true);
 	else speak("canceled");
 }
 // A yes/no confirm before running one of the card's staff commands; runs it on Yes, speaks "canceled" otherwise.
@@ -815,7 +816,7 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "declinedrules")
 			{
-				// You typed /rules disagree: the server drops you; return to the connection menu like a kick.
+				// You chose No on the rules agree menu (declined): the server drops you; return to the connection menu like a kick.
 				p.play_stationary("sounds/ui/misc/kick.ogg", false);
 				speak("You did not agree to the server rules, so you have been returned to the connection menu.", true);
 				kicked = true;
