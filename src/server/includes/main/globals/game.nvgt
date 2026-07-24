@@ -402,11 +402,11 @@ players[ti].invite_room = 0;
 players[ti].invite_from = players[inviter_index].name;
 players[ti].invite_timer.restart();
 string gposs = pronoun_word(players[inviter_index].pronoun, "possessive", display_name_flagged(inviter_index));
-string msg = display_name_flagged(inviter_index) + " has invited you to " + gposs + " game. Would you like to accept? Type /accept, or /reject to refuse.";
+string msg = display_name_flagged(inviter_index) + " has invited you to " + gposs + " game. Press Alt plus A to accept, or Alt plus D to deny.";
 send(players[ti].peer_id, "roominvite\n" + msg, 0, true);
 send(peer, "misc Invitation sent to " + display_name_flagged(ti) + ".", 0, true);
 }
-/* The invited player typed /accept on a pending GAME invite: re-validate (still in the room, game still open,
+/* The invited player pressed Alt+A on a pending GAME invite: re-validate (still in the room, game still open,
 not full, round not yet underway) and drop them in, then tell the host. Clears the invite on any outcome. */
 void accept_game_invite(int index)
 {
@@ -424,7 +424,7 @@ join_game_now(index, gi);
 int hi = get_online_index(inviter);
 if(hi > -1) send(players[hi].peer_id, "misc " + display_name_flagged(index) + " has accepted your game invite.", 0, true);
 }
-// The invited player typed /reject on a pending GAME invite: clear it and tell the host they declined.
+// The invited player pressed Alt+D on a pending GAME invite: clear it and tell the host they declined.
 void reject_game_invite(int index)
 {
 int peer = players[index].peer_id;

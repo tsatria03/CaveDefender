@@ -78,7 +78,7 @@ Inside a room, press enter to open the room panel, the room menu. If you host th
 
 When you join a private room, you are asked for its password first. If you are staff joining a private room you created yourself, that box opens with the password already filled in, so you can just press enter rather than type it; this only happens for your own room, and joining anyone else's private room still asks you to type the password as usual.
 
-Anyone in a room can invite someone to it. Choose Invite to room from the room menu to see everyone currently in the lobby, and pick the person you want. They are told privately that you invited them, and they join by typing /accept, or refuse with /reject; an invitation lasts two minutes before it expires. Accepting brings them straight in, even past a private room's password, and you are told whether they accepted or declined.
+Anyone in a room can invite someone to it. Choose Invite to room from the room menu to see everyone currently in the lobby, and pick the person you want. They are told privately that you invited them, and they answer with Alt plus A to accept or Alt plus D to deny; an invitation lasts two minutes before it expires, and they can check how long is left with /invtime. Accepting brings them straight in, even past a private room's password, and you are told whether they accepted or declined.
 
 Games.
 
@@ -86,7 +86,7 @@ Inside a room you can start a game, choosing a game mode, then who can play, the
 
 If your game is open, that menu also has Invite to game and Kick from game, which are the same idea as the room's Invite to room and Kick from room but one step further in.
 
-Invite to game first asks where to invite from, your room or the lobby, then lists the players there for you to pick; the player you pick answers the same way, with /accept or /reject. Choosing the lobby pulls someone straight into the cavern, past a private room's password, without their having to join the room first.
+Invite to game first asks where to invite from, your room or the lobby, then lists the players there for you to pick; the player you pick answers the same way, with Alt plus A to accept or Alt plus D to deny. Choosing the lobby pulls someone straight into the cavern, past a private room's password, without their having to join the room first.
 
 A player you invited from the lobby returns to the lobby when they leave the game or it ends, while a player who joined through your room returns to the room; Kick from game follows the same rule, sending each player back to wherever they came from. The Kick from game list also includes your own name, which you can pick to simply leave your own game, the same as leaving through the pause menu.
 
@@ -199,6 +199,11 @@ Control plus C. Create a public room.
 Control plus shift plus C. Create a private room.
 Control plus J. Rejoin the last public room you joined or created this session.
 Control plus shift plus J. Rejoin the last private room you joined or created this session, with its password already filled in.
+
+These next two answer an invitation and work in the lobby or a room.
+
+Alt plus A. Accept a pending room or game invitation.
+Alt plus D. Deny a pending room or game invitation.
 
 While inside a room, these run the room menu's actions without opening it first.
 
