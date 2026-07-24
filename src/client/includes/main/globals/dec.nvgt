@@ -78,5 +78,5 @@ instance gamstence;
 kh keyhook;
 sound_pool p, pool, spool, temp, beaconpool, vpool, ambpool, musicpool, woodpool, ammopool, botpool, crosspool, burnpool;
 sound_pool bulletpool(200); // ranged bullet travel loops get their own pool (own cap) so heavy machine-gun fire can't crowd their whooshes off the shared weapons pool p; treated exactly like p (see decpool all_pools + effect_space)
-sound_pool roompool; // room join/leave cues get their own pool so a busy shared pool p (footsteps, weapons, walls) can't crowd them out and silently drop the cue -- same reasoning as bulletpool; registered in decpool all_pools like the rest
+sound_pool roompool; // server-pushed "play" cues (room join/leave, game kick) get their own pool so a busy shared pool p (footsteps, weapons, walls) can't crowd them out and silently drop the cue -- same reasoning as bulletpool; registered in decpool all_pools like the rest
 virtual_dialogs vd;
