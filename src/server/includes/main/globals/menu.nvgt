@@ -1056,15 +1056,18 @@ body += "AFK: " + (players[ti].afk ? "Yes" : "No") + "\r\n";
 body += "Agreed to rules: " + (players[ti].agreed ? "Yes" : "No") + "\r\n"; // rules-agreement status; shown to everyone since you can't invite an unagreed player anyway
 body += "Location: " + (player_ignores(ti, players[viewer_index].name) ? "Private." : player_location_phrase(ti)) + "\r\n"; // hidden when this player has personally muted the viewer, matching /where (staff viewers are exempt via player_ignores)
 body += "Client version: " + format_float(players[ti].version, "", 0, 1); // fixed one decimal so 3.0 reads "3.0" not "3", and the float->double precision tail (2.9000000954) is rounded off too
-/* Public records, shown to everyone (a little profile): the PVE personal-best round and the warning count.
-Warnings used to be staff-only; they're now visible to all so a player can see their own too. */
+/* Public records, shown to everyone (a little profile): each mode's personal-best round, its lifetime gather total
+(PVE total wood / EVP total ammo, the same figures the leaderboards rank), and the warning count. Warnings used to
+be staff-only; they're now visible to all so a player can see their own too. */
 /* PVP record HIDDEN while PVP is out of the start-game menu (see push_start_gamemode) -- don't surface a stat for a
 mode players can't play. Uncomment these three lines to restore it when PVP comes back. */
 //int wins = get_wins(players[ti].name);
 //int losses = get_losses(players[ti].name);
 //body += "\r\nPVP record: " + wins + (wins==1 ? " win" : " wins") + ", " + losses + (losses==1 ? " loss" : " losses");
 body += "\r\nPVE best round: " + get_pve_best_round(players[ti].name);
+body += "\r\nPVE total wood: " + get_total_wood(players[ti].name);
 body += "\r\nEVP best round: " + get_evp_best_round(players[ti].name);
+body += "\r\nEVP total ammo: " + get_total_ammo(players[ti].name);
 body += "\r\nWarnings: " + warning_count(players[ti].name);
 if(is_staff(players[viewer_index].rank))
 {

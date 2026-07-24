@@ -1,3 +1,5 @@
+New in 4.9.
+A player's information card now shows their total wood and total ammo collected, the same lifetime figures the leaderboards rank, listed next to their best rounds in each mode.
 New in 4.8.
 Best round on the leaderboards, and the milestone bonus for beating it, now count only in solo games. In an open game everyone finishes on the same round, so that shared number no longer sets your personal best or earns the bonus; you set a best round by playing alone. The wood and ammo you gather still count in both solo and open games, since what you personally pick up is always your own, and free play still counts toward nothing.
 In the Server storage menu, the Custom entry that keeps a manually typed address now sits at the bottom of the Select a server list, below your saved servers, instead of at the top.
