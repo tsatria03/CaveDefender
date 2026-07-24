@@ -1026,7 +1026,7 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "play" and parsed.length() > 1)
 		{
-			roompool.play_stationary("sounds/ui/misc/"+parsed[1], false); // room join/leave cue for others in the room -- on roompool so a busy p can't drop it (cue_room_others is the only sender of "play")
+			roompool.play_stationary("sounds/ui/misc/"+parsed[1], false); // a server-pushed cue for others in your room or game (room join/leave via cue_room_others, or a game kick) -- on roompool so a busy p can't drop it
 		}
 		else if (parsed[0] == "terminate")
 		{

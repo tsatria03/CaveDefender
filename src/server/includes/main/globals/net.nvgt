@@ -2723,7 +2723,7 @@ send(targetpeer, "roomkicked "+hostname+" "+kind+"\n"+display_name_flagged_for(h
 if(tpi>-1) set_room_scope(tpi, 0);
 send(event.peer_id, "misc You kicked "+tdisp+".", 0,true); // kicker: first-person
 broadcast_event(tdisp+" was kicked from "+display_name_flagged_for(hostname)+"'s "+kind+" room.", event.peer_id, targetpeer); // everyone else
-cue_room_others(rooms[ri].id, -1, "leaveroom.ogg"); // members who stay (including the kicker) hear the kicked player leave -- the kicked player themselves gets roomkicked (kick.ogg), not this
+cue_room_others(rooms[ri].id, -1, "kick.ogg"); // members who stay (including the kicker) hear the KICK sound, not a voluntary leaveroom cue -- a kick isn't a normal leave; the kicked player gets roomkicked (also kick.ogg)
 }
 }
 }
@@ -2767,6 +2767,7 @@ send(targetpeer, "gamekicked "+hostname+"\n"+hostdisp, 0,true); // 2nd line: ran
 if(tpi>-1) set_room_scope(tpi, players[tpi].pregame_room); // back to where they came from: the room, or the lobby if invited from there
 send(event.peer_id, "misc You kicked "+tdisp+".", 0,true); // kicker: first-person
 send_to_game(games[gi].id, "misc "+tdisp+" was kicked from the game."); // remaining members and any watchers
+send_to_game(games[gi].id, "play kick.ogg"); // and the kick sound to those who stay (the kicked player already heard it via gamekicked) -- was previously silent for onlookers
 if(games[gi].phase=="over" and all_answered_playagain(gi)) reset_for_new_round(gi); // the holdout may have just left
 }
 }
