@@ -1137,6 +1137,7 @@ int pi = get_player_index(games[gi].members[m]);
 if(pi < 0) continue;
 players[pi].playagain_answered = false; // start everyone "awaiting an answer"
 int collected = players[pi].wood_collected;
+if(collected > 0) add_total_wood(players[pi].name, collected); // accumulate this game's gathered wood into the lifetime total (gather-leaderboard prep; PVE-only by virtue of this being the PVE end path)
 /* Milestone: beating your personal-best round grants a one-time 20-40 wood bonus (added to next round's
 starting stockpile) and updates the record. Matching or falling short of your best grants nothing. */
 int bonus = 0, milestone = 0;
@@ -1262,6 +1263,7 @@ milestone = cleared;
 }
 players[pi].playagain_answered = false; // awaiting the play-again answer
 int collected = players[pi].ammo_collected; // ammo gathered this whole EVP game, shown on the results screen (mirror of PVE's collected wood)
+if(collected > 0) add_total_ammo(players[pi].name, collected); // accumulate this game's gathered ammo into the lifetime total (gather-leaderboard prep; EVP-only by virtue of this being the EVP end path)
 players[pi].pending_results = "evpover "+cleared+" "+collected+" "+milestone+(bonus.is_empty() ? "" : " "+bonus); // <cleared> <collected> <milestone> [type:amount ...] (milestone 0 = no new best, no pairs); kept so a reconnect during the results screen can re-show this prompt
 send(games[gi].members[m], players[pi].pending_results, 0, true); // client: results dialog + play-again
 }
