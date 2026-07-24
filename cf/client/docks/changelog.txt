@@ -1,4 +1,5 @@
 New in 4.8.
+Names on the leaderboards now appear the same way as everywhere else in the game, showing a player's nickname, their rank if they are staff, and an away marker when they are AFK. Your own row is no longer singled out, so it simply lists your name like every other row.
 A best round's date is no longer shown on the leaderboard, so each row now reads as simply the rank, the player, and the round they reached.
 The leaderboards now give each standing to a single player. When your best round, or your total wood or ammo, matches someone already listed, you no longer share the board with them: whoever reached that place first keeps it, and you appear only once you push past it.
 New in 4.7.
