@@ -1720,12 +1720,12 @@ push_pronoun_menu(index); // the /pronoun chooser, available to everyone
 }
 else if(parsed[0]=="acceptinvite" and index>-1)
 {
-if(!players[index].agreed) send(event.peer_id, "misc You must agree to the server rules before you can play; type /rules to read them, then /rules agree.", 0,true);
+if(!players[index].agreed) send(event.peer_id, "misc You must agree to the server rules before you can play; type /rules to read them, then agree from the menu that appears.", 0,true);
 else accept_invite(index); // /accept: join the room you were invited to
 }
 else if(parsed[0]=="rejectinvite" and index>-1)
 {
-if(!players[index].agreed) send(event.peer_id, "misc You must agree to the server rules before you can play; type /rules to read them, then /rules agree.", 0,true);
+if(!players[index].agreed) send(event.peer_id, "misc You must agree to the server rules before you can play; type /rules to read them, then agree from the menu that appears.", 0,true);
 else reject_invite(index); // /reject: refuse the pending room invite
 }
 else if(parsed[0]=="afk" and index>-1)
@@ -1834,7 +1834,7 @@ Disagreeing drops the player back to the connection menu. Both are open to every
 if(which=="agree")
 {
 if(players[index].agreed) send(event.peer_id, "misc You already agreed to the server rules.", 0,true);
-else if(!players[index].read_player_rules) send(event.peer_id, "misc Please read the player rules first with /rules, then type /rules agree.", 0,true);
+else if(!players[index].read_player_rules) send(event.peer_id, "misc Please read the player rules first with /rules; the agree menu appears when you close the page.", 0,true);
 else if(is_staff(players[index].rank) and !players[index].read_staff_rules) send(event.peer_id, "misc As a staff member you must also read the staff rules with /rules staff before you can agree.", 0,true);
 else
 {
@@ -2288,7 +2288,7 @@ if(players[index].room_id==0 or get_room_index(players[index].room_id)>-1) push_
 }
 else if(!players[index].agreed)
 {
-send(event.peer_id, "misc You must read the server rules before you can play. Type /rules to read them, then /rules agree to continue, or /rules disagree to leave.", 0,true);
+send(event.peer_id, "misc You must read the server rules before you can play. Type /rules to read them, then agree from the menu that appears when you close the page.", 0,true);
 }
 else if(which == "lobby" and players[index].room_id==0) push_lobby_menu(index);
 else if(which == "room" and get_room_index(players[index].room_id)>-1) push_room_menu(index);

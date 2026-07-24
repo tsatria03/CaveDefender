@@ -1,4 +1,5 @@
 New in 4.7.
+The typed /rules agree and /rules disagree commands have been removed, since the menu that already appears when you close the rules answers the gate for you. You still agree or disagree there, and re-reading the rules with /rules brings that menu back any time.
 You now hear a cue whenever you join or leave any room, however you do it, and anyone already in the room hears you come and go too, much like players hear you connect to and disconnect from the server.
 The game over screen in environment versus player now tells you how much ammo you gathered that game, the attacker's version of the collected wood the player versus environment results already show.
 The player versus player mode has been taken out of the start game menu for now while it is reworked, so you can no longer start a new one; its section has been removed from this guide and player information cards no longer show a player versus player record until it returns. Environment versus player, player versus environment, and free play are all still here, and player versus player will return once it has been rebuilt.
