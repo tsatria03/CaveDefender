@@ -134,6 +134,50 @@ def compile_side(label, nvgt_file, src_dir, bundle, assets_dir, asset_folders, d
     print(f"{label} build assembled in {target}.\n")
     return True
 
+def sanitize_server_bundle(build_dir):
+    # Strip host-specific and private data from the SHIPPED server bundle so the archive on itch.io is a clean, safe
+    # slate for a new host. Operates ONLY on the assembled bundle copy (build_dir); the source under cf/server is
+    # never touched. All of it is recreated/settable by the host on their own server:
+    #   1) Empty data/players -- remove every account (passwords, emails, records) but keep the empty store folder.
+    #   2) Blank the owners= line in conf.svr -- so no username ships pre-trusted as owner (otherwise whoever
+    #      registered that name on the new server would become owner). The host sets their own owner in conf.svr.
+    #   3) Delete reports.svr + feedback.svr (private player-submitted logs) and peak.svr (this server's peak-players
+    #      stat) if present, so a fresh host starts these clean. Warnings need no handling here: they live per-account
+    #      in data/players/<name>/warnings.usr, already gone with (1).
+    #   4) Reset motd.svr to a neutral default welcome message, so the shipped server doesn't greet players with this
+    #      host's own message of the day.
+    data = os.path.join(build_dir, "data")
+    players = os.path.join(data, "players")
+    if os.path.isdir(players):
+        for entry in os.listdir(players):
+            ep = os.path.join(players, entry)
+            shutil.rmtree(ep) if os.path.isdir(ep) else os.remove(ep)
+        print("Emptied data/players in the server build (kept the folder).")
+    conf = os.path.join(data, "preffs", "main", "conf.svr")
+    if os.path.isfile(conf):
+        with open(conf, "r", encoding="utf-8", newline="") as f:
+            lines = f.read().splitlines(keepends=True)
+        changed = False
+        for i, line in enumerate(lines):
+            if line.lstrip().replace(" ", "").startswith("owners="):
+                eol = "\r\n" if line.endswith("\r\n") else ("\n" if line.endswith("\n") else "")
+                if line != "owners=" + eol:
+                    lines[i] = "owners=" + eol   # keep the line, drop its value, preserve the line ending
+                    changed = True
+        if changed:
+            with open(conf, "w", encoding="utf-8", newline="") as f:
+                f.writelines(lines)
+            print("Blanked the owners list in the server build's conf.svr.")
+    for fname in ("reports.svr", "feedback.svr", "peak.svr"):
+        fp = os.path.join(data, "preffs", "main", fname)
+        if os.path.isfile(fp):
+            os.remove(fp)
+            print(f"Removed {fname} from the server build.")
+    motd = os.path.join(data, "preffs", "main", "motd.svr")
+    with open(motd, "w", encoding="utf-8", newline="") as f:
+        f.write("Welcome to CaveDefender. We hope you enjoy your stay here.")   # neutral default; the whole file is the MOTD, so no trailing newline
+    print("Reset motd.svr to the default welcome message in the server build.")
+
 def compile_downcheck():
     # Compile the server supervisor and place its bare exe in the finished server bundle. downcheck.properties
     # (build.windows_bundle=0) makes nvgt -c emit a single src/server/downcheck.exe with no folder/lib, so we
@@ -502,6 +546,9 @@ def run_release(skip_compile, skip_box, skip_package, skip_release, skip_empty_r
             return
         if not compile_side("server", SERVER_FILE, SRC_SERVER, SERVER_BUNDLE, ASSETS_SERVER, SERVER_ASSETS, SERVER_DEST, SERVER_OUT):
             return
+        # Scrub private/host-specific data from the shipped server bundle (accounts, owner list, reports) so the
+        # itch.io archive is a clean, safe slate. Bundle copy only; the source under cf/server is untouched.
+        sanitize_server_bundle(SERVER_BUILD)
         if not compile_downcheck():
             return
         print("Both sides compiled and assembled.\n")
