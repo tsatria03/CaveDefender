@@ -84,6 +84,15 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/staff"); return; }
 		send(0, "staff", 0, true);
 	}
+	else if(base == "/lb" or base == "/leaderboard")
+	{
+		/* Server-wide best-round leaderboard. Bare command opens a PVE/EVP picker; an explicit uppercase mode
+		(/lb PVE, /lb EVP) opens that board directly. The mode value is validated server-side, so we only check
+		the argument count and forward it with its case intact. */
+		if(parsed.length() > 2) { syntax_error("/lb, /lb PVE, or /lb EVP"); return; }
+		if(parsed.length() == 2) send(0, "leaderboard "+parsed[1], 0, true);
+		else send(0, "leaderboard", 0, true);
+	}
 	else if(base == "/where")
 	{
 		// Everyone: ask the server where an online player is; it answers with a misc-buffer line like the F6 card.

@@ -1710,6 +1710,14 @@ else if(parsed[0]=="staff" and index>-1)
 {
 send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
 }
+else if(parsed[0]=="leaderboard" and index>-1)
+{
+/* /lb (and /leaderboard): server-wide best-round board. Bare request opens the PVE/EVP picker; an explicit
+uppercase mode opens that board directly. The mode is validated here since the server owns the boards. */
+if(parsed.length()==1) push_leaderboard_modes(index);
+else if(parsed[1]=="PVE" or parsed[1]=="EVP") push_leaderboard(index, parsed[1]);
+else send(event.peer_id, "misc The leaderboard modes are PVE and EVP, both in capitals.", 0,true);
+}
 else if(parsed[0]=="channel" and index>-1)
 {
 push_language_menu(index); // the /channel chooser, available to everyone

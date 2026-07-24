@@ -66,6 +66,10 @@ The private message button asks you for a message and sends it straight to that 
 
 If you are staff, the card also shows action buttons for the things your rank lets you do to that player: kick, ban, promote, demote, notify, and warn. Only the buttons you are actually allowed to use on that particular player appear, and choosing one asks for anything it needs, such as a ban length, a new rank, a notification, or a warning level and reason, before carrying out the same action as the matching staff command. They never let you do anything the commands would not, so all the usual rank rules still apply; the staff help explains each of these in full.
 
+The leaderboard.
+
+Type /lb to see the server-wide leaderboard, which ranks every account by its best round in a game mode from highest to lowest, whether or not that player is currently online. With /lb on its own you pick a mode, PVE or EVP, from a menu; you can also name it directly in capitals, such as /lb PVE or /lb EVP. Only players who have cleared at least one round in that mode appear, and your own row is marked with your name so you can find yourself. Choosing a row opens that player's information card if they are online, the same card the players menu opens, or tells you they are offline.
+
 The account and location panels.
 
 In the lobby or any room you are in, press enter to open the panel for where you are: the lobby panel in the lobby, or the room panel in a room, which is the create and join rooms menu, or the room menu, both described just below. Press shift plus enter to open the account panel instead, which gathers your personal, account-tied settings in one place: your language channel, your pronoun, your muted players list, and changing your nickname, email, or password, each doing the same as the matching slash command. In a game, enter opens the round menu instead, and your personal settings stay reachable through their slash commands, the players menu on F6, and your preferences on Alt plus P.
