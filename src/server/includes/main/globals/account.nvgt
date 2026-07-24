@@ -87,6 +87,14 @@ int get_pve_best_round(string name) { return int(string_to_number(read_field(nam
 bool set_pve_best_round(string name, int round) { return write_field(name, "pvebestround", "" + round); }
 int get_evp_best_round(string name) { return int(string_to_number(read_field(name, "evpbestround", "0"))); }
 bool set_evp_best_round(string name, int round) { return write_field(name, "evpbestround", "" + round); }
+/* When each best round was reached, in its own file next to the number (pvebestrounddate.usr / evpbestrounddate.usr),
+stored as a string-sortable "YYYY-MM-DD HH:MM" stamp so the leaderboard breaks equal-round ties by who got there
+first with a plain string compare -- no date parsing. Written at the same game-over moment the record is. Empty
+default: accounts whose best predates this field have no date (they sort after dated ones on a tie). */
+string get_pve_best_round_date(string name) { return read_field(name, "pvebestrounddate", ""); }
+bool set_pve_best_round_date(string name, string stamp) { return write_field(name, "pvebestrounddate", stamp); }
+string get_evp_best_round_date(string name) { return read_field(name, "evpbestrounddate", ""); }
+bool set_evp_best_round_date(string name, string stamp) { return write_field(name, "evpbestrounddate", stamp); }
 /* Lifetime gathered totals for the (upcoming) gather leaderboards: totalwood.usr = every wood piece ever picked
 up off the ground in PVE, totalammo.usr = every ammo piece ever gathered in EVP. Accumulated once at game over by
 adding that game's collected figure (PVE-only for wood, EVP-only for ammo; free play is never counted). Both

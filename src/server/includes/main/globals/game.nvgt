@@ -1148,6 +1148,7 @@ bonussize = random_wood_type();
 bonus = wood_bonus_amount(bonussize); // that species' data-driven bonus amount
 milestone = rounds;
 set_pve_best_round(players[pi].name, rounds);
+set_pve_best_round_date(players[pi].name, leaderboard_stamp()); // stamp WHEN this best was reached, for the leaderboard's first-to-reach tie-break
 players[pi].pending_bonus_wood = bonus;
 players[pi].pending_bonus_size = bonussize;
 }
@@ -1256,6 +1257,7 @@ string bonus = ""; // the rolled per-type bonus amounts as "type:amount" pairs; 
 if(cleared > get_evp_best_round(players[pi].name))
 {
 set_evp_best_round(players[pi].name, cleared);
+set_evp_best_round_date(players[pi].name, leaderboard_stamp()); // stamp WHEN this best was reached, for the leaderboard's first-to-reach tie-break
 string[] at = ammo_types();
 for(uint k=0; k<at.length(); k++) bonus += (bonus.is_empty() ? "" : " ") + at[k] + ":" + ammo_bonus_amount(at[k]); // roll each amount NOW so the message can name it and the grant hands out these exact figures
 players[pi].pending_bonus_ammo = bonus;
