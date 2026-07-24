@@ -1119,20 +1119,6 @@ if(ha != hb) return ha; // the one with a date ranks above the one without
 if(ha and hb and da != db) return da < db; // earlier stamp = reached first = higher
 return string_to_lower_case(na) < string_to_lower_case(nb);
 }
-/* A stored "YYYY-MM-DD HH:MM" stamp as a friendly "Month D, YYYY" for display (e.g. "July 20, 2026"), matching the
-"Member since" date style. Empty or malformed stamps (legacy records with no date) return "" so the row just omits
-the "set" clause. */
-string friendly_date(string stamp)
-{
-string[] parts = string_split(stamp, " ", true);
-if(parts.length() < 1 or parts[0] == "") return "";
-string[] ymd = string_split(parts[0], "-", true);
-if(ymd.length() < 3) return "";
-int mo = int(string_to_number(ymd[1]));
-if(mo < 1 or mo > 12) return "";
-string[] months = {"", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"};
-return months[mo] + " " + int(string_to_number(ymd[2])) + ", " + ymd[0];
-}
 /* The storage field for a (mode, board) pair. board is "round", "wood", or "ammo": round is the per-mode best-round
 record, wood the PVE lifetime wood total, ammo the EVP lifetime ammo total. */
 string board_field(string mode, string board)
@@ -1174,6 +1160,14 @@ int j = int(i) - 1;
 while(j >= 0 and lb_outranks(cv, cd, cn, vals[j], dates[j], names[j])) { names[j+1] = names[j]; vals[j+1] = vals[j]; dates[j+1] = dates[j]; j--; }
 names[j+1] = cn; vals[j+1] = cv; dates[j+1] = cd;
 }
+/* No two accounts may share the same value ("status"): once sorted, equal values sit next to each other, so keep only
+the first of each run -- the one that outranks the rest (first-to-reach on round boards, alphabetically-first on the
+dateless gather boards) -- and drop the others off the board entirely until they beat it. Walk back-to-front so the
+remove_at indices stay valid. */
+for(int i = int(names.length()) - 1; i >= 1; i--)
+{
+if(vals[i] == vals[i-1]) { names.remove_at(i); vals.remove_at(i); dates.remove_at(i); }
+}
 }
 /* The 1-based rank of one account on a board, or 0 if it isn't on it (value 0). Used at game over to tell whether a
 new best round or a fresh gather total actually MOVED the player up, the only thing that fires an announcement. */
@@ -1205,9 +1199,9 @@ else { opts.insert_last("Total ammo"); players[index].menu_targets.insert_last("
 send_menu(players[index].peer_id, "lbboardpick:" + mode, "Choose a " + mode + " leaderboard to view.", opts);
 }
 /* Build and push one board (mode = "PVE"/"EVP", board = "round"/"wood"/"ammo") to a player. Uses build_board for the
-ranked data, then lists one row per ranked account -- best-round rows carry when the record was set, gather rows the
-total gathered; the viewer's own row is tagged "You". Usernames ride in menu_targets so picking a row opens that
-player's info card when they're online, or reports them offline. */
+ranked data, then lists one row per ranked account showing its rank and value (best round or total gathered); the
+viewer's own row is tagged "You". The record's date is used only internally for first-to-reach ordering, never shown.
+Usernames ride in menu_targets so picking a row opens that player's info card when they're online, or reports them offline. */
 void push_leaderboard(int index, string mode, string board)
 {
 int peer = players[index].peer_id;
@@ -1227,8 +1221,7 @@ for(uint i=0; i<names.length(); i++)
 string who = display_name_flagged_for(names[i]);
 bool isme = (string_to_lower_case(names[i]) == myname);
 string valphrase = (board == "round") ? ("round " + vals[i]) : ("collected " + vals[i] + (board == "wood" ? " wood" : " ammo"));
-string fd = (board == "round") ? friendly_date(dates[i]) : ""; // "set" clause is best-round only
-opts.insert_last("" + (i+1) + ". " + (isme ? "You (" + who + ")" : who) + ", " + valphrase + (fd == "" ? "" : ", set " + fd));
+opts.insert_last("" + (i+1) + ". " + (isme ? "You (" + who + ")" : who) + ", " + valphrase);
 players[index].menu_targets.insert_last(names[i]);
 }
 string title = "Cave defender " + mode + " leaderboard, " + (board == "round" ? "best rounds" : board_label(board)) + ", " + names.length() + (names.length()==1 ? " player ranked." : " players ranked.");
