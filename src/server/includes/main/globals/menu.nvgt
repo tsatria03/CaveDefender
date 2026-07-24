@@ -1097,6 +1097,57 @@ if(other and vlevel>=1 and tlevel<=vlevel and tlevel>=1 and !is_owner(players[ti
 for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
 send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
 }
+/* --- Leaderboard (server-wide, persistent) ---
+Ranks every account by a stored round record, online or not. Built ON DEMAND (no live state): walk the account
+folders, read the one field, sort. The pick-a-mode step when no mode was typed. */
+void push_leaderboard_modes(int index)
+{
+players[index].menu_targets.resize(0);
+players[index].menu_targets.insert_last("PVE");
+players[index].menu_targets.insert_last("EVP");
+string[] opts = {"PVE", "EVP"};
+send_menu(players[index].peer_id, "lbmode", "Choose a game leaderboard to view.", opts);
+}
+/* Build and push one best-round board (mode = "PVE" or "EVP") to a player. Walks every account folder, reads that
+mode's best-round field, drops the zeros/absent, sorts highest first (equal rounds break alphabetically for now --
+the dated first-to-reach tie-break arrives with the date records), and lists one row per ranked account. The
+viewer's own row is tagged "You". Usernames ride in menu_targets so picking a row opens that player's info card
+when they're online, or reports them offline, exactly like the F6 players list. */
+void push_leaderboard(int index, string mode)
+{
+int peer = players[index].peer_id;
+string field = (mode == "PVE") ? "pvebestround" : "evpbestround";
+string[] dirs = find_directories("data/players/*");
+string[] names;
+int[] vals;
+for(uint i=0; i<dirs.length(); i++)
+{
+int v = int(string_to_number(read_field(dirs[i], field, "0")));
+if(v <= 0) continue; // never cleared a round in that mode: off the board
+names.insert_last(dirs[i]);
+vals.insert_last(v);
+}
+// Insertion sort: value descending, then name ascending (case-insensitive), so equal rounds read alphabetically.
+for(uint i=1; i<names.length(); i++)
+{
+string cn = names[i]; int cv = vals[i]; string cl = string_to_lower_case(cn);
+int j = int(i) - 1;
+while(j >= 0 and (vals[j] < cv or (vals[j] == cv and string_to_lower_case(names[j]) > cl))) { names[j+1] = names[j]; vals[j+1] = vals[j]; j--; }
+names[j+1] = cn; vals[j+1] = cv;
+}
+if(names.length() == 0) { send(peer, "misc No "+mode+" rounds have been cleared yet, so be the first to make the leaderboard.", 0, true); return; }
+players[index].menu_targets.resize(0);
+string[] opts;
+string myname = string_to_lower_case(players[index].name);
+for(uint i=0; i<names.length(); i++)
+{
+string who = display_name_flagged_for(names[i]);
+bool isme = (string_to_lower_case(names[i]) == myname);
+opts.insert_last((i+1) + ". " + (isme ? "You (" + who + ")" : who) + ", round " + vals[i]);
+players[index].menu_targets.insert_last(names[i]);
+}
+send_menu(peer, "lbboard", "Cave defender " + mode + " leaderboard, best rounds, " + names.length() + (names.length()==1 ? " player ranked." : " players ranked."), opts);
+}
 /* --- Developer data-file browser (editdata / viewdata) ---
 A path CONFINED to the server's data/ folder: reject anything that could climb out of it, so a write command
 can never touch code or files outside data/. Empty path = the data root. */
@@ -1555,6 +1606,20 @@ else if(id == "playerlist")
 if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
 int ti = get_online_index(players[player_index].menu_targets[choice]); // the chosen username
 if(ti < 0) { send(peer, "This player is no longer online.", 0, true); return; } // logged off since the menu opened
+push_player_info(player_index, ti);
+}
+else if(id == "lbmode")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+push_leaderboard(player_index, players[player_index].menu_targets[choice]); // chose PVE or EVP: show that board
+}
+else if(id == "lbboard")
+{
+/* Picked a row on a leaderboard: open that account's info card if they're online, else report them offline. The
+board ranks offline accounts too, so a missing live index is expected here -- not an error. */
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+int ti = get_online_index(players[player_index].menu_targets[choice]);
+if(ti < 0) { send(peer, "misc This player is not online.", 0, true); return; } // same wording the slash commands use for an offline target
 push_player_info(player_index, ti);
 }
 else if(id.substr(0, 8) == "datanav:")
