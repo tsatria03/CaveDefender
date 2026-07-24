@@ -1448,6 +1448,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "roomjoined" and parsed.length() > 3)
 		{
+			p.play_stationary("sounds/ui/misc/joinroom.ogg", false); // your own cue for entering a room (others already in it get a server-sent joinroom cue); fires on every join path
 			clear_players();
 			current_room = string_to_number(parsed[1]);
 			current_room_private = (parsed[2] == "private");
@@ -1461,6 +1462,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "roomleft")
 		{
+			p.play_stationary("sounds/ui/misc/leaveroom.ogg", false); // your own cue for leaving a room; a room-kick sends "roomkicked" instead (kick.ogg), so a kicked player never plays this -- only kick.ogg
 			clear_players();
 			current_room = 0;
 			current_room_private = false;
