@@ -12,6 +12,12 @@ Living backlog of feature ideas for CaveDefender. Started 2026-07 after PVP was 
 - (b) the dev asks me to brainstorm → add the new ideas under Candidates.
 Also drop an idea from Candidates once it ships (it becomes changelog/todo-Finished history).
 
+## Planned for 5.0 (dev-earmarked 2026-07-24)
+4.8 is complete; the two most important remaining todo items are batched for the **5.0** release:
+1. **PVP map refactor** -- rework the lopsided inset-ring split into an equal, full-size arena both sides share, reusing the rest of the mode. This is the change that unhides PVP from the start-game menu (it's the core reason PVP was pulled). The big one. See [[pvp-recode-rationale]] and [[game-mode-pvp]].
+2. **Learn-sounds / practice mode** for EVP and PVE -- let newcomers hear how a mode plays before the real thing (onboarding for an audio-only game). High accessibility value.
+Both are still on `cf/client/docks/todo list.txt` as Unfinished; this note just records that 5.0 is their target release.
+
 ## Candidate ideas (not yet on the todo)
 Filling the PVP void = give the co-op/solo modes the competition, depth, and replay value PVP provided, WITHOUT needing a live opponent.
 
