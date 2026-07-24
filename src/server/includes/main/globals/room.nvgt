@@ -55,7 +55,7 @@ else players[index].last_public_room = rid;
 if(priv) set_saved_private(players[index].name, pass);
 else set_saved_public(players[index].name, true);
 send_yourrooms(peer, players[index].name);
-send(peer, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
+send(peer, "roomjoined "+rid+" "+(priv?"private":"public")+" "+players[index].name+" created\n"+display_name_flagged(index), 0,true); // the "created" flag tells the client this is a room you MADE, so it skips the join-room cue -- roomcreate.ogg (below) plays instead
 set_room_scope(index, rid);
 send(peer, "play roomcreate.ogg", 0,true);
 // Tell everyone else (player events) a new room is up and how to join it.

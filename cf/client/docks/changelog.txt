@@ -1,4 +1,5 @@
 New in 4.9.
+Creating a room no longer also plays the join-room sound on top of the room-created sound; you now hear just the created cue. And deleting a room now plays the leave-room sound, so closing a room you are in sounds like leaving one.
 A player's information card now shows their total wood and total ammo collected, the same lifetime figures the leaderboards rank, listed next to their best rounds in each mode.
 New in 4.8.
 Best round on the leaderboards, and the milestone bonus for beating it, now count only in solo games. In an open game everyone finishes on the same round, so that shared number no longer sets your personal best or earns the bonus; you set a best round by playing alone. The wood and ammo you gather still count in both solo and open games, since what you personally pick up is always your own, and free play still counts toward nothing.
