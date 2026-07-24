@@ -1162,11 +1162,14 @@ add_total_wood(players[pi].name, collected); // accumulate this game's gathered 
 int wr_new = board_rank("PVE", "wood", players[pi].name);
 if(wr_new > 0 and (wr_old == 0 or wr_new < wr_old)) announce_rankup(pi, "PVE", "total wood", wr_new); // announce only a genuine climb on the wood board
 }
-/* Milestone: beating your personal-best round grants a one-time 20-40 wood bonus (added to next round's
-starting stockpile) and updates the record. Matching or falling short of your best grants nothing. */
+/* Milestone (SOLO games only): in a solo game, beating your personal-best round updates your best-round record
++ date and grants a one-time 20-40 wood bonus (added to next round's starting stockpile). Open games are excluded
+on purpose -- best round is a shared group outcome (every member ends on the SAME round), so it counts as your own
+individual record only when you played alone; open-game GATHERING still counts (the total-wood block above, which
+is not gated on solo). Matching/falling short of your best, or playing open, grants nothing here. */
 int bonus = 0, milestone = 0;
 string bonussize = "none"; // the single random wood species the bonus will be granted as; rolled now so the results message can name it
-if(rounds > get_pve_best_round(players[pi].name))
+if(games[gi].solo and rounds > get_pve_best_round(players[pi].name))
 {
 int lb_old = board_rank("PVE", "round", players[pi].name); // rank with the OLD best (0 = wasn't on the board yet), captured before the write
 bonussize = random_wood_type();
@@ -1277,11 +1280,14 @@ for(uint m=0; m<games[gi].members.length(); m++)
 {
 int pi = get_player_index(games[gi].members[m]);
 if(pi < 0) continue;
-/* Milestone: beating your personal-best EVP round (most cleared) grants a one-time bonus of every ammo type
-at your next EVP game's build phase, and records the new best. Matching or falling short grants nothing. */
+/* Milestone (SOLO games only): in a solo game, beating your personal-best EVP round (most cleared) updates your
+best-round record + date and grants a one-time bonus of every ammo type at your next EVP game's build phase. Open
+games are excluded on purpose -- best round is a shared group outcome, so it counts as your own individual record
+only when you played alone; open-game AMMO GATHERING still counts (the total-ammo block below, not gated on solo).
+Matching/falling short of your best, or playing open, grants nothing here. */
 int milestone = 0;
 string bonus = ""; // the rolled per-type bonus amounts as "type:amount" pairs; stored for the grant and named in the results message
-if(cleared > get_evp_best_round(players[pi].name))
+if(games[gi].solo and cleared > get_evp_best_round(players[pi].name))
 {
 int lb_old = board_rank("EVP", "round", players[pi].name); // rank with the OLD best (0 = wasn't on the board yet), captured before the write
 set_evp_best_round(players[pi].name, cleared);
