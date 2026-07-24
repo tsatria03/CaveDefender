@@ -1,6 +1,6 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Fix some leaderboard related messages and scoring.
+**Unfinished. Fix being able to invite people that have already been invited to places.
 **Unfinished. Fix the join and leave sounds for rooms not always playing.
 **Unfinished. Add survived time to the PVE leaderboard.
 **Unfinished. Refacter the player versus player map so both sides share an equal, full-size arena instead of the lopsided ring split, reusing the rest of the mode.
@@ -8,6 +8,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Fix some leaderboard related messages and scoring.
 **Finished. Add a server-wide leaderboard showing the top PVE and EVP best rounds and PVP win-loss records already stored on each account.
 **Finished. Make a wall fire's burning loop fade out as its fire-out sound plays over it when the fire ends, instead of cutting off abruptly.
 **Finished. Make the walls fortify visibly toward the round's goal across the build phase in environment versus player, instead of snapping to it when the wave starts.

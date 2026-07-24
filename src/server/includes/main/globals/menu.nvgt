@@ -1106,7 +1106,7 @@ players[index].menu_targets.resize(0);
 players[index].menu_targets.insert_last("PVE");
 players[index].menu_targets.insert_last("EVP");
 string[] opts = {"PVE", "EVP"};
-send_menu(players[index].peer_id, "lbmode", "Choose a game mode.", opts);
+send_menu(players[index].peer_id, "lbmode", "Choose a game leaderboard to view.", opts);
 }
 /* True when best-round entry A outranks entry B: a higher round always wins; on an equal round the record set
 FIRST wins (earlier "YYYY-MM-DD HH:MM" stamp, a plain string compare), a dated record beats an undated legacy one,
@@ -1210,21 +1210,20 @@ build_board(mode, board, names, vals, dates);
 if(names.length() == 0)
 {
 string what = (board == "round") ? (mode + " rounds have been cleared") : (mode + " " + (board == "wood" ? "wood" : "ammo") + " has been gathered");
-send(peer, "misc No " + what + " yet, so be the first to make the leaderboard.", 0, true);
+send(peer, "misc No " + what + " yet.", 0, true);
 return;
 }
 players[index].menu_targets.resize(0);
 string[] opts;
-string myname = string_to_lower_case(players[index].name);
 for(uint i=0; i<names.length(); i++)
 {
-string who = display_name_flagged_for(names[i]);
-bool isme = (string_to_lower_case(names[i]) == myname);
+int pi = get_online_index(names[i]);
+string who = (pi > -1 ? afk_prefix(pi) : "") + display_name_flagged_for(names[i]); // AFK/rank/nickname-aware, like the rest of the game's rosters; offline accounts can't be AFK so they get no prefix
 string valphrase = (board == "round") ? ("round " + vals[i]) : ("collected " + vals[i] + (board == "wood" ? " wood" : " ammo"));
-opts.insert_last("" + (i+1) + ". " + (isme ? "You (" + who + ")" : who) + ", " + valphrase);
+opts.insert_last("" + (i+1) + ". " + who + ", " + valphrase);
 players[index].menu_targets.insert_last(names[i]);
 }
-string title = "Cave defender " + mode + " leaderboard, " + (board == "round" ? "best rounds" : board_label(board)) + ", " + names.length() + (names.length()==1 ? " player ranked." : " players ranked.");
+string title = mode + " leaderboard, " + (board == "round" ? "best rounds" : board_label(board)) + ", " + names.length() + (names.length()==1 ? " player ranked." : " players ranked.");
 send_menu(peer, "lbboard", title, opts);
 }
 /* --- Developer data-file browser (editdata / viewdata) ---
