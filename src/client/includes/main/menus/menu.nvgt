@@ -349,13 +349,13 @@ void addserver()
 	}
 }
 /* Load a server preset into ip/port so the connection menu connects to it (it does not connect by itself).
-The default top entry is Custom: it keeps whatever ip/port are set (a manually entered, non-preset server). */
+Custom is the last entry, below the presets: it keeps whatever ip/port are set (a manually entered, non-preset server). */
 void loadservermenu()
 {
 	setupmenu(false);
-	m.add_item("Custom" + (server_custom ? ". Selected." : ""), "custom"); // Custom is active when you're on a manually entered address
 	for(uint i=0; i<servers.length(); i++)
 		m.add_item(server_list_text(i, (!server_custom and servers[i].sip==ip and servers[i].sport==port) ? ". Selected" : ""), ""+i); // mark the server you're set to, right after its name (no trailing period: the ". IP:" that follows supplies it)
+	m.add_item("Custom" + (server_custom ? ". Selected." : ""), "custom"); // Custom sits at the BOTTOM of the list, after the presets; active when you're on a manually entered address
 	m.add_item("back", "back");
 	m.intro_text="Choose a server to use in the game.";
 	int mres=m.run();
