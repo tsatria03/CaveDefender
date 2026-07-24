@@ -128,11 +128,11 @@ players[ti].invite_room = rooms[ri].id;
 players[ti].invite_game = 0; // a newer invite replaces any older one of either kind
 players[ti].invite_from = players[inviter_index].name;
 players[ti].invite_timer.restart();
-string msg = display_name_flagged(inviter_index) + " has invited you to " + room_display(ri) + ". Would you like to accept? Type /accept, or /reject to refuse.";
+string msg = display_name_flagged(inviter_index) + " has invited you to " + room_display(ri) + ". Press Alt plus A to accept, or Alt plus D to deny.";
 send(players[ti].peer_id, "roominvite\n" + msg, 0, true);
 send(peer, "misc Invitation sent to " + display_name_flagged(ti) + ".", 0, true);
 }
-/* The invited player typed /accept: re-validate the still-pending invite and join them into the room,
+/* The invited player pressed Alt+A: re-validate the still-pending invite and join them into the room,
 bypassing a private room's password, then tell the inviter. Clears the invite either way. */
 void accept_invite(int index)
 {
@@ -149,7 +149,7 @@ do_join_room(index, peer, rooms[ri].id, rooms[ri].password, false); // password 
 int hi = get_online_index(inviter);
 if(hi > -1) send(players[hi].peer_id, "misc " + display_name_flagged(index) + " has accepted your room invite.", 0, true);
 }
-// The invited player typed /reject: clear the invite and tell the inviter they declined.
+// The invited player pressed Alt+D: clear the invite and tell the inviter they declined.
 void reject_invite(int index)
 {
 int peer = players[index].peer_id;

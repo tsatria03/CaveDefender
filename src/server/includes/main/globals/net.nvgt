@@ -1721,12 +1721,24 @@ push_pronoun_menu(index); // the /pronoun chooser, available to everyone
 else if(parsed[0]=="acceptinvite" and index>-1)
 {
 if(!players[index].agreed) send(event.peer_id, "misc You must agree to the server rules before you can play; type /rules to read them, then agree from the menu that appears.", 0,true);
-else accept_invite(index); // /accept: join the room you were invited to
+else accept_invite(index); // Alt+A: join the room/game you were invited to
 }
 else if(parsed[0]=="rejectinvite" and index>-1)
 {
 if(!players[index].agreed) send(event.peer_id, "misc You must agree to the server rules before you can play; type /rules to read them, then agree from the menu that appears.", 0,true);
-else reject_invite(index); // /reject: refuse the pending room invite
+else reject_invite(index); // Alt+D: deny the pending room/game invite
+}
+else if(parsed[0]=="invitetime" and index>-1)
+{
+// /invtime: report how many seconds remain on the pending room/game invite (replaces the removed /accept and /reject).
+if(players[index].invite_room == 0 and players[index].invite_game == 0) send(event.peer_id, "misc You have no pending invitation.", 0,true);
+else
+{
+int remaining = (invite_timeout - int(players[index].invite_timer.elapsed)) / 1000;
+if(remaining < 0) remaining = 0;
+string ikind = (players[index].invite_game != 0) ? "game" : "room";
+send(event.peer_id, "misc You have "+remaining+(remaining==1?" second":" seconds")+" left to accept "+display_name_flagged_for(players[index].invite_from)+"'s "+ikind+" invitation.", 0,true);
+}
 }
 else if(parsed[0]=="afk" and index>-1)
 {

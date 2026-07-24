@@ -24,8 +24,8 @@ Press slash to open the chat, type a command, and press enter to send it. Every 
 /pronoun: Opens a menu to choose the pronouns used to refer to you in messages, such as masculine or feminine. It defaults to singular they, and the none option uses your name in place of a pronoun.
 /ignore: Opens a menu of the players online to personally mute, hiding that person's chat and voice from you only; they are not told when you mute them, though if they try to message you they learn they have been muted, and it lasts until you unmute them. Staff cannot be muted. This is the same personal mute as the checkbox on a player's information card.
 /ignored: Opens a menu of everyone you are personally muting; choose one to stop muting them and you alone are told they are now unmuted.
-/accept: Accepts a pending room or game invitation and takes you in; see the readme for rooms and games.
-/reject: Refuses a pending room or game invitation; see the readme for rooms and games.
+Invitations to a room or game are answered right where you are, in the lobby or a room: press Alt plus A to accept, or Alt plus D to deny. An invitation lasts two minutes before it expires.
+/invtime: Tells you how many seconds you have left to answer your pending room or game invitation. See the readme for rooms and games.
 
 What only staff can do.
 

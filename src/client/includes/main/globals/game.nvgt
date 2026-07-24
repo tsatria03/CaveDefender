@@ -240,7 +240,16 @@ buffercheck();
 				if (key_pressed(KEY_D)) send(0, "roomaction delete", 0, true);
 				if (key_pressed(KEY_L)) send(0, "roomaction leave", 0, true);
 			}
-			/* PVE/EVP round hotkeys (host only, in a PVE or EVP game): Ctrl+B begins the round, Ctrl+S skips the build phase
+			/* Invite answer keys (lobby or a room -- the only places an invite can land): Alt+A accepts, Alt+D denies a
+				pending room or game invitation, sending the same acceptinvite/rejectinvite the server validates. Alt keeps
+				them clear of the Ctrl room hotkeys (Ctrl+D deletes a room); with no invite pending the server just says so.
+				Gated to !in_game since you never receive an invite while in a game. Each key read once. */
+				if (!in_game and alt_is_down() and !control_is_down())
+				{
+					if (key_pressed(KEY_A)) send(0, "acceptinvite", 0, true); // accept a pending room/game invite (the removed /accept)
+					if (key_pressed(KEY_D)) send(0, "rejectinvite", 0, true); // deny a pending room/game invite (the removed /reject)
+				}
+				/* PVE/EVP round hotkeys (host only, in a PVE or EVP game): Ctrl+B begins the round, Ctrl+S skips the build phase
 			(staff), Ctrl+I invites, Ctrl+K kicks. Each key read once, sent by action name via do_game_action, which
 			re-validates host/phase/staff server-side. PVP shares this menu but adds side options, so it gets its own block. */
 			if (in_game and (game_mode=="pve" or game_mode=="evp") and current_game_host==name and control_is_down())

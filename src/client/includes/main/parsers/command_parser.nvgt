@@ -110,15 +110,12 @@ void comparse(string text, string channel = "global")
 			if(parsed.length() != 1) { syntax_error("/ignored"); return; }
 			send(0, "ignoredmenu", 0, true); // everyone: the server pushes your personal ignore list to review and unmute
 		}
-		else if(base == "/accept")
+		else if(base == "/invtime")
 	{
-		if(parsed.length() != 1) { syntax_error("/accept"); return; }
-		send(0, "acceptinvite", 0, true); // accept a pending room invitation
-	}
-	else if(base == "/reject")
-	{
-		if(parsed.length() != 1) { syntax_error("/reject"); return; }
-		send(0, "rejectinvite", 0, true); // refuse a pending room invitation
+		/* The /accept and /reject commands were removed -- invites are now answered with Alt+A (accept) and Alt+D
+		(deny) in the lobby or a room. This replaces them with a reminder of how long is left on your pending invite. */
+		if(parsed.length() != 1) { syntax_error("/invtime"); return; }
+		send(0, "invitetime", 0, true); // ask the server how many seconds remain on your pending room/game invite
 	}
 	else if(base == "/restart" or base == "/rt")
 	{
