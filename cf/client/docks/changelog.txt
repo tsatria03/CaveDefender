@@ -1,4 +1,5 @@
 New in 4.9.
+The host of a free play arena can now set a wall reinforce limit before beginning it, from the arena menu, just as the other modes ask at the start of a game. Pick 200, 400, or 800 percent, or no limit, for how far wood may reinforce a wall; it locks in once you begin the arena, and free play still defaults to no limit.
 Kicking yourself out of a room or a game, using the kick menu, now plays the kick sound, the same cue you hear when someone else kicks you, instead of the room-leave sound or, for a game, silence. Leaving through the ordinary leave option still plays the normal leave cue.
 Creating a room no longer also plays the join-room sound on top of the room-created sound; you now hear just the created cue. And deleting a room now plays the leave-room sound, so closing a room you are in sounds like leaving one.
 A player's information card now shows their total wood and total ammo collected, the same lifetime figures the leaderboards rank, listed next to their best rounds in each mode.

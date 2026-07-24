@@ -1533,7 +1533,7 @@ else
 {
 string place_type = spend_one_wood(players[index].inv); // spend your biggest piece first (large -> medium -> small)
 int gain = wood_reinforce_value(place_type); // repair scales with the size spent (small<medium<large)
-if(games[gi].reinforce_cap > 0) repair_wall(wi, gain, true, games[gi].reinforce_cap); // per-game reinforce limit (200/400/600/800% of full strength)
+if(games[gi].reinforce_cap > 0) repair_wall(wi, gain, true, games[gi].reinforce_cap); // per-game reinforce limit (200/400/800% of full strength)
 else repair_wall(wi, gain, false); // "No limit" was chosen: uncapped, as before
 if(games[gi].mode=="pvp") players[index].pvp_wood_placed++; // tally this defender's placements for the results screen
 send_wood_count(index);
