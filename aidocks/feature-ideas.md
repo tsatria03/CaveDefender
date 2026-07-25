@@ -53,7 +53,7 @@ Filling the PVP void = give the co-op/solo modes the competition, depth, and rep
 
 ## Promoted to todo (already committed on the todo list)
 - **Server-wide leaderboard** (todo: "top PVE and EVP best rounds… already stored on each account"). The clearest PVP replacement — asynchronous competition. Design fleshed out below.
-- **Learn-sounds / practice mode for EVP and PVE** (todo) — onboarding for an audio-only game; lets newcomers learn a mode safely, then graduate to the real thing. High accessibility value.
+- **Learn-sounds / practice mode for EVP and PVE** (todo) — onboarding for an audio-only game; lets newcomers learn a mode safely, then graduate to the real thing. High accessibility value. **Design specced 2026-07 in [[learn-sounds-menu]]** (main-menu sound browser on form_menu.nvgt's `learn_game_sounds_menu`; the broader "practice mode" — actually playing a mode safely — is still open beyond the sound browser).
 
 ## Design notes
 

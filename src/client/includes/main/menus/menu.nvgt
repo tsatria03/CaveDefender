@@ -5,6 +5,7 @@ void mainmenu()
 		setupmenu(true);
 		m.add_item("documentation menu", "docs");
 		m.add_item("game menu", "connect");
+		m.add_item("learn sounds menu", "learn");
 		m.add_item("preferences menu", "settings");
 		m.add_item("test speakers", "st");
 		m.add_item("restart game", "rx");
@@ -19,6 +20,11 @@ void mainmenu()
 		else if(sel=="connect")
 		{
 			connectionmenu();
+		}
+		else if(sel=="learn")
+		{
+			m.fade_music();
+			learnsoundsmenu();
 		}
 		else if(sel=="settings")
 		{
@@ -67,6 +73,155 @@ void docsmenu(bool music=true)
 		else if(sel=="credits") dockread("docks/credits.txt");
 		else if(sel=="readme") dockread("docks/readme.txt");
 		else if(sel=="todo") dockread("docks/todo list.txt");
+	}
+}
+/* The Learn Sounds menu (main menu, offline): a category picker, then a browsable, previewable list of that
+category's cues, built on form_menu's learn_game_sounds_menu helper. Sounds are grouped by type and every label says
+where the cue is used. ls_add adds one file; ls_addv builds a numbered-variant entry with a for-loop and tacks on the
+"multiple variants" note. audio_prefix is "sounds/", so each stored value carries its path from there down. */
+void ls_add(dictionary@ d, const string&in label, const string&in path)
+{
+	d.set(label, path);
+}
+void ls_addv(dictionary@ d, const string&in label, const string&in dir, const string&in base, int count)
+{
+	array<string> files;
+	for(int i=1; i<=count; i++) files.insert_last(dir + base + i + ".ogg");
+	d.set(label + ". This sound has multiple variants.", files);
+}
+void learnsoundsmenu()
+{
+	// Wood -- defenders' four tree kinds (PVE and free play).
+	dictionary wood;
+	string wclause = ": used in PVE and free play";
+	array<string> woodkinds = {"oak", "maple", "birch", "pine"};
+	array<string> wooddisp = {"Oak", "Maple", "Birch", "Pine"};
+	for(uint i=0; i<woodkinds.length(); i++)
+	{
+		string dir = "equipment/items/wood/" + woodkinds[i] + "/";
+		ls_add(wood, wooddisp[i] + " pickup" + wclause, dir + "take.ogg");
+		ls_add(wood, wooddisp[i] + " place" + wclause, dir + "place.ogg");
+		ls_add(wood, wooddisp[i] + " drop" + wclause, dir + "drop.ogg");
+		ls_add(wood, wooddisp[i] + " loop" + wclause, dir + "loop.ogg");
+	}
+	// Ammo -- attackers' five ammo kinds (EVP and free play).
+	dictionary ammo;
+	string aclause = ": used in EVP and free play";
+	array<string> ammokinds = {"arrow", "gas", "grenade", "normal", "powder"};
+	array<string> ammodisp = {"Arrow", "Gas", "Grenade", "Normal", "Powder"};
+	for(uint i=0; i<ammokinds.length(); i++)
+	{
+		string dir = "equipment/items/ammo/" + ammokinds[i] + "/";
+		ls_add(ammo, ammodisp[i] + " ammo pickup" + aclause, dir + "take.ogg");
+		ls_add(ammo, ammodisp[i] + " ammo drop" + aclause, dir + "drop.ogg");
+		ls_add(ammo, ammodisp[i] + " ammo loop" + aclause, dir + "loop.ogg");
+	}
+	// Weapons -- one flat list of every weapon's cues (EVP and free play).
+	dictionary weapons;
+	string wpclause = ": used in EVP and free play";
+	array<string> melee = {"axe", "bat", "crowbar", "feet", "fist", "hammer"};
+	array<string> meleedisp = {"Axe", "Bat", "Crowbar", "Feet", "Fist", "Hammer"};
+	for(uint i=0; i<melee.length(); i++)
+	{
+		string dir = "equipment/weapons/melee/" + melee[i] + "/";
+		ls_add(weapons, meleedisp[i] + " draw" + wpclause, dir + "draw.ogg");
+		ls_addv(weapons, meleedisp[i] + " swing" + wpclause, dir, "fire", 3);
+		ls_addv(weapons, meleedisp[i] + " hit" + wpclause, dir, "hit", 3);
+		ls_add(weapons, meleedisp[i] + " ricochet" + wpclause, dir + "rico.ogg");
+	}
+	array<string> expl = {"cannon", "firebomb", "grenade"};
+	array<string> expldisp = {"Cannon", "Firebomb", "Grenade"};
+	for(uint i=0; i<expl.length(); i++)
+	{
+		string dir = "equipment/weapons/explosive/" + expl[i] + "/";
+		ls_add(weapons, expldisp[i] + " draw" + wpclause, dir + "draw.ogg");
+		ls_add(weapons, expldisp[i] + " fire" + wpclause, dir + "fire.ogg");
+		ls_add(weapons, expldisp[i] + " projectile" + wpclause, dir + "loop.ogg");
+		ls_add(weapons, expldisp[i] + " hit" + wpclause, dir + "hit.ogg");
+		ls_add(weapons, expldisp[i] + " empty" + wpclause, dir + "empty.ogg");
+		ls_add(weapons, expldisp[i] + " reload" + wpclause, dir + "reload.ogg");
+		ls_add(weapons, expldisp[i] + " reloaded" + wpclause, dir + "ping.ogg");
+		ls_add(weapons, expldisp[i] + " ricochet" + wpclause, dir + "rico.ogg");
+	}
+	// Crossbow: like the explosive weapons, but ricochet has two variants.
+	string cbdir = "equipment/weapons/archery/crossbow/";
+	ls_add(weapons, "Crossbow draw" + wpclause, cbdir + "draw.ogg");
+	ls_add(weapons, "Crossbow fire" + wpclause, cbdir + "fire.ogg");
+	ls_add(weapons, "Crossbow projectile" + wpclause, cbdir + "loop.ogg");
+	ls_add(weapons, "Crossbow hit" + wpclause, cbdir + "hit.ogg");
+	ls_add(weapons, "Crossbow empty" + wpclause, cbdir + "empty.ogg");
+	ls_add(weapons, "Crossbow reload" + wpclause, cbdir + "reload.ogg");
+	ls_add(weapons, "Crossbow reloaded" + wpclause, cbdir + "ping.ogg");
+	ls_addv(weapons, "Crossbow ricochet" + wpclause, cbdir, "rico", 2);
+	// Guns: pistol and machine gun are twins -- 12 ricochet variants and 2 shell variants each.
+	array<string> guns = {"pistol", "machinegun"};
+	array<string> gunsdisp = {"Pistol", "Machine gun"};
+	for(uint i=0; i<guns.length(); i++)
+	{
+		string dir = "equipment/weapons/artillery/" + guns[i] + "/";
+		ls_add(weapons, gunsdisp[i] + " draw" + wpclause, dir + "draw.ogg");
+		ls_add(weapons, gunsdisp[i] + " fire" + wpclause, dir + "fire.ogg");
+		ls_add(weapons, gunsdisp[i] + " bullet" + wpclause, dir + "loop.ogg");
+		ls_add(weapons, gunsdisp[i] + " hit" + wpclause, dir + "hit.ogg");
+		ls_add(weapons, gunsdisp[i] + " empty" + wpclause, dir + "empty.ogg");
+		ls_add(weapons, gunsdisp[i] + " reload" + wpclause, dir + "reload.ogg");
+		ls_add(weapons, gunsdisp[i] + " reloaded" + wpclause, dir + "ping.ogg");
+		ls_addv(weapons, gunsdisp[i] + " ricochet" + wpclause, dir, "rico", 12);
+		ls_addv(weapons, gunsdisp[i] + " shell casing" + wpclause, dir, "shell", 2);
+	}
+	// Walls -- only the destructible wooden walls carry a full sound set (all modes).
+	dictionary walls;
+	string alclause = ": used in all modes";
+	ls_add(walls, "Crate wall bump" + alclause, "objects/walls/wallcrate/bump.ogg");
+	ls_add(walls, "Woodpile wall bump" + alclause, "objects/walls/wallwoodpile/bump.ogg");
+	string wwdir = "objects/walls/wallwood/";
+	ls_add(walls, "Wooden wall bump" + alclause, wwdir + "bump.ogg");
+	ls_addv(walls, "Wooden wall hit" + alclause, wwdir, "hurt", 3);
+	ls_add(walls, "Wooden wall break" + alclause, wwdir + "death.ogg");
+	ls_add(walls, "Wooden wall ignite" + alclause, wwdir + "burnstart.ogg");
+	ls_add(walls, "Wooden wall burning" + alclause, wwdir + "burning.ogg");
+	ls_add(walls, "Wooden wall extinguish" + alclause, wwdir + "burnstop.ogg");
+	// Surfaces -- footsteps, one entry per surface (each with five step variants); context clause, not a mode.
+	dictionary surfaces;
+	ls_addv(surfaces, "Concrete step: used when you walk on concrete", "objects/platforms/concrete/", "step", 5);
+	ls_addv(surfaces, "Gravel step: used when you walk on gravel", "objects/platforms/gravel/", "step", 5);
+	ls_addv(surfaces, "Woodpile step: used when you walk on a woodpile", "objects/platforms/woodpile/", "step", 5);
+	// Interface -- the ten curated game cues; mode clause for the round cues, context clause for the rest.
+	dictionary interfacecat;
+	ls_add(interfacecat, "Build phase: used in PVE and EVP", "ui/misc/buildprep.ogg");
+	ls_add(interfacecat, "Wave begin: used in PVE and EVP", "ui/misc/wavestart.ogg");
+	ls_add(interfacecat, "Wave end: used in PVE and EVP", "ui/misc/wavestop.ogg");
+	ls_add(interfacecat, "Game paused: used in any game", "ui/misc/pause.ogg");
+	ls_add(interfacecat, "Game resumed: used in any game", "ui/misc/resume.ogg");
+	ls_add(interfacecat, "Player turn: used when you turn to face a direction in place", "ui/misc/turn.ogg");
+	ls_add(interfacecat, "Player beacon: used to locate other players around you", "ui/misc/beacon.ogg");
+	ls_add(interfacecat, "Join game: used when you join a game", "ui/misc/joingame.ogg");
+	ls_add(interfacecat, "Leaderboard climb: used when you move up a leaderboard", "ui/misc/lbrank.ogg");
+	ls_add(interfacecat, "Leaderboard update: used when another player moves up a leaderboard", "ui/misc/lbupdate.ogg");
+	// Assemble; the picker sorts the category names and the helper sorts each list, so insertion order is moot.
+	dictionary learnCategories;
+	learnCategories.set("Ammo", ammo);
+	learnCategories.set("Interface", interfacecat);
+	learnCategories.set("Surface", surfaces);
+	learnCategories.set("Wall", walls);
+	learnCategories.set("Weapon", weapons);
+	learnCategories.set("Wood", wood);
+	array<string>@ cats = learnCategories.get_keys();
+	cats.sort_ascending();
+	while(true)
+	{
+		setupmenu(false);
+		for(uint i=0; i<cats.length(); i++) m.add_item(cats[i], cats[i]);
+		m.add_item("back", "back");
+		m.intro_text = "Learn sounds menu. Choose a category of sounds, then pick a sound to preview it.";
+		int res = m.run();
+		string sel = res<0 ? "back" : m.selected_item_id;
+		if(sel == "back") { speak("canceled"); return; }
+		if(!learnCategories.exists(sel)) continue;
+		setupmenu(false); // fresh menu so the browser's list holds only this category's sounds plus its Go back item
+		m.automatic_intro = false; // the helper calls intro() itself; keep the first monitor() from re-announcing it
+		m.intro_text = sel + " sounds.";
+		learn_game_sounds_menu(cast<dictionary@>(learnCategories[sel]), "sounds/", m);
 	}
 }
 /* Shift+H shortcut: open the help. A regular player goes straight to the player help; staff first pick which
