@@ -327,7 +327,7 @@ Number row, 1 through 0 then dash and equals. Draw a weapon directly, in alphabe
 
 Spacebar. Swing a drawn melee weapon at the nearest wall, or fire a drawn ranged weapon at the wall you face, once per press; the machine gun instead fires continuously while it is held. For attackers, that is EVP and free play.
 
-Shift plus R. Reload the drawn ranged weapon from your reserve once it is empty; a ping sounds when it is loaded. For attackers, that is EVP and free play.
+Shift plus R. Reload the drawn ranged weapon from your reserve once it is empty; a ping sounds when it is loaded, and you cannot switch weapons until the reload finishes, so it is never cut short. For attackers, that is EVP and free play.
 
 X. Hear the drawn ranged weapon's ammo, how many rounds are loaded and how many are in reserve. For attackers, that is EVP and free play.
 

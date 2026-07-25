@@ -79,8 +79,8 @@ int weapon_menu_last_tab=0; // which weapon-menu tab to reopen on (0=All, 1=Arch
 void draw_weapon(string wname)
 {
 if(wname=="" or wname==current_weapon) return; // unknown, or already drawn
+if(is_reloading) { speak("You can't switch weapons while reloading."); return; } // no switching mid-reload -- it would silently throw the reload away; wait it out. (System re-arms go through equip_weapon, which is NOT gated.)
 current_weapon = wname;
-is_reloading = false; // switching weapons cancels any reload in progress
 p.destroy_sound(wepslot); // cut off the previous DRAW still ringing so switching weapons doesn't stack draws
 wepslot = p.play_3d("sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 send(0, "step equipment/weapons/"+weapon_class(wname)+"/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot

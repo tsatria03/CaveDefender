@@ -5,6 +5,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add options for setting the wall's health and reinforce limmits in the free play mode.
 **Finished. Fix the join and leave sounds for rooms not always playing.
 **Finished. Fix being able to invite people that have already been invited to places.
 **Finished. Fix not being able to do anything after a host leaves from a game.
