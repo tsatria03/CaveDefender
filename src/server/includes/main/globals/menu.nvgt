@@ -471,7 +471,7 @@ opts.insert_last(clitems_label); players[index].menu_actions.insert_last("cleari
 opts.insert_last("Modify wall health"); players[index].menu_actions.insert_last("setwallhealth");
 // The full reset (and Enable wall damage, from the arena menu) stays HOST-ONLY.
 if(ishost) { opts.insert_last("Reset cavern map"); players[index].menu_actions.insert_last("clearmap"); }
-send_menu(peer, "cavern", "Cavern controls.", opts);
+send_menu(peer, "cavern", "Cavern controls. The arena is active.", opts);
 }
 /* Run a cavern-control action by its action key (from the cavern menu). Re-validates free/active/host here so a
 stale menu can't act after the arena's gone. "Add cavern attacker bots" opens the count prompt (which cascades to

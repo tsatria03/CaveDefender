@@ -1588,11 +1588,12 @@ void netloop_impl()
 			game_paused = false;
 			current_game = string_to_number(parsed[1]);
 			game_outside = (parsed[4] == "out"); // explicit deck flag: "out" = outdoor gravel deck, "in" = indoor concrete deck (PVP watchers choose; PVE/EVP fixed by mode)
+			game_mode = parsed[3]; // the watched game's mode: needed so mode-aware keys work while watching (Tab's free-play arena status, the free-play wall up/down alerts)
 			current_game_host = parsed[5]; // plain name (we're never the host while watching); parsed[3] is the mode, parsed[4] the deck
 			string[] sjl = string_split(message, "\n", true);
 			string shost = (sjl.length() > 1) ? sjl[1] : parsed[5];
 			watch_host = shost; // remembered for the stop-watching confirmation
-			add_buffer_item("misc", "You are now watching " + shost + "'s " + (parsed[3] == "evp" ? "EVP" : parsed[3] == "pvp" ? "PVP" : "PVE") + " game.");
+			add_buffer_item("misc", "You are now watching " + shost + "'s " + (parsed[3] == "evp" ? "EVP" : parsed[3] == "pvp" ? "PVP" : parsed[3] == "free" ? "Free play" : "PVE") + " game.");
 			draw_map("cavern2", 0, gsize, 0, gsize, game_outside); // the deck (the outdoor gravel/wallwoodpile retheme is task #65)
 			me.z = spectate_height; // lift the listener onto the deck above the action (draw_map leaves z alone)
 			lastx = int(me.x);
