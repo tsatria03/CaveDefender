@@ -315,7 +315,7 @@ buffercheck();
 			else if(current_room != 0) announce_members("scopemembers", "in this room");
 			else announce_rooms();
 		}
-		if (!control_is_down() and key_pressed(KEY_L)) announce_members("scopemembers 0", "in the lobby"); // !control frees Ctrl+L for the room leave hotkey // works from anywhere, including inside a game, since it asks for the lobby scope (0) explicitly
+		if (!control_is_down() and key_pressed(KEY_L)) { if(alt_is_down()) { pause_pools(); learnsoundsmenu(); resume_pools(); } else announce_members("scopemembers 0", "in the lobby"); } // read L once, then branch: Alt+L opens the learn sounds menu (all sound pools paused while it's open, resumed when you exit at the top -- Alt+L is unreachable while paused/frozen, so resume can't un-pause a live game), plain L lists the lobby. !control frees Ctrl+L for the room leave hotkey; works anywhere in-session
 		if (key_pressed(KEY_G))
 		{
 			if(in_game) announce_members("scopemembers", "in this game");

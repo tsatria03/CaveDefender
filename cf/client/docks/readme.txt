@@ -307,6 +307,7 @@ Enter. In the lobby or a room, open the panel for where you are, the lobby panel
 Shift plus enter. In the lobby or a room, open the account panel, your personal settings in one place.
 Alt plus P. Open your preferences without leaving, the same settings you reach from the main menu; saving or canceling returns you to where you were.
 Alt plus K. Open the documentation menu without leaving, the changelog, credits, readme, and todo list you also reach from the main menu; closing it returns you to where you were.
+Alt plus L. Open the learn sounds menu without leaving, the same sound browser you reach from the main menu; every game sound pauses while it is open so the previews play cleanly, and they all resume the moment you close it. Plain L still lists who is in the lobby.
 Shift plus H. Open the help without typing the command; you go straight to the player help, while staff are first asked whether to view the player or the staff help.
 Shift plus U. Open the rules without typing the command; you go straight to the player rules, while staff are first asked which page to view.
 Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the connection menu, asking you to confirm first if that setting is on.
