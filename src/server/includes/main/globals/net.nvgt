@@ -2225,6 +2225,24 @@ push_cavern_bot_wall(index);
 }
 }
 }
+else if(parsed[0]=="setwallhealthpct" and index>-1 and parsed.length()>1)
+{
+/* Free play, Set wall health step 1: the typed percentage comes back here (ask_input prefix "setwallhealthpct").
+Re-validate, floor at a minimum of 1 (the min-1 check also catches a wrapped-negative from an overflow-huge entry);
+there is NO upper cap -- it's a direct debug set, not wood. Carry the percentage into the wall-target menu. */
+int gi=get_game_index(players[index].room_id);
+if(!can_use_cavern(gi, index)) { } // any live free-arena member (host or guest), not a spectator
+else
+{
+int pct = int(string_to_number(parsed[1]));
+if(pct < 1) send(event.peer_id, "misc Enter a wall strength of 1 percent or higher.", 0,true);
+else
+{
+players[index].menu_pending = "" + pct;
+push_set_wall_health_wall(index);
+}
+}
+}
 else if(parsed[0]=="cavernbuildercount" and index>-1 and parsed.length()>1)
 {
 /* Free play, Add cavern builders: the typed count (ask_input prefix "cavernbuildercount"). Re-validate
