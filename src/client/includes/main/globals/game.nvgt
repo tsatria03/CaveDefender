@@ -477,7 +477,7 @@ direction sent here is just a legacy hint it ignores (facing no longer matters).
 			}
 			else send(0, shift_is_down() ? "openpanel account" : (current_room==0 ? "openpanel lobby" : "openpanel room"), 0, true); // lobby/room: Enter jumps straight to the location panel (lobby or room), Shift+Enter to the Account panel -- these replace the old two-item Actions menu chooser
 		}
-		if(key_pressed(KEY_TAB) and in_game) { if(game_mode=="free") send(0, "opencavern", 0, true); else speak_game_status(); } // Tab: free play opens the server-side cavern controls (or reports the arena isn't started yet); the other modes speak the round status
+		if(key_pressed(KEY_TAB) and in_game) { if(game_mode=="free" and !watching) send(0, "opencavern", 0, true); else speak_game_status(); } // Tab: a free-play PLAYER opens the server-side cavern controls; a free-play watcher (who can't) and every other mode speak the status instead (speak_game_status reports the arena state for free play)
 		if(key_pressed(KEY_ESCAPE))
 		{
 			if(in_game) { if(watching) stop_watching_prompt(); else send(0, "openpausemenu", 0, true); continue; } // spectators leave the watch; players get the pause menu
@@ -536,6 +536,7 @@ bool can_defend()
 out where the round stands -- the build countdown, or whether the enemies are attacking or resting. */
 void speak_game_status()
 {
+	if(game_mode == "free") { speak(game_phase == "active" ? "The arena is active." : "The arena has not started yet."); return; } // free play has no rounds; report the arena state (reached by watchers -- free-play players Tab into the cavern controls instead)
 	if(game_phase == "build")
 	{
 		int rem = int(game_build_seconds) - int(game_phasetimer.elapsed / 1000);
