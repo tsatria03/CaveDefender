@@ -825,6 +825,28 @@ send(players[index].peer_id, "offlinepm " + sender + "\nOffline PM from " + sdis
 }
 clear_offline_pms(players[index].name);
 }
+/* Deliver every warning queued for a freshly-spawned player (added by /warn while they were offline), then clear the
+queue. Each goes as the SAME "warn" control message a live /warn sends, so the client shows it identically -- the
+warning sound, the level, the issuing staff's name, and the reason. Fresh logins only, never reconnects (called next
+to deliver_offline_pms). The warning is already on record in warnings.usr; this only replays the notification. */
+void deliver_pending_warns(int index)
+{
+string raw = get_pending_warns(players[index].name);
+if(raw == "") return;
+string[] lines = string_split(raw, "\n", true);
+for(uint i=0; i<lines.length(); i++)
+{
+if(lines[i].trim_whitespace() == "") continue;
+string[] parts = string_split(lines[i], "\t", true);
+if(parts.length() < 3) continue;
+int level = int(string_to_number(parts[0]));
+string staff = parts[1];
+string reason = string_join(parts, "\t", 2, parts.length()); // rejoin the reason: everything after level + staff
+string sdisp = read_field(staff, "nickname", staff); // the issuing staff's current display name, or their username if none/deleted
+send(players[index].peer_id, "warn " + level + "\n" + sdisp + "\n" + reason, 0, true);
+}
+clear_pending_warns(players[index].name);
+}
 // Sends a message to everyone sharing the given room scope (used by local chat). room_id 0 = lobby.
 void relay_to_local(int room_id, string msg, string language="", int sender_index=-1)
 {
@@ -1339,6 +1361,7 @@ if(i==uint(index) or players[i].room_id!=players[index].room_id) continue;
 send(event.peer_id, pos_msg(int(i)), 0,true);
 }
 deliver_offline_pms(index); // hand over any private messages left for them while they were offline
+deliver_pending_warns(index); // and replay any warnings issued to them while they were offline
 if(world_frozen) send(event.peer_id, "worldfreeze\nThe game is currently frozen.", 0, true); // joined during a developer world-stop: freeze them on arrival (no fresh "X has frozen" line -- that already happened)
 }
 }
@@ -3391,16 +3414,18 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         string wname = parsed[1];
                         int wlevel = int(string_to_number(parsed[2]));
                         string wreason = string_join(parsed, " ", 3, parsed.length());
-                        int ti = get_player_index_from(wname); // online-only, by username or nickname
+                        int ti = get_player_index_from(wname); // online by username or nickname, else -1
+                        string wtarget = (ti > -1) ? players[ti].name : wname; // resolve to the account username (nicknames only work online)
+                        string wtrank = (ti > -1) ? players[ti].rank : get_rank(wtarget); // rank from the roster if online, else from disk
                         if(wlevel < 1 || wlevel > 4)
                         {
                             send(event.peer_id, "Warning level must be between 1 and 4.", 0, true);
                         }
-                        else if(ti < 0)
+                        else if(!account_exists(wtarget)) // resolve on disk, like /unban -- an offline player can still be warned
                         {
-                            reply_target_not_found(event.peer_id, wname);
+                            send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
-                        else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
+                        else if(rank_level(wtrank) > rank_level(players[index].rank))
                         {
                             send(event.peer_id, "You can't warn someone above your own rank.", 0, true);
                         }
@@ -3411,14 +3436,16 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                             a reason that trips the crash filter is dropped and the warning still lands. */
                             bool wreason_dropped = filter_crash(wreason);
                             if(wreason_dropped) wreason = "";
-                            int wcount = add_warning(players[ti].name, wlevel, players[index].name, wreason);
-                            send(players[ti].peer_id, "warn "+wlevel+"\n"+display_name(index)+"\n"+wreason, 0, true);
-                            send(event.peer_id, "misc Warned "+display_name_flagged(ti)+" (level "+wlevel+"). This is warning number "+wcount+".", 0, true);
+                            int wcount = add_warning(wtarget, wlevel, players[index].name, wreason);
+                            string wtdisp = (ti > -1) ? display_name_flagged(ti) : read_field(wtarget, "nickname", wtarget); // display/nickname-aware, online or off
+                            if(ti > -1) send(players[ti].peer_id, "warn "+wlevel+"\n"+display_name(index)+"\n"+wreason, 0, true); // online: push the warning live
+                            else add_pending_warn(wtarget, wlevel, players[index].name, wreason); // offline: queue it, replayed on their next sign-in
+                            send(event.peer_id, "misc Warned "+wtdisp+" (level "+wlevel+"). This is warning number "+wcount+".", 0, true);
                             if(wreason_dropped) send(event.peer_id, "misc That reason contained a screen reader crash string, so the warning went through without it.", 0, true);
                             for(uint wsi=0; wsi<players.length(); wsi++)
                             {
                                 if(is_staff(players[wsi].rank) && players[wsi].peer_id != event.peer_id)
-                                    send(players[wsi].peer_id, "misc "+display_name(index)+" warned "+display_name_flagged(ti)+" (level "+wlevel+"): "+wreason, 0, true);
+                                    send(players[wsi].peer_id, "misc "+display_name(index)+" warned "+wtdisp+" (level "+wlevel+"): "+wreason, 0, true);
                             }
                         }
                     }
