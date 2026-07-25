@@ -46,3 +46,21 @@ broadcast_wall_strength(games[gi].id);
 send_to_game(games[gi].id, "wallrebuilt "+dir); // clients re-tile the breach back to solid + announce the return
 }
 }
+/* FREE PLAY: directly set one wall's current strength to `pct` percent of its max (base = conf.gvr wallbase) health --
+the Set wall health cavern control. A direct debug set, so it IGNORES the reinforce limit (that governs wood only). If
+the wall was DOWN (breached, health <= 0), re-raise it: cancel any pending self-heal for it and re-tile the breach back
+to solid on clients (mirrors heal_tick's rebuild). The caller broadcasts the new strengths once after setting. */
+void set_wall_health(int gi, string dir, int pct)
+{
+if(gi < 0 or gi >= int(games.length())) return;
+int wi = wall_in_dir(games[gi].id, dir, games[gi].size);
+if(wi < 0) return;
+bool wasdown = (walls[wi].health <= 0);
+walls[wi].health = walls[wi].maxhealth * pct / 100.0; // percent of the wall's full strength; over 100 = over-built, like piling on wood
+walls[wi].floor = walls[wi].health; // keep the EVP floor field consistent (unused in free)
+if(wasdown)
+{
+for(int h = int(games[gi].heals.length())-1; h >= 0; h--) if(games[gi].heals[h].dir == dir) games[gi].heals.remove_at(h); // we raised it ourselves; drop the pending self-heal so heal_tick won't re-roll it
+send_to_game(games[gi].id, "wallrebuilt "+dir); // clients re-tile the breach back to solid
+}
+}

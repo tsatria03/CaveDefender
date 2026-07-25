@@ -375,7 +375,7 @@ if(host and phase == "idle" and games[gi].mode != "free") { opts.insert_last("Be
 else if(host and phase == "idle" and games[gi].mode == "free")
 {
 opts.insert_last("Begin arena\tControl plus B."); players[index].menu_actions.insert_last("beginarena"); // Free play: start the sandbox (no build phase, no bots or wood granted)
-opts.insert_last("Change wall reinforce limit"); players[index].menu_actions.insert_last("changereinforce"); // host-only, pre-start: how far WOOD may reinforce a wall this arena; an idle-only option, so it locks (disappears) once you Begin arena
+opts.insert_last("Change wall reinforce limit. Currently set to " + reinforce_cap_label(games[gi].reinforce_cap) + "."); players[index].menu_actions.insert_last("changereinforce"); // host-only, pre-start: how far WOOD may reinforce a wall this arena; an idle-only option, so it locks (disappears) once you Begin arena
 }
 else if(host and phase == "active" and games[gi].mode == "free")
 {
@@ -467,6 +467,8 @@ string clitems_label = "Clear cavern items";
 string clitems_tally = cavern_item_tally(games[gi].id);
 if(clitems_tally != "") clitems_label += ": " + clitems_tally + ".";
 opts.insert_last(clitems_label); players[index].menu_actions.insert_last("clearitems");
+// Set wall health: a test tool that directly sets a wall's current strength (host AND guests). After the clears; undone by Clear map's fresh walls.
+opts.insert_last("Set wall health"); players[index].menu_actions.insert_last("setwallhealth");
 // The full reset (and Enable wall damage, from the arena menu) stays HOST-ONLY.
 if(ishost) { opts.insert_last("Clear cavern map"); players[index].menu_actions.insert_last("clearmap"); }
 send_menu(peer, "cavern", "Cavern controls.", opts);
@@ -489,6 +491,7 @@ if(wood_count_in(games[gi].id) <= 0) send(peer, "misc You need wood on the groun
 else ask_input(peer, "How many builder bots?", "cavernbuildercount", false); // client returns "cavernbuildercount <n>"
 }
 else if(act == "additems") push_cavern_item_type(player_index); // What item? -> kind -> How many?
+else if(act == "setwallhealth") ask_input(peer, "Set a wall to what percentage of its full strength? Enter 1 or higher.", "setwallhealthpct", false); // free play, host + guests: a direct wall-strength set (no upper cap); the wall is chosen next
 else if(act == "clearbots")
 {
 if(!ishost)
@@ -549,6 +552,17 @@ opts.insert_last("South wall");
 opts.insert_last("West wall");
 opts.insert_last("All walls");
 send_menu(players[index].peer_id, "cavernbotwall", "Which wall should they attack?", opts);
+}
+// FREE PLAY: step 2 of Set wall health -- pick which wall to set (or all four). The percentage rides in menu_pending.
+void push_set_wall_health_wall(int index)
+{
+string[] opts;
+opts.insert_last("North wall");
+opts.insert_last("East wall");
+opts.insert_last("South wall");
+opts.insert_last("West wall");
+opts.insert_last("All walls");
+send_menu(players[index].peer_id, "setwallhealthwall", "Which wall should be set?", opts);
 }
 // FREE PLAY: step 3 of Add cavern bots (All walls only) -- spread the count evenly, or put that many on EACH wall. Labels carry the number.
 void push_cavern_bot_spread(int index, int n)
@@ -730,18 +744,26 @@ opts.insert_last("800 percent"); // 2 -> 8
 opts.insert_last("No limit");    // 3 -> 0
 send_menu(players[index].peer_id, "startreinforce", "Choose a wall reinforce limit", opts);
 }
+// A wall reinforce limit (reinforce_cap: multiplier 2/4/8, or 0 = no limit) as a spoken phrase, for menu labels.
+string reinforce_cap_label(double cap)
+{
+if(cap == 2) return "200 percent";
+if(cap == 4) return "400 percent";
+if(cap == 8) return "800 percent";
+return "no limit";
+}
 /* FREE PLAY: the host changes the arena's wall reinforce limit BEFORE Begin arena -- the sandbox equivalent of the
-PVE/PVP start-game reinforce question. Same four options; the one currently set is tagged ". Currently active.".
-The result goes to the "freereinforce" menu id, which sets the LIVE game's reinforce_cap (push_start_reinforce
-above instead feeds the start-game cascade). reinforce_cap holds the multiplier 2/4/8, or 0 = no limit. */
+PVE/PVP start-game reinforce question. Same four options; the one currently set is tagged ". Selected.". The result
+goes to the "freereinforce" menu id, which sets the LIVE game's reinforce_cap (push_start_reinforce above instead
+feeds the start-game cascade). reinforce_cap holds the multiplier 2/4/8, or 0 = no limit. */
 void push_free_reinforce(int index, int gi)
 {
 double cur = games[gi].reinforce_cap;
 string[] opts;
-opts.insert_last("200 percent" + (cur == 2 ? ". Currently active." : "")); // -> 2
-opts.insert_last("400 percent" + (cur == 4 ? ". Currently active." : "")); // -> 4
-opts.insert_last("800 percent" + (cur == 8 ? ". Currently active." : "")); // -> 8
-opts.insert_last("No limit" + (cur == 0 ? ". Currently active." : ""));     // -> 0 (free play's default)
+opts.insert_last("200 percent" + (cur == 2 ? ". Selected." : "")); // -> 2
+opts.insert_last("400 percent" + (cur == 4 ? ". Selected." : "")); // -> 4
+opts.insert_last("800 percent" + (cur == 8 ? ". Selected." : "")); // -> 8
+opts.insert_last("No limit" + (cur == 0 ? ". Selected." : ""));     // -> 0 (free play's default)
 send_menu(players[index].peer_id, "freereinforce", "Choose a wall reinforce limit for this arena.", opts);
 }
 /* Start-game cascade (PVE only): ask whether a fallen wall's bots pile onto the walls still standing. Yes is the
@@ -1492,6 +1514,22 @@ push_cavern_bot_recovery(player_index); // "Do you want these bots to spawn upon
 }
 else push_cavern_bot_spread(player_index, n); // All walls -> ask spread-evenly vs on-each
 }
+else if(id == "setwallhealthwall")
+{
+// FREE PLAY, Set wall health step 2: the target wall (or all four). The percentage rode in menu_pending.
+if(choice < 0) return; // cancelled
+int gi = get_game_index(players[player_index].room_id);
+if(!can_use_cavern(gi, player_index)) return; // any live free-arena member (host or guest), not a spectator
+int pct = int(string_to_number(players[player_index].menu_pending));
+if(pct < 1) return;
+string[] dirs;
+if(choice <= 3) dirs.insert_last((choice == 0) ? "north" : (choice == 1) ? "east" : (choice == 2) ? "south" : "west");
+else { dirs.insert_last("north"); dirs.insert_last("east"); dirs.insert_last("south"); dirs.insert_last("west"); }
+for(uint i=0; i<dirs.length(); i++) set_wall_health(gi, dirs[i], pct);
+broadcast_wall_strength(games[gi].id); // update everyone's N/E/S/W readouts once, after all sets
+string where = (choice <= 3) ? ("The " + dirs[0] + " wall has") : "All four walls have";
+send(peer, "misc " + where + " been set to " + pct + " percent.", 0, true);
+}
 else if(id == "cavernbotspread")
 {
 // FREE PLAY, Add cavern bots step 3 (All walls): spread the count evenly across the four walls, or put that many on EACH.
@@ -1701,8 +1739,7 @@ int gi = get_game_index(players[player_index].room_id);
 if(gi < 0 or games[gi].mode != "free" or games[gi].phase != "idle" or games[gi].host_peer != peer) return; // re-validate: still host, free, pre-start (the limit locks at Begin arena)
 double rein = (choice == 0) ? 2 : (choice == 1) ? 4 : (choice == 2) ? 8 : 0; // 200/400/800 percent, or 0 = no limit
 games[gi].reinforce_cap = rein;
-string label = (choice == 3) ? "no limit" : (((choice == 0) ? "200" : (choice == 1) ? "400" : "800") + " percent");
-send(peer, "misc The wall reinforce limit for this arena is now " + label + ".", 0, true);
+send(peer, "misc The wall reinforce limit for this arena is now " + reinforce_cap_label(rein) + ".", 0, true);
 }
 else if(id == "startpileup")
 {
