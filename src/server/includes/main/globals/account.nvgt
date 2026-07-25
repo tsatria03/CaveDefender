@@ -257,6 +257,27 @@ void clear_offline_pms(string name)
 {
 write_field(name, "offline_pm's", "");
 }
+/* --- Pending warnings: queued by /warn on an OFFLINE player, delivered at their next login (mirrors the offline-PM
+queue above). Stored in pending_warns.usr, one per line, TAB-delimited: <level>\t<staff username>\t<reason>. The
+reason is free text and the last field, so it's rejoined on read; a warn reason is single-line chat (space-delimited
+on the wire), so unlike an offline PM there are no body newlines to encode. The warning itself is already recorded in
+warnings.usr the moment it's issued; this queue is only the "tell them when they return" half. */
+void add_pending_warn(string recipient, int level, string staff, string reason)
+{
+string existing = read_field(recipient, "pending_warns", "");
+string entry = "" + level + "\t" + staff + "\t" + reason;
+write_field(recipient, "pending_warns", (existing == "") ? entry : existing + "\n" + entry);
+}
+// The raw queued pending warnings for a player ("" if none), one per line; the caller parses each and then clears them.
+string get_pending_warns(string name)
+{
+return read_field(name, "pending_warns", "");
+}
+// Drop all queued pending warnings for a player (after they've been delivered).
+void clear_pending_warns(string name)
+{
+write_field(name, "pending_warns", "");
+}
 /* Offline-capable version of player_ignores: does the recipient ACCOUNT have the sender on its personal ignore
 list? Reads ignored.usr straight from disk so it works when the recipient isn't online. Staff are never ignored,
 mirroring player_ignores, so a staff member's PM always goes through. */
