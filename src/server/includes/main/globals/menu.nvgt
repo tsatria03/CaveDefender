@@ -467,10 +467,10 @@ string clitems_label = "Clear cavern items";
 string clitems_tally = cavern_item_tally(games[gi].id);
 if(clitems_tally != "") clitems_label += ": " + clitems_tally + ".";
 opts.insert_last(clitems_label); players[index].menu_actions.insert_last("clearitems");
-// Set wall health: a test tool that directly sets a wall's current strength (host AND guests). After the clears; undone by Clear map's fresh walls.
-opts.insert_last("Set wall health"); players[index].menu_actions.insert_last("setwallhealth");
+// Modify wall health: a test tool that directly sets a wall's current strength (host AND guests). After the clears; undone by Reset cavern map's fresh walls.
+opts.insert_last("Modify wall health"); players[index].menu_actions.insert_last("setwallhealth");
 // The full reset (and Enable wall damage, from the arena menu) stays HOST-ONLY.
-if(ishost) { opts.insert_last("Clear cavern map"); players[index].menu_actions.insert_last("clearmap"); }
+if(ishost) { opts.insert_last("Reset cavern map"); players[index].menu_actions.insert_last("clearmap"); }
 send_menu(peer, "cavern", "Cavern controls.", opts);
 }
 /* Run a cavern-control action by its action key (from the cavern menu). Re-validates free/active/host here so a
