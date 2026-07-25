@@ -1971,26 +1971,34 @@ force_logout(tpeer); // don't wait on the client to leave: revoke identity + dro
 }
 else if(parsed[0]=="changepassadmin" and index>-1 and parsed.length()==3)
 {
-/* Admin RESET: administrator+ sets another online player's password without their old one (at-or-below rank), then
-logs them out. Their saved password is left stale (they don't know the new one), so staff tell them out of band. */
+/* Admin RESET: administrator+ sets another player's password without their old one (at-or-below rank). Works on an
+OFFLINE account too (resolved on disk, like /unban), so staff can restore access for a locked-out player who isn't
+connected. An online target is logged out afterward; an offline one just has the new hash written. Either way their
+saved password is left stale (they don't know the new one), so staff tell them out of band. */
 if(rank_level(players[index].rank) < 2) send(event.peer_id, "misc You can't reset another player's password.", 0, true);
 else
 {
-int ti = get_player_index_from(parsed[1]);
+int ti = get_player_index_from(parsed[1]); // online player by username or nickname, else -1
+string target = (ti > -1) ? players[ti].name : parsed[1]; // resolve to the account username (nicknames only work online)
 string np = parsed[2];
-if(ti < 0) reply_target_not_found(event.peer_id, parsed[1]);
-else if(rank_level(players[ti].rank) > rank_level(players[index].rank)) send(event.peer_id, "misc You can't reset the password of someone above your rank.", 0, true);
+string trank = (ti > -1) ? players[ti].rank : get_rank(target); // rank from the roster if online, else from disk
+if(!account_exists(target)) send(event.peer_id, "misc This player does not exist.", 0, true);
+else if(rank_level(trank) > rank_level(players[index].rank)) send(event.peer_id, "misc You can't reset the password of someone above your rank.", 0, true);
 else if(np.length() < 6 or np.length() > 24) send(event.peer_id, "misc The new password must be between 6 and 24 characters.", 0, true);
 else
 {
-write_field(players[ti].name, "password", password_blob(make_salt(), np));
+write_field(target, "password", password_blob(make_salt(), np));
+string tname = (ti > -1) ? display_name_flagged(ti) : read_field(target, "nickname", target); // display/nickname-aware, online or off
+send(event.peer_id, "misc You reset "+tname+"'s password.", 0, true);
+notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" reset "+(ti > -1 ? afk_prefix(ti) : "")+tname+"'s password.", -1);
+if(ti > -1) // online: log them out so a modified client can't keep playing on the old-password session
+{
 int tpeer = players[ti].peer_id;
-send(event.peer_id, "misc You reset "+display_name_flagged(ti)+"'s password.", 0, true);
-notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" reset "+afk_prefix(ti)+display_name_flagged(ti)+"'s password.", -1);
 send(0, "offline "+players[ti].name+" "+players[ti].rank+" "+players[ti].nickname, 0, true);
 send(tpeer, "passreset", 0, true); // the target is logged out; their saved password stays as-is
 players.remove_at(ti);
-force_logout(tpeer); // enforce the logout server-side so a modified client can't keep playing on the reset account
+force_logout(tpeer); // enforce the logout server-side so a modified client can't keep the session
+}
 }
 }
 }
@@ -2019,33 +2027,38 @@ force_logout(tpeer); // the account no longer exists: revoke identity + drop the
 }
 else if(parsed[0]=="delcharadmin" and index>-1 and parsed.length()==2)
 {
-/* Admin /delchar <username>: administrator+ deletes another ONLINE player's account (at-or-below rank). The owner
-can't be deleted by anyone else (use the self form); self-targeting is bounced to the password-checked self form. */
+/* Admin /delchar <username>: administrator+ deletes another player's account (at-or-below rank). Works on an OFFLINE
+account too (resolved on disk, like /unban). The owner can't be deleted by anyone else (use the self form);
+self-targeting is bounced to the password-checked self form. An online target is also logged out. */
 if(rank_level(players[index].rank) < 2) send(event.peer_id, "misc You can't delete other players' accounts.", 0, true);
 else
 {
-int ti = get_player_index_from(parsed[1]);
-if(ti < 0) reply_target_not_found(event.peer_id, parsed[1]);
+int ti = get_player_index_from(parsed[1]); // online player by username or nickname, else -1
+string target = (ti > -1) ? players[ti].name : parsed[1]; // resolve to the account username (nicknames only work online)
+string trank = (ti > -1) ? players[ti].rank : get_rank(target); // rank from the roster if online, else from disk
+if(!account_exists(target)) send(event.peer_id, "misc This player does not exist.", 0, true);
 else if(ti == index) send(event.peer_id, "misc To delete your own account, use /delchar with no name.", 0, true);
-else if(is_owner(players[ti].name)) send(event.peer_id, "misc You can't delete the owner's account.", 0, true);
-else if(rank_level(players[ti].rank) > rank_level(players[index].rank)) send(event.peer_id, "misc You can't delete the account of someone above your rank.", 0, true);
+else if(is_owner(target)) send(event.peer_id, "misc You can't delete the owner's account.", 0, true);
+else if(rank_level(trank) > rank_level(players[index].rank)) send(event.peer_id, "misc You can't delete the account of someone above your rank.", 0, true);
 else
 {
-string acct = players[ti].name;
-int tpeer = players[ti].peer_id;
-string tflagged = display_name_flagged(ti);
-string dname = afk_prefix(ti) + tflagged; // the target, for the public + audit lines
+int tpeer = (ti > -1) ? players[ti].peer_id : -1; // captured before any removal shifts indices
+string tflagged = (ti > -1) ? display_name_flagged(ti) : read_field(target, "nickname", target); // display/nickname-aware, online or off
+string dname = (ti > -1 ? afk_prefix(ti) : "") + tflagged; // the target, for the public + audit lines
 string aname = afk_prefix(index) + display_name_flagged(index); // the actor, captured before any removal shifts indices
-if(!delete_account(acct)) send(event.peer_id, "misc The deletion failed, so the account was not removed.", 0, true);
+if(!delete_account(target)) send(event.peer_id, "misc The deletion failed, so the account was not removed.", 0, true);
 else
 {
-remove_from_online_ignores(acct);
-players.remove_at(ti);
+remove_from_online_ignores(target);
+if(ti > -1) players.remove_at(ti);
 send(event.peer_id, "misc You deleted "+tflagged+"'s account.", 0, true);
 notify_staff_audit(aname+" deleted "+dname+"'s account.", -1);
 for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "chardeleted "+dname+"'s account has been deleted.", 0, true);
+if(ti > -1) // online: log the target out; the account no longer exists so a modified client can't keep a session on it
+{
 send(tpeer, "delcharkicked", 0, true);
-force_logout(tpeer); // the account no longer exists: revoke identity + drop the socket so a modified client can't keep a session on it
+force_logout(tpeer);
+}
 }
 }
 }

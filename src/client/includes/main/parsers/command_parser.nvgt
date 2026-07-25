@@ -428,7 +428,8 @@ void comparse(string text, string channel = "global")
 		else if(base == "/delchar")
 	{
 		/* Self: /delchar (no args) deletes YOUR account -- warn, then confirm with your password. Admin (administrator+):
-		/delchar <username> deletes another online player's after a warning. The server does the deletion and logout. */
+		/delchar <username> deletes another player's after a warning, whether or not they're online. The server does the
+		deletion and, if the target is connected, the logout. */
 		if(parsed.length() == 1)
 		{
 			setupmenu();
