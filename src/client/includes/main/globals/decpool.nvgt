@@ -1,4 +1,5 @@
 sound_pool@[] all_pools(0);
+float[] saved_pool_volumes; // each pool mixer's volume, saved by mute_pools and restored by unmute_pools (used by the learn sounds menu)
 
 void apply_map_pool()
 {
@@ -47,5 +48,28 @@ for(uint i = 0; i < all_pools[h].items.length(); i++)
 {
 all_pools[h].resume_sound(i);
 }
+}
+}
+/* Silence every game sound pool by muting its mixer, and restore it later. Unlike pause_pools (which only freezes
+sounds already PLAYING at the moment it runs), muting the mixer also silences sounds SPAWNED while muted -- every
+pool sound is routed through pool.mixer via set_mixer, and new ones are too, so they're born silent with no timing
+gap. Used while the learn sounds menu is open in-session, so bot footsteps and item cues arriving over the network
+can't leak through. mixer.volume = -100 maps to linear amplitude 0 (fully silent); 0 is full. */
+void mute_pools()
+{
+saved_pool_volumes.resize(all_pools.length());
+for(uint i = 0; i < all_pools.length(); i++)
+{
+if(@all_pools[i].mixer == null) { saved_pool_volumes[i] = 0; continue; }
+saved_pool_volumes[i] = all_pools[i].mixer.volume;
+all_pools[i].mixer.volume = -100;
+}
+}
+void unmute_pools()
+{
+for(uint i = 0; i < all_pools.length(); i++)
+{
+if(@all_pools[i].mixer == null) continue;
+all_pools[i].mixer.volume = (i < saved_pool_volumes.length()) ? saved_pool_volumes[i] : 0;
 }
 }
