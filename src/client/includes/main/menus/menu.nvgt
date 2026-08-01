@@ -99,10 +99,10 @@ void learnsoundsmenu()
 	for(uint i=0; i<woodkinds.length(); i++)
 	{
 		string dir = "equipment/items/wood/" + woodkinds[i] + "/";
-		ls_add(wood, wooddisp[i] + " pickup" + wclause, dir + "take.ogg");
-		ls_add(wood, wooddisp[i] + " place" + wclause, dir + "place.ogg");
-		ls_add(wood, wooddisp[i] + " drop" + wclause, dir + "drop.ogg");
-		ls_add(wood, wooddisp[i] + " loop" + wclause, dir + "loop.ogg");
+		ls_add(wood, wooddisp[i] + " wood pickup" + wclause, dir + "take.ogg");
+		ls_add(wood, wooddisp[i] + " wood place" + wclause, dir + "place.ogg");
+		ls_add(wood, wooddisp[i] + " wood drop" + wclause, dir + "drop.ogg");
+		ls_add(wood, wooddisp[i] + " wood loop" + wclause, dir + "loop.ogg");
 	}
 	// Ammo -- attackers' five ammo kinds (EVP and free play).
 	dictionary ammo;
