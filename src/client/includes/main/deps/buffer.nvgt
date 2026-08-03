@@ -145,49 +145,78 @@ else{
 buffers[bufferpos].toggle_mute();
 }
 }
-void next_buffer()
+/* A buffer only shows up in the arrow-key category rotation once it has something in it -- EXCEPT "all" and
+"alerts", which always show (they're the two buffers that can't be muted). So an empty category is skipped over
+rather than stopped on with an "empty" readout, and it appears the instant its first message lands. New messages
+still speak live and still land in "all" regardless, so nothing is missed while a category is hidden. */
+bool buffer_visible(int i)
 {
-if(buffers.length()==0) return;
-bool moved=false;
-if(bufferpos<int(buffers.length())-1) { bufferpos++; moved=true; }
-if(!moved and buffers.length()>1) return; // at the last of several categories: hard stop; a lone category re-announces
-spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
+if(i < 0 or i >= int(buffers.length())) return false;
+return buffers[i].name=="all" or buffers[i].name=="alerts" or buffers[i].items.length()>0;
+}
+// How many categories are currently visible (drives the switch cue's spatial pan/pitch, so it reflects the shortened list).
+int visible_buffer_count()
+{
+int n=0;
+for(uint i=0; i<buffers.length(); i++) if(buffer_visible(int(i))) n++;
+return n;
+}
+// The 0-based position of the focused category among the visible ones (for the same pan/pitch).
+int visible_buffer_position()
+{
+int n=0;
+for(int i=0; i<bufferpos and i<int(buffers.length()); i++) if(buffer_visible(i)) n++;
+return n;
+}
+// The shared "moved to this category" cue + readout, positioned within the VISIBLE list. Used by all four category-nav keys.
+void announce_buffer()
+{
+if(bufferpos<0 or bufferpos>=int(buffers.length())) return;
+int vc=visible_buffer_count(), vp=visible_buffer_position();
+spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(vc+1,vp,-50,50),0,max(20,convert_to_pitch(vc+1,vp,20,200)),false);
 string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
 if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
 speak(binfo, true);
+}
+void next_buffer()
+{
+if(buffers.length()==0) return;
+int target=-1;
+for(int i=bufferpos+1; i<int(buffers.length()); i++) if(buffer_visible(i)) { target=i; break; } // next visible category, skipping empties
+if(target!=-1) { bufferpos=target; announce_buffer(); return; }
+if(visible_buffer_count()>1) return; // already at the last visible category: hard stop
+announce_buffer(); // a lone visible category just re-announces itself
 }
 void previous_buffer()
 {
 if(buffers.length()==0) return;
-bool moved=false;
-if(bufferpos>0) { bufferpos--; moved=true; }
-if(!moved and buffers.length()>1) return; // at the first of several categories: hard stop; a lone category re-announces
-spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
-string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
-if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
-speak(binfo, true);
+int target=-1;
+for(int i=bufferpos-1; i>=0; i--) if(buffer_visible(i)) { target=i; break; } // previous visible category, skipping empties
+if(target!=-1) { bufferpos=target; announce_buffer(); return; }
+if(visible_buffer_count()>1) return; // already at the first visible category: hard stop
+announce_buffer();
 }
 void top_buffer()
 {
 if(buffers.length()==0) return;
-bool moved=(bufferpos!=0);
-bufferpos=0;
-if(!moved and buffers.length()>1) return; // already at the top of several: hard stop; a lone category re-announces
-spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
-string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
-if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
-speak(binfo, true);
+int target=-1;
+for(int i=0; i<int(buffers.length()); i++) if(buffer_visible(i)) { target=i; break; } // the first visible category (always "all")
+if(target<0) return;
+bool moved=(bufferpos!=target);
+bufferpos=target;
+if(!moved and visible_buffer_count()>1) return; // already at the top of several visible: hard stop
+announce_buffer();
 }
 void bottom_buffer()
 {
 if(buffers.length()==0) return;
-bool moved=(bufferpos!=int(buffers.length())-1);
-bufferpos=int(buffers.length())-1;
-if(!moved and buffers.length()>1) return; // already at the bottom of several: hard stop; a lone category re-announces
-spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(buffers.length()+1,bufferpos,-50,50),0,max(20,convert_to_pitch(buffers.length()+1,bufferpos,20,200)),false);
-string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
-if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
-speak(binfo, true);
+int target=-1;
+for(int i=int(buffers.length())-1; i>=0; i--) if(buffer_visible(i)) { target=i; break; } // the last visible category
+if(target<0) return;
+bool moved=(bufferpos!=target);
+bufferpos=target;
+if(!moved and visible_buffer_count()>1) return; // already at the bottom of several visible: hard stop
+announce_buffer();
 }
 void next_buffer_item()
 {
@@ -350,6 +379,7 @@ if (bufferpos < 0 || bufferpos >= int(buffers.length()))
 return;
 buffers[bufferpos].items.resize(0);
 buffers[bufferpos].bpos = 0;
+if(!buffer_visible(bufferpos)) bufferpos = 0; // the cleared category is now empty and hidden (not all/alerts) -- fall back to the always-present all buffer
 }
 void clear_all_buffers()
 {
@@ -358,6 +388,7 @@ for (uint i = 0; i < buffers.length(); i++)
 buffers[i].items.resize(0);
 buffers[i].bpos = 0;
 }
+bufferpos = 0; // every category but all/alerts is now hidden; focus the always-present all buffer
 }
 
 void buffercheck()

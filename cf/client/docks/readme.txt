@@ -314,7 +314,7 @@ O. Talk over voice chat. With hold to talk on, hold O to talk; with it off, pres
 
 The message buffers.
 
-These review past messages, which are sorted into categories such as global chats, private chats, and alerts.
+These review past messages, which are sorted into categories such as global chats, private chats, and alerts. A category only joins the ones you move between once it has a message in it, so cycling skips the empty ones and lands only on categories with something to read; a category you clear drops back out until its next message. The all category, which gathers every message, and the alerts category are always present, since neither can be muted. New messages are still read aloud as they arrive even for a category you are not on, and still collect in all, so hiding an empty category never causes you to miss anything.
 
 Comma. Move to the previous message in the current category.
 Period. Move to the next message in the current category.
