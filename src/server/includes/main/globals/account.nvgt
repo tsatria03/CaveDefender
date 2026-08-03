@@ -1,5 +1,7 @@
-/* Account storage. Each account is a FOLDER at data/players/<username>/, holding one small file per
-field: username.usr, password.usr, pronoun.usr, rank.usr, muted.usr, banned.usr.
+/* Account storage. Each account is a FOLDER at data/players/<username>/ with two subfolders: info/ holds one
+small .usr file per data field (username.usr, password.usr, pronoun.usr, rank.usr, muted.usr, banned.usr, the
+records, ...), and onoffs/ holds the account's custom media (online.ogg / offline.ogg). field_path resolves the
+info/ files; the account FOLDER itself is still what account_dir / account_exists / rename / delete operate on.
 This lets a server host read or edit a single field by hand without parsing a combined file.
 
 Passwords are never stored in plaintext: password.usr holds "argon2id$<nb_blocks>$<nb_passes>$<salt>$<hash>"
@@ -26,7 +28,7 @@ return direct;
 }
 string field_path(string name, string field)
 {
-return account_dir(name) + "/" + field + ".usr";
+return account_dir(name) + "/info/" + field + ".usr"; // the .usr data fields live in the account's info/ subfolder (the account folder also holds onoffs/ for custom media)
 }
 /* Case-insensitive (account_dir resolves an existing folder regardless of case): login relies on it (sign in
 regardless of case), registration relies on it (you can't create both "Bob" and "bob" -- the second resolves
@@ -124,12 +126,13 @@ v = v.trim_whitespace();
 if(v == "") return def;
 return v;
 }
-// Write a single field file, creating the data/players/<name> folders as needed.
+// Write a single field file, creating the data/players/<name>/info folders as needed.
 bool write_field(string name, string field, string value)
 {
 if(!directory_exists("data")) directory_create("data");
 if(!directory_exists("data/players")) directory_create("data/players");
 if(!directory_exists(account_dir(name))) directory_create(account_dir(name));
+if(!directory_exists(account_dir(name) + "/info")) directory_create(account_dir(name) + "/info"); // fields live in info/; make sure it exists so the write can't fail on a missing subfolder
 file f;
 if(!f.open(field_path(name, field), "wb")) return false;
 f.write(value);
