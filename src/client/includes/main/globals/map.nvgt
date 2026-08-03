@@ -19,6 +19,12 @@ spawns at the center, so the same call works for a 25x25, 50x50, or 100x100 map.
 `outside` switches the cavern from its inside look (concrete floor, cavern_int ambience and music) to the EVP
 outdoor look (gravel floor, cavern_ext ambience and music); the wallwood border is unchanged.
 Ignored by the non-cavern maps. */
+/* PVP ring inset -- the client mirror of the server's wall.nvgt pvp_ring_inset. These two MUST stay equal, or the
+walls the server spawns won't line up with what this client draws and hears. Single source of truth for the ring
+geometry on the client: draw_map's tiling below, the cross-wall audio test, the bullet and fire spans, and the
+attacker spawn all call this. size/3 = equal thirds (interior and exterior band the same thickness); was size/4
+before the 2026-08 B2 recode. */
+int pvp_ring_inset(int size) { return size/3; }
 void draw_map(string mapname, double minx=0, double maxx=50, double miny=0, double maxy=50, bool outside=false)
 {
 clear_map(); // wipe the previous map first so switching spaces (lobby <-> office) doesn't stack tiles.
@@ -66,7 +72,7 @@ if(mapname=="pvparena")
 border tile and its bump sound), a walkable EXTERIOR gravel band (attackers), the four destructible wallwood
 walls as a MIDDLE ring, and a walkable INTERIOR concrete floor (defenders). Painted outer-to-inner; a later
 platform overwrites earlier cells, so each pass carves out the next region. wmin/wmax match spawn_ring_walls. */
-int wmin = int(maxx)/4;
+int wmin = pvp_ring_inset(int(maxx));
 int wmax = int(maxx) - wmin;
 spawn_platform(minx, maxx, miny, maxy, "wallwoodpile");         // indestructible outer boundary
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "gravel");       // exterior band floor

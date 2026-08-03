@@ -703,7 +703,7 @@ Attackers restore out at the exterior entry -- not the centre the redraw assumes
 too; sent before the gamephase/equipweapon below so the client's PVP auto-arm sees the correct side. */
 if(games[gi].mode=="pvp" and players[index].team!="")
 {
-if(players[index].team=="attack") { int wmin=games[gi].size/4; players[index].x=wmin/2; players[index].y=games[gi].size/2; }
+if(players[index].team=="attack") { int wmin=pvp_ring_inset(games[gi].size); players[index].x=wmin/2; players[index].y=games[gi].size/2; }
 send(peer, "yourside "+players[index].team, 0, true);
 }
 /* EVP (and a PVP attacker): restore the weapon they had drawn BEFORE the gamephase message, so its auto-axe
@@ -1498,7 +1498,7 @@ string face = (parsed.length()>1) ? parsed[1] : ""; // the direction the shooter
 a corner finds no wall. tdir/tdist = the wall hit and its distance in tiles, or "" if nothing lies that way. */
 int s = int(games[gi].size);
 bool pvp = (games[gi].mode == "pvp");
-int wmin = s/4, wmax = s - wmin;
+int wmin = pvp_ring_inset(s), wmax = s - wmin;
 int dx=0, dy=0;
 if(face=="west") dx=-1; else if(face=="east") dx=1; else if(face=="north") dy=1; else if(face=="south") dy=-1;
 string tdir=""; int tdist=0;

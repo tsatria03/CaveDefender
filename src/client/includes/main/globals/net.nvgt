@@ -1577,7 +1577,7 @@ void netloop_impl()
 			my_side = parsed[1];
 			if (my_side == "attack")
 			{
-				int wmin = cavern_size / 4;     // the wall ring's inset (matches pvparena and spawn_ring_walls)
+				int wmin = pvp_ring_inset(cavern_size); // the wall ring's inset (matches pvparena and spawn_ring_walls)
 				me.x = wmin / 2;                 // shared attacker entry: middle of the west exterior band...
 				me.y = cavern_size / 2;          // ...at mid-height
 				send(0, "move " + int(me.x) + " " + int(me.y), 0, true);

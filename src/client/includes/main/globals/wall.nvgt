@@ -46,7 +46,7 @@ fading toward one spot. Same span geometry as play_wall_hit: border walls (EVP/P
 void play_wall_wood(string dir, string type)
 {
 double s = cavern_size;
-double wmin = int(s)/4, wmax = s - wmin;
+double wmin = pvp_ring_inset(int(s)), wmax = s - wmin;
 double minx, maxx, miny, maxy;
 if(game_mode == "pvp")
 {
@@ -75,7 +75,7 @@ void play_wall_hit(string dir, int weapon, bool constant=false)
 {
 double s = cavern_size;
 double minx, maxx, miny, maxy;
-double wmin = int(s)/4, wmax = s - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
+double wmin = pvp_ring_inset(int(s)), wmax = s - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
 if(game_mode == "pvp") // PVP walls are the inset ring, not the outer border
 {
 if(dir=="west") { minx=wmin; maxx=wmin; miny=wmin; maxy=wmax; }
@@ -122,7 +122,7 @@ void play_wall_rico(string dir, int weapon)
 {
 double s = cavern_size;
 double minx, maxx, miny, maxy;
-double wmin = int(s)/4, wmax = s - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
+double wmin = pvp_ring_inset(int(s)), wmax = s - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
 if(game_mode == "pvp") // PVP walls are the inset ring, not the outer border
 {
 if(dir=="west") { minx=wmin; maxx=wmin; miny=wmin; maxy=wmax; }
@@ -156,7 +156,7 @@ void play_bullet_hit(string dir, string wname)
 {
 double s = cavern_size;
 double minx, maxx, miny, maxy;
-double wmin = int(s)/4, wmax = s - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
+double wmin = pvp_ring_inset(int(s)), wmax = s - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
 if(game_mode == "pvp") // PVP walls are the inset ring, not the outer border
 {
 if(dir=="west") { minx=wmin; maxx=wmin; miny=wmin; maxy=wmax; }
@@ -196,7 +196,7 @@ void play_bullet_rico(string dir, string wname)
 {
 double s = cavern_size;
 double minx, maxx, miny, maxy;
-double wmin = int(s)/4, wmax = s - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
+double wmin = pvp_ring_inset(int(s)), wmax = s - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
 if(game_mode == "pvp") // PVP walls are the inset ring, not the outer border
 {
 if(dir=="west") { minx=wmin; maxx=wmin; miny=wmin; maxy=wmax; }
@@ -233,7 +233,7 @@ void destroy_wall_client(string dir, bool silent=false)
 {
 double s = cavern_size;
 int minx, maxx, miny, maxy;
-int wmin = int(s)/4, wmax = int(s) - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
+int wmin = pvp_ring_inset(int(s)), wmax = int(s) - wmin; // PVP ring inset (matches spawn_ring_walls / draw_map("pvparena"))
 if(game_mode == "pvp") // PVP walls are the inset ring, not the outer border
 {
 if(dir=="west") { minx=wmin; maxx=wmin; miny=wmin; maxy=wmax; }

@@ -522,7 +522,7 @@ void pvp_build_setup(int gi)
 {
 games[gi].pvp_deserted = false; // clear any leftover desertion state from a previous round
 int size = games[gi].size;
-int wmin = size / 4;               // the wall ring's inset (matches spawn_ring_walls and the client's pvparena draw)
+int wmin = pvp_ring_inset(size);   // the wall ring's inset (matches spawn_ring_walls and the client's pvparena draw)
 int ax = wmin / 2, ay = size / 2;  // shared attacker entry: middle of the west exterior band, at mid-height
 int center = size / 2;
 for(uint m=0; m<games[gi].members.length(); m++)
@@ -825,11 +825,10 @@ int stat = (players[pi].team=="attack") ? players[pi].pvp_damage : players[pi].p
 players[pi].pending_results = "pvpresult "+winner+" "+down+" "+players[pi].team+" "+stat;
 send(games[gi].members[m], players[pi].pending_results, 0, true);
 /* Persistent per-account tally: the winning side each gain a win, the losing side a loss (watchers, who
-aren't members, get nothing). Counted once here, at the decisive end of the match. HIDDEN while PVP is out of the
-start-game menu (see push_start_gamemode): these are the only writers of pvpwins.usr / pvplosses.usr, so leaving
-them commented means those account files are never created. Uncomment to restore when PVP comes back. */
-//if(players[pi].team == winner) set_wins(players[pi].name, get_wins(players[pi].name) + 1);
-//else set_losses(players[pi].name, get_losses(players[pi].name) + 1);
+aren't members, get nothing). Counted once here, at the decisive end of the match. These are the only writers
+of pvpwins.usr / pvplosses.usr. Re-enabled 2026-08 with the PVP revival (B2 recode). */
+if(players[pi].team == winner) set_wins(players[pi].name, get_wins(players[pi].name) + 1);
+else set_losses(players[pi].name, get_losses(players[pi].name) + 1);
 }
 string wname = (winner=="attack") ? "attackers" : "defenders";
 for(uint s=0; s<players.length(); s++)
@@ -957,7 +956,7 @@ for(int d=0; d<drops; d++)
 {
 if(wood_count_in(games[i].id) >= wood_cap(games[i].size)) break;
 int wlo = 1, whi = games[i].size-1; // interior only; the 0 and size edges are walls
-if(games[i].mode=="pvp") { int wm = games[i].size/4; wlo = wm+1; whi = games[i].size-wm-1; } // PVP: keep wood on the interior concrete, inside the wall ring (the defenders' ground supply)
+if(games[i].mode=="pvp") { int wm = pvp_ring_inset(games[i].size); wlo = wm+1; whi = games[i].size-wm-1; } // PVP: keep wood on the interior concrete, inside the wall ring (the defenders' ground supply)
 int wx = random(wlo, whi);
 int wy = random(wlo, whi);
 string wt = random_wood_type(); // a random wood species (oak/maple/birch/pine), each with its own sounds
@@ -980,7 +979,7 @@ if(ammo_count_in(games[i].id) >= ammo_cap(games[i].size)) break;
 int ax, ay;
 if(games[i].mode=="pvp")
 {
-int wm = games[i].size/4; // outside the ring: reject an interior-core cell (rejection sampling, a few tries)
+int wm = pvp_ring_inset(games[i].size); // outside the ring: reject an interior-core cell (rejection sampling, a few tries)
 int tries=0;
 do { ax=random(1, games[i].size-1); ay=random(1, games[i].size-1); tries++; }
 while(tries<8 and ax>wm and ax<games[i].size-wm and ay>wm and ay<games[i].size-wm);

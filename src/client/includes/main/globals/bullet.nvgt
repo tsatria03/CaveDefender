@@ -31,7 +31,7 @@ void add_client_bullet(int px, int py, string dir, string wname, int flight_ms)
 client_bullet b;
 b.ox = px; b.oy = py;
 double s = cavern_size;
-double wmin = int(s)/4, wmax = s - wmin; // PVP ring inset (matches the wall geometry in wall.nvgt / draw_map)
+double wmin = pvp_ring_inset(int(s)), wmax = s - wmin; // PVP ring inset (matches the wall geometry in wall.nvgt / draw_map)
 if(game_mode == "pvp")
 {
 if(dir=="west") { b.tx=wmin; b.ty=py; }
