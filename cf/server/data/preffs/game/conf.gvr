@@ -37,3 +37,11 @@ evproundtime_medium=50:120
 evproundtime_big=75:180
 evproundtime_large=100:180
 evproundbonus=0
+
+# PVP map sizes. Player versus player offers its OWN set of grid sizes, separate from the fixed 25/50/75/100 the other
+# modes use, so its walled arena can be made roomier without a rebuild. List the grid sizes as a comma-separated list,
+# smallest to largest; the size menu labels them Small, Medium, Big, Large in that order (extra sizes get a numbered
+# label). The four destructible walls sit a third of the way in from each edge, so the defenders' interior and the
+# attackers' surrounding band are each about a third of the size -- bigger numbers give both sides more room. This is
+# server-only: change it here and restart the server, and connected players get the new sizes with no new client build.
+pvpsizes=40,60,80,100

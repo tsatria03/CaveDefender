@@ -728,10 +728,19 @@ send_menu(players[index].peer_id, "startmode", "Choose who can play", opts);
 void push_start_size(int index)
 {
 string[] opts;
+if(players[index].pending_mode == "pvp") // PVP has its own configurable size set (conf.gvr pvpsizes); the startsize result maps back through pvp_sizes
+{
+string[] labels = {"Small", "Medium", "Big", "Large"};
+for(uint i=0; i<pvp_sizes.length(); i++)
+opts.insert_last(((i < labels.length()) ? labels[i] : ("Size " + (i+1))) + ", " + pvp_sizes[i] + " by " + pvp_sizes[i]);
+}
+else
+{
 opts.insert_last("Small, 25 by 25");
 opts.insert_last("Medium, 50 by 50");
 opts.insert_last("Big, 75 by 75");
 opts.insert_last("Large, 100 by 100");
+}
 send_menu(players[index].peer_id, "startsize", "Choose the map size", opts);
 }
 /* Start-game cascade (PVE/PVP only): pick how far players may reinforce a wall past its full strength. 200% is the
@@ -1105,11 +1114,11 @@ body += "Client version: " + format_float(players[ti].version, "", 0, 1); // fix
 /* Public records, shown to everyone (a little profile): each mode's personal-best round, its lifetime gather total
 (PVE total wood / EVP total ammo, the same figures the leaderboards rank), and the warning count. Warnings used to
 be staff-only; they're now visible to all so a player can see their own too. */
-/* PVP record HIDDEN while PVP is out of the start-game menu (see push_start_gamemode) -- don't surface a stat for a
-mode players can't play. Uncomment these three lines to restore it when PVP comes back. */
-//int wins = get_wins(players[ti].name);
-//int losses = get_losses(players[ti].name);
-//body += "\r\nPVP record: " + wins + (wins==1 ? " win" : " wins") + ", " + losses + (losses==1 ? " loss" : " losses");
+/* PVP record: restored 2026-08 with the PVP revival (B2 recode). Wins/losses read from pvpwins.usr / pvplosses.usr,
+which the match-end tally writes (game.nvgt). Shown to everyone, like the other records. */
+int wins = get_wins(players[ti].name);
+int losses = get_losses(players[ti].name);
+body += "\r\nPVP record: " + wins + (wins==1 ? " win" : " wins") + ", " + losses + (losses==1 ? " loss" : " losses");
 body += "\r\nPVE best round: " + get_pve_best_round(players[ti].name);
 body += "\r\nPVE total wood: " + get_total_wood(players[ti].name);
 body += "\r\nEVP best round: " + get_evp_best_round(players[ti].name);
@@ -1718,7 +1727,13 @@ push_start_size(player_index);
 else if(id == "startsize")
 {
 if(choice < 0) return;
-int size = (choice == 0) ? 25 : (choice == 1) ? 50 : (choice == 2) ? 75 : 100;
+int size;
+if(players[player_index].pending_mode == "pvp") // PVP: map the choice back through the configurable pvp_sizes list
+{
+if(choice >= int(pvp_sizes.length())) return; // out of range (conf changed under an open menu); ignore
+size = pvp_sizes[choice];
+}
+else size = (choice == 0) ? 25 : (choice == 1) ? 50 : (choice == 2) ? 75 : 100;
 players[player_index].pending_size = size; // carried across the reinforce step
 if(players[player_index].pending_mode == "evp" or players[player_index].pending_mode == "free")
 send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " 0 0", 0, true); // EVP and Free play have no reinforce or pile-up step; both unused, pass 0
