@@ -7,15 +7,18 @@ itemcount_small=25:1
 itemcount_medium=50:2
 itemcount_big=75:3
 itemcount_large=100:4
+
 itemcap_small=25:6
 itemcap_medium=50:18
 itemcap_big=75:28
 itemcap_large=100:40
+
 itemspawn=500,2000
 
 # wallbase is the full (max) health of the four destroyable walls, and it applies to ALL THREE game modes -- PVE,
 # environment versus player, and player versus player alike (not just PVE/PVP). In EVP it's also the anchor the
 # fortify percentages ride on, so a "150%" wall is 1.5 times this value; raising it makes walls tougher everywhere.
+
 wallbase=400
 
 # EVP wall toughness escalation: each wave the bots' walls are guaranteed to at least evpfortifybase of full strength,
@@ -36,12 +39,17 @@ evproundtime_small=25:75
 evproundtime_medium=50:120
 evproundtime_big=75:180
 evproundtime_large=100:180
+
 evproundbonus=0
 
 # PVP map sizes. Player versus player offers its OWN set of grid sizes, separate from the fixed 25/50/75/100 the other
-# modes use, so its walled arena can be made roomier without a rebuild. List the grid sizes as a comma-separated list,
-# smallest to largest; the size menu labels them Small, Medium, Big, Large in that order (extra sizes get a numbered
-# label). The four destructible walls sit a third of the way in from each edge, so the defenders' interior and the
-# attackers' surrounding band are each about a third of the size -- bigger numbers give both sides more room. This is
-# server-only: change it here and restart the server, and connected players get the new sizes with no new client build.
-pvpsizes=40,60,80,100
+# modes use, so its walled arena can be made more spacious without a rebuild. One line per size tier, matching the
+# Small, Medium, Big, and Large labels the size menu shows; set each to the grid size you want for that tier. The four
+# destructible walls sit a third of the way in from each edge, so the defenders' interior and the attackers' surrounding
+# band are each about a third of the size -- bigger numbers give both sides more room. This is server-only: change it
+# here and restart the server, and connected players get the new sizes with no new client build.
+
+pvpsize_small=40
+pvpsize_medium=60
+pvpsize_big=80
+pvpsize_large=100
