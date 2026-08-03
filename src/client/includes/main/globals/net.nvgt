@@ -541,11 +541,12 @@ void card_rank_command(string question, string prefix, string ranklist)
 	comparse(prefix + ranks[c]);
 }
 /* The F6 player info card. Wire format:
-  "playerinfo\n<username>\n<ignored>\n<is_self>\n<kick ban warn notify mute pm>\n<promote ranks>\n<demote ranks>\n<title>\n<body>"
+  "playerinfo\n<username>\n<ignored>\n<is_self>\n<kick ban warn notify mute pm silence setnick>\n<promote ranks>\n<demote ranks>\n<title>\n<body>"
 Shown inline in a read-only, multiline input box (the same widget dockread builds, but with our own title).
-Unless it's your own card it also gets a Mute checkbox (Alt+M, a personal ignore of their chat and voice), a
-Private message button (Alt+P), and -- for staff, only the ones the server says you may use on this target --
-Kick (Alt+K), Ban/Unban (Alt+B/U), Promote (Alt+R), Demote (Alt+D), and Warn (Alt+W). Every action routes
+Unless it's your own card it also gets a Personally mute checkbox (Alt+M, a personal ignore of their chat and
+voice, affecting only you), a Private message button (Alt+P), and -- for staff, only the ones the server says
+you may use on this target -- Kick (Alt+K), Ban (Alt+B), Promote (Alt+R), Demote (Alt+D), Warn (Alt+W), Silence
+(Alt+S, the staff channel mute/unmute that affects everyone), and Set nickname (Alt+E). Every action routes
 through comparse to the existing slash command, which re-validates. The loop pumps net_keepalive() so the
 connection survives while it's open; it's deferral-gated at the call site so it never stacks on another modal. */
 void handle_playerinfo(string message)
@@ -580,15 +581,17 @@ void handle_playerinfo(string message)
 	bool can_notify = (fl.length() > 3 and fl[3] == "1");
 		bool can_mute = (fl.length() > 4 and fl[4] == "1"); // personal Mute checkbox: off for your own card and any staff member
 		bool can_pm = (fl.length() > 5 and fl[5] == "1"); // PM button: off when this player has personally muted you (your PM would bounce)
+		bool can_silence = (fl.length() > 6 and fl[6] == "1"); // Silence button: staff channel mute/unmute (administrator+, players only) -- distinct from the personal Mute checkbox above
+		bool can_setnick = (fl.length() > 7 and fl[7] == "1"); // Set-nickname button: any staff may set another online player's nickname
 	bool can_promote = (prom != "");
 	bool can_demote = (demo != "");
 	form.reset();
 	form.create_window(title, false, false, false);
 	int infobox = form.create_input_box("Player information", body, read_only: true, multiline: true);
-	int mutebox = -1, pmbtn = -1, kickbtn = -1, banbtn = -1, prombtn = -1, demobtn = -1, notifybtn = -1, warnbtn = -1;
+	int mutebox = -1, pmbtn = -1, kickbtn = -1, banbtn = -1, prombtn = -1, demobtn = -1, notifybtn = -1, warnbtn = -1, silencebtn = -1, setnickbtn = -1;
 	if(!is_self)
 	{
-		if(can_mute) mutebox = form.create_checkbox("&mute this player", already_ignored); // Alt+M: personal ignore of their chat and voice (hidden for staff)
+		if(can_mute) mutebox = form.create_checkbox("personally &mute this player", already_ignored); // Alt+M: personal ignore of their chat and voice, affecting only you (hidden for staff targets)
 		if(can_pm) pmbtn = form.create_button("&private message this player"); // Alt+P (hidden if this player has muted you)
 		if(can_kick) kickbtn = form.create_button("&kick this player"); // Alt+K
 		if(can_ban) banbtn = form.create_button("&ban this player"); // Alt+B (a banned player is offline, so the card only ever bans; unban is the typed /unban command)
@@ -596,6 +599,8 @@ void handle_playerinfo(string message)
 		if(can_demote) demobtn = form.create_button("&demote this player"); // Alt+D
 		if(can_notify) notifybtn = form.create_button("&notify this player"); // Alt+N
 		if(can_warn) warnbtn = form.create_button("&warn this player"); // Alt+W
+		if(can_silence) silencebtn = form.create_button("&silence this player"); // Alt+S: staff channel mute/unmute (everyone), distinct from the personal Mute checkbox
+		if(can_setnick) setnickbtn = form.create_button("s&et this player's nickname"); // Alt+E: staff nickname form
 	}
 	int infoclose = form.create_button("&close", false, true);
 	form.focus(infobox);
@@ -614,6 +619,8 @@ void handle_playerinfo(string message)
 		if(can_demote and form.is_pressed(demobtn)) { action = "demote"; break; }
 		if(can_notify and form.is_pressed(notifybtn)) { action = "notify"; break; }
 		if(can_warn and form.is_pressed(warnbtn)) { action = "warn"; break; }
+		if(can_silence and form.is_pressed(silencebtn)) { action = "silence"; break; }
+		if(can_setnick and form.is_pressed(setnickbtn)) { action = "setnick"; break; }
 		if(form.is_pressed(infoclose)) break;
 	}
 	// Persist any change to the mute checkbox (server stores it on the account) before we leave the card.
@@ -699,6 +706,51 @@ void handle_playerinfo(string message)
 			if(reason != "") comparse("/warn " + uname + " " + (wl + 1) + " " + reason);
 			else speak("canceled");
 		}
+	}
+	else if(action == "silence")
+	{
+		/* Staff channel mute/unmute. Pick a channel (or all), choose to silence or lift it, and for a silence pick a
+		length. Routes to /mute or /unmute, which re-validate (rank, players-only, already-muted, etc.). */
+		setupmenu();
+		m.add_item("Global chat");
+		m.add_item("Local chat");
+		m.add_item("Voice chat");
+		m.add_item("Team chat");
+		m.add_item("All channels");
+		m.intro_text = "Silence " + uname + " in which channel?";
+		int ch = m.run();
+		if(ch < 0 or ch > 4) { speak("canceled"); return; }
+		string[] chans = {"global", "local", "voice", "team", "all"};
+		string channel = chans[ch];
+		setupmenu();
+		m.add_item("Silence in this channel");
+		m.add_item("Lift the silence in this channel");
+		m.intro_text = "Silence or lift the silence for " + uname + "?";
+		int sa = m.run();
+		if(sa != 0 and sa != 1) { speak("canceled"); return; }
+		if(sa == 1) comparse("/unmute " + uname + " " + channel);
+		else
+		{
+			setupmenu();
+			m.add_item("Permanent");
+			m.add_item("For a set time");
+			m.intro_text = "Choose how long to silence " + uname + ".";
+			int lc = m.run();
+			if(lc != 0 and lc != 1) { speak("canceled"); return; }
+			string secs = "";
+			if(lc == 1)
+			{
+				secs = vd.input_box("Silence " + uname, "Enter a length in seconds for this player. Press escape to cancel.", "");
+				if(secs == "") { speak("canceled"); return; }
+			}
+			comparse("/mute " + uname + " " + channel + (secs == "" ? "" : " " + secs));
+		}
+	}
+	else if(action == "setnick")
+	{
+		string nn = vd.input_box("Set " + uname + "'s nickname", "Enter a new nickname for this player. Press escape to cancel.", "");
+		if(nn != "") comparse("/nick " + uname + " " + nn);
+		else speak("canceled");
 	}
 }
 /* A server-driven flow needs a typed value. Format: askinput\n<prompt>\n<command prefix>\n<mask>. We show a

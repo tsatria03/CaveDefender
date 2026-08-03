@@ -94,7 +94,7 @@ opts.insert_last("Change your nickname. Currently set to " + players[index].nick
 if(is_staff(players[index].rank)) opts.insert_last("Change your email. Currently set to " + read_field(players[index].name, "email") + ".");
 else opts.insert_last("Change your email");
 opts.insert_last("Change your password"); // never reveal the current password
-send_menu(peer, "account", "Account panel", opts);
+send_menu(peer, "account", "Player panel", opts);
 }
 /* The room menu (Enter while in a room). Heterogeneous, so each option's action key is recorded in
 menu_actions. Password items appear only for a private room. */
@@ -1136,6 +1136,8 @@ int cwarn = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;  // /warn: adminis
 int cnotify = (other and vlevel>=1) ? 1 : 0;                   // /notifyplayer: moderator+, may target anyone
 int cmute = (other and !is_staff(players[ti].rank)) ? 1 : 0;    // personal Mute checkbox: hidden on your own card and on any staff member (staff can never be personally muted)
 int cpm = (other and !player_ignores(ti, players[viewer_index].name)) ? 1 : 0; // PM button: hidden when THIS target has personally muted YOU (your PM would just bounce); staff viewers are exempt via player_ignores
+int csilence = (other and vlevel>=2 and !is_staff(players[ti].rank)) ? 1 : 0; // Silence button (staff channel mute/unmute via /mute,/unmute): administrator+, players only (staff are never silenced), mirroring cmute
+int csetnick = (other and vlevel>=1) ? 1 : 0; // Set-nickname button (/nick <user> <name>): any staff may set any other online player's nickname
 string[] RANKS = {"player", "moderator", "administrator", "developer"};
 string prom = ""; // ranks the viewer may PROMOTE the target to: above the target's current, up to the viewer's own (the grant cap)
 if(other and vlevel>=1 and tlevel<=vlevel)
@@ -1143,7 +1145,7 @@ for(int L=tlevel+1; L<=vlevel; L++) prom += (prom=="" ? "" : ",") + RANKS[L];
 string demo = ""; // ranks the viewer may DEMOTE the target to: below the target's current (moderator+, owner protected)
 if(other and vlevel>=1 and tlevel<=vlevel and tlevel>=1 and !is_owner(players[ti].name))
 for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
-send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
+send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm+" "+csilence+" "+csetnick + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
 }
 /* --- Leaderboard (server-wide, persistent) ---
 Ranks every account by a stored record, online or not. Built ON DEMAND (no live state): walk the account folders,

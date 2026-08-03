@@ -27,6 +27,24 @@ Dev-designed 2026-07-24; both controls now built. Two SEPARATE controls for weap
 
 Code anchors: `wall_percent` = wall.nvgt:189 (health/maxhealth*100, can exceed 100); wood reinforce + free-play uncapped path = net.nvgt:1531-1537 (reinforce_cap 0 -> `repair_wall(..., false)`); `repair_wall` = wall.nvgt:94; `reinforce_cap` field = game.nvgt:19; reinforce chooser = menu.nvgt:715 `push_start_reinforce`; cavern controls menu = menu.nvgt:424-463; arena/round menu = menu.nvgt:374-398; `wallbase` = conf.gvr / gamedata.nvgt:202; free-play self-heal (only regrows a fully-DOWNED wall, ~10s, at a fresh 50-100% base roll) = heal.nvgt.
 
+## Staff panel (Alt+Enter) + player-card staff actions -- dev-designed 2026-08 (5.0)
+Companion to the existing Player panel (Shift+Enter). **The Player panel was RENAMED from "Account panel" (display title only, wire keyword `account` unchanged)** -- done in menu.nvgt push_account_menu send_menu title. Readme still says "account panel" (docs pass owed when the Staff panel ships).
+
+**PART 1 -- F6 player-card staff-action gap-fill: BUILT in 5.0 (awaiting dev test).** The F6 info card already had staff buttons (PM/kick/ban(+tempban via length)/promote/demote/notify/warn) gated per-target by the flagline. It was MISSING only two staff actions vs the full set, now added:
+- **Silence (Alt+S)** -- staff channel mute/unmute (affects everyone), distinct from the personal-ignore checkbox. Client flow (net.nvgt handle_playerinfo `action=="silence"`): channel menu (global/local/voice/team/all) -> silence-or-lift menu -> if silencing, Permanent/timed length -> routes to `/mute <name> <channel> [secs]` or `/unmute <name> <channel>` via comparse. `/mute` syntax is `<name> <channel> [seconds]`, admin+ (net.nvgt ~3493).
+- **Set nickname (Alt+E)** -- routes to `/nick <user> <name>` (any staff, net.nvgt ~3231; apply_nickname).
+- Personal-ignore checkbox RENAMED "mute this player" -> **"personally mute this player" (Alt+M)** so it isn't confused with the staff Silence (label change only; same `cmute`/ignore flag).
+- Flagline extended: server menu.nvgt push_playerinfo appends `csilence csetnick` (order now `kick ban warn notify mute pm silence setnick`). `csilence = other && vlevel>=2 && !is_staff(target)` (admin+, players only, mirrors cmute); `csetnick = other && vlevel>=1` (any staff). Client parses fl[6]/fl[7]. Own single 5.0 changelog entry (Silence + Set nickname + the rename, one entry).
+
+**PART 2 -- Staff panel via Alt+Enter: DESIGNED, NOT BUILT (dev said hold).** Staff-only counterpart to the Player panel.
+- KEY GATING (dev "option A"): Alt+Enter opens it in the lobby, a room, or an IDLE game you're not watching; SILENT during any running phase (build/wave/active), the over/results screen, and while watching. Enter handling is game.nvgt:465-478 (only checks Shift today) -- must add `!alt_is_down()` to that existing block so Alt+Enter doesn't also fire reinforce/round-menu/location/Player panel, PLUS a new Alt+Enter branch sending `openpanel staff`. Client game-state for the gate: `in_game`, `watching`, `game_phase` ("idle"/"build"/"wave"/"active"/"over") in dec.nvgt. Alt+Enter confirmed otherwise-free.
+- SERVER: `openpanel staff` branch (net.nvgt ~2422) gated on `is_staff`, allowed in a game context too; `push_staff_menu` builds a RANK-FILTERED list.
+- ITEMS (dev-locked, exactly two, IN THIS ORDER):
+  1. **Change message of the day** -- DEVELOPER only. Opens an edit box PRE-FILLED with the current MOTD (option A: see-and-edit-in-place, handles multi-line; no separate view step), saves via the existing `/motd` flow. Label verb "Change" matches the Player panel.
+  2. **View moderation records** -- moderator+. Submenu: Mutes (`/mutes`) / Bans (`/bans`) / Warnings (`/warnings <name>`, prompts for a name), reusing the existing viewers.
+- REJECTED items (dev, don't re-propose): Manage-a-player (redundant -- the F6 card IS the act-on-a-player surface, now gap-filled), Staff online (`/staff` easy to type), Toggle attention flag (`/flag` easy to type), Server controls (destructive, rare, easier to hit by accident in a menu).
+- DOCS owed when built: Player-panel rename in readme; document Alt+Enter + the new card buttons in readme; changelog the Staff panel; staff.txt note.
+
 ## Candidate ideas (not yet on the todo)
 Filling the PVP void = give the co-op/solo modes the competition, depth, and replay value PVP provided, WITHOUT needing a live opponent.
 
