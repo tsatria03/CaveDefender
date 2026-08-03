@@ -227,8 +227,10 @@ for(uint i=0; i<sizes.length(); i++) set_tier(evp_round_sizes, evp_round_secs_va
 the other modes use, so its walled arena can be made roomier (the interior and the attacker band are each ~a third of
 the size). Shown in the PVP size menu smallest-to-largest with Small/Medium/Big/Large labels in order. Server-only:
 the client just draws whatever size the server tells it, so retuning needs no new client build. */
-int[] pvp_sizes; // the PVP size menu's grid sizes, seeded in seed_pvp_sizes and overridden by the pvpsizes conf line
+int[] pvp_sizes; // the PVP size menu's grid sizes, in order small/medium/big/large; seeded in seed_pvp_sizes and overridden per tier by the pvpsize_<label> conf lines
 void seed_pvp_sizes() { pvp_sizes.resize(0); int[] d = {40, 60, 80, 100}; for(uint i=0; i<d.length(); i++) pvp_sizes.insert_last(d[i]); }
+// The pvp_sizes slot for a size-tier label (small=0 .. large=3), or -1 for an unknown label. Maps a pvpsize_<label> conf line to its position.
+int pvp_size_label_index(string label) { if(label=="small") return 0; if(label=="medium") return 1; if(label=="big") return 2; if(label=="large") return 3; return -1; }
 // Is this a size the PVP menu offers? Used to validate the startgame size for PVP (the fixed 25/50/75/100 check is other-modes-only).
 bool pvp_size_allowed(int size) { for(uint i=0; i<pvp_sizes.length(); i++) if(pvp_sizes[i]==size) return true; return false; }
 
@@ -331,12 +333,11 @@ else if(string_left(keys[i], 12) == "evproundtime") // evproundtime_<label>=<siz
 int c = string_contains(vals[i], ":", 1);
 if(c >= 1) { int size = string_to_number(string_left(vals[i], c)); int v = string_to_number(vals[i].substr(c+1)); if(size > 0 and v >= 0) set_tier(evp_round_sizes, evp_round_secs_vals, size, v); }
 }
-else if(keys[i] == "pvpsizes") // pvpsizes=40,60,80,100 -- the PVP-only map size menu (comma-separated grid sizes, smallest to largest)
+else if(string_left(keys[i], 8) == "pvpsize_") // pvpsize_<label>=<grid size> -- one PVP map-size tier (small/medium/big/large), mirroring the item/round-timer tier lines
 {
-string[] parts = string_split(vals[i], ",", true);
-int[] parsed;
-for(uint p=0; p<parts.length(); p++) { int v = string_to_number(parts[p]); if(v > 0) parsed.insert_last(v); }
-if(parsed.length() > 0) pvp_sizes = parsed; // ignore an empty/garbage line, keeping the seeded default
+int idx = pvp_size_label_index(keys[i].substr(8));
+int v = string_to_number(vals[i]);
+if(idx >= 0 and v > 0) pvp_sizes[idx] = v; // override just that tier, keeping the seeded default for any tier the file omits
 }
 else if(string_left(keys[i], 4) == "item")
 {
