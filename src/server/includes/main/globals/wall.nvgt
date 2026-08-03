@@ -53,13 +53,20 @@ spawn_wall(room_id, size, size, 0, size, wall_start_health(health, maxhealth, de
 spawn_wall(room_id, 0, size, size, size, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable); // north (y = size)
 spawn_wall(room_id, 0, size, 0, 0, wall_start_health(health, maxhealth, destroyable), maxhealth, destroyable);       // south (y = 0)
 }
-/* PVP: the four destructible walls form a MIDDLE ring -- a square inset by size/4 -- so the space has a walkable
-INTERIOR inside them (defenders) and a walkable EXTERIOR band around them (attackers), all in one grid. Uses the
-SAME wmin/wmax the client's draw_map("pvparena") uses, so the server's reach/audio positions line up with the
-rendered ring. Always destroyable; each wall rolls its own 50-100% starting strength like the other modes. */
+/* PVP ring inset: how far the four destructible walls sit in from each edge. This is the SINGLE SOURCE OF TRUTH
+for the ring geometry -- every server site that computes the ring (spawn, reach, spawns, wood/item placement, the
+ranged-fire ray) calls this, and the client mirrors the exact same helper in map.nvgt, so server and client always
+agree. size/3 = equal thirds: the interior square (defenders) and the surrounding exterior band (attackers) are the
+same thickness on every side. Was size/4 before the 2026-08 B2 recode (that gave a cramped, unequal split). To
+retune the balance, change ONLY this line and the client's matching pvp_ring_inset. */
+int pvp_ring_inset(int size) { return size/3; }
+/* PVP: the four destructible walls form a MIDDLE ring -- a square inset by pvp_ring_inset -- so the space has a
+walkable INTERIOR inside them (defenders) and a walkable EXTERIOR band around them (attackers), all in one grid.
+Uses the SAME wmin/wmax the client's draw_map("pvparena") uses, so the server's reach/audio positions line up with
+the rendered ring. Always destroyable; each wall rolls its own 50-100% starting strength like the other modes. */
 void spawn_ring_walls(int room_id, double size, double health, double maxhealth)
 {
-double wmin = int(size)/4;
+double wmin = pvp_ring_inset(int(size));
 double wmax = size - wmin;
 spawn_wall(room_id, wmin, wmin, wmin, wmax, wall_start_health(health, maxhealth, true), maxhealth, true); // west  (x = wmin)
 spawn_wall(room_id, wmax, wmax, wmin, wmax, wall_start_health(health, maxhealth, true), maxhealth, true); // east  (x = wmax)
@@ -139,11 +146,11 @@ if(bd > wall_reach) return "";
 return best;
 }
 /* The walls[] index of a PVP ring wall in a compass direction. Mirrors border_wall but for the inset ring
-spawn_ring_walls builds (x=wmin/wmax, y=wmin/wmax, inset by size/4). Each wall spans its whole side, so the
+spawn_ring_walls builds (x=wmin/wmax, y=wmin/wmax, inset by pvp_ring_inset). Each wall spans its whole side, so the
 midpoint cell finds it. */
 int ring_wall(int room_id, string dir, double size)
 {
-double wmin = int(size)/4, wmax = size - wmin;
+double wmin = pvp_ring_inset(int(size)), wmax = size - wmin;
 if(dir=="west") return wall_at(room_id, wmin, size/2);
 if(dir=="east") return wall_at(room_id, wmax, size/2);
 if(dir=="north") return wall_at(room_id, size/2, wmax);
@@ -151,11 +158,11 @@ if(dir=="south") return wall_at(room_id, size/2, wmin);
 return -1;
 }
 /* The PVP ring wall an attacker at (px,py) out in the exterior band is closest to, or "" if none is within
-wall_reach. The ring sits inset by size/4; an attacker is always OUTSIDE it, so the reach is the distance
+wall_reach. The ring sits inset by pvp_ring_inset; an attacker is always OUTSIDE it, so the reach is the distance
 past whichever side they are beyond, nearest side wins (the mirror of wall_in_reach for the ring geometry). */
 string ring_wall_in_reach(int px, int py, double size)
 {
-int wmin = int(size)/4, wmax = int(size)-wmin;
+int wmin = pvp_ring_inset(int(size)), wmax = int(size)-wmin;
 string best=""; int bd=wall_reach+1;
 int dw = wmin - px; if(dw>=0 and dw<bd) { best="west"; bd=dw; }  // west ring wall (x=wmin), attacker to its west
 int de = px - wmax; if(de>=0 and de<bd) { best="east"; bd=de; }  // east ring wall (x=wmax)
@@ -168,7 +175,7 @@ The mirror of ring_wall_in_reach: a defender is always INSIDE the ring, so the r
 the wall inward (px-wmin for the west wall, etc.). Lets defenders reinforce the ring from the interior side. */
 string ring_wall_in_reach_inside(int px, int py, double size)
 {
-int wmin = int(size)/4, wmax = int(size)-wmin;
+int wmin = pvp_ring_inset(int(size)), wmax = int(size)-wmin;
 string best=""; int bd=wall_reach+1;
 int dw = px - wmin; if(dw>=0 and dw<bd) { best="west"; bd=dw; }  // west ring wall (x=wmin), defender to its east (inside)
 int de = wmax - px; if(de>=0 and de<bd) { best="east"; bd=de; }  // east ring wall (x=wmax)

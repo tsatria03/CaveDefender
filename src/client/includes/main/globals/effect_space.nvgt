@@ -105,12 +105,12 @@ pool_fx_signatures.set(poolkey, sig);
 pool.mixer.set_fx(rv);
 pool.mixer.set_fx(lp);
 }
-/* PVP cross-wall audio geometry. The wall ring is inset by cavern_size/4; a point is INSIDE (the defenders'
+/* PVP cross-wall audio geometry. The wall ring is inset by pvp_ring_inset; a point is INSIDE (the defenders'
 interior) when it's within that ring, else OUTSIDE (the attackers' band). A sound is "cross-wall" -- and so
 muffled through the ring -- when its source sits on the opposite side of the walls from the local listener. */
 bool pvp_inside_ring(double x, double y)
 {
-int wmin = cavern_size/4, wmax = cavern_size - wmin;
+int wmin = pvp_ring_inset(cavern_size), wmax = cavern_size - wmin;
 return x > wmin and x < wmax and y > wmin and y < wmax;
 }
 bool pvp_crosswall(double sx, double sy)

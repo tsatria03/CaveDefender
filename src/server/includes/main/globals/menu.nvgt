@@ -79,21 +79,22 @@ opts.insert_last("Join a public room\tControl plus J.");
 opts.insert_last("Join a private room\tControl plus shift plus J.");
 send_menu(peer, "lobby", "Lobby panel", opts);
 }
-/* The Account panel (Shift+Enter in the lobby or a room): personal, account-persisted settings. The first three items reuse
-the same sub-menus /channel, /pronoun, and /ignored push; the three change items run on the client (which owns
-the input boxes and the masked password form) via accountaction, reusing the /changemail, /nick, /changepass flows. */
+/* The Player panel (Shift+Enter in the lobby or a room): personal, account-persisted settings. The first three
+"Change your ..." items run on the client (which owns the input boxes and the masked password form) via
+accountaction, reusing the /nick, /changemail, /changepass flows; the last three reuse the same sub-menus
+/channel, /pronoun, and /ignored push. */
 void push_account_menu(int index)
 {
 int peer = players[index].peer_id;
 string[] opts;
-opts.insert_last("Select a language channel. Currently set to " + players[index].language + ".");
-opts.insert_last("Select a pronoun. Currently set to " + players[index].pronoun + ".");
-opts.insert_last("View muted players");
 opts.insert_last("Change your nickname. Currently set to " + players[index].nickname + ".");
 // Email is staff-only PII, exactly as on the info card: show the current address only to staff; a regular player (even on their own panel) just sees the action.
 if(is_staff(players[index].rank)) opts.insert_last("Change your email. Currently set to " + read_field(players[index].name, "email") + ".");
 else opts.insert_last("Change your email");
 opts.insert_last("Change your password"); // never reveal the current password
+opts.insert_last("Select a language channel. Currently set to " + players[index].language + ".");
+opts.insert_last("Select a pronoun. Currently set to " + players[index].pronoun + ".");
+opts.insert_last("View muted players");
 send_menu(peer, "account", "Player panel", opts);
 }
 /* The room menu (Enter while in a room). Heterogeneous, so each option's action key is recorded in
@@ -712,8 +713,8 @@ void push_start_gamemode(int index)
 string[] opts;
 opts.insert_last("EVP (Environment versus player)"); // option 0
 opts.insert_last("PVE (Player versus environment)"); // option 1
-//opts.insert_last("PVP (Player versus player)"); // TEMPORARILY HIDDEN pending the PVP recode -- uncomment this AND restore the "pvp" branch in the startgamemode result handler to bring it back; all PVP game logic is untouched
-opts.insert_last("Free play (Sandbox)"); // option 2 -- the sandbox, listed last (was 3 before PVP was hidden)
+opts.insert_last("PVP (Player versus player)"); // option 2
+opts.insert_last("Free play (Sandbox)"); // option 3 -- the sandbox, listed last
 send_menu(players[index].peer_id, "startgamemode", "Choose a game mode to play.", opts);
 }
 // Start-game cascade, step 2: pick who can play (solo/open), then a size; the choice rides in menu_pending across the two.
@@ -1379,15 +1380,15 @@ else if(choice == 3) push_join_list(player_index, true);  // Join a private room
 }
 else if(id == "account")
 {
-/* Account panel: the first three reuse existing server sub-menus; the last three are run on the client, which
-owns the input boxes (email, nickname) and the masked change-password form. */
+/* Player panel: the first three are run on the client, which owns the input boxes (nickname, email) and the
+masked change-password form; the last three reuse existing server sub-menus. */
 if(choice < 0) return; // cancelled
-if(choice == 0) push_language_menu(player_index);
-else if(choice == 1) push_pronoun_menu(player_index);
-else if(choice == 2) push_ignored_menu(player_index);
-else if(choice == 3) send(peer, "accountaction nick", 0, true);       // client opens the nickname prompt (/nick)
-else if(choice == 4) send(peer, "accountaction changemail", 0, true); // client opens the email prompt (/changemail)
-else if(choice == 5) send(peer, "accountaction changepass", 0, true); // client opens the masked change-password form (/changepass)
+if(choice == 0) send(peer, "accountaction nick", 0, true);            // client opens the nickname prompt (/nick)
+else if(choice == 1) send(peer, "accountaction changemail", 0, true); // client opens the email prompt (/changemail)
+else if(choice == 2) send(peer, "accountaction changepass", 0, true); // client opens the masked change-password form (/changepass)
+else if(choice == 3) push_language_menu(player_index);
+else if(choice == 4) push_pronoun_menu(player_index);
+else if(choice == 5) push_ignored_menu(player_index);
 }
 else if(id == "channel")
 {
@@ -1704,7 +1705,7 @@ else if(act == "stop") confirm_menu(peer, "stopgame", "Are you sure you want to 
 else if(id == "startgamemode")
 {
 if(choice < 0) return; // cancelled the mode picker
-players[player_index].pending_mode = (choice == 0) ? "evp" : (choice == 1) ? "pve" : "free"; // 0 EVP, 1 PVE, 2 Free play (PVP option temporarily hidden from the menu -- see push_start_gamemode; to restore, re-add the "pvp" branch here: (choice == 2) ? "pvp" : "free")
+players[player_index].pending_mode = (choice == 0) ? "evp" : (choice == 1) ? "pve" : (choice == 2) ? "pvp" : "free"; // 0 EVP, 1 PVE, 2 PVP, 3 Free play
 if(players[player_index].pending_mode == "pvp") { players[player_index].menu_pending = "open"; push_start_size(player_index); } // PVP is always multiplayer (1v1 or 2v2) -- skip the solo/open step and force Open (dead while PVP is hidden, kept intact for the restore)
 else push_start_mode(player_index); // on to who-can-play (every mode but PVP picks solo or open here, free play included)
 }

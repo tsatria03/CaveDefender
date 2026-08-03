@@ -50,7 +50,7 @@ The span follows draw_map: border walls (EVP/PVE) at 0/size, the PVP ring inset 
 int play_wall_fire(string dir, string file, bool looping)
 {
 double s = cavern_size;
-double wmin = int(s)/4, wmax = s - wmin;
+double wmin = pvp_ring_inset(int(s)), wmax = s - wmin;
 double minx, maxx, miny, maxy;
 if(game_mode == "pvp")
 {
