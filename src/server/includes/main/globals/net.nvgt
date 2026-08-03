@@ -2502,12 +2502,14 @@ send(event.peer_id, "You must be in a room to start a game.", 0,true);
 else
 {
 int size=int(string_to_number(parsed[1]));
-if(size!=25 and size!=50 and size!=75 and size!=100) size=50;
 bool solo=(parsed[2]=="solo");
 string mode="pve"; // gameplay mode; defaults to the original pve for a missing or unrecognized arg
 if(parsed.length()>3 and parsed[3]=="evp") mode="evp";
 else if(parsed.length()>3 and parsed[3]=="pvp") mode="pvp";
 else if(parsed.length()>3 and parsed[3]=="free") mode="free";
+// Size validation is mode-aware: PVP allows any of its configurable pvp_sizes (conf.gvr), every other mode the fixed 25/50/75/100. An unrecognized size falls back to a sensible default rather than being rejected.
+if(mode=="pvp") { if(!pvp_size_allowed(size)) size = (pvp_sizes.length()>0) ? pvp_sizes[0] : 50; }
+else if(size!=25 and size!=50 and size!=75 and size!=100) size=50;
 double rcap = (parsed.length()>4) ? string_to_number(parsed[4]) : 0; // wall reinforce cap multiplier (2/4/8, or 0 = no limit); PVE/PVP only, EVP sends 0
 if(rcap < 0) rcap = 0;
 bool pileup = (parsed.length()>5 and parsed[5]=="1"); // PVE only: a fallen wall's bots pile onto the standing walls (Yes); EVP/PVP send 0
