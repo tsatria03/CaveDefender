@@ -1307,7 +1307,7 @@ index=existing;
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true); // the host's cave-acoustics presets (effects.gvr); re-sent on reconnect in case the client restarted
 send(event.peer_id, "autoafk "+autoafk, 0, true); // the host's idle-timeout policy (conf.svr's autoafk); re-sent on reconnect in case the client restarted
-if(players[index].restore_reannounce) send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true); // only if they were held (announced offline); a live takeover was never offline
+if(players[index].restore_reannounce) send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname+" "+onoff_flags(players[index].name), 0,true); // only if they were held (announced offline); a live takeover was never offline. Trailing flags = has custom online/offline sound.
 players[index].restore_reannounce=false;
 send(event.peer_id, "voicemutestate "+(is_muted_now(index, "voice") ? "1" : "0"), 0, true); // silent voice-mute state so the client can warn on O without opening the mic; no message or sound
 send_yourrooms(event.peer_id, players[index].name);
@@ -1353,7 +1353,7 @@ send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true
 send(event.peer_id, "autoafk "+autoafk, 0, true); // the host's idle-timeout policy (conf.svr's autoafk): 0 = off, else the client auto-goes-AFK after this many idle seconds
 /* New accounts are announced at creation time (see register_account), so logging in for the first time
 is just a normal "online" notice like anyone else. */
-send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
+send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname+" "+onoff_flags(players[index].name), 0,true); // trailing flags = has custom online/offline sound
 update_peak(); // a player joined -- bump the all-time concurrent-player record if this is a new high
 /* Load each channel mute from disk so it's enforced, but DON'T notify the player: a mute set while they
 were offline shouldn't greet them with a message and sound every time they sign in (staff can still see
@@ -2178,6 +2178,32 @@ else
 string uname = read_field(target, "username", target);
 send(event.peer_id, "mutestext "+uname+"\n"+format_mutes(target), 0, true);
 }
+}
+}
+else if(parsed[0]=="getonoff" and index>-1 and parsed.length()==3)
+{
+/* A client requests a player's custom online/offline connect sound (data/players/<user>/onoffs/<which>.ogg).
+The .ogg is binary, so it's base64-encoded to ride the space-delimited text protocol safely. Reply is
+"onoffdata <user> <which>\n<base64>", or "...\nnone" when the account has no custom file for that cue (the
+client then caches the "none" answer and plays its builtin fallback). Everything after the first newline is the
+payload, so the audio's own bytes never disturb parsing. */
+string which = (parsed[2] == "offline") ? "offline" : "online";
+string target = parsed[1];
+string path = account_dir(target) + "/onoffs/" + which + ".ogg";
+if(!account_exists(target) or !file_exists(path))
+{
+send(event.peer_id, "onoffdata "+target+" "+which+"\nnone", 0, true);
+}
+else
+{
+file f;
+if(f.open(path, "rb"))
+{
+string data = f.read();
+f.close();
+send(event.peer_id, "onoffdata "+target+" "+which+"\n"+string_base64_encode(data, STRING_BASE64_DEFAULT), 0, true);
+}
+else send(event.peer_id, "onoffdata "+target+" "+which+"\nnone", 0, true); // couldn't open it; fall the client back to builtin
 }
 }
 else if(parsed[0]=="getreports" and index>-1)

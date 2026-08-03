@@ -1,9 +1,10 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Refacter the player versus player map so both sides share an equal, full-size arena instead of the lopsided ring split, reusing the rest of the mode.
+**Unfinished. Add the ability for players to have custom online and offline sounds.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Refacter the player versus player map so both sides share an equal, full-size arena instead of the lopsided ring split, reusing the rest of the mode.
 **Finished. Add a learn sounds option for the EVP and PVE game modes so players can have an idea on how the modes work when being played.
 
 **Finished. Add options for setting the wall's health and reinforce limmits in the free play mode.

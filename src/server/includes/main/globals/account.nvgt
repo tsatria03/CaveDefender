@@ -37,6 +37,16 @@ bool account_exists(string name)
 {
 return directory_exists(account_dir(name));
 }
+// Does this account have a custom online/offline sound in its onoffs/ subfolder? which = "online" or "offline".
+bool has_onoff_sound(string name, string which)
+{
+return file_exists(account_dir(name) + "/onoffs/" + which + ".ogg");
+}
+// The two trailing flags appended to an "online" broadcast: "<has custom online> <has custom offline>", each 1 or 0, so a client knows whether to fetch a player's custom connect/disconnect sound or play its builtin.
+string onoff_flags(string name)
+{
+return (has_onoff_sound(name, "online") ? "1" : "0") + " " + (has_onoff_sound(name, "offline") ? "1" : "0");
+}
 // True if this name is one of the configured owner aliases (case-insensitive); every owner alias is always developer.
 bool is_owner(string name)
 {
