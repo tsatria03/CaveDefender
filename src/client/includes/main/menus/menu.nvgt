@@ -121,11 +121,11 @@ void onoff_sounds_form()
 	if(!myonoff_received) { dlgmessage("Your sound settings could not be loaded. Please try again."); return; }
 	bool ho = (myonoff_online == 1), hf = (myonoff_offline == 1), md = (myonoff_master == 1);
 	form.reset();
-	form.create_window("Online and offline sounds");
+	form.create_window("Online and offline sounds", false); // false = don't spawn/retitle a real OS window (show_window); match every other in-game form so it stays a virtual dialog over the game window
 	int useOnline = form.create_checkbox("Use o&nline sound", ho);
-	int browseOnline = form.create_button("Br&owse for online sound...");
+	int browseOnline = form.create_button("Br&owse for online sound");
 	int useOffline = form.create_checkbox("Use o&ffline sound", hf);
-	int browseOffline = form.create_button("&Browse for offline sound...");
+	int browseOffline = form.create_button("&Browse for offline sound");
 	int masterBox = form.create_checkbox("Temporarily &disable custom online and offline sounds", md);
 	int saveBtn = form.create_button("&Save changes");
 	int cancelBtn = form.create_button("&Cancel changes", false, true); // cancel=true, so Escape also triggers it (cancels without saving)
