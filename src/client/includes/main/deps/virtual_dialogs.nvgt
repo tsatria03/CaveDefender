@@ -129,6 +129,17 @@ break;
 this.destroy_window();
 return result;
 }
+/* A native Open File dialog, routed through this class so the temporary window it needs is shown, then hidden again,
+keeping the otherwise windowless audio game "invisible" (same window handling as the virtual dialogs above). Returns
+the chosen file's path, or "" if cancelled. `filters` use the name:ext format, e.g. "OGG sounds:ogg". NOTE: unlike
+this class's virtual dialogs, the native picker is a real modal, so the network is NOT serviced while it's open -- a
+very slow pick can time the connection out, which the reconnect grace then recovers. */
+string open_file_dialog(const string filters = "", const string default_location = "") {
+this.create_window("");
+string result = :: open_file_dialog(filters, default_location);
+this.destroy_window();
+return result;
+}
 string input_box(const string title, const string text, const string default_text = "", string disallowed_chars="", string char_disallowed_description="This character is not allowed.", const int flags = 0, bool multiline = false)
 {
 string result;

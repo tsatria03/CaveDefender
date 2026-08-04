@@ -75,6 +75,100 @@ void docsmenu(bool music=true)
 		else if(sel=="todo") dockread("docks/todo list.txt");
 	}
 }
+/* Pick a file for a custom onoff sound and validate it, returning its path, or "" (with a spoken reason) on cancel or
+failure. Enforces: OGG (checked by the "OggS" magic bytes, so a renamed WAV/MP3 can't sneak in), <= 128 KB, and <= 3
+seconds -- the "snappy, no drawn-out sounds" rule finally checked on the real file. */
+string pick_onoff_file()
+{
+	string path = vd.open_file_dialog("OGG sounds:ogg", "");
+	if(path == "" or !file_exists(path)) return ""; // cancelled the picker
+	file mf;
+	if(mf.open(path, "rb")) { string hdr = mf.read(4); mf.close(); if(hdr != "OggS") { dlgmessage("That is not an OGG file. Please choose an OGG sound."); return ""; } }
+	if(file_get_size(path) > onoff_max_bytes) { dlgmessage("That sound is too large. Please choose an OGG file under 128 kilobytes."); return ""; }
+	sound s;
+	if(!s.load(path)) { dlgmessage("That file could not be opened as a sound. Please choose an OGG file."); return ""; }
+	float len = s.length;
+	s.close();
+	if(len > 3000) { dlgmessage("That sound is too long. Please choose one that is 3 seconds or shorter."); return ""; }
+	return path;
+}
+// Read a picked file and upload it to the server as this player's custom online/offline sound (base64 over the protocol).
+void upload_onoff(string which, string path)
+{
+	file f;
+	if(!f.open(path, "rb")) { dlgmessage("That sound could not be read."); return; }
+	string data = f.read();
+	f.close();
+	send(0, "setonoff " + which + "\n" + string_base64_encode(data, STRING_BASE64_DEFAULT), 0, true);
+}
+/* The "Change your online and offline sounds" form (F7 / player panel). Loads your current state from the server,
+then lets you pick, replace, or remove your custom connect/disconnect sounds and toggle the master "temporarily off"
+switch. A file's PRESENCE is the "use" state: unchecking a Use box and saving removes that sound (confirmed first);
+checking a box reveals its Browse button. All changes go to the server on Save; Cancel discards everything. */
+void onoff_sounds_form()
+{
+	// Preload the current state (raw file presence + master flag) so the checkboxes reflect what you already have.
+	myonoff_received = false;
+	send(0, "getmyonoff", 0, true);
+	timer t; t.restart();
+	while(t.elapsed < 3000)
+	{
+		wait(5);
+		netloop();
+		if(!connected) return;
+		if(myonoff_received) break;
+	}
+	if(!myonoff_received) { dlgmessage("Your sound settings could not be loaded. Please try again."); return; }
+	bool ho = (myonoff_online == 1), hf = (myonoff_offline == 1), md = (myonoff_master == 1);
+	form.reset();
+	form.create_window("Online and offline sounds");
+	int useOnline = form.create_checkbox("Use o&nline sound", ho);
+	int browseOnline = form.create_button("Br&owse for online sound...");
+	int useOffline = form.create_checkbox("Use o&ffline sound", hf);
+	int browseOffline = form.create_button("&Browse for offline sound...");
+	int masterBox = form.create_checkbox("Temporarily turn off my custom soun&ds, keeping them saved", md);
+	int saveBtn = form.create_button("&Save changes");
+	int cancelBtn = form.create_button("&Cancel changes");
+	form.set_state(browseOnline, ho, ho); // each Browse button shows only while its Use box is checked
+	form.set_state(browseOffline, hf, hf);
+	form.focus(useOnline);
+	bool prevO = ho, prevF = hf;
+	string pendingOnline = "", pendingOffline = "";
+	string act = "";
+	while(true)
+	{
+		wait(5);
+		form.monitor();
+		net_keepalive(); // keep the connection serviced while the form is open
+		bool oc = form.is_checked(useOnline);
+		if(oc != prevO) { form.set_state(browseOnline, oc, oc); prevO = oc; } // reveal/hide Browse on toggle
+		bool fc = form.is_checked(useOffline);
+		if(fc != prevF) { form.set_state(browseOffline, fc, fc); prevF = fc; }
+		if(oc and form.is_pressed(browseOnline)) { string p = pick_onoff_file(); if(p != "") { pendingOnline = p; speak("Online sound chosen."); } }
+		if(fc and form.is_pressed(browseOffline)) { string p = pick_onoff_file(); if(p != "") { pendingOffline = p; speak("Offline sound chosen."); } }
+		if(form.is_pressed(saveBtn)) { act = "save"; break; }
+		if(form.is_pressed(cancelBtn)) { act = "cancel"; break; }
+	}
+	if(act != "save") { speak("canceled"); return; }
+	bool oc = form.is_checked(useOnline), fc = form.is_checked(useOffline), mc = form.is_checked(masterBox);
+	bool delOnline = (!oc and ho), delOffline = (!fc and hf); // unchecking a sound you currently have is a removal
+	if(delOnline or delOffline)
+	{
+		setupmenu();
+		m.add_item("Yes");
+		m.add_item("No");
+		string what = (delOnline and delOffline) ? "online and offline sounds" : (delOnline ? "online sound" : "offline sound");
+		string it = (delOnline and delOffline) ? "them" : "it";
+		m.intro_text = "This will remove your custom " + what + ", and you would have to upload " + it + " again. Continue?";
+		if(m.run() != 0) { speak("canceled"); return; } // No / cancel -> abort the whole save, nothing changes
+	}
+	send(0, "onoffmaster " + (mc ? "1" : "0"), 0, true);
+	if(oc and pendingOnline != "") upload_onoff("online", pendingOnline);
+	else if(!oc and ho) send(0, "delonoff online", 0, true);
+	if(fc and pendingOffline != "") upload_onoff("offline", pendingOffline);
+	else if(!fc and hf) send(0, "delonoff offline", 0, true);
+	speak("Your online and offline sound settings have been saved.");
+}
 /* The Learn Sounds menu (main menu, offline): a category picker, then a browsable, previewable list of that
 category's cues, built on form_menu's learn_game_sounds_menu helper. Sounds are grouped by type and every label says
 where the cue is used. ls_add adds one file; ls_addv builds a numbered-variant entry with a for-loop and tacks on the
