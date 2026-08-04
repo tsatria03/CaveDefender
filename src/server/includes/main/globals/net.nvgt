@@ -2222,7 +2222,12 @@ if(data.length() > 0 and int64(data.length()) <= onoff_max_bytes)
 string dir = account_dir(players[index].name) + "/onoffs";
 if(!directory_exists(dir)) directory_create(dir);
 file f;
-if(f.open(dir + "/" + which + ".ogg", "wb")) { f.write(data); f.close(); }
+if(f.open(dir + "/" + which + ".ogg", "wb"))
+{
+f.write(data); f.close();
+string poss = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
+send(0, "alert "+display_name_flagged(index)+" has just updated "+poss+" "+which+" sound.", 0, true); // rank/nickname/pronoun-aware, everyone including the uploader
+}
 }
 }
 }
@@ -2231,12 +2236,24 @@ else if(parsed[0]=="delonoff" and index>-1 and parsed.length()==2)
 // A player removes their OWN custom online/offline sound (unchecked "Use ... sound" and saved).
 string which = (parsed[1] == "offline") ? "offline" : "online";
 string path = account_dir(players[index].name) + "/onoffs/" + which + ".ogg";
-if(file_exists(path)) file_delete(path);
+if(file_exists(path))
+{
+file_delete(path);
+string poss = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
+send(0, "alert "+display_name_flagged(index)+" has just removed "+poss+" "+which+" sound.", 0, true); // only when a file was actually there to remove
+}
 }
 else if(parsed[0]=="onoffmaster" and index>-1 and parsed.length()==2)
 {
 // The player's master "temporarily turn off my custom sounds" switch (keeps the files, just suppresses them). onoffdisabled.usr = "1" off, blank on.
-write_field(players[index].name, "onoffdisabled", (parsed[1] == "1") ? "1" : "");
+bool newmaster = (parsed[1] == "1");
+bool oldmaster = (read_field(players[index].name, "onoffdisabled", "") == "1");
+write_field(players[index].name, "onoffdisabled", newmaster ? "1" : "");
+if(newmaster != oldmaster) // the client re-sends this on every save; only announce a genuine flip of the switch
+{
+string poss = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
+send(0, "alert "+display_name_flagged(index)+" has just "+(newmaster?"muted":"unmuted")+" "+poss+" online and offline sounds.", 0, true);
+}
 }
 else if(parsed[0]=="getmyonoff" and index>-1)
 {
