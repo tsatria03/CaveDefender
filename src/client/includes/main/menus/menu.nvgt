@@ -124,15 +124,18 @@ void onoff_sounds_form()
 	form.create_window("Online and offline sounds", false); // false = don't spawn/retitle a real OS window (show_window); match every other in-game form so it stays a virtual dialog over the game window
 	int useOnline = form.create_checkbox("Use o&nline sound", ho);
 	int browseOnline = form.create_button("Br&owse for online sound");
+	int previewOnline = form.create_button("&Preview current online sound");
 	int useOffline = form.create_checkbox("Use o&ffline sound", hf);
 	int browseOffline = form.create_button("&Browse for offline sound");
+	int previewOffline = form.create_button("Pre&view current offline sound");
 	int masterBox = form.create_checkbox("Temporarily &disable custom online and offline sounds", md);
 	int saveBtn = form.create_button("&Save changes");
 	int cancelBtn = form.create_button("&Cancel changes", false, true); // cancel=true, so Escape also triggers it (cancels without saving)
-	form.set_state(browseOnline, ho, ho); // each Browse button shows only while its Use box is checked
+	form.set_state(browseOnline, ho, ho); // each Browse button shows only while its Use box is checked; the Preview buttons stay visible at all times
 	form.set_state(browseOffline, hf, hf);
+	form.set_state(masterBox, (ho or hf), (ho or hf)); // the disable switch only makes sense with a custom sound in use: hide it unless one is uploaded AND a Use box is checked (both true at open)
 	form.focus(useOnline);
-	bool prevO = ho, prevF = hf;
+	bool prevO = ho, prevF = hf, prevMaster = (ho or hf);
 	string pendingOnline = "", pendingOffline = "";
 	string act = "";
 	while(true)
@@ -141,11 +144,15 @@ void onoff_sounds_form()
 		form.monitor();
 		net_keepalive(); // keep the connection serviced while the form is open
 		bool oc = form.is_checked(useOnline);
-		if(oc != prevO) { form.set_state(browseOnline, oc, oc); prevO = oc; } // reveal/hide Browse on toggle
+		if(oc != prevO) { form.set_state(browseOnline, oc, oc); prevO = oc; } // reveal/hide Browse on toggle (Preview stays visible)
 		bool fc = form.is_checked(useOffline);
 		if(fc != prevF) { form.set_state(browseOffline, fc, fc); prevF = fc; }
+		bool showMaster = (ho or hf) and (oc or fc); // uploaded sound(s) exist AND at least one Use box is on
+		if(showMaster != prevMaster) { form.set_state(masterBox, showMaster, showMaster); prevMaster = showMaster; }
 		if(oc and form.is_pressed(browseOnline)) { string p = pick_onoff_file(); if(p != "") { pendingOnline = p; speak("Online sound chosen."); } }
 		if(fc and form.is_pressed(browseOffline)) { string p = pick_onoff_file(); if(p != "") { pendingOffline = p; speak("Offline sound chosen."); } }
+		if(form.is_pressed(previewOnline)) send(0, "getonoffraw online", 0, true); // audition the sound that would actually play on connect: your saved online sound, or the builtin if you have none or have it disabled
+		if(form.is_pressed(previewOffline)) send(0, "getonoffraw offline", 0, true);
 		if(form.is_pressed(saveBtn)) { act = "save"; break; }
 		if(form.is_pressed(cancelBtn)) { act = "cancel"; break; }
 	}

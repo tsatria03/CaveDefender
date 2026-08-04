@@ -930,6 +930,26 @@ void netloop_impl()
 			if(onoff_cache.exists(ok)) onoff_cache.delete(ok);
 			if(onoff_cache.exists(fk)) onoff_cache.delete(fk);
 		}
+		else if (parsed[0] == "onoffpreview" and parsed.length() == 2)
+		{
+			/* Reply to a self-preview (getonoffraw): the player's saved file, base64 after the first newline, or "none".
+			Play it so they can audition what they have saved; "none" means none saved, so preview the builtin cue. Parse
+			which from the header, and deliberately do NOT touch onoff_cache -- a one-off audition, not the play state. */
+			int nl = string_contains(message, "\n", 1);
+			string header = (nl >= 0) ? message.substr(0, nl) : message;
+			string[] hp = string_split(header, " ", true);
+			string which = (hp.length() > 1 and hp[1] == "offline") ? "offline" : "online";
+			string payload = (nl >= 0) ? message.substr(nl + 1) : "none";
+			if(payload == "none") play_builtin_onoff(which);
+			else
+			{
+				string dir = DIRECTORY_APPDATA + "tsatria03/CaveDefender/onoffcache";
+				if(!directory_exists(dir)) directory_create(dir);
+				string path = dir + "/preview_" + which + ".ogg";
+				file f;
+				if(f.open(path, "wb")) { f.write(string_base64_decode(payload, STRING_BASE64_DEFAULT)); f.close(); p.play_stationary(path, false); }
+			}
+		}
 		else if (parsed[0] == "myonoffstate" and parsed.length() >= 4)
 		{
 			// Reply to getmyonoff: this account's own onoff state, for the settings form to preload its checkboxes.
