@@ -2189,13 +2189,13 @@ client then caches the "none" answer and plays its builtin fallback). Everything
 payload, so the audio's own bytes never disturb parsing. */
 string which = (parsed[2] == "offline") ? "offline" : "online";
 string target = parsed[1];
-string path = account_dir(target) + "/onoffs/" + which + ".ogg";
-if(!account_exists(target) or !file_exists(path))
+if(!has_onoff_sound(target, which)) // missing, oversized (over the ~128 KB cap), or no such account -> no custom sound; the client plays its builtin
 {
 send(event.peer_id, "onoffdata "+target+" "+which+"\nnone", 0, true);
 }
 else
 {
+string path = account_dir(target) + "/onoffs/" + which + ".ogg";
 file f;
 if(f.open(path, "rb"))
 {
@@ -2205,6 +2205,38 @@ send(event.peer_id, "onoffdata "+target+" "+which+"\n"+string_base64_encode(data
 }
 else send(event.peer_id, "onoffdata "+target+" "+which+"\nnone", 0, true); // couldn't open it; fall the client back to builtin
 }
+}
+else if(parsed[0]=="setonoff" and index>-1)
+{
+/* A player uploads their OWN custom online/offline sound: "setonoff <online|offline>\n<base64 audio>". Split on the
+FIRST newline (the base64 may carry its own wrapping newlines): header before it, audio payload after. Decode and
+re-check the size cap server-side (never trust the client), then write it to their onoffs/<which>.ogg. */
+int nl = string_contains(message, "\n", 1);
+if(nl >= 1)
+{
+string[] hp = string_split(message.substr(0, nl), " ", true); // the header line "setonoff <which>"
+string which = (hp.length() > 1 and hp[1] == "offline") ? "offline" : "online";
+string data = string_base64_decode(message.substr(nl+1), STRING_BASE64_DEFAULT);
+if(data.length() > 0 and int64(data.length()) <= onoff_max_bytes)
+{
+string dir = account_dir(players[index].name) + "/onoffs";
+if(!directory_exists(dir)) directory_create(dir);
+file f;
+if(f.open(dir + "/" + which + ".ogg", "wb")) { f.write(data); f.close(); }
+}
+}
+}
+else if(parsed[0]=="delonoff" and index>-1 and parsed.length()==2)
+{
+// A player removes their OWN custom online/offline sound (unchecked "Use ... sound" and saved).
+string which = (parsed[1] == "offline") ? "offline" : "online";
+string path = account_dir(players[index].name) + "/onoffs/" + which + ".ogg";
+if(file_exists(path)) file_delete(path);
+}
+else if(parsed[0]=="onoffmaster" and index>-1 and parsed.length()==2)
+{
+// The player's master "temporarily turn off my custom sounds" switch (keeps the files, just suppresses them). onoffdisabled.usr = "1" off, blank on.
+write_field(players[index].name, "onoffdisabled", (parsed[1] == "1") ? "1" : "");
 }
 else if(parsed[0]=="getreports" and index>-1)
 {
