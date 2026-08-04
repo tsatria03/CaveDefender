@@ -2268,6 +2268,22 @@ int hf = file_exists(account_dir(n) + "/onoffs/offline.ogg") ? 1 : 0;
 int md = (read_field(n, "onoffdisabled", "") == "1") ? 1 : 0;
 send(event.peer_id, "myonoffstate "+ho+" "+hf+" "+md, 0, true);
 }
+else if(parsed[0]=="getonoffraw" and index>-1 and parsed.length()==2)
+{
+/* Self-preview for the settings form: send the player their OWN saved onoff file so they can audition what will
+actually play. This RESPECTS the master disable switch (via has_onoff_sound) -- if they've saved with their custom
+sounds temporarily off, the preview should match reality and fall back to the builtin, just like a real connect
+would. "onoffpreview <which>\n<base64>", or "...\nnone" so the client previews its builtin cue. */
+string which = (parsed[1] == "offline") ? "offline" : "online";
+string reply = "none";
+if(has_onoff_sound(players[index].name, which)) // present, within the size cap, and not temporarily disabled
+{
+string path = account_dir(players[index].name) + "/onoffs/" + which + ".ogg";
+file f;
+if(f.open(path, "rb")) { string d = f.read(); f.close(); reply = string_base64_encode(d, STRING_BASE64_DEFAULT); }
+}
+send(event.peer_id, "onoffpreview "+which+"\n"+reply, 0, true);
+}
 else if(parsed[0]=="getreports" and index>-1)
 {
 /* Staff (moderator+) view every report on record, read-only, newest first, in the doc viewer. Unlike the
