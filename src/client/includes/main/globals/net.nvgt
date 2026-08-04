@@ -790,6 +790,9 @@ or the cache file's path; a missing key means not yet fetched. onoff_pending tra
 whether to PLAY the sound when it lands ("1") or just warm the cache ("0"). */
 dictionary onoff_cache;
 dictionary onoff_pending;
+const int64 onoff_max_bytes = 131072; // ~128 KB cap on a custom onoff sound (mirrors the server); with the 3-second length check it enforces the snappy, no-WAV rule when a player picks a file for upload.
+bool myonoff_received = false; // set true when a "myonoffstate" reply lands, so the settings form knows its preload arrived
+int myonoff_online = 0, myonoff_offline = 0, myonoff_master = 0; // this account's own onoff state (raw file presence for online/offline + the master flag), from the last getmyonoff
 string onoff_key(string user, string which) { return string_to_lower_case(user) + "|" + which; }
 string onoff_cachefile(string user, string which) { return DIRECTORY_APPDATA + "tsatria03/CaveDefender/onoffcache/" + string_to_lower_case(user) + "_" + which + ".ogg"; }
 void play_builtin_onoff(string which) { p.play_stationary("sounds/ui/misc/" + which + ".ogg", false); }
@@ -905,6 +908,14 @@ void netloop_impl()
 			bool play = onoff_pending.get(key, pend) and pend == "1";
 			if(onoff_pending.exists(key)) onoff_pending.delete(key);
 			if(play) play_cached_onoff(parsed[2], cacheval);
+		}
+		else if (parsed[0] == "myonoffstate" and parsed.length() >= 4)
+		{
+			// Reply to getmyonoff: this account's own onoff state, for the settings form to preload its checkboxes.
+			myonoff_online = string_to_number(parsed[1]);
+			myonoff_offline = string_to_number(parsed[2]);
+			myonoff_master = string_to_number(parsed[3]);
+			myonoff_received = true;
 		}
 		else if (parsed[0] == "kicked")
 		{
