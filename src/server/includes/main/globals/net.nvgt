@@ -1751,8 +1751,7 @@ players.remove_at(index);
 }
 else if(parsed[0]=="welcome" and index>-1)
 {
-send(event.peer_id, "play welcome.ogg", 0,true);
-send(event.peer_id, "welcome to the CaveDefender server. server version "+version, 0,true);
+send(event.peer_id, "welcome to the CaveDefender server. server version "+version, 0,true); // welcome.ogg is NOT played here; it plays once, from the agreedrules reply, the moment a player agrees to the rules -- never on a later login
 }
 else if(parsed[0]=="who" and index>-1)
 {
@@ -2227,6 +2226,7 @@ if(f.open(dir + "/" + which + ".ogg", "wb"))
 f.write(data); f.close();
 string poss = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
 send(0, "alert "+display_name_flagged(index)+" has just updated "+poss+" "+which+" sound.", 0, true); // rank/nickname/pronoun-aware, everyone including the uploader
+send(0, "onoffchanged "+players[index].name, 0, true); // tell every client to drop its cached cues for this player so the new sound is picked up
 }
 }
 }
@@ -2241,6 +2241,7 @@ if(file_exists(path))
 file_delete(path);
 string poss = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
 send(0, "alert "+display_name_flagged(index)+" has just removed "+poss+" "+which+" sound.", 0, true); // only when a file was actually there to remove
+send(0, "onoffchanged "+players[index].name, 0, true); // clients drop their cached cues for this player so the removal takes effect at once
 }
 }
 else if(parsed[0]=="onoffmaster" and index>-1 and parsed.length()==2)
@@ -2253,6 +2254,7 @@ if(newmaster != oldmaster) // the client re-sends this on every save; only annou
 {
 string poss = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
 send(0, "alert "+display_name_flagged(index)+" has just "+(newmaster?"muted":"unmuted")+" "+poss+" online and offline sounds.", 0, true);
+send(0, "onoffchanged "+players[index].name, 0, true); // clients drop their cached cues so the disable/enable is reflected on the next event
 }
 }
 else if(parsed[0]=="getmyonoff" and index>-1)
