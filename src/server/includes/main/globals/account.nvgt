@@ -37,10 +37,19 @@ bool account_exists(string name)
 {
 return directory_exists(account_dir(name));
 }
-// Does this account have a custom online/offline sound in its onoffs/ subfolder? which = "online" or "offline".
+/* ~128 KB cap on a custom onoff sound. A larger file is treated as "no custom sound" (the builtin cue plays), which
+also bounces WAV/uncompressed uploads -- a few seconds of WAV is ~500 KB, well over this -- so onoff cues stay the
+short, snappy .ogg blips they're meant to be. A 3-second duration limit will be enforced on the file itself when
+self-upload lands; this size backstop is what the headless server can check on its own. */
+const int64 onoff_max_bytes = 131072;
+// Does this account have a USABLE custom online/offline sound in onoffs/ (it exists, is within the size cap, and the
+// player hasn't temporarily turned their custom sounds off)? which = "online" or "offline". file_get_size throws on a
+// missing file, so the short-circuit file_exists guard runs first.
 bool has_onoff_sound(string name, string which)
 {
-return file_exists(account_dir(name) + "/onoffs/" + which + ".ogg");
+if(read_field(name, "onoffdisabled", "") == "1") return false; // the player's master "temporarily turn off my custom sounds" switch (files kept, just suppressed)
+string path = account_dir(name) + "/onoffs/" + which + ".ogg";
+return file_exists(path) and file_get_size(path) <= onoff_max_bytes;
 }
 // The two trailing flags appended to an "online" broadcast: "<has custom online> <has custom offline>", each 1 or 0, so a client knows whether to fetch a player's custom connect/disconnect sound or play its builtin.
 string onoff_flags(string name)

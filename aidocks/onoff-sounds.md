@@ -23,5 +23,35 @@ metadata:
 ## BUILD STATUS (2026-08)
 - **SERVER: DONE.** account.nvgt: `has_onoff_sound(name, which)` (file_exists onoffs/<which>.ogg) + `onoff_flags(name)` (the "1 0" suffix). net.nvgt: appended `onoff_flags` to the 2 ONLINE broadcasts (~1310 restore-reannounce, ~1356 fresh login); new `getonoff` handler (~2183, before getreports) reads the file, base64-encodes, replies `onoffdata`, or `\nnone`. Safe to ship alone (flags trailing, getonoff uncalled by old clients).
 - **CLIENT: DONE (awaiting dev test).** client net.nvgt (before netloop_impl): `onoff_cache` + `onoff_pending` dictionaries; helpers `onoff_key`, `onoff_cachefile` (`DIRECTORY_APPDATA + "tsatria03/CaveDefender/onoffcache/<user>_<which>.ogg"`), `play_builtin_onoff`, `play_cached_onoff`, `request_onoff` (one getonoff in flight per cue; a play request beats a warm), `do_onoff(user,which,hascustom,play)` (cached->play/skip; "0"->cache none+builtin; "1"/"?"->fetch). Online handler: parse flags parsed[4]/[5], `do_onoff(...,"online",hason,true)` + `do_onoff(...,"offline",hasoff,false)` prefetch, staffin.ogg + connections buffer unchanged. Offline handler: `do_onoff(...,"offline","?",true)`. New `onoffdata` handler: split payload after first `\n`, base64_decode -> write cache file (or "none"), cache the answer, play if pending=="1". Playback via `p.play_stationary(cachefile)` -- OK because the client uses loose files, NO pack (see [[no-sound-pack-support]]), so an absolute APPDATA path loads fine.
-- **DOCS: held** (no changelog/readme until dev tests, same as PVP).
+- **SIZE BACKSTOP DONE (2026-08):** `const int64 onoff_max_bytes = 131072` (~128 KB) in account.nvgt. `has_onoff_sound` now returns true only if the file exists AND `file_get_size <= onoff_max_bytes` (short-circuit: file_exists guards the throw). So an oversized file reports flag 0 on the online broadcast AND the getonoff handler replies "none" (it now guards on `has_onoff_sound` instead of raw file_exists) -> client plays the builtin. 128 KB comfortably fits a 3-second OGG even at ~320 kbps, and doubles as a no-WAV guard (a 3s WAV ~500 KB is far over). The REAL limit is DURATION: dev-agreed **3 seconds**, to be enforced client-side ON THE FILE (sound.length) when self-upload lands -- the headless server can't measure duration, so size is its proxy. WAV is not a permitted host format.
+- **DOCS: changelog DONE (playback half only, host-managed, no mention of uploading -- dev added "set for them by the server host"); readme HELD until the self-upload half is built, then document both together.**
+
+## V2 -- self-upload (in-game): DESIGN LOCKED (2026-08), NOT BUILT
+Lets a player set/replace/remove their OWN online/offline sounds in-game (no host needed). All design decisions confirmed with the dev.
+
+**Entry points (both open the same form):** F7 (confirmed FREE -- no KEY_F7 anywhere in the client) anywhere in-session; AND a Player panel (Shift+Enter) item labeled **"Change your online and offline sounds"** (dev picked this over "Change server onoffs" for clarity).
+
+**The form** -- built on the audio form directly (form.nvgt `form` class: create_checkbox/create_button, `set_state(idx, enabled, visible)` toggles visibility live, and the tab loop at form.nvgt:676/701 already SKIPS invisible controls). Controls in order:
+1. "Use online sound" checkbox (Alt+N) -- checked iff the account currently has a custom online.ogg.
+2. "Browse for online sound..." button -- VISIBLE ONLY when box 1 is checked (monitor loop calls set_state(browseBtn, checked, checked) on toggle).
+3. "Use offline sound" checkbox (Alt+F).
+4. "Browse for offline sound..." button -- visible only when box 3 checked.
+5. "Temporarily turn off my custom sounds (keeps them saved)" checkbox (Alt+D) -- the SAFE, NON-DESTRUCTIVE master (keeps files, just suppresses them).
+6. "Save changes" button (Alt+S).
+7. "Cancel changes" button (Alt+C).
+
+**Browse:** `open_file_dialog(filters, default_location)` (UI.cpp, returns picked path or "") with an `.ogg` filter; pick from ANYWHERE. Validate AT PICK TIME: loadable as a real OGG (load it), duration <= 3 s (`sound.length` <= 3000 ms), size <= 128 KB (`file_get_size`). Reject invalid with a clear dlgmessage. The uploaded file always lands as `online.ogg`/`offline.ogg` regardless of source name (server names it on write -- so NO rename needed; file_rename/file_move DO exist in filesystem.cpp if ever wanted).
+
+**Save semantics (dev-confirmed):** presence of the file IS the "use" state -- there is no per-sound "kept but off". Per sound: box UNCHECKED + save => DELETE onoffs/<which>.ogg (SHOW A CONFIRM first: "This will remove your custom online sound; you'd need to upload it again. Continue?"). box CHECKED + a newly-browsed file => upload (replace). box CHECKED + no new browse but existing file => keep. Cancel discards all pending changes. The master temp-disable is the ONLY non-destructive off.
+
+**Protocol (client acts on its OWN account only -- server uses players[index].name, no cross-account edits):**
+- `setonoff <which>\n<base64 audio>` -> server RE-checks size <= onoff_max_bytes (never trust the client), writes onoffs/<which>.ogg (ensure onoffs/ dir exists).
+- `delonoff <which>` -> server removes onoffs/<which>.ogg.
+- `onoffmaster <0|1>` -> server persists the master temp-disable flag as an account field (proposed `onoffdisabled.usr`, "1"/blank, in info/ via write_field).
+
+**Server `has_onoff_sound` update:** ADD the master-flag check -> return false when `read_field(name,"onoffdisabled","")=="1"`. So a temp-disabled account reports flag 0 on the online broadcast AND "none" on getonoff -> everyone hears builtin, files preserved. (Already checks file_exists + size.)
+
+**Build order (checkpoints):** (1) server setonoff/delonoff/onoffmaster + has_onoff_sound master check -- **DONE 2026-08**; (2) client form (controls + live visibility + browse + validation) + save/upload logic -- TODO; (3) F7 handler + Player panel item -- TODO; (4) docs -- HELD. Then changelog the self-upload half AND write the readme covering the WHOLE feature (playback + self-set) together.
+
+**SERVER V2 AS-BUILT (net.nvgt, after the getonoff handler):** `setonoff` (splits `message` on the FIRST `\n` -- header "setonoff <which>" before, base64 after -- because the server splits parsed on spaces so the payload glues into parsed[1]; decodes, re-checks `<= onoff_max_bytes`, writes onoffs/<which>.ogg, creating onoffs/ if needed); `delonoff <which>` (file_delete onoffs/<which>.ogg); `onoffmaster <0|1>` (write_field onoffdisabled "1"/blank). All act on `players[index].name` (own account only). account.nvgt `has_onoff_sound` now returns false if `read_field(name,"onoffdisabled","")=="1"`. `file_delete(path)` bool confirmed in filesystem.cpp.
 - **TEST NOTES:** first encounter of a player plays a beat late (round-trip); after that instant from cache. Base64 may wrap lines (Poco) -- harmless: payload is everything after the header's first `\n`, and base64_decode ignores embedded newlines. Cache files persist across sessions but the in-memory dict is per-session, so a host swapping a sound shows next session (re-fetch overwrites the file).
