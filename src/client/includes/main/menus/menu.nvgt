@@ -80,7 +80,7 @@ failure. Enforces: OGG (checked by the "OggS" magic bytes, so a renamed WAV/MP3 
 seconds -- the "snappy, no drawn-out sounds" rule finally checked on the real file. */
 string pick_onoff_file()
 {
-	string path = vd.open_file_dialog("OGG sounds:ogg", "");
+	string path = open_file_dialog("OGG sounds:ogg", ""); // the plain native picker (its own visible window); the vd wrapper fought the open audio form's window and froze
 	if(path == "" or !file_exists(path)) return ""; // cancelled the picker
 	file mf;
 	if(mf.open(path, "rb")) { string hdr = mf.read(4); mf.close(); if(hdr != "OggS") { dlgmessage("That is not an OGG file. Please choose an OGG sound."); return ""; } }
@@ -126,9 +126,9 @@ void onoff_sounds_form()
 	int browseOnline = form.create_button("Br&owse for online sound...");
 	int useOffline = form.create_checkbox("Use o&ffline sound", hf);
 	int browseOffline = form.create_button("&Browse for offline sound...");
-	int masterBox = form.create_checkbox("Temporarily turn off my custom soun&ds, keeping them saved", md);
+	int masterBox = form.create_checkbox("Temporarily &disable custom online and offline sounds", md);
 	int saveBtn = form.create_button("&Save changes");
-	int cancelBtn = form.create_button("&Cancel changes");
+	int cancelBtn = form.create_button("&Cancel changes", false, true); // cancel=true, so Escape also triggers it (cancels without saving)
 	form.set_state(browseOnline, ho, ho); // each Browse button shows only while its Use box is checked
 	form.set_state(browseOffline, hf, hf);
 	form.focus(useOnline);
@@ -158,8 +158,8 @@ void onoff_sounds_form()
 		m.add_item("Yes");
 		m.add_item("No");
 		string what = (delOnline and delOffline) ? "online and offline sounds" : (delOnline ? "online sound" : "offline sound");
-		string it = (delOnline and delOffline) ? "them" : "it";
-		m.intro_text = "This will remove your custom " + what + ", and you would have to upload " + it + " again. Continue?";
+		string tail = (delOnline and delOffline) ? "You'll be required to reupload these sounds again." : "You'll be required to reupload this sound again.";
+		m.intro_text = "Are you sure you want to remove your custom " + what + "? " + tail;
 		if(m.run() != 0) { speak("canceled"); return; } // No / cancel -> abort the whole save, nothing changes
 	}
 	send(0, "onoffmaster " + (mc ? "1" : "0"), 0, true);

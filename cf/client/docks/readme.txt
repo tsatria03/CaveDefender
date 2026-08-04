@@ -81,7 +81,15 @@ Whenever someone climbs to a new place on a leaderboard, everyone on the server 
 
 The player and location panels.
 
-In the lobby or any room you are in, press enter to open the panel for where you are: the lobby panel in the lobby, or the room panel in a room, which is the create and join rooms menu, or the room menu, both described just below. Press shift plus enter to open the player panel instead, which gathers your personal, account-tied settings in one place: your language channel, your pronoun, your muted players list, and changing your nickname, email, or password, each doing the same as the matching slash command. In a game, enter opens the round menu instead, and your personal settings stay reachable through their slash commands, the players menu on F6, and your preferences on Alt plus P.
+In the lobby or any room you are in, press enter to open the panel for where you are: the lobby panel in the lobby, or the room panel in a room, which is the create and join rooms menu, or the room menu, both described just below. Press shift plus enter to open the player panel instead, which gathers your personal, account-tied settings in one place: your language channel, your pronoun, your muted players list, and changing your nickname, email, or password, each doing the same as the matching slash command, along with setting your own online and offline sounds, described in its own section below. In a game, enter opens the round menu instead, and your personal settings stay reachable through their slash commands, the players menu on F6, and your preferences on Alt plus P.
+
+Online and offline sounds.
+
+Every player can have their own online and offline sounds. When you connect, everyone on the server hears the sound you chose, and when you disconnect they hear your other one, in place of the standard connect and disconnect cues, so people can tell who is coming and going by ear. If you have not set any, you simply keep the standard cues as before.
+
+To set them, press F7 anywhere in the game, or choose the online and offline sounds option in your player panel. A form opens with a box for each sound: check use online sound and a browse button appears, then browse to any OGG file on your computer and it becomes the sound others hear when you come online, and the offline sound works the same way. Each must be an OGG file no longer than three seconds, so the cues stay short and snappy, and anything too long, too large, or of the wrong type is refused the moment you pick it.
+
+Your chosen sounds are saved to your account on the server. To replace one, browse a new file and save. To remove one, uncheck its use box and save, and you are asked to confirm first, since removing a sound means picking it again if you ever want it back. A separate switch temporarily disables your custom sounds, keeping them saved but falling back to the standard cues until you turn it off. Press escape, or choose cancel changes, to close the form without saving. A server host can also set these sounds for a player who asks.
 
 Rooms.
 
@@ -300,6 +308,7 @@ F3. Ping the server and hear the round trip time.
 F4. Hear how long the server has been running, and the most players ever connected at once.
 F5. Toggle player beacons on or off.
 F6. Open the players menu.
+F7. Open the form for setting your own online and offline sounds; also reachable from the player panel.
 
 Volume.
 
