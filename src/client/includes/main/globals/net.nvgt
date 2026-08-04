@@ -266,6 +266,7 @@ void handle_accountaction(string message)
 	if(parsed.length() < 2) return;
 	string which = parsed[1];
 	if(which == "changepass") comparse("/changepass"); // no args opens the three-field masked form
+	else if(which == "onoffsounds") onoff_sounds_form(); // opens the online and offline sounds form (same as F7)
 	else if(which == "changemail")
 	{
 		string v = vd.input_box("Change email", "Enter your new email address.", email); // prefilled with your current email
