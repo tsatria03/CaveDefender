@@ -101,6 +101,13 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 2) { syntax_error("/where username"); return; }
 		send(0, "where "+parsed[1], 0, true);
 	}
+	else if(base == "/online" or base == "/offline")
+	{
+		/* Preview your OWN connect/disconnect cue: the server plays your saved online/offline sound (or the builtin
+		when you have none), and shows the exact message everyone sees when you come online or go offline. */
+		if(parsed.length() != 1) { syntax_error(base); return; }
+		send(0, "playonoff "+base.substr(1), 0, true); // "/online" -> "playonoff online", "/offline" -> "playonoff offline"
+	}
 	else if(base == "/channel")
 	{
 		if(parsed.length() != 1) { syntax_error("/channel"); return; }
