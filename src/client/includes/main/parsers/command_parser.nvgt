@@ -101,12 +101,19 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 2) { syntax_error("/where username"); return; }
 		send(0, "where "+parsed[1], 0, true);
 	}
-	else if(base == "/online" or base == "/offline")
+	else if(base == "/online" or base == "/on" or base == "/offline" or base == "/off")
 	{
 		/* Preview your OWN connect/disconnect cue: the server plays your saved online/offline sound (or the builtin
-		when you have none), and shows the exact message everyone sees when you come online or go offline. */
+		when you have none), and shows the exact message everyone sees when you come online or go offline. /on and /off
+		are the short aliases. */
 		if(parsed.length() != 1) { syntax_error(base); return; }
-		send(0, "playonoff "+base.substr(1), 0, true); // "/online" -> "playonoff online", "/offline" -> "playonoff offline"
+		string which = (base == "/offline" or base == "/off") ? "offline" : "online";
+		send(0, "playonoff "+which, 0, true);
+	}
+	else if(base == "/onoffs")
+	{
+		if(parsed.length() != 1) { syntax_error("/onoffs"); return; }
+		onoff_sounds_form(); // opens the online and offline sounds form, same as F7 or the player panel option
 	}
 	else if(base == "/channel")
 	{
