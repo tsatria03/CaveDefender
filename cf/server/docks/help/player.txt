@@ -25,6 +25,8 @@ Press slash to open the chat, type a command, and press enter to send it. Every 
 /pronoun: Opens a menu to choose the pronouns used to refer to you in messages, such as masculine or feminine. It defaults to singular they, and the none option uses your name in place of a pronoun.
 /ignore: Opens a menu of the players online to personally mute, hiding that person's chat and voice from you only; they are not told when you mute them, though if they try to message you they learn they have been muted, and it lasts until you unmute them. Staff cannot be muted. This is the same personal mute as the checkbox on a player's information card.
 /ignored: Opens a menu of everyone you are personally muting; choose one to stop muting them and you alone are told they are now unmuted.
+/online: Plays your own online sound and shows the message everyone sees when you come online, so you can hear and check what will actually happen. If you have not set a custom online sound, or have your custom sounds temporarily disabled, it plays the standard connect cue instead. You set your sounds by pressing F7, or with the online and offline sounds option in your player panel.
+/offline: Plays your own offline sound and shows the message everyone sees when you go offline. Just like /online, it falls back to the standard disconnect cue when you have no custom offline sound saved or have your custom sounds turned off.
 Invitations to a room or game are answered right where you are, in the lobby or a room: press Alt plus A to accept, or Alt plus D to deny. An invitation lasts two minutes before it expires.
 /invtime: Tells you how many seconds you have left to answer your pending room or game invitation. See the readme for rooms and games.
 

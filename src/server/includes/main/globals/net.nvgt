@@ -2275,14 +2275,17 @@ actually play. This RESPECTS the master disable switch (via has_onoff_sound) -- 
 sounds temporarily off, the preview should match reality and fall back to the builtin, just like a real connect
 would. "onoffpreview <which>\n<base64>", or "...\nnone" so the client previews its builtin cue. */
 string which = (parsed[1] == "offline") ? "offline" : "online";
-string reply = "none";
-if(has_onoff_sound(players[index].name, which)) // present, within the size cap, and not temporarily disabled
-{
-string path = account_dir(players[index].name) + "/onoffs/" + which + ".ogg";
-file f;
-if(f.open(path, "rb")) { string d = f.read(); f.close(); reply = string_base64_encode(d, STRING_BASE64_DEFAULT); }
+send(event.peer_id, "onoffpreview "+which+"\n"+onoff_payload(players[index].name, which), 0, true);
 }
-send(event.peer_id, "onoffpreview "+which+"\n"+reply, 0, true);
+else if(parsed[0]=="playonoff" and index>-1 and parsed.length()==2)
+{
+/* The /online and /offline commands: play the player their OWN connect (or disconnect) cue and show the exact
+message they'd see on a real one, so they can hear and read what everyone gets. The sound reuses the settings-form
+preview player (onoffpreview -> saved cue, or the builtin when none/disabled); the message uses the same rank/
+nickname-aware display name as the real broadcast. */
+string which = (parsed[1] == "offline") ? "offline" : "online";
+send(event.peer_id, "onoffpreview "+which+"\n"+onoff_payload(players[index].name, which), 0, true);
+send(event.peer_id, "connevent "+display_name_flagged(index)+(which=="online" ? " just came online" : " just went offline"), 0, true);
 }
 else if(parsed[0]=="getreports" and index>-1)
 {
