@@ -813,9 +813,19 @@ void do_onoff(string user, string which, string hascustom, bool play)
 {
 string key = onoff_key(user, which);
 string val;
-if(onoff_cache.get(key, val)) { if(play) play_cached_onoff(which, val); return; } // already know the answer
-if(hascustom == "0") { onoff_cache.set(key, "none"); if(play) play_builtin_onoff(which); return; } // server says no custom file
-request_onoff(user, which, play); // "1" or "?": ask the server
+/* A definitive server flag ("0"/"1") is AUTHORITATIVE and overrides any cached answer -- the player may have
+toggled their master disable switch, or added/removed a sound, since we last cached, so a stale cache must not
+win (this is what made a disabled custom sound still play on reconnect). Only the flagless offline event ("?")
+trusts the cache, since it carries no flag of its own. */
+if(hascustom == "0") { onoff_cache.set(key, "none"); if(play) play_builtin_onoff(which); return; } // server says no custom file (none set, or temporarily disabled)
+if(hascustom == "1")
+{
+if(onoff_cache.get(key, val) and val != "none") { if(play) play_cached_onoff(which, val); return; } // known custom file -> reuse it
+request_onoff(user, which, play); // custom but not cached, or cache had gone stale to "none" -> (re)fetch
+return;
+}
+if(onoff_cache.get(key, val)) { if(play) play_cached_onoff(which, val); return; } // "?" offline event: use the (usually prewarmed) cache
+request_onoff(user, which, play); // uncached "?" -> fetch-discover
 }
 void netloop_impl()
 {
@@ -909,6 +919,16 @@ void netloop_impl()
 			bool play = onoff_pending.get(key, pend) and pend == "1";
 			if(onoff_pending.exists(key)) onoff_pending.delete(key);
 			if(play) play_cached_onoff(parsed[2], cacheval);
+		}
+		else if (parsed[0] == "onoffchanged" and parsed.length() == 2)
+		{
+			/* A player changed their onoff settings (uploaded, removed, or toggled their disable switch). Drop our
+			cached answers for them so the next online/offline event re-fetches the current truth, instead of replaying
+			a now-stale sound. The next getonoff reply overwrites any on-disk cache file, so only the in-memory keys
+			need clearing here. */
+			string ok = onoff_key(parsed[1], "online"), fk = onoff_key(parsed[1], "offline");
+			if(onoff_cache.exists(ok)) onoff_cache.delete(ok);
+			if(onoff_cache.exists(fk)) onoff_cache.delete(fk);
 		}
 		else if (parsed[0] == "myonoffstate" and parsed.length() >= 4)
 		{
