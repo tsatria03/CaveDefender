@@ -593,7 +593,7 @@ void handle_playerinfo(string message)
 	int mutebox = -1, pmbtn = -1, kickbtn = -1, banbtn = -1, prombtn = -1, demobtn = -1, notifybtn = -1, warnbtn = -1, silencebtn = -1, setnickbtn = -1;
 	if(!is_self)
 	{
-		if(can_mute) mutebox = form.create_checkbox("personally &mute this player", already_ignored); // Alt+M: personal ignore of their chat and voice, affecting only you (hidden for staff targets)
+		if(can_mute) mutebox = form.create_checkbox("personally &mute this player's chats", already_ignored); // Alt+M: personal ignore of their chat and voice, affecting only you (hidden for staff targets)
 		if(can_pm) pmbtn = form.create_button("&private message this player"); // Alt+P (hidden if this player has muted you)
 		if(can_kick) kickbtn = form.create_button("&kick this player"); // Alt+K
 		if(can_ban) banbtn = form.create_button("&ban this player"); // Alt+B (a banned player is offline, so the card only ever bans; unban is the typed /unban command)
