@@ -115,6 +115,16 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/onoffs"); return; }
 		onoff_sounds_form(); // opens the online and offline sounds form, same as F7 or the player panel option
 	}
+	else if(base == "/onlinemsg" or base == "/onmsg" or base == "/offlinemsg" or base == "/offmsg")
+	{
+		/* Set your own online/offline MESSAGE, the action shown after your name on connect/disconnect. Text sets it,
+		"default" reverts, no text just shows usage (use /online or /offline to read your current one). The body keeps
+		its original case; the server validates (single line, 64 chars, filtered) and confirms in your misc buffer. */
+		string which = (base == "/offlinemsg" or base == "/offmsg") ? "offline" : "online";
+		if(parsed.length() < 2) { syntax_error(base + " text, or " + base + " default"); return; }
+		string body = text.substr(parsed[0].length()).trim_whitespace(); // everything after the command word, original case
+		send(0, "setonoffmsg " + which + "\n" + body, 0, true);
+	}
 	else if(base == "/channel")
 	{
 		if(parsed.length() != 1) { syntax_error("/channel"); return; }

@@ -598,7 +598,7 @@ void begin_hold(int index)
 players[index].held=true;
 players[index].held_timer.restart();
 players[index].afk=false; // they're simply gone now, not away-at-keyboard
-send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
+send(0, offline_line(players[index].name, players[index].rank, players[index].nickname), 0,true);
 if(players[index].spectating)
 {
 // To the game they were watching, they simply stopped watching (they aren't in anyone's tracker anyway).
@@ -905,6 +905,17 @@ for(uint i=0; i<players.length(); i++)
 if(int(players[i].peer_id) == skip1 or int(players[i].peer_id) == skip2) continue;
 send(players[i].peer_id, "event "+text, 0, true);
 }
+}
+/* The two presence broadcasts, built in one place so every site stays consistent. Both carry the player's connect/disconnect
+ACTION on a SECOND line ("...\n<action>") -- their custom message or the default -- which the client shows after the display
+name; an older client (or one that reads only the first line) simply ignores it and falls back to its built-in wording. */
+string online_line(string nm, string rk, string nk)
+{
+return "online "+nm+" "+rk+" "+nk+" "+onoff_flags(nm)+"\n"+onoff_message(nm, "online"); // trailing flags = has custom online/offline sound; 2nd line = online action
+}
+string offline_line(string nm, string rk, string nk)
+{
+return "offline "+nm+" "+rk+" "+nk+"\n"+onoff_message(nm, "offline"); // 2nd line = offline action
 }
 /* Change an online player's nickname (ti = their roster index). requested is the new nickname, or "default"
 to revert to their account username. Validates format and uniqueness, persists to nickname.usr, updates
@@ -1228,7 +1239,7 @@ handle_disconnect_rooms(event.peer_id);
 int index=get_player_index(event.peer_id);
 if(index>-1)
 {
-send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
+send(0, offline_line(players[index].name, players[index].rank, players[index].nickname), 0,true);
 players.remove_at(index);
 }
 verified_logins.delete(""+event.peer_id); // forget this peer's authenticated identity so a recycled peer id can't inherit it
@@ -1307,7 +1318,7 @@ index=existing;
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true); // the host's cave-acoustics presets (effects.gvr); re-sent on reconnect in case the client restarted
 send(event.peer_id, "autoafk "+autoafk, 0, true); // the host's idle-timeout policy (conf.svr's autoafk); re-sent on reconnect in case the client restarted
-if(players[index].restore_reannounce) send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname+" "+onoff_flags(players[index].name), 0,true); // only if they were held (announced offline); a live takeover was never offline. Trailing flags = has custom online/offline sound.
+if(players[index].restore_reannounce) send(0, online_line(players[index].name, players[index].rank, players[index].nickname), 0,true); // only if they were held (announced offline); a live takeover was never offline.
 players[index].restore_reannounce=false;
 send(event.peer_id, "voicemutestate "+(is_muted_now(index, "voice") ? "1" : "0"), 0, true); // silent voice-mute state so the client can warn on O without opening the mic; no message or sound
 send_yourrooms(event.peer_id, players[index].name);
@@ -1353,7 +1364,7 @@ send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true
 send(event.peer_id, "autoafk "+autoafk, 0, true); // the host's idle-timeout policy (conf.svr's autoafk): 0 = off, else the client auto-goes-AFK after this many idle seconds
 /* New accounts are announced at creation time (see register_account), so logging in for the first time
 is just a normal "online" notice like anyone else. */
-send(0, "online "+players[index].name+" "+players[index].rank+" "+players[index].nickname+" "+onoff_flags(players[index].name), 0,true); // trailing flags = has custom online/offline sound
+send(0, online_line(players[index].name, players[index].rank, players[index].nickname), 0,true);
 update_peak(); // a player joined -- bump the all-time concurrent-player record if this is a new high
 /* Load each channel mute from disk so it's enforced, but DON'T notify the player: a mute set while they
 were offline shouldn't greet them with a message and sound every time they sign in (staff can still see
@@ -1742,7 +1753,7 @@ else if(parsed[0]=="disconnect")
 {
 if(index>-1)
 {
-send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
+send(0, offline_line(players[index].name, players[index].rank, players[index].nickname), 0,true);
 send(players[index].peer_id, "terminate", 0,true);
 handle_disconnect_games(event.peer_id);
 handle_disconnect_rooms(event.peer_id); // close any rooms they host now, not a beat later when enet drops them.
@@ -1967,7 +1978,7 @@ else
 // They declined: tell the client (which returns to the connection menu) and drop them, like a normal disconnect.
 send(event.peer_id, "declinedrules", 0,true);
 send(0, "alert "+afk_prefix(index)+display_name_flagged(index)+" has just disagreed to the game's rules.", 0, true); // tell everyone in the alerts buffer, with the alert cue, before they drop, AFK/rank/nickname aware
-send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0,true);
+send(0, offline_line(players[index].name, players[index].rank, players[index].nickname), 0,true);
 players.remove_at(index);
 verified_logins.delete(""+event.peer_id);
 }
@@ -2027,7 +2038,7 @@ else
 {
 write_field(players[index].name, "password", password_blob(make_salt(), np));
 int tpeer = players[index].peer_id;
-send(0, "offline "+players[index].name+" "+players[index].rank+" "+players[index].nickname, 0, true); // announce them offline now
+send(0, offline_line(players[index].name, players[index].rank, players[index].nickname), 0, true); // announce them offline now
 send(tpeer, "passchanged", 0, true); // the client updates its saved password and returns to the connection menu
 players.remove_at(index); // free the slot now so the ensuing disconnect doesn't hold it; disconnect cleans up rooms/games/verified_logins
 force_logout(tpeer); // don't wait on the client to leave: revoke identity + drop the socket so a modified client can't stay on the old password's session
@@ -2058,7 +2069,7 @@ notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" reset "+(ti >
 if(ti > -1) // online: log them out so a modified client can't keep playing on the old-password session
 {
 int tpeer = players[ti].peer_id;
-send(0, "offline "+players[ti].name+" "+players[ti].rank+" "+players[ti].nickname, 0, true);
+send(0, offline_line(players[ti].name, players[ti].rank, players[ti].nickname), 0, true);
 send(tpeer, "passreset", 0, true); // the target is logged out; their saved password stays as-is
 players.remove_at(ti);
 force_logout(tpeer); // enforce the logout server-side so a modified client can't keep the session
@@ -2285,7 +2296,42 @@ preview player (onoffpreview -> saved cue, or the builtin when none/disabled); t
 nickname-aware display name as the real broadcast. */
 string which = (parsed[1] == "offline") ? "offline" : "online";
 send(event.peer_id, "onoffpreview "+which+"\n"+onoff_payload(players[index].name, which), 0, true);
-send(event.peer_id, "connevent "+display_name_flagged(index)+(which=="online" ? " just came online" : " just went offline"), 0, true);
+send(event.peer_id, "connevent "+display_name_flagged(index)+" "+onoff_message(players[index].name, which), 0, true);
+}
+else if(parsed[0]=="setonoffmsg" and index>-1)
+{
+/* Set (or revert) the player's OWN custom online/offline MESSAGE: "setonoffmsg <online|offline>\n<text>". The name is
+always shown before it, so this is only the action phrase (e.g. "has arrived at the cave" -> "Alice has arrived at the
+cave"). "default" reverts to the standard line. It's shown to EVERYONE on connect, so it's a single line, capped at
+onoff_msg_max chars, and crash/word filtered; the confirmation goes only to the setter's own misc buffer. */
+int nl = string_contains(message, "\n", 1);
+if(nl >= 1)
+{
+string[] hp = string_split(message.substr(0, nl), " ", true);
+string which = (hp.length() > 1 and hp[1] == "offline") ? "offline" : "online";
+string field = (which == "offline") ? "offmsg" : "onmsg";
+string text = message.substr(nl+1).trim_whitespace();
+if(string_to_lower_case(text) == "default")
+{
+write_field(players[index].name, field, "");
+send(event.peer_id, "misc Your "+which+" message has been reset to the default.", 0, true);
+}
+else if(text == "") send(event.peer_id, "misc Your "+which+" message cannot be empty.", 0, true);
+else if(string_contains(text, "\n", 1) >= 0 or string_contains(text, "\r", 1) >= 0) send(event.peer_id, "misc Your "+which+" message must be a single line.", 0, true);
+else if(text.length() > onoff_msg_max) send(event.peer_id, "misc Your "+which+" message must be "+onoff_msg_max+" characters or fewer.", 0, true);
+else if(filter_crash(text) or filter_chat(text)) send(event.peer_id, "misc That message contains forbidden words, and therefore cannot be used.", 0, true);
+else
+{
+write_field(players[index].name, field, text);
+send(event.peer_id, "misc Your "+which+" message has been set to: "+display_name_flagged(index)+" "+text, 0, true); // prepend their display name so the confirmation reads exactly as everyone will see it on connect
+}
+}
+}
+else if(parsed[0]=="getmyonoffmsgs" and index>-1)
+{
+// Tell a player their OWN raw custom messages so the messages form can preload its two fields ("" = none/default). Messages can't contain newlines, so newline-delimited is safe.
+string n = players[index].name;
+send(event.peer_id, "myonoffmsgs\n"+read_field(n, "onmsg", "")+"\n"+read_field(n, "offmsg", ""), 0, true);
 }
 else if(parsed[0]=="getreports" and index>-1)
 {
@@ -3329,7 +3375,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                 /* Log the renamed player out: announce them offline under the OLD name, tell their client to
                                 return to the connection menu, then drop them from the roster. The ensuing disconnect handles
                                 host migration and room/game cleanup if they were hosting. */
-                                send(0, "offline "+oldname+" "+oldrank+" "+oldnick, 0, true);
+                                send(0, offline_line(oldname, oldrank, oldnick), 0, true);
                                 send(tpeer, "renamed "+newname, 0, true);
                                 players.remove_at(ti);
                                 force_logout(tpeer); // enforce the logout server-side so a modified client can't keep a session under the old name

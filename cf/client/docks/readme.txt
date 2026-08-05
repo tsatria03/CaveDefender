@@ -93,6 +93,12 @@ Your chosen sounds are saved to your account on the server. To replace one, brow
 
 Whenever anyone changes their online or offline sounds, a short notice arrives in everyone's alerts buffer, your own included, naming the player and saying what they did, whether they updated a sound, removed one, or temporarily muted or unmuted their online and offline sounds, so it is clear when someone's cue is about to sound different.
 
+Online and offline messages.
+
+Alongside your sounds, you can set your own online and offline messages, the words shown after your name when you connect and disconnect. Normally everyone sees your name followed by just came online or just went offline; a custom message replaces those words, so with an online message of has entered the cave, everyone sees your name followed by has entered the cave. Your name is always kept, so people still know who it is.
+
+To set them, type slash onmsg followed by your message, for example slash onmsg has entered the cave, and slash offmsg for your disconnect line. Type slash onmsg default, or slash offmsg default, to go back to the standard wording. You can also set both at once from the change your online and offline messages option in your player panel, which opens a form with a field for each; leave a field blank to use the default. Each message is a single line of up to sixty four characters and is filtered like chat, and only you are told when you change it. Use slash online or slash offline any time to hear your sound and read your message exactly as others will get them.
+
 Rooms.
 
 From the lobby, press enter to open the lobby panel and create or join a public or private room. You can host up to one public and one private room of your own. You hear a sound whenever you join or leave a room, and anyone already in the room hears you come and go too, much like players hear you connect to and leave the server. Joining and leaving rooms share a brief half-second cooldown, so you cannot bounce in and out of a room super fast; it is silent, so a join or leave that comes too soon after your last one is simply ignored until the moment passes.
