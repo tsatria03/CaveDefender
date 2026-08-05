@@ -267,6 +267,7 @@ void handle_accountaction(string message)
 	string which = parsed[1];
 	if(which == "changepass") comparse("/changepass"); // no args opens the three-field masked form
 	else if(which == "onoffsounds") onoff_sounds_form(); // opens the online and offline sounds form (same as F7)
+	else if(which == "onoffmessages") onoff_messages_form(); // opens the online and offline messages form
 	else if(which == "changemail")
 	{
 		string v = vd.input_box("Change email", "Enter your new email address.", email); // prefilled with your current email
@@ -794,6 +795,8 @@ dictionary onoff_pending;
 const int64 onoff_max_bytes = 131072; // ~128 KB cap on a custom onoff sound (mirrors the server); with the 3-second length check it enforces the snappy, no-WAV rule when a player picks a file for upload.
 bool myonoff_received = false; // set true when a "myonoffstate" reply lands, so the settings form knows its preload arrived
 int myonoff_online = 0, myonoff_offline = 0, myonoff_master = 0; // this account's own onoff state (raw file presence for online/offline + the master flag), from the last getmyonoff
+bool mymsgs_received = false; // set true when a "myonoffmsgs" reply lands, so the messages form knows its preload arrived
+string mymsg_online = "", mymsg_offline = ""; // this account's own RAW custom online/offline message ("" = none/default), from the last getmyonoffmsgs
 string onoff_key(string user, string which) { return string_to_lower_case(user) + "|" + which; }
 string onoff_cachefile(string user, string which) { return DIRECTORY_APPDATA + "tsatria03/CaveDefender/onoffcache/" + string_to_lower_case(user) + "_" + which + ".ogg"; }
 void play_builtin_onoff(string which) { p.play_stationary("sounds/ui/misc/" + which + ".ogg", false); }
@@ -870,7 +873,8 @@ void netloop_impl()
 			if(onstaff) p.play_stationary("sounds/ui/misc/staffin.ogg", false);
 			string onname = (parsed.length() > 3) ? parsed[3] : parsed[1]; // nickname for display, fallback to username
 			string ondisp = onstaff ? parsed[2] + " " + onname : onname;
-			add_buffer_item("connections", ondisp + " just came online");
+			string onaction = (firstline.length() > 1 and firstline[1] != "") ? firstline[1] : "just came online"; // 2nd line = their custom online message, or the default from an older server
+			add_buffer_item("connections", ondisp + " " + onaction);
 		}
 		else if (parsed[0] == "newchar" and parsed.length() > 1)
 		{
@@ -895,7 +899,8 @@ void netloop_impl()
 			do_onoff(parsed[1], "offline", "?", true); // play their departure cue; "?" = the offline event carries no flag, so use the (usually prefetched) cache, else fetch-discover
 			string offname = (parsed.length() > 3) ? parsed[3] : parsed[1]; // nickname for display, fallback to username
 			string offdisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + offname : offname;
-				add_buffer_item("connections", offdisp + " just went offline");
+				string offaction = (firstline.length() > 1 and firstline[1] != "") ? firstline[1] : "just went offline"; // 2nd line = their custom offline message, or the default
+				add_buffer_item("connections", offdisp + " " + offaction);
 			remove_player(parsed[1]); // remove from the scoped roster by the username key
 		}
 		else if (parsed[0] == "onoffdata" and parsed.length() >= 3)
@@ -962,6 +967,13 @@ void netloop_impl()
 			myonoff_offline = string_to_number(parsed[2]);
 			myonoff_master = string_to_number(parsed[3]);
 			myonoff_received = true;
+		}
+		else if (parsed[0] == "myonoffmsgs")
+		{
+			// Reply to getmyonoffmsgs: this account's RAW custom online/offline messages ("" = none), for the messages form to preload.
+			mymsg_online = (firstline.length() > 1) ? firstline[1] : "";
+			mymsg_offline = (firstline.length() > 2) ? firstline[2] : "";
+			mymsgs_received = true;
 		}
 		else if (parsed[0] == "kicked")
 		{
