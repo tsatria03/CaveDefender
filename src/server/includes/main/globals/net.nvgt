@@ -2257,14 +2257,14 @@ send(0, "onoffchanged "+players[index].name, 0, true); // clients drop their cac
 }
 else if(parsed[0]=="onoffmaster" and index>-1 and parsed.length()==2)
 {
-// The player's master "temporarily turn off my custom sounds" switch (keeps the files, just suppresses them). onoffdisabled.usr = "1" off, blank on.
-bool newmaster = (parsed[1] == "1");
-bool oldmaster = (read_field(players[index].name, "onoffdisabled", "") == "1");
-write_field(players[index].name, "onoffdisabled", newmaster ? "1" : "");
-if(newmaster != oldmaster) // the client re-sends this on every save; only announce a genuine flip of the switch
+// The player's master "temporarily turn off my custom sounds" switch (keeps the files, just suppresses them). onoffs.usr = "0" off, "1" on, blank on (default).
+bool newoff = (parsed[1] == "1"); // client sends 1 when the "temporarily disable" box is checked, i.e. turning custom sounds OFF
+bool oldoff = (read_field(players[index].name, "onoffs", "") == "0");
+write_field(players[index].name, "onoffs", newoff ? "0" : "1");
+if(newoff != oldoff) // the client re-sends this on every save; only announce a genuine flip of the switch
 {
 string poss = pronoun_word(players[index].pronoun, "possessive", display_name_flagged(index));
-send(0, "alert "+display_name_flagged(index)+" has just "+(newmaster?"muted":"unmuted")+" "+poss+" online and offline sounds.", 0, true);
+send(0, "alert "+display_name_flagged(index)+" has just "+(newoff?"muted":"unmuted")+" "+poss+" online and offline sounds.", 0, true);
 send(0, "onoffchanged "+players[index].name, 0, true); // clients drop their cached cues so the disable/enable is reflected on the next event
 }
 }
@@ -2276,7 +2276,7 @@ file is there, independent of the master switch), plus the master temp-disable f
 string n = players[index].name;
 int ho = file_exists(account_dir(n) + "/onoffs/online.ogg") ? 1 : 0;
 int hf = file_exists(account_dir(n) + "/onoffs/offline.ogg") ? 1 : 0;
-int md = (read_field(n, "onoffdisabled", "") == "1") ? 1 : 0;
+int md = (read_field(n, "onoffs", "") == "0") ? 1 : 0; // md = "disable box checked"; the switch is off only when onoffs.usr is "0"
 send(event.peer_id, "myonoffstate "+ho+" "+hf+" "+md, 0, true);
 }
 else if(parsed[0]=="getonoffraw" and index>-1 and parsed.length()==2)

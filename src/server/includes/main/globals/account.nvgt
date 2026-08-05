@@ -47,7 +47,7 @@ const int64 onoff_max_bytes = 131072;
 // missing file, so the short-circuit file_exists guard runs first.
 bool has_onoff_sound(string name, string which)
 {
-if(read_field(name, "onoffdisabled", "") == "1") return false; // the player's master "temporarily turn off my custom sounds" switch (files kept, just suppressed)
+if(read_field(name, "onoffs", "") == "0") return false; // the player's master switch: onoffs.usr "0" = off (files kept, just suppressed); "1" or blank = on
 string path = account_dir(name) + "/onoffs/" + which + ".ogg";
 return file_exists(path) and file_get_size(path) <= onoff_max_bytes;
 }
