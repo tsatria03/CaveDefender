@@ -1,10 +1,10 @@
 ####These are the things that need to be finished for future versions of the game.
 
 **Unfinished. Let staff silence a player's online and offline sounds through the mute command.
-**Unfinished. Let players personally mute another player's online and offline sounds from their information card or a command.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Let players personally mute another player's online and offline sounds from their information card or a command.
 **Finished. Add the ability for players to set their own online and offline messages, with commands and a player panel option.
 **Finished. Add the ability for players to have custom online and offline sounds.
 **Finished. Refacter the player versus player map so both sides share an equal, full-size arena instead of the lopsided ring split, reusing the rest of the mode.
