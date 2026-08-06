@@ -62,6 +62,7 @@ string invite_from="";   // the username of whoever sent the pending invite (roo
 timer invite_timer;      // started when the pending invite arrives; the invite expires once it passes invite_timeout.
 int pregame_room=0;      // the scope (room_id) this player was in right before joining their current game, so leaving/kick/stop returns them there: a room member goes back to the room, a lobby invitee back to the lobby. Captured when they join a game.
 string[] ignored;        // this player's personal ignore list (usernames): people whose chat and voice they've chosen not to receive. Loaded from ignored.usr at spawn, persisted on change; matched case-insensitively. Unrelated to staff mutes.
+string[] onoffignored;   // this player's personal ONOFF-ignore list (usernames): people whose custom online/offline sound + message they've chosen to replace with the standard ones, for themselves only. Loaded from onoffignored.usr at spawn; enforced client-side. Separate from ignored; staff are NOT exempt.
 player(int id, string username, double ver)
 {
 name=username;
@@ -87,14 +88,31 @@ for(uint k=0; k<players[recipient_index].ignored.length(); k++)
 if(string_to_lower_case(players[recipient_index].ignored[k]) == s) return true;
 return false;
 }
-/* Remove a (renamed-away or deleted) username from every ONLINE player's in-memory ignore list, so a stale personal
-mute doesn't linger this session; the on-disk lists are fixed separately by delete_account / rename_account. */
+/* Does the recipient at roster index have sender_name on their personal ONOFF-ignore list? Used to build the menus and
+the card checkbox. Unlike player_ignores there is NO staff exemption -- an onoff cue is cosmetic, so any player's can be
+muted. Case-insensitive, keyed by username. */
+bool player_onoff_ignores(int recipient_index, string sender_name)
+{
+if(recipient_index<0 or recipient_index>=int(players.length())) return false;
+string s = string_to_lower_case(sender_name);
+for(uint k=0; k<players[recipient_index].onoffignored.length(); k++)
+if(string_to_lower_case(players[recipient_index].onoffignored[k]) == s) return true;
+return false;
+}
+/* Remove a (renamed-away or deleted) username from every ONLINE player's in-memory ignore lists (chat AND onoff), so a
+stale personal mute doesn't linger this session; the on-disk lists are fixed separately by delete_account / rename_account. */
 void remove_from_online_ignores(string name)
 {
 string low = string_to_lower_case(name);
 for(uint i=0; i<players.length(); i++)
+{
 for(int j=int(players[i].ignored.length())-1; j>=0; j--)
 if(string_to_lower_case(players[i].ignored[j]) == low) players[i].ignored.remove_at(j);
+bool oremoved = false;
+for(int j=int(players[i].onoffignored.length())-1; j>=0; j--)
+if(string_to_lower_case(players[i].onoffignored[j]) == low) { players[i].onoffignored.remove_at(j); oremoved = true; }
+if(oremoved) send_onoff_ignore_list(int(i)); // the client enforces the onoff list, so resync it after dropping a gone name
+}
 }
 // The channels a mute can apply to. "all" expands to every channel; a specific channel stays itself.
 array<string> mute_channels_for(string ch)

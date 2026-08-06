@@ -145,6 +145,16 @@ void comparse(string text, string channel = "global")
 			if(parsed.length() != 1) { syntax_error("/ignored"); return; }
 			send(0, "ignoredmenu", 0, true); // everyone: the server pushes your personal ignore list to review and unmute
 		}
+		else if(base == "/ignoreonfs")
+		{
+			if(parsed.length() != 1) { syntax_error("/ignoreonfs"); return; }
+			send(0, "ignoreonfsmenu", 0, true); // everyone: the server pushes a menu of online players whose onoffs to personally mute
+		}
+		else if(base == "/ignoredonfs")
+		{
+			if(parsed.length() != 1) { syntax_error("/ignoredonfs"); return; }
+			send(0, "ignoredonfsmenu", 0, true); // everyone: the server pushes your onoff-ignore list to review and lift
+		}
 		else if(base == "/invtime")
 	{
 		/* The /accept and /reject commands were removed -- invites are now answered with Alt+A (accept) and Alt+D

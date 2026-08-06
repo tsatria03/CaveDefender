@@ -277,6 +277,25 @@ string joined;
 for(uint i=0; i<list.length(); i++) joined += (i>0 ? "\n" : "") + list[i];
 return write_field(name, "ignored", joined);
 }
+/* A player's personal ONOFF-ignore list (onoffignored.usr), one username per line: people whose custom online/offline
+sound AND message this player has chosen to replace with the standard ones, for themselves only. Loaded into the roster
+at spawn; enforced CLIENT-side (the server just stores it and syncs it to the client). Wholly separate from the chat
+ignore list above, and staff are NOT exempt here (an onoff cue is cosmetic, not communication). */
+string[] get_onoff_ignored(string name)
+{
+string raw = read_field(name, "onoffignored", "");
+string[] list;
+if(raw == "") return list;
+string[] lines = string_split(raw, "\n", true);
+for(uint i=0; i<lines.length(); i++) { string ln = lines[i].trim_whitespace(); if(ln != "") list.insert_last(ln); }
+return list;
+}
+bool set_onoff_ignored(string name, string[] list)
+{
+string joined;
+for(uint i=0; i<list.length(); i++) joined += (i>0 ? "\n" : "") + list[i];
+return write_field(name, "onoffignored", joined);
+}
 /* --- Offline private messages: queued by /pm to an offline player, delivered at their next login ---
 Stored in offline_pm's.usr, one message per line, TAB-delimited: <sender username>\t<message>. Tabs because the
 message is free text (a username can't contain one) and it's the last field, rejoined on read. Unlimited: every
@@ -356,6 +375,11 @@ bool changed = false;
 for(uint j=0; j<list.length(); j++)
 if(string_to_lower_case(list[j]) == lowold) { list[j] = newname; changed = true; }
 if(changed) set_ignored(dirs[i], list);
+string[] olist = get_onoff_ignored(dirs[i]); // same rename fix for the onoff-ignore list
+bool ochanged = false;
+for(uint j=0; j<olist.length(); j++)
+if(string_to_lower_case(olist[j]) == lowold) { olist[j] = newname; ochanged = true; }
+if(ochanged) set_onoff_ignored(dirs[i], olist);
 }
 return true;
 }
@@ -377,6 +401,11 @@ bool changed = false;
 for(int j=int(list.length())-1; j>=0; j--)
 if(string_to_lower_case(list[j]) == lowdel) { list.remove_at(j); changed = true; }
 if(changed) set_ignored(dirs[i], list);
+string[] olist = get_onoff_ignored(dirs[i]); // same scrub for the onoff-ignore list
+bool ochanged = false;
+for(int j=int(olist.length())-1; j>=0; j--)
+if(string_to_lower_case(olist[j]) == lowdel) { olist.remove_at(j); ochanged = true; }
+if(ochanged) set_onoff_ignored(dirs[i], olist);
 }
 return true;
 }

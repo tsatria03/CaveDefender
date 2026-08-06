@@ -917,6 +917,14 @@ string offline_line(string nm, string rk, string nk)
 {
 return "offline "+nm+" "+rk+" "+nk+"\n"+onoff_message(nm, "offline"); // 2nd line = offline action
 }
+/* Sync a player's personal onoff-ignore list to their own client, which enforces it (plays the builtin cue + default
+message for anyone on the list). "onoffignorelist\n<user>\n<user>..." -- header alone means an empty list. */
+void send_onoff_ignore_list(int index)
+{
+string payload = "onoffignorelist";
+for(uint i=0; i<players[index].onoffignored.length(); i++) payload += "\n" + players[index].onoffignored[i];
+send(players[index].peer_id, payload, 0, true);
+}
 /* Change an online player's nickname (ti = their roster index). requested is the new nickname, or "default"
 to revert to their account username. Validates format and uniqueness, persists to nickname.usr, updates
 the roster + tracker, and alerts everyone. issuer_peer receives any error. byself controls the wording. */
@@ -1358,6 +1366,8 @@ players[index].language = is_valid_language(lang) ? lang : "English";
 string pron = get_pronoun(players[index].name); // pronoun set (pronoun.usr); fall back to the they/them option if it's not a configured one
 players[index].pronoun = is_valid_pronoun(pron) ? pron : default_pronoun();
 players[index].ignored = get_ignored(players[index].name); // personal ignore list (ignored.usr): whose chat/voice this player drops
+players[index].onoffignored = get_onoff_ignored(players[index].name); // personal onoff-ignore list (onoffignored.usr): whose custom connect cue this player replaces with the standard one, enforced client-side
+send_onoff_ignore_list(index); // sync it to their client so it can enforce
 players[index].agreed = has_agreed_rules(players[index].name); // rules agreement (rules.usr vs rulesver); gates play until agreed. The reminder to read/agree is shown when they try to open the lobby, not at spawn.
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
 send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true); // the host's cave-acoustics presets (effects.gvr): the client adopts them for its reverb/muffle slots
@@ -1782,6 +1792,8 @@ push_player_list(index); // F6: the server-wide roster as a navigable menu (same
 }
 else if(parsed[0]=="ignoremenu" and index>-1) push_ignore_menu(index); // /ignore: pick an online player to personally mute
 else if(parsed[0]=="ignoredmenu" and index>-1) push_ignored_menu(index); // /ignored: review and unmute your personal ignore list
+else if(parsed[0]=="ignoreonfsmenu" and index>-1) push_ignoreonfs_menu(index); // /ignoreonfs: pick an online player whose onoffs to personally mute
+else if(parsed[0]=="ignoredonfsmenu" and index>-1) push_ignoredonfs_menu(index); // /ignoredonfs: review and lift your onoff-ignore list
 else if(parsed[0]=="ignore" and index>-1 and parsed.length()>1)
 {
 /* Personal mute from the F6 info card: add a username to this player's ignore list (their chat and voice
@@ -1801,6 +1813,26 @@ string tu = parsed[1];
 for(int k=int(players[index].ignored.length())-1; k>=0; k--)
 if(string_to_lower_case(players[index].ignored[k]) == string_to_lower_case(tu)) players[index].ignored.remove_at(k);
 set_ignored(players[index].name, players[index].ignored);
+}
+else if(parsed[0]=="onoffignore" and index>-1 and parsed.length()>1)
+{
+// Personal onoff-mute from the F6 card checkbox: add a username to this player's onoff-ignore list (their custom cue + message fall back to the standard ones, for this player only). Staff ARE allowed; the target isn't notified. Then resync the client that enforces it.
+string tu = parsed[1];
+if(string_to_lower_case(tu) != string_to_lower_case(players[index].name) and account_exists(tu) and !player_onoff_ignores(index, tu))
+{
+players[index].onoffignored.insert_last(tu);
+set_onoff_ignored(players[index].name, players[index].onoffignored);
+send_onoff_ignore_list(index);
+}
+}
+else if(parsed[0]=="onoffunignore" and index>-1 and parsed.length()>1)
+{
+// Lift a personal onoff-mute (F6 card): drop a username from this player's onoff-ignore list, persist, resync.
+string tu = parsed[1];
+for(int k=int(players[index].onoffignored.length())-1; k>=0; k--)
+if(string_to_lower_case(players[index].onoffignored[k]) == string_to_lower_case(tu)) players[index].onoffignored.remove_at(k);
+set_onoff_ignored(players[index].name, players[index].onoffignored);
+send_onoff_ignore_list(index);
 }
 else if(parsed[0]=="staff" and index>-1)
 {
