@@ -724,11 +724,12 @@ void handle_playerinfo(string message)
 		m.add_item("Local chat");
 		m.add_item("Voice chat");
 		m.add_item("Team chat");
+		m.add_item("Online and offline sounds");
 		m.add_item("All channels");
 		m.intro_text = "Silence " + uname + " in which channel?";
 		int ch = m.run();
-		if(ch < 0 or ch > 4) { speak("canceled"); return; }
-		string[] chans = {"global", "local", "voice", "team", "all"};
+		if(ch < 0 or ch > 5) { speak("canceled"); return; }
+		string[] chans = {"global", "local", "voice", "team", "onoff", "all"};
 		string channel = chans[ch];
 		setupmenu();
 		m.add_item("Silence in this channel");
@@ -941,13 +942,17 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "onoffchanged" and parsed.length() == 2)
 		{
-			/* A player changed their onoff settings (uploaded, removed, or toggled their disable switch). Drop our
-			cached answers for them so the next online/offline event re-fetches the current truth, instead of replaying
-			a now-stale sound. The next getonoff reply overwrites any on-disk cache file, so only the in-memory keys
-			need clearing here. */
-			string ok = onoff_key(parsed[1], "online"), fk = onoff_key(parsed[1], "offline");
-			if(onoff_cache.exists(ok)) onoff_cache.delete(ok);
-			if(onoff_cache.exists(fk)) onoff_cache.delete(fk);
+			/* A player changed their onoff settings, or staff silenced/unsilenced them. Drop our cached answers so the
+			next online/offline event re-fetches the current truth instead of replaying a now-stale sound. The next
+			getonoff reply overwrites any on-disk cache file, so only the in-memory keys need clearing. "onoffchanged *"
+			(from /muteall, which hits everyone) clears the whole cache at once. */
+			if(parsed[1] == "*") onoff_cache.delete_all();
+			else
+			{
+				string ok = onoff_key(parsed[1], "online"), fk = onoff_key(parsed[1], "offline");
+				if(onoff_cache.exists(ok)) onoff_cache.delete(ok);
+				if(onoff_cache.exists(fk)) onoff_cache.delete(fk);
+			}
 		}
 		else if (parsed[0] == "onoffpreview" and parsed.length() == 2)
 		{
@@ -1638,6 +1643,7 @@ void netloop_impl()
 			if(ch == "voice" or ch == "all") voice_muted = true;
 				if(ch == "all") what = "You have been muted in all channels";
 			else if(ch == "voice") what = "Your voice chat has been muted";
+			else if(ch == "onoff") what = "Your online and offline sounds have been silenced";
 			else what = "Your " + ch + " chats have been muted";
 			what += (rem > 0) ? " for " + rem + " seconds." : " indefinitely.";
 			add_buffer_item("alerts", what);
@@ -1650,6 +1656,7 @@ void netloop_impl()
 			if(ch == "voice" or ch == "all") voice_muted = false;
 				if(ch == "all") what = "You have been unmuted in all channels.";
 			else if(ch == "voice") what = "Your voice chat has been unmuted.";
+			else if(ch == "onoff") what = "Your online and offline sounds are no longer silenced.";
 			else what = "Your " + ch + " chats have been unmuted.";
 			add_buffer_item("alerts", what);
 		}
