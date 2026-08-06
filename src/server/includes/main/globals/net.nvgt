@@ -29,11 +29,11 @@ array<string> chans = mute_channels_for(channel);
 bool allmuted = true;
 for(uint c=0; c<chans.length(); c++) if(get_channel_mute(target, chans[c]) == -1) allmuted = false;
 string tdisp = read_field(target, "nickname", target); // nickname-aware display for the offline target
-if(allmuted) { send(actorpeer, "misc "+tdisp+" is already muted in "+(channel=="all"?"all channels":("the "+channel+" channel"))+".", 0, true); return; }
+if(allmuted) { send(actorpeer, "misc "+tdisp+" is already muted in "+mute_where(channel)+".", 0, true); return; }
 if(dur < 0) dur = 0;
 int64 until = (dur > 0) ? (now_epoch() + dur) : 0;
 for(uint c=0; c<chans.length(); c++) set_channel_mute(target, chans[c], until);
-string chan_phrase = (channel=="all") ? "all channels" : ("the "+channel+" channel");
+string chan_phrase = mute_where(channel);
 string dur_phrase = (dur > 0) ? " for "+dur+" seconds" : "";
 send(actorpeer, "misc "+tdisp+" has been muted in "+chan_phrase+dur_phrase+" while they were offline.", 0, true);
 notify_staff_audit(afk_prefix(actorindex)+display_name_flagged(actorindex)+" muted "+tdisp+" in "+chan_phrase+dur_phrase+" while they were offline.", -1);
@@ -45,9 +45,9 @@ array<string> chans = mute_channels_for(channel);
 bool anymuted = false;
 for(uint c=0; c<chans.length(); c++) if(get_channel_mute(target, chans[c]) != -1) anymuted = true;
 string tdisp = read_field(target, "nickname", target);
-if(!anymuted) { send(actorpeer, "misc "+tdisp+" is not muted in "+(channel=="all"?"any channel":("the "+channel+" channel"))+".", 0, true); return; }
+if(!anymuted) { send(actorpeer, "misc "+tdisp+" is not muted in "+(channel=="all"?"any channel":mute_where(channel))+".", 0, true); return; }
 for(uint c=0; c<chans.length(); c++) clear_channel_mute(target, chans[c]);
-string chan_phrase = (channel=="all") ? "all channels" : ("the "+channel+" channel");
+string chan_phrase = mute_where(channel);
 send(actorpeer, "misc "+tdisp+" has been unmuted in "+chan_phrase+" while they were offline.", 0, true);
 notify_staff_audit(afk_prefix(actorindex)+display_name_flagged(actorindex)+" unmuted "+tdisp+" in "+chan_phrase+" while they were offline.", -1);
 }
@@ -1194,6 +1194,7 @@ notify_target_mute(int(i), expired[e], false, 0);
 announce_mute_to_others(display_name(int(i)), players[i].peer_id, expired[e], false);
 }
 }
+for(uint e=0; e<expired.length(); e++) if(expired[e]=="onoff") { send(0, "onoffchanged "+players[i].name, 0, true); break; } // an onoff silence lapsed: clients re-fetch so the custom cue returns (covers the "all" case too, which includes onoff)
 }
 // Expire pending invitations (room or game): once one passes invite_timeout, clear it and tell the invited player.
 for(uint i=0; i<players.length(); i++)
@@ -3686,7 +3687,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         int ti = get_player_index_from(mname); // online by username or nickname, else -1
                         if(channel != "all" && !valid_mute_channel(channel))
                         {
-                            send(event.peer_id, "Unknown channel. Use global, local, voice, team, or all.", 0, true);
+                            send(event.peer_id, "Unknown channel. Use global, local, voice, team, onoff, or all.", 0, true);
                         }
                         else if(ti > -1) // online: the usual live mute (roster state + notify the target + public alert)
                         {
@@ -3711,6 +3712,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                     for(uint c=0; c<chans.length(); c++) { set_channel_mute(players[ti].name, chans[c], until); set_player_mute(ti, chans[c], until); }
                                     notify_target_mute(ti, channel, true, dur);
                                     announce_mute_to_others(display_name(ti), players[ti].peer_id, channel, true);
+                                    if(channel=="onoff" or channel=="all") send(0, "onoffchanged "+players[ti].name, 0, true); // drop clients' cached cues for them so the silence takes effect even on their next (flagless) disconnect
                                 }
                             }
                         }
@@ -3732,7 +3734,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         int ti = get_player_index_from(mname); // online by username or nickname, else -1
                         if(channel != "all" && !valid_mute_channel(channel))
                         {
-                            send(event.peer_id, "Unknown channel. Use global, local, voice, team, or all.", 0, true);
+                            send(event.peer_id, "Unknown channel. Use global, local, voice, team, onoff, or all.", 0, true);
                         }
                         else if(ti > -1) // online: the usual live unmute (roster state + notify the target + public alert)
                         {
@@ -3754,6 +3756,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                     for(uint c=0; c<chans.length(); c++) { clear_channel_mute(players[ti].name, chans[c]); set_player_mute(ti, chans[c], -1); }
                                     notify_target_mute(ti, channel, false, 0);
                                     announce_mute_to_others(display_name(ti), players[ti].peer_id, channel, false);
+                                    if(channel=="onoff" or channel=="all") send(0, "onoffchanged "+players[ti].name, 0, true); // clients re-fetch so their custom cue returns on the next event
                                 }
                             }
                         }
@@ -3778,7 +3781,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         string channel = string_to_lower_case(parsed[1]);
                         if(channel != "all" and !valid_mute_channel(channel))
                         {
-                            send(event.peer_id, "misc That is not a channel you can mute; use global, local, voice, team, or all.", 0, true);
+                            send(event.peer_id, "misc That is not a channel you can mute; use global, local, voice, team, onoff, or all.", 0, true);
                         }
                         else
                         {
@@ -3796,6 +3799,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                 if(players[i].peer_id >= 0) notify_target_mute(int(i), channel, true, dur); // live players hear their own notice; held sessions are muted silently and learn on reconnect
                                 muted_count++;
                             }
+                            if((channel=="onoff" or channel=="all") and muted_count>0) send(0, "onoffchanged *", 0, true); // mass onoff silence: clear every client's whole onoff cache so cues re-fetch as silenced
                             if(muted_count == 0) send(event.peer_id, "misc There is no one to mute.", 0, true);
                             else
                             {
@@ -3819,7 +3823,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         string channel = string_to_lower_case(parsed[1]);
                         if(channel != "all" and !valid_mute_channel(channel))
                         {
-                            send(event.peer_id, "misc That is not a channel you can unmute; use global, local, voice, team, or all.", 0, true);
+                            send(event.peer_id, "misc That is not a channel you can unmute; use global, local, voice, team, onoff, or all.", 0, true);
                         }
                         else
                         {
@@ -3837,6 +3841,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                 if(players[i].peer_id >= 0) notify_target_mute(int(i), channel, false, 0);
                                 unmuted_count++;
                             }
+                            if((channel=="onoff" or channel=="all") and unmuted_count>0) send(0, "onoffchanged *", 0, true); // mass unsilence: clear every client's onoff cache so custom cues re-fetch
                             if(unmuted_count == 0) send(event.peer_id, "misc No one was muted in "+(channel=="all" ? "any channel" : chan_phrase)+".", 0, true);
                             else
                             {

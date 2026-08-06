@@ -47,6 +47,7 @@ const int64 onoff_max_bytes = 131072;
 // missing file, so the short-circuit file_exists guard runs first.
 bool has_onoff_sound(string name, string which)
 {
+if(onoff_silenced(name)) return false; // staff silence (/mute <name> onoff): no custom sound for ANYONE while it's in effect
 if(read_field(name, "onoffs", "") == "0") return false; // the player's master switch: onoffs.usr "0" = off (files kept, just suppressed); "1" or blank = on
 string path = account_dir(name) + "/onoffs/" + which + ".ogg";
 return file_exists(path) and file_get_size(path) <= onoff_max_bytes;
@@ -73,6 +74,7 @@ const uint onoff_msg_max = 64;
 string onoff_message(string name, string which)
 {
 string def = (which == "offline") ? "just went offline" : "just came online";
+if(onoff_silenced(name)) return def; // staff silence: the standard message for everyone too, not just the standard sound
 string m = read_field(name, (which == "offline") ? "offmsg" : "onmsg", "");
 return (m == "") ? def : m;
 }
@@ -254,7 +256,7 @@ if(until < 0) continue;
 if(until > 0 and until - now_epoch() <= 0) continue; // a timed mute that has already lapsed
 shown++;
 string when = (until == 0) ? "indefinite" : format_duration(until - now_epoch()) + " remaining";
-listing += (shown>1 ? "\r\n" : "") + shown + ". " + chans[i] + " (" + when + ")";
+listing += (shown>1 ? "\r\n" : "") + shown + ". " + (chans[i]=="onoff" ? "online and offline sounds" : chans[i]) + " (" + when + ")";
 }
 if(shown == 0) return "This player is not muted in any channel.";
 return "Muted in:\r\n" + listing;

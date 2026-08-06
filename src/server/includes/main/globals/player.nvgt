@@ -13,7 +13,7 @@ double version;
 string rank="player";
 string language="English"; // the player's current language chat channel (bare name); loaded from language.usr at spawn, defaults to English.
 string pronoun=""; // how third-person messages refer to this player; the bare key from pronouns.svr, set from pronoun.usr at spawn (default_pronoun() if unset or invalid).
-int64 mute_global=-1, mute_local=-1, mute_voice=-1, mute_team=-1; // per channel: -1 = not muted, 0 = indefinite, >0 = epoch it expires at. (Staff can't be muted, so there's no staff channel.)
+int64 mute_global=-1, mute_local=-1, mute_voice=-1, mute_team=-1, mute_onoff=-1; // per channel: -1 = not muted, 0 = indefinite, >0 = epoch it expires at. (Staff can't be chat-muted, so there's no staff channel.) mute_onoff = staff silence of this player's custom connect/disconnect cue + message, suppressed for EVERYONE.
 int64[] global_msg_times; // anti-spam: svruptimer.elapsed (ms since boot) of this player's recent global-chat messages, newest appended last; entries older than spamtime are pruned each message, and the whole list is cleared when the spam guard trips. Transient, never persisted.
 int x=1, y=1; // map position; defaults to the client's spawn at (1,1) until a position update arrives.
 int room_id=0; // 0 = main lobby; otherwise the id of the room this player is currently in.
@@ -118,13 +118,20 @@ if(oremoved) send_onoff_ignore_list(int(i)); // the client enforces the onoff li
 array<string> mute_channels_for(string ch)
 {
 array<string> r;
-if(ch=="all") { r.insert_last("global"); r.insert_last("local"); r.insert_last("voice"); r.insert_last("team"); }
+if(ch=="all") { r.insert_last("global"); r.insert_last("local"); r.insert_last("voice"); r.insert_last("team"); r.insert_last("onoff"); } // "all" now also sweeps in the onoff silence (dev's call)
 else r.insert_last(ch);
 return r;
 }
 bool valid_mute_channel(string ch)
 {
-return ch=="global" or ch=="local" or ch=="voice" or ch=="team";
+return ch=="global" or ch=="local" or ch=="voice" or ch=="team" or ch=="onoff";
+}
+// The phrase after "muted in ..." for a channel; onoff reads as their sounds rather than "the onoff channel".
+string mute_where(string channel)
+{
+if(channel == "all") return "all channels";
+if(channel == "onoff") return "their online and offline sounds";
+return "the " + channel + " channel";
 }
 // Read/write a player's in-memory mute for a channel (-1 not muted, 0 indefinite, >0 epoch).
 int64 get_player_mute(int pi, string ch)
@@ -134,6 +141,7 @@ if(ch=="global") return players[pi].mute_global;
 if(ch=="local") return players[pi].mute_local;
 if(ch=="voice") return players[pi].mute_voice;
 if(ch=="team") return players[pi].mute_team;
+if(ch=="onoff") return players[pi].mute_onoff;
 return -1;
 }
 void set_player_mute(int pi, string ch, int64 v)
@@ -143,12 +151,25 @@ if(ch=="global") players[pi].mute_global=v;
 else if(ch=="local") players[pi].mute_local=v;
 else if(ch=="voice") players[pi].mute_voice=v;
 else if(ch=="team") players[pi].mute_team=v;
+else if(ch=="onoff") players[pi].mute_onoff=v;
 }
 /* Is this player muted in this channel right now? (>0 epochs that have passed read as not muted; the
 netloop poll clears and announces them shortly after.) */
 bool is_muted_now(int pi, string ch)
 {
 int64 u = get_player_mute(pi, ch);
+if(u < 0) return false;
+if(u == 0) return true;
+return now_epoch() < u;
+}
+/* Is this player's onoff (their custom connect/disconnect cue + message) currently STAFF-silenced? Reads mute_onoff.usr
+straight from DISK, which is authoritative: every /mute and /unmute (and the expiry poll) writes it, and it's correct
+even at the moment of a returning player's own connect broadcast, before the roster mute has loaded. Handles timed
+expiry itself (a lapsed epoch reads as not silenced). Fed into has_onoff_sound + onoff_message, so a silenced player
+falls back to the standard sound AND the standard message for EVERYONE. */
+bool onoff_silenced(string name)
+{
+int64 u = get_channel_mute(name, "onoff");
 if(u < 0) return false;
 if(u == 0) return true;
 return now_epoch() < u;
@@ -184,6 +205,7 @@ string verb = muting ? "muted" : "unmuted";
 string text;
 if(channel == "all") text = disp + " has been " + verb + " in all channels.";
 else if(channel == "voice") text = disp + "'s voice chat has been " + verb + ".";
+else if(channel == "onoff") text = disp + "'s online and offline sounds " + (muting ? "have been silenced." : "are no longer silenced.");
 else text = disp + "'s " + channel + " chats have been " + verb + ".";
 for(uint i=0; i<players.length(); i++)
 {
