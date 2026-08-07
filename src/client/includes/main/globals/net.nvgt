@@ -827,6 +827,12 @@ string s = string_replace(relpath, "/", "_", true);
 s = string_replace(s, " ", "_", true);
 return DIRECTORY_APPDATA + "tsatria03/CaveDefender/soundcache/" + s;
 }
+int soundboard_slot = -1; // the soundboard clip currently playing, so a newly played one cuts off the last still ringing (like a weapon draw), rather than overlapping it.
+void play_soundboard(string path)
+{
+if(soundboard_slot != -1) p.destroy_sound(soundboard_slot); // stop the previous clip if it's still ringing, so only the newest one plays
+soundboard_slot = p.play_stationary(path, false);
+}
 void request_onoff(string user, string which, bool play)
 {
 string key = onoff_key(user, which);
@@ -1004,7 +1010,7 @@ void netloop_impl()
 			relpath is the whole second line (it has slashes and spaces but no newline), so read firstline[1], not parsed. */
 			string relpath = firstline[1];
 			string val;
-			if(sound_cache.get(relpath, val) and file_exists(val)) p.play_stationary(val, false); // cached this session -> replay instantly
+			if(sound_cache.get(relpath, val) and file_exists(val)) play_soundboard(val); // cached this session -> replay instantly, cutting off any previous clip
 			else send(0, "getsound " + relpath, 0, true); // not cached -> fetch the bytes, which arrive as soundpush
 		}
 		else if (parsed[0] == "soundpush" and firstline.length() >= 3)
@@ -1016,7 +1022,7 @@ void netloop_impl()
 			if(!directory_exists(dir)) directory_create(dir);
 			string path = sound_cachefile(relpath);
 			file f;
-			if(f.open(path, "wb")) { f.write(string_base64_decode(firstline[2], STRING_BASE64_DEFAULT)); f.close(); sound_cache.set(relpath, path); p.play_stationary(path, false); }
+			if(f.open(path, "wb")) { f.write(string_base64_decode(firstline[2], STRING_BASE64_DEFAULT)); f.close(); sound_cache.set(relpath, path); play_soundboard(path); }
 		}
 		else if (parsed[0] == "myonoffstate" and parsed.length() >= 4)
 		{
