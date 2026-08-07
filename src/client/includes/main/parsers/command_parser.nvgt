@@ -140,6 +140,21 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/channel"); return; }
 		send(0, "channel", 0, true); // everyone: the server pushes the language-channel chooser
 	}
+	else if(base == "/gl" or base == "/lc" or base == "/st" or base == "/tm")
+	{
+		/* Channel-routing prefixes: re-run the rest of the line as if it were typed in that channel's chat box, so a
+		script key (which has no channel context) can pick a channel, and you can cross-post from any box. Plain text
+		becomes that channel's chat and /me becomes that channel's emote (reuses comparse -> send_chat/send_me), so no
+		new server message is needed. /gl global, /lc local, /st staff (staff only, hidden like other staff commands),
+		/tm team where possible. A bare command with nothing after it just shows usage. */
+		if(base == "/st" and my_rank_level() < 1) { unknown_command(parsed[0]); return; }
+		if(parsed.length() < 2) { syntax_error(base + " message"); return; }
+		string chan = "global";
+		if(base == "/lc") chan = "local";
+		else if(base == "/st") chan = "staff";
+		else if(base == "/tm") chan = "team";
+		comparse(text.substr(parsed[0].length()).trim_whitespace(), chan); // everything after the command word, original case, run in that channel
+	}
 	else if(base == "/pronoun")
 	{
 		if(parsed.length() != 1) { syntax_error("/pronoun"); return; }
