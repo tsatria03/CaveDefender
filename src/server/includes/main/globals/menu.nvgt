@@ -1415,6 +1415,87 @@ string base = segs[segs.length() - 1];
 if(edit) send(peer, "editdatatext " + relpath + "\n" + content, 0, true); // full path so the client echoes it back on save
 else send(peer, "viewdatatext " + base + "\n" + content, 0, true);
 }
+/* --- The /playsound soundboard browser ---
+Confine a sounds-relative path to the server's sounds/ folder, exactly like safe_data_path guards data/: no parent
+traversal, drive letters, backslashes, or absolute paths, so a play command can never reach outside sounds/. */
+bool safe_sound_path(string relpath)
+{
+if(relpath == "") return true; // the sounds root
+if(string_contains(relpath, "..", 1) >= 0) return false; // no parent traversal
+if(string_contains(relpath, ":", 1) >= 0) return false;  // no drive letters
+if(string_contains(relpath, "\\", 1) >= 0) return false; // backslashes not allowed; forward slashes only
+if(relpath[0] == "/") return false;                       // no absolute path
+return true;
+}
+/* The lowest folder a player may stand in: staff browse the sounds root (both player/ and staff/), everyone else is
+confined to player/. Escape in the picker walks up only as far as this floor, then closes. */
+string sound_floor(int index) { return is_staff(players[index].rank) ? "" : "player"; }
+/* Is this sounds path allowed for this player? Returns "" when fine, otherwise the reason to show. Enforces the
+whitelist (root = player, or staff which only staff may reach; category = common or misc) regardless of whether the
+leaf is a folder or a file -- the caller checks existence. The rank gate here is re-applied on every play and every
+menu step, so a modified client can never coax a staff clip out as a regular player. */
+string sound_path_reject(int index, string relpath)
+{
+if(!safe_sound_path(relpath)) return "That sound path is not allowed.";
+if(relpath == "") return ""; // the sounds root (staff only, enforced by their floor in push_sound_nav)
+string[] segs = string_split(relpath, "/", true);
+if(segs[0] != "player" and segs[0] != "staff") return "Sounds come from the player or staff folder only.";
+if(segs[0] == "staff" and !is_staff(players[index].rank)) return "Only staff can play staff sounds.";
+if(segs.length() >= 2 and segs[1] != "common" and segs[1] != "misc") return "Sound categories are common and misc only.";
+return "";
+}
+/* Play a sounds/ clip to EVERYONE (the /playsound command and a pick in its picker). The path is re-validated and
+rank-scoped here too. Every client gets "soundplay\n<relpath>" and plays it from its cache or fetches the bytes with
+getsound; the path rides after a newline because clip names contain spaces. Silent to players: the actor gets a
+one-line confirmation and staff get an audit note of who played what. */
+void broadcast_sound(int index, string relpath)
+{
+int peer = players[index].peer_id;
+string reason = sound_path_reject(index, relpath);
+if(reason != "") { send(peer, "misc " + reason, 0, true); return; }
+string[] segs = string_split(relpath, "/", true);
+if(segs.length() < 3) { send(peer, "misc Choose a sound file inside player or staff, in common or misc.", 0, true); return; } // must be root/category/file, not a bare folder
+string full = "sounds/" + relpath;
+if(!file_exists(full) or directory_exists(full)) { send(peer, "misc There is no sound at that path.", 0, true); return; }
+send(0, "soundplay\n" + relpath, 0, true); // everyone: play from cache or fetch with getsound
+send(peer, "misc You played " + relpath + " to everyone.", 0, true); // actor's first-person confirmation
+notify_staff_audit(display_name_flagged(index) + " played the sound " + relpath + ".", peer); // staff record; actor excluded (they got the confirmation)
+}
+/* Push the /playsound picker for a sounds folder: its sub-folders (drill in) then its sound files (play to everyone).
+A folder or file named outright is handled too -- a bare file path plays straight away. Confined to sounds/ and scoped
+by rank: a player only ever browses player/, staff see both roots. Mirrors push_data_nav but plays instead of editing;
+the menu id "soundnav" resolves the choice back here. */
+void push_sound_nav(int index, string relpath)
+{
+int peer = players[index].peer_id;
+if(relpath == "" and !is_staff(players[index].rank)) relpath = "player"; // a player's floor is player/, never the root chooser
+string reason = sound_path_reject(index, relpath);
+if(reason != "") { send(peer, "misc " + reason, 0, true); return; }
+string full = (relpath == "") ? "sounds" : "sounds/" + relpath;
+if(file_exists(full) and !directory_exists(full)) { broadcast_sound(index, relpath); return; } // a file named outright -> play it
+if(!directory_exists(full)) { send(peer, "misc There is no sound folder or file at that path.", 0, true); return; }
+string[] dirs = find_directories(full + "/*");
+string[] files = find_files(full + "/*");
+sort_names_ci(dirs); // case-insensitive alphabetical, matching the data browser
+sort_names_ci(files);
+string[] opts;
+players[index].menu_targets.resize(0);
+for(uint i = 0; i < dirs.length(); i++) // folders first, marked so it's clear they drill in
+{
+string nm = leaf_name(dirs[i]);
+opts.insert_last(nm + ", folder");
+players[index].menu_targets.insert_last((relpath == "") ? nm : relpath + "/" + nm);
+}
+for(uint i = 0; i < files.length(); i++)
+{
+string nm = leaf_name(files[i]);
+opts.insert_last(nm);
+players[index].menu_targets.insert_last((relpath == "") ? nm : relpath + "/" + nm);
+}
+if(opts.length() == 0) { send(peer, "misc That sound folder is empty.", 0, true); return; }
+players[index].sound_nav_path = relpath; // remember where we are so Escape can walk up one level (see the soundnav on_menu_result branch)
+send_menu(peer, "soundnav", "Choose a folder to open or a sound to play to everyone.", opts);
+}
 void on_menu_result(int player_index, string id, int choice)
 {
 if(player_index < 0 or player_index >= int(players.length())) return;
@@ -1885,5 +1966,25 @@ if(choice >= int(players[player_index].menu_targets.length())) return; // out of
 string target = players[player_index].menu_targets[choice];
 if(directory_exists("data/" + target)) push_data_nav(player_index, target, edit); // a folder: show the next level
 else open_data_file(player_index, target, edit); // a file: open it
+}
+else if(id == "soundnav")
+{
+/* A pick in the /playsound picker. Escape (choice -1) walks UP one folder level per press, but only as far as the
+player's floor (staff: the sounds root; everyone else: player/), where it closes the picker; a chosen folder drills
+in, a chosen sound plays to everyone. */
+if(choice < 0)
+{
+string cur = players[player_index].sound_nav_path;
+if(cur == sound_floor(player_index)) { send(peer, "datacancel", 0, true); return; } // at your floor -> close the picker (the client speaks "canceled")
+string[] segs = string_split(cur, "/", true); // the parent = everything before the last path segment
+string parent = "";
+for(uint k=0; k+1 < segs.length(); k++) parent += (parent=="" ? "" : "/") + segs[k];
+push_sound_nav(player_index, parent);
+return;
+}
+if(choice >= int(players[player_index].menu_targets.length())) return; // out of range
+string target = players[player_index].menu_targets[choice];
+if(directory_exists("sounds/" + target)) push_sound_nav(player_index, target); // a folder: show the next level
+else broadcast_sound(player_index, target); // a sound: play it to everyone
 }
 }

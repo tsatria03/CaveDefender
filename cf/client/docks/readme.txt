@@ -101,6 +101,10 @@ Alongside your sounds, you can set your own online and offline messages, the wor
 
 To set them, type slash onmsg followed by your message, for example slash onmsg has entered the cave, and slash offmsg for your disconnect line. Type slash onmsg default, or slash offmsg default, to go back to the standard wording. You can also set both at once from the change your online and offline messages option in your player panel, which opens a form with a field for each; leave a field blank to use the default. Each message is a single line of up to sixty four characters and is filtered like chat, and only you are told when you change it. Use slash online or slash offline any time to hear your sound and read your message exactly as others will get them.
 
+Soundboard.
+
+You can play a short sound to everyone on the server, chosen from a library the server host keeps on the server. Type slash playsound, or slash pls, followed by the sound's path, for example slash playsound player slash common slash something dot ogg: the first part is the folder and the second is the category, either common or misc. Every player shares the player folder. Type slash playsound on its own, with no path, to open a menu instead, where you choose a folder and then a sound to play, and escape steps back a level or closes the menu once you are as far out as you can go. Whoever plays a sound, everyone on the server hears it the same way wherever they are, and it plays on its own with no message saying who played it. Staff have a staff folder of their own to play from as well, on top of the shared player sounds.
+
 Rooms.
 
 From the lobby, press enter to open the lobby panel and create or join a public or private room. You can host up to one public and one private room of your own. You hear a sound whenever you join or leave a room, and anyone already in the room hears you come and go too, much like players hear you connect to and leave the server. Joining and leaving rooms share a brief half-second cooldown, so you cannot bounce in and out of a room super fast; it is silent, so a join or leave that comes too soon after your last one is simply ignored until the moment passes.
@@ -109,7 +113,7 @@ Inside a room, press enter to open the room panel, the room menu. If you host th
 
 When you join a private room, you are asked for its password first. If you are staff joining a private room you created yourself, that box opens with the password already filled in, so you can just press enter rather than type it; this only happens for your own room, and joining anyone else's private room still asks you to type the password as usual.
 
-Anyone in a room can invite someone to it. Choose Invite to room from the room menu to see everyone currently in the lobby, and pick the person you want. They are told privately that you invited them, and they answer with Alt plus A to accept or Alt plus D to deny; an invitation lasts two minutes before it expires, and they can check how long is left with /invtime. Accepting brings them straight in, even past a private room's password, and you are told whether they accepted or declined.
+Anyone in a room can invite someone to it. Choose Invite to room from the room menu to see everyone currently in the lobby, and pick the person you want. They are told privately that you invited them, and they answer with Alt plus A to accept or Alt plus D to deny; an invitation lasts two minutes before it expires, with a sound playing to let them know when it runs out unanswered, and they can check how long is left with /invtime. Accepting brings them straight in, even past a private room's password, and you are told whether they accepted or declined.
 
 Games.
 

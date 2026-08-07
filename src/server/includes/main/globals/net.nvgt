@@ -2437,6 +2437,38 @@ send(event.peer_id, "misc Saved " + segs[segs.length() - 1] + "; restart the ser
 }
 }
 }
+else if(parsed[0]=="playsound" and index>-1)
+{
+/* The /playsound soundboard: with no path, open the picker at the player's floor (players see player/, staff see
+both roots); with a path (the remainder after "playsound ", kept whole since clip names contain spaces) play that
+sound to everyone, or browse if it's a folder. All validation and the rank gate live in push_sound_nav. */
+int sp = string_contains(message, " ", 1);
+if(sp < 0) push_sound_nav(index, ""); // no path -> open the picker
+else push_sound_nav(index, message.substr(sp+1).trim_whitespace()); // a path -> play it (or drill in if it's a folder)
+}
+else if(parsed[0]=="getsound" and index>-1)
+{
+/* A client that heard a soundplay but doesn't have the file cached asks for its bytes ("getsound <relpath>", path
+kept whole). No rank gate here on purpose -- anyone who hears a staff clip must be able to fetch it -- but the path is
+still confined to sounds/ and checked against the root/category whitelist, then the ogg goes back base64 to that peer. */
+int sp = string_contains(message, " ", 1);
+if(sp < 0) { }
+else
+{
+string relpath = message.substr(sp+1).trim_whitespace();
+string[] segs = string_split(relpath, "/", true);
+if(!safe_sound_path(relpath) or segs.length() < 3 or (segs[0] != "player" and segs[0] != "staff") or (segs[1] != "common" and segs[1] != "misc")) { }
+else
+{
+string full = "sounds/" + relpath;
+if(!file_exists(full) or directory_exists(full)) { }
+else
+{
+file f;
+if(f.open(full, "rb")) { string d = f.read(); f.close(); send(event.peer_id, "soundpush\n" + relpath + "\n" + string_base64_encode(d, STRING_BASE64_DEFAULT), 0, true); }
+}
+}
+}
 else if(parsed[0]=="menuresult" and index>-1 and parsed.length()>2)
 {
 on_menu_result(index, parsed[1], int(string_to_number(parsed[2])));

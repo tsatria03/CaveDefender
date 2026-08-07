@@ -815,6 +815,18 @@ string onoff_key(string user, string which) { return string_to_lower_case(user) 
 string onoff_cachefile(string user, string which) { return DIRECTORY_APPDATA + "tsatria03/CaveDefender/onoffcache/" + string_to_lower_case(user) + "_" + which + ".ogg"; }
 void play_builtin_onoff(string which) { p.play_stationary("sounds/ui/misc/" + which + ".ogg", false); }
 void play_cached_onoff(string which, string val) { if(val == "none") play_builtin_onoff(which); else p.play_stationary(val, false); }
+/* The /playsound soundboard: clips live on the server (sounds/player/... and sounds/staff/...) and are heard by
+everyone when someone plays one. Each clip is fetched once per session (base64), written to a client cache file, and
+replayed from there so a repeat is never re-fetched. sound_cache maps the clip's sounds-relative path -> its cache
+file; a missing key means not yet fetched this session. */
+dictionary sound_cache;
+// A filesystem-safe cache file for a clip's relative path: slashes and spaces become underscores (e.g. "staff/common/a b.ogg" -> "staff_common_a_b.ogg").
+string sound_cachefile(string relpath)
+{
+string s = string_replace(relpath, "/", "_", true);
+s = string_replace(s, " ", "_", true);
+return DIRECTORY_APPDATA + "tsatria03/CaveDefender/soundcache/" + s;
+}
 void request_onoff(string user, string which, bool play)
 {
 string key = onoff_key(user, which);
@@ -985,6 +997,27 @@ void netloop_impl()
 			onoff_ignored.resize(0);
 			for(uint fi=1; fi<firstline.length(); fi++) { string iu = firstline[fi].trim_whitespace(); if(iu != "") onoff_ignored.insert_last(string_to_lower_case(iu)); }
 		}
+		else if (parsed[0] == "soundplay" and firstline.length() >= 2)
+		{
+			/* Someone played a soundboard clip to everyone ("soundplay\n<relpath>"). Play it straight from our cache if we
+			have it; otherwise ask the server for the bytes with getsound, and the soundpush reply caches and plays it. The
+			relpath is the whole second line (it has slashes and spaces but no newline), so read firstline[1], not parsed. */
+			string relpath = firstline[1];
+			string val;
+			if(sound_cache.get(relpath, val) and file_exists(val)) p.play_stationary(val, false); // cached this session -> replay instantly
+			else send(0, "getsound " + relpath, 0, true); // not cached -> fetch the bytes, which arrive as soundpush
+		}
+		else if (parsed[0] == "soundpush" and firstline.length() >= 3)
+		{
+			/* Reply to getsound: "soundpush\n<relpath>\n<base64>". Decode to a cache file keyed by the path, remember it for
+			the session, and play it now (this only arrives because we just heard a soundplay we couldn't satisfy from cache). */
+			string relpath = firstline[1];
+			string dir = DIRECTORY_APPDATA + "tsatria03/CaveDefender/soundcache";
+			if(!directory_exists(dir)) directory_create(dir);
+			string path = sound_cachefile(relpath);
+			file f;
+			if(f.open(path, "wb")) { f.write(string_base64_decode(firstline[2], STRING_BASE64_DEFAULT)); f.close(); sound_cache.set(relpath, path); p.play_stationary(path, false); }
+		}
 		else if (parsed[0] == "myonoffstate" and parsed.length() >= 4)
 		{
 			// Reply to getmyonoff: this account's own onoff state, for the settings form to preload its checkboxes.
@@ -1131,7 +1164,7 @@ void netloop_impl()
 		else if (parsed[0] == "invitexpired")
 		{
 			// A pending room invitation ran out before you answered it.
-			p.play_stationary("sounds/ui/misc/alert.ogg", false);
+			p.play_stationary("sounds/ui/misc/invtime.ogg", false);
 			add_buffer_item("misc", "Your invitation has expired.");
 		}
 		else if (parsed[0] == "alert" and message.length() > parsed[0].length()+1)

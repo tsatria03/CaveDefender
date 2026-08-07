@@ -115,6 +115,16 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/onoffs"); return; }
 		onoff_sounds_form(); // opens the online and offline sounds form, same as F7 or the player panel option
 	}
+	else if(base == "/playsound" or base == "/pls")
+	{
+		/* The soundboard: play a server sound clip to everyone. No path opens the picker (players browse the player
+		folder; staff also get the staff folder). A path plays it, e.g. /playsound player/common/something.ogg -- the
+		path keeps its spaces and case (clip names have both), so it's the whole remainder after the command word. The
+		server validates the path and enforces which folders your rank may reach, so no rank check is needed here. */
+		if(parsed.length() == 1) { send(0, "playsound", 0, true); return; } // no args: open the picker
+		string path = text.substr(parsed[0].length()).trim_whitespace(); // everything after "/playsound"/"/pls", original case and spaces
+		send(0, "playsound " + path, 0, true);
+	}
 	else if(base == "/onlinemsg" or base == "/onmsg" or base == "/offlinemsg" or base == "/offmsg")
 	{
 		/* Set your own online/offline MESSAGE, the action shown after your name on connect/disconnect. Text sets it,

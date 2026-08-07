@@ -2,6 +2,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a slash playsound command that plays a server-hosted sound to everyone, with a menu picker, a shared player folder for all and a staff folder for staff.
 **Finished. Let staff silence a player's online and offline sounds through the mute command.
 **Finished. Let players personally mute another player's online and offline sounds from their information card or a command.
 **Finished. Add the ability for players to set their own online and offline messages, with commands and a player panel option.
