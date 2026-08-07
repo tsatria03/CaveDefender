@@ -1,0 +1,10 @@
+/pm %Who do you want to message? %What do you want to say?
+/r %What's your reply?
+/me %What are you doing?
+/lb
+Good luck, everyone!
+/gl %What do you want to say in global?
+/lc %What do you want to say in local?
+/lc /me %What are you doing, in local?
+/st %What do you want to say in staff chat?
+/tm %What do you want to say to your team?
