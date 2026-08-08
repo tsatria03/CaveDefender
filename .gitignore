@@ -10,7 +10,3 @@ release/
 # Binary engine libraries (DLLs + bundled tools.
 cf/client/lib/
 cf/server/lib/
-
-# Binary media assets
-cf/client/sounds/
-cf/server/sounds/
