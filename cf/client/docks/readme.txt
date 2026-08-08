@@ -93,7 +93,7 @@ To set them, press F7 anywhere in the game, or choose the online and offline sou
 
 Your chosen sounds are saved to your account on the server. To replace one, browse a new file and save. To remove one, uncheck its use box and save, and you are asked to confirm first, since removing a sound means picking it again if you ever want it back. A separate switch temporarily disables your custom sounds, keeping them saved but falling back to the standard cues until you turn it off; this switch appears only when you have at least one custom sound uploaded and in use, since there is otherwise nothing to disable. A preview button for each sound, always available, lets you hear what will actually play, your saved sound or the standard cue when you have none saved or have your custom sounds disabled. Press escape, or choose cancel changes, to close the form without saving. A server host can also set these sounds for a player who asks.
 
-Whenever anyone changes their online or offline sounds, a short notice arrives in everyone's alerts buffer, your own included, naming the player and saying what they did, whether they updated a sound, removed one, or temporarily muted or unmuted their online and offline sounds, so it is clear when someone's cue is about to sound different.
+Whenever anyone changes their online or offline sounds, a short notice arrives in everyone's alerts buffer, your own included, naming the player and saying what they did, whether they updated a sound, removed one, or temporarily enabled or disabled their online and offline sounds, so it is clear when someone's cue is about to sound different.
 
 Online and offline messages.
 
@@ -375,6 +375,10 @@ Alt plus L. Open the learn sounds menu without leaving, the same sound browser y
 Shift plus H. Open the help without typing the command; you go straight to the player help, while staff are first asked whether to view the player or the staff help.
 Shift plus U. Open the rules without typing the command; you go straight to the player rules, while staff are first asked which page to view.
 Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the connection menu, asking you to confirm first if that setting is on.
+
+Script keys.
+
+Alt, or Alt plus Shift, with a number row key runs one of your twenty eight script keys, the chat command shortcuts you keep in the scriptkeys dot txt file beside the game. See the Script keys section earlier in this readme for how they work.
 
 In a game.
 
