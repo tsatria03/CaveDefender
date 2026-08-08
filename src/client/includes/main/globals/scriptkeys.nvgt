@@ -1,0 +1,81 @@
+/* Script keys: user-defined keyboard shortcuts that run a line of cf/client/scriptkeys.txt as if it were typed into
+chat. Line N maps to key N by position. Keys 1-14 are Alt + the number row (grave, 1-0, minus, equals, backspace);
+keys 15-28 are Alt+Shift + those same keys. The file is RE-READ fresh on every press (it's tiny and presses are rare
+and user-driven), so a hand-edit is live on the very next press with no restart. A line's leading / makes it a command,
+otherwise it's a global chat message; a % starts a prompt whose text (up to the next %) is asked in an input box and
+whose answer is substituted in. The file ships loose beside the game (never boxed) so players can edit it. See the
+readme and [[scriptkeys]]. */
+
+/* Read scriptkeys.txt fresh (empty array if it's missing or unreadable). Blank lines are KEPT so line N stays mapped
+to key N. Read on demand, not cached, so editing the file while the game runs takes effect on the next press. */
+string[] read_scriptkeys()
+{
+string[] lines;
+if(!file_exists("scriptkeys.txt")) return lines;
+file f;
+if(!f.open("scriptkeys.txt", "rb")) return lines;
+string content = f.read();
+f.close();
+return split_lines(content); // CRLF-normalizes and splits on \n, keeping empty lines
+}
+
+/* Resolve a script-key line into the final command text. Literal text is kept verbatim; each %prompt (its text running
+to the next % or the end of the line) is replaced by what the player types in an input box. Trailing whitespace before a
+% stays as a literal separator between arguments, so "/pm %who? %what?" becomes "/pm <name> <message>". Returns "" if the
+player cancels (or leaves blank) any prompt, which aborts the whole command. */
+string resolve_scriptkey(string line)
+{
+string[] parts = string_split(line, "%", true);
+string result = parts[0]; // literal text before the first %
+for(uint k = 1; k < parts.length(); k++)
+{
+string seg = parts[k];
+// Peel the trailing whitespace off the segment: it's the separator to the next argument, kept as literal.
+uint end = seg.length();
+while(end > 0 and (seg.substr(end-1, 1) == " " or seg.substr(end-1, 1) == "\t")) end--;
+string prompt = seg.substr(0, end).trim_whitespace();
+string trailing = seg.substr(end);
+if(prompt == "") { result += trailing; continue; } // a stray % with no prompt text: drop it, keep any separator
+string answer = vd.input_box("Script key", prompt, "");
+if(answer == "") return ""; // cancelled or left blank -> abort the whole command
+result += answer + trailing;
+}
+return result;
+}
+
+// Run script key n (1-28): read the file fresh, and either report the empty/missing slot or resolve its prompts and run
+// the finished line through comparse (the normal command router), so rank gating and validation apply as if typed.
+void run_scriptkey(int n)
+{
+string[] lines = read_scriptkeys();
+if(n < 1 or n > int(lines.length()) or lines[n-1].trim_whitespace() == "")
+{
+speak("scriptkey " + n + " not found");
+return;
+}
+string cmd = resolve_scriptkey(lines[n-1]);
+if(cmd == "") { speak("canceled"); return; } // a prompt was cancelled/left blank
+comparse(cmd);
+}
+
+/* Check the script-key hotkeys once per frame. Fires on Alt + a number-row key (bank 1, keys 1-14) or Alt+Shift + the
+same (bank 2, keys 15-28); Ctrl+Alt is left alone. Returns true when a script key was pressed (so the caller swallows
+the frame). Only active while connected and not mid-reconnect, so a key can't fire a command at a dead link. */
+bool scriptkey_loop()
+{
+if(!connected or reconnecting) return false;
+if(!alt_is_down() or control_is_down()) return false; // ours is Alt (+ optional Shift), never Ctrl+Alt
+// The 14 physical keys of one bank, in order (grave, 1-0, minus, equals, backspace); built here, after the Alt guard,
+// so it costs nothing when Alt isn't held. Plain number-row keys are weapon quick-equip, so Alt keeps these clear.
+uint[] row = { KEY_GRAVE, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9, KEY_0, KEY_MINUS, KEY_EQUALS, KEY_BACK };
+for(uint i = 0; i < row.length(); i++)
+{
+if(key_pressed(row[i]))
+{
+int n = int(i) + 1 + (shift_is_down() ? 14 : 0); // Alt+Shift is the second bank, keys 15-28
+run_scriptkey(n);
+return true; // handled this Alt+key press
+}
+}
+return false;
+}

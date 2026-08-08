@@ -2,6 +2,8 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add script keys, Alt and Alt plus Shift number row shortcuts that run lines of a loose scriptkeys file as chat commands with fill-in prompts, read fresh on each press.
+**Finished. Add the slash gl, slash lc, slash st, and slash tm channel commands that send the rest of a line to a chat channel from any box.
 **Finished. Add a slash playsound command that plays a server-hosted sound to everyone, with a menu picker, a shared player folder for all and a staff folder for staff.
 **Finished. Let staff silence a player's online and offline sounds through the mute command.
 **Finished. Let players personally mute another player's online and offline sounds from their information card or a command.

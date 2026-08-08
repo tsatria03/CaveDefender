@@ -105,6 +105,16 @@ Soundboard.
 
 You can play a short sound to everyone on the server, chosen from a library the server host keeps on the server. Type slash playsound, or slash pls, followed by the sound's path, for example slash playsound player slash common slash something dot ogg: the first part is the folder and the second is the category, either common or misc. Every player shares the player folder. Type slash playsound on its own, with no path, to open a menu instead, where you choose a folder and then a sound to play, and escape steps back a level or closes the menu once you are as far out as you can go. Whoever plays a sound, everyone on the server hears it the same way wherever they are, and it plays on its own with no message saying who played it. Staff have a staff folder of their own to play from as well, on top of the shared player sounds.
 
+Script keys.
+
+Script keys are your own keyboard shortcuts that run a chat command, or send a message, from anywhere in the game with a single keystroke. They live in a plain text file called scriptkeys dot txt that sits next to the game, which you can open and edit in any text editor. You put one command per line, exactly as you would type it into a chat box, so a line that starts with a slash is a command, such as slash lb, and a line without one is a global chat message. Line one is the first key, line two the second, and so on.
+
+To run a script key, hold Alt and press a key along the number row, the grave key for the first, then 1 through 0, the minus, the equals, and finally backspace for the fourteenth. Holding Alt and Shift together with those same keys runs a second set of fourteen, so there are twenty eight in all. If the line for a key is empty, or the file has no such line, you are told, for example, scriptkey 15 not found.
+
+A line can also ask you for parts of the command as you run it. Anywhere in the line, a percent sign followed by some words is a prompt, and when you press the key the game asks you that question in a box and puts your answer into the command in that spot, asking each prompt in turn from left to right. For example, a line reading slash pm followed by a prompt for who to message and a prompt for what to say asks you both, then sends the private message. Cancelling any prompt, or leaving it blank, cancels the whole command.
+
+The file is read fresh every time you press a script key, so you can edit it while the game is running and your changes work on the very next press, with no need to restart. To send to a channel other than global from a script key, begin the line with one of the channel commands, slash gl for global, slash lc for local, slash st for staff chat, or slash tm for your team, for example slash lc followed by a prompt for a local message.
+
 Rooms.
 
 From the lobby, press enter to open the lobby panel and create or join a public or private room. You can host up to one public and one private room of your own. You hear a sound whenever you join or leave a room, and anyone already in the room hears you come and go too, much like players hear you connect to and leave the server. Joining and leaving rooms share a brief half-second cooldown, so you cannot bounce in and out of a room super fast; it is silent, so a join or leave that comes too soon after your last one is simply ignored until the moment passes.
