@@ -30,6 +30,11 @@ ASSETS_CLIENT = os.path.join(REPO_DIR, "cf", "client")
 ASSETS_SERVER = os.path.join(REPO_DIR, "cf", "server")
 CLIENT_ASSETS = ["lib", "sounds", "docks"]
 SERVER_ASSETS = ["data", "docks"]
+# Loose files copied into the bundle ROOT (not a subfolder). scriptkeys.txt must stay a real, editable file next to
+# the exe -- it is read fresh on every script-key press so hand-edits go live -- and is deliberately kept OUT of the
+# Enigma box (the .evb only embeds sounds/docks, never root files), so it ships loose and stays editable by players.
+CLIENT_LOOSE = ["scriptkeys.txt"]
+SERVER_LOOSE = []
 CLIENT_BUNDLE = os.path.join(SRC_CLIENT, CLIENT_OUT)
 SERVER_BUNDLE = os.path.join(SRC_SERVER, SERVER_OUT)
 
@@ -112,9 +117,10 @@ def sync_version_files(version):
             f.write(line)
     print(f"Synced version {version} into client and server version.nvgt.\n")
 
-def compile_side(label, nvgt_file, src_dir, bundle, assets_dir, asset_folders, dest, out_name):
+def compile_side(label, nvgt_file, src_dir, bundle, assets_dir, asset_folders, dest, out_name, loose_files=None):
     # Compile one side from src/<side> (so the bundle lands there), copy its assets in, and move it into
-    # the release folder. Mirrors the old cfcm.py / cfsm.py, now unified here.
+    # the release folder. Mirrors the old cfcm.py / cfsm.py, now unified here. loose_files are individual files
+    # copied into the bundle ROOT (next to the exe) rather than into a subfolder -- e.g. scriptkeys.txt.
     print(f"Compiling {label}...")
     if not run_cmd([NVGT, "-c", "-Q", nvgt_file], cwd=src_dir):
         print(f"ERROR: {label} compilation failed.")
@@ -126,6 +132,12 @@ def compile_side(label, nvgt_file, src_dir, bundle, assets_dir, asset_folders, d
             print(f"ERROR: missing asset folder: {asset_src}")
             return False
         shutil.copytree(asset_src, os.path.join(bundle, folder), dirs_exist_ok=True)
+    for name in (loose_files or []):
+        file_src = os.path.join(assets_dir, name)
+        if not os.path.isfile(file_src):
+            print(f"ERROR: missing loose file: {file_src}")
+            return False
+        shutil.copy2(file_src, os.path.join(bundle, name))
     os.makedirs(dest, exist_ok=True)
     target = os.path.join(dest, out_name)
     if os.path.exists(target):
@@ -542,9 +554,9 @@ def run_release(skip_compile, skip_box, skip_package, skip_release, skip_empty_r
     if do_compile:
         # Keep both sides' version.nvgt in lockstep with version.txt before compiling.
         sync_version_files(version)
-        if not compile_side("client", CLIENT_FILE, SRC_CLIENT, CLIENT_BUNDLE, ASSETS_CLIENT, CLIENT_ASSETS, CLIENT_DEST, CLIENT_OUT):
+        if not compile_side("client", CLIENT_FILE, SRC_CLIENT, CLIENT_BUNDLE, ASSETS_CLIENT, CLIENT_ASSETS, CLIENT_DEST, CLIENT_OUT, CLIENT_LOOSE):
             return
-        if not compile_side("server", SERVER_FILE, SRC_SERVER, SERVER_BUNDLE, ASSETS_SERVER, SERVER_ASSETS, SERVER_DEST, SERVER_OUT):
+        if not compile_side("server", SERVER_FILE, SRC_SERVER, SERVER_BUNDLE, ASSETS_SERVER, SERVER_ASSETS, SERVER_DEST, SERVER_OUT, SERVER_LOOSE):
             return
         # Scrub private/host-specific data from the shipped server bundle (accounts, owner list, reports) so the
         # itch.io archive is a clean, safe slate. Bundle copy only; the source under cf/server is untouched.
