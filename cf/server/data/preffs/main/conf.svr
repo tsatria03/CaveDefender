@@ -5,24 +5,20 @@
 # All settings take effect on restart.
 
 # Network: the UDP port to listen on, and the most players allowed online at once.
-
 port=25562
 userlimit=200
 
 # Owner accounts: up to three comma-separated aliases for the single owner, each forced to developer rank and
 # matched without case sensitivity; a blank value means no owner. Maintained automatically on owner rename or transfer.
-
 owners=DevilGuardian,tsatria03,tony
 
 # Rules agreement: raise rulesver to make everyone re-read and re-agree to the rules once. ruleswitch is the master
 # gate -- 1 means players must agree before they can play, 0 turns the gate off so anyone can play unagreed.
-
 rulesver=5
 ruleswitch=1
 
 # Global-chat anti-spam auto-mute: spamguard is the master switch (1 on, 0 off). A non-staff player who sends
 # spamcount messages within spamtime milliseconds is auto-muted in global chat for spamdir seconds (0 is indefinite).
-
 spamguard=1
 spamcount=5
 spamtime=3000
@@ -30,5 +26,4 @@ spamdir=600
 
 # Auto-AFK: seconds a player can go without pressing any key before they're automatically marked away, the same
 # as /afk but with no countdown. 0 turns it off so only manual /afk works; any positive value is floored at 30.
-
 autoafk=300
