@@ -1,10 +1,14 @@
-/pm %Who do you want to message? %What do you want to say?
-/r %What's your reply?
-/me %What are you doing?
+/gl /me %what do you want to emote in global chat?
+/lc /me %what do you want to emote in local chat?
+/st /me %what do you want to emote in staff chat?
+/tm /me %what do you want to emote in team chat?
+/pm %who do you want to message? %what do you want to say?
+/r %what do you want to reply?
+/where %who do you want to locate?
+/report %who are you reporting? %what happened?
+/playsound
 /lb
-Good luck, everyone!
-/gl %What do you want to say in global?
-/lc %What do you want to say in local?
-/lc /me %What are you doing, in local?
-/st %What do you want to say in staff chat?
-/tm %What do you want to say to your team?
+/invtime
+/afk
+/feedback %what is your feedback or bug report?
+/nick %what nickname do you want?
