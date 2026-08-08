@@ -12,6 +12,10 @@ Treat everyone with kindness. Harassment, hate speech, racism, threats, insults,
 
 Don't flood chat with repeated, meaningless, or gibberish messages, and don't try to send screen reader crash strings; the game blocks the ones it knows, but attempting it is still a violation. Global chat carries an automatic guard that may mute your global messages for a time if you send them too quickly, but that safeguard is not permission to spam: flooding any channel is a violation whether the guard catches it or not. Spam also covers disruptive actions, such as rapidly creating and deleting rooms, hopping in and out of a room over and over to flood it with join and leave notices, or joining and leaving a game as a spectator to interfere with a round in progress. The quick rejoin keys make returning to your last room easy, but that convenience is not permission to bounce in and out of it repeatedly. Joining and leaving rooms also carries an automatic cooldown that quietly ignores a move made too soon after your last, but like the chat guard, that safeguard is not permission to spam.
 
+Your custom online and offline sounds and messages fall under this too. Don't abuse them, whether by rapidly flashing your custom sounds on and off, which floods everyone with the change notice, by reconnecting over and over to spam your connect cue, or by choosing a sound or message meant only to annoy. Staff can silence a player's online and offline sounds, turning their connect and disconnect back to the standard cue and wording for everyone, if they are misused.
+
+The playsound command is the same story. It plays a sound to everyone on the server at once, so don't spam it, fire sounds off one after another to drown out the game, or use it to disrupt a room or a game in progress. Enjoy it in moderation, and be considerate of everyone who has to hear it.
+
 3. Keep content appropriate, and use the right channel.
 
 Adult or NSFW language is allowed only on the opt-in Unfiltered channel, never in local chat or the other channels, where it reaches people who did not choose to read it. Do not post disturbing, graphic, or violent material anywhere.
