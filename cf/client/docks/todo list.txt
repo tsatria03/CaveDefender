@@ -2,17 +2,17 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
-**Finished. Add script keys, Alt and Alt plus Shift number row shortcuts that run lines of a loose scriptkeys file as chat commands with fill-in prompts, read fresh on each press.
+**Finished. Add script keys, Alt and Alt plus Shift number row shortcuts that run lines of an editable scriptkeys file as chat commands, with fill-in prompts.
 **Finished. Add the slash gl, slash lc, slash st, and slash tm channel commands that send the rest of a line to a chat channel from any box.
-**Finished. Add a slash playsound command that plays a server-hosted sound to everyone, with a menu picker, a shared player folder for all and a staff folder for staff.
+**Finished. Add a slash playsound command that plays a server-hosted sound to everyone, with a menu picker and separate player and staff sound folders.
 **Finished. Let staff silence a player's online and offline sounds through the mute command.
 **Finished. Let players personally mute another player's online and offline sounds from their information card or a command.
 **Finished. Add the ability for players to set their own online and offline messages, with commands and a player panel option.
 **Finished. Add the ability for players to have custom online and offline sounds.
-**Finished. Refacter the player versus player map so both sides share an equal, full-size arena instead of the lopsided ring split, reusing the rest of the mode.
+**Finished. Refactor the player versus player map so both sides share an equal, full-size arena instead of the lopsided ring split, reusing the rest of the mode.
 **Finished. Add a learn sounds option for the EVP and PVE game modes so players can have an idea on how the modes work when being played.
 
-**Finished. Add options for setting the wall's health and reinforce limmits in the free play mode.
+**Finished. Add options for setting the wall's health and reinforce limits in the free play mode.
 **Finished. Fix the join and leave sounds for rooms not always playing.
 **Finished. Fix being able to invite people that have already been invited to places.
 **Finished. Fix not being able to do anything after a host leaves from a game.
