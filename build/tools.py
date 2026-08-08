@@ -29,7 +29,9 @@ SRC_SERVER    = os.path.join(REPO_DIR, "src", "server")
 ASSETS_CLIENT = os.path.join(REPO_DIR, "cf", "client")
 ASSETS_SERVER = os.path.join(REPO_DIR, "cf", "server")
 CLIENT_ASSETS = ["lib", "sounds", "docks"]
-SERVER_ASSETS = ["data", "docks"]
+# The server's sounds/ folder holds the soundboard clips (/playsound). It ships LOOSE like data/ -- NOT in
+# SERVER_EMBEDDED_FOLDERS -- so the host can add and remove clips, and the server can read them off disk to stream.
+SERVER_ASSETS = ["data", "docks", "sounds"]
 # Loose files copied into the bundle ROOT (not a subfolder). scriptkeys.txt must stay a real, editable file next to
 # the exe -- it is read fresh on every script-key press so hand-edits go live -- and is deliberately kept OUT of the
 # Enigma box (the .evb only embeds sounds/docks, never root files), so it ships loose and stays editable by players.
