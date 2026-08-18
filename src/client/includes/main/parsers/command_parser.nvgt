@@ -110,9 +110,9 @@ void comparse(string text, string channel = "global")
 		string which = (base == "/offline" or base == "/off") ? "offline" : "online";
 		send(0, "playonoff "+which, 0, true);
 	}
-	else if(base == "/onoffs")
+	else if(base == "/onoff")
 	{
-		if(parsed.length() != 1) { syntax_error("/onoffs"); return; }
+		if(parsed.length() != 1) { syntax_error("/onoff"); return; }
 		onoff_sounds_form(); // opens the online and offline sounds form, same as F7 or the player panel option
 	}
 	else if(base == "/playsound" or base == "/pls")
