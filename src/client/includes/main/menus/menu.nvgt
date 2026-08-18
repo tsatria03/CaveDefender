@@ -328,7 +328,7 @@ void learnsoundsmenu()
 	ls_addv(surfaces, "Concrete step: used when you walk on concrete", "objects/platforms/concrete/", "step", 5);
 	ls_addv(surfaces, "Gravel step: used when you walk on gravel", "objects/platforms/gravel/", "step", 5);
 	ls_addv(surfaces, "Woodpile step: used when you walk on a woodpile", "objects/platforms/woodpile/", "step", 5);
-	// Interface -- the ten curated game cues; mode clause for the round cues, context clause for the rest.
+	// Interface -- the eleven curated game cues; mode clause for the round cues, context clause for the rest.
 	dictionary interfacecat;
 	ls_add(interfacecat, "Build phase: used in PVE and EVP", "ui/misc/buildprep.ogg");
 	ls_add(interfacecat, "Wave begin: used in PVE and EVP", "ui/misc/wavestart.ogg");
@@ -338,6 +338,7 @@ void learnsoundsmenu()
 	ls_add(interfacecat, "Player turn: used when you turn to face a direction in place", "ui/misc/turn.ogg");
 	ls_add(interfacecat, "Player beacon: used to locate other players around you", "ui/misc/beacon.ogg");
 	ls_add(interfacecat, "Join game: used when you join a game", "ui/misc/joingame.ogg");
+	ls_add(interfacecat, "Invitation expired: used when a room or game invitation runs out before you answer it", "ui/misc/invtime.ogg");
 	ls_add(interfacecat, "Leaderboard climb: used when you move up a leaderboard", "ui/misc/lbrank.ogg");
 	ls_add(interfacecat, "Leaderboard update: used when another player moves up a leaderboard", "ui/misc/lbupdate.ogg");
 	// Assemble; the picker sorts the category names and the helper sorts each list, so insertion order is moot.
