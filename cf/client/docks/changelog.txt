@@ -1,4 +1,5 @@
 New in 5.1.
+The developer editdata and viewdata browsers no longer open a player's onoffs folder, where their connect and disconnect sounds live. Those are audio files that editing as text would corrupt, so only a player's info folder, holding their text fields, can be browsed now.
 The preview buttons in the online and offline sounds form now play a sound you have just picked, before you save it, so you can hear a new choice right away. When you have not picked a new one, they still play your saved sound as before.
 Fixed your custom online and offline sounds not updating after you replaced one: uploading a new sound would seem to do nothing and the old one kept playing. A replacement now takes effect right away, both when you preview it and when it plays for real on connect and disconnect.
 Your pronouns can now fill themselves into your own emotes and your online and offline messages. Put a short code like percent d in the text, for example slash me waves percent d hand, and everyone reads it with the right word for your pronouns, her hand, his hand, or their hand. The pronouns section of this readme lists every code.
