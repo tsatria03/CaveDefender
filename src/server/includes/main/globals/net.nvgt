@@ -1081,6 +1081,7 @@ int rid = players[pindex].room_id;
 int gi = get_game_index(rid);
 if(gi < 0) return;
 if(games[gi].mode == "evp") return; // EVP: the builder bots gather the wood, not the players
+if(games[gi].mode == "pvp" and players[pindex].team != "defend") return; // PVP: only the defending side gathers wood; attackers use ammo (mirrors gather_ammo's attacker gate). Without this an attacker outside could grab wood, denying it to defenders and firing a pickup cue that plays clear to other outside players.
 if(!game_active_play(gi)) return; // only while the game is playable (build/wave, or free play's active arena)
 int px = players[pindex].x;
 int py = players[pindex].y;

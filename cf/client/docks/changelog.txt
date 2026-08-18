@@ -1,4 +1,5 @@
 New in 5.1.
+Fixed attackers in a player versus player game being able to pick up the defenders' wood from outside the cave, which took it from the defenders and made its pickup sound ring out clearly to everyone outside. Only the defending side gathers wood now, the way it was always meant to work.
 Your custom online and offline messages can now be a little longer, up to ninety six characters instead of sixty four, giving you more room to say what you want.
 New in 5.0.
 You can now set up script keys, your own keyboard shortcuts that run a chat command or send a message from anywhere with a single keystroke. You write them in the scriptkeys dot s r k file, in the data folder beside the game, one command per line, and reach them by holding Alt, or Alt and Shift, with a number row key, twenty eight in all. A command can include prompts, so a single key can ask who to message and what to say and then send it, and the readme explains the file in full.
