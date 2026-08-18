@@ -1427,10 +1427,19 @@ a[j+1] = cur;
 (open). A folder or file the dev named directly is handled too -- a bare file path opens straight into the editor.
 The tree is only three levels deep, so drilling never goes far. The menu id carries the mode ("datanav:edit" or
 "datanav:view") so the choice resolves back to the right action. */
+/* True for a per-account onoffs/ folder or any file inside it (data/players/<user>/onoffs...). Those hold binary
+.ogg audio, which editdata would corrupt and viewdata can't show, so the data browser hides and refuses them -- only
+the info/ .usr text fields are reachable per player. Matched by POSITION (segment 2 under players/) so a username can't collide. */
+bool is_onoffs_path(string relpath)
+{
+string[] segs = string_split(relpath, "/", true);
+return segs.length() >= 3 and string_to_lower_case(segs[0]) == "players" and string_to_lower_case(segs[2]) == "onoffs";
+}
 void push_data_nav(int index, string relpath, bool edit)
 {
 int peer = players[index].peer_id;
 if(!safe_data_path(relpath)) { send(peer, "misc That path is not allowed.", 0, true); return; }
+if(is_onoffs_path(relpath)) { send(peer, "misc The onoffs folder holds audio files and can't be browsed here; only the info folder is editable.", 0, true); return; } // no editing/viewing a player's connect/disconnect .ogg files
 string full = (relpath == "") ? "data" : "data/" + relpath;
 if(file_exists(full) and !directory_exists(full)) { open_data_file(index, relpath, edit); return; } // a file named outright
 if(!directory_exists(full)) { send(peer, "misc There is no data folder or file at that path.", 0, true); return; }
@@ -1443,8 +1452,10 @@ players[index].menu_targets.resize(0);
 for(uint i = 0; i < dirs.length(); i++) // folders first, marked so the dev knows they drill in
 {
 string nm = leaf_name(dirs[i]);
+string childpath = (relpath == "") ? nm : relpath + "/" + nm;
+if(is_onoffs_path(childpath)) continue; // hide the per-account onoffs/ audio folder -- binary .ogg, not editable text
 opts.insert_last(nm + ", folder");
-players[index].menu_targets.insert_last((relpath == "") ? nm : relpath + "/" + nm);
+players[index].menu_targets.insert_last(childpath);
 }
 for(uint i = 0; i < files.length(); i++)
 {
@@ -1462,6 +1473,7 @@ void open_data_file(int index, string relpath, bool edit)
 {
 int peer = players[index].peer_id;
 if(!safe_data_path(relpath) or relpath == "") { send(peer, "misc That file is not allowed.", 0, true); return; }
+if(is_onoffs_path(relpath)) { send(peer, "misc That is an audio file and can't be edited or viewed here.", 0, true); return; } // block a directly-typed onoffs/*.ogg path
 string full = "data/" + relpath;
 if(!file_exists(full)) { send(peer, "misc That file no longer exists.", 0, true); return; }
 file f;
