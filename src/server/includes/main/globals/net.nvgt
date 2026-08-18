@@ -1928,7 +1928,7 @@ else if(parsed[0]=="staffme" and index>-1 and is_staff(players[index].rank) and 
 {
 string action=string_join(parsed, " ", 1, parsed.length());
 if(filter_crash(action)) send(event.peer_id, "misc Your message contains forbidden words, and therefore will not be sent.", 0,true); // crash-string protection applies to staff chat too
-else relay_to_staff("staffmsg "+afk_prefix(index)+display_name(index)+" "+action);
+else relay_to_staff("staffmsg "+afk_prefix(index)+display_name(index)+" "+substitute_pronoun_vars(action, players[index].pronoun, display_name(index)));
 }
 else if(parsed[0]=="localchat" and index>-1 and parsed.length()>1)
 {
@@ -1942,7 +1942,7 @@ else if(parsed[0]=="localme" and index>-1 and parsed.length()>1)
 string action=string_join(parsed, " ", 1, parsed.length());
 if(is_muted_now(index, "local")) send(event.peer_id, muted_chat_message(index, "local"), 0,true);
 else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words, and therefore will not be sent.", 0,true); // local chat is always filtered (crash strings + word filter), regardless of language channel
-else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+" "+action, "", index); // local chat reaches everyone in the space, regardless of language channel (minus anyone ignoring the sender)
+else relay_to_local(players[index].room_id, "localmsg "+afk_prefix(index)+display_name_flagged(index)+" "+substitute_pronoun_vars(action, players[index].pronoun, display_name(index)), "", index); // local chat reaches everyone in the space, regardless of language channel (minus anyone ignoring the sender)
 }
 else if(parsed[0]=="teamchat" and index>-1 and parsed.length()>1)
 {
@@ -1958,7 +1958,7 @@ string action=string_join(parsed, " ", 1, parsed.length());
 if(get_game_index(players[index].room_id) < 0 or games[get_game_index(players[index].room_id)].mode != "pvp") send(event.peer_id, "Team chat is only available in player versus player games.", 0,true);
 else if(is_muted_now(index, "team")) send(event.peer_id, muted_chat_message(index, "team"), 0,true);
 else if(filter_crash(action) or filter_chat(action)) send(event.peer_id, "misc Your message contains forbidden words, and therefore will not be sent.", 0,true);
-else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(index)+" "+action);
+else relay_to_team(index, "teammsg "+afk_prefix(index)+display_name_flagged(index)+" "+substitute_pronoun_vars(action, players[index].pronoun, display_name(index)));
 }
 else if(parsed[0]=="help" and index>-1 and parsed.length()>1)
 {
@@ -3387,7 +3387,7 @@ else
                     else
                     {
                         string action = string_join(parsed, " ", 1, parsed.length());
-                        relay_global(index, afk_prefix(index) + display_name_flagged(index) + " " + action); // global /me: same-language only
+                        relay_global(index, afk_prefix(index) + display_name_flagged(index) + " " + substitute_pronoun_vars(action, players[index].pronoun, display_name(index))); // global /me: same-language only
                     }
                 }
                 else if(parsed[0] == "/flag" && rank_level(players[index].rank) >= 1)
