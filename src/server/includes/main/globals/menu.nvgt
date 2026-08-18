@@ -982,6 +982,39 @@ if(form == "reflexive") return f[4];
 if(form == "possessive" or form == "possessivepronoun") return displayname + "'s";
 return displayname;
 }
+/* Replace pronoun-substitution tokens in `text` with words from `pkey`'s pronoun set (via pronoun_word), using
+`dispname` for the %n name token and for the name-only fallback. Tokens -- lowercase gives the word, uppercase gives
+it with its first letter capitalized: %s subject, %o object, %d possessive determiner, %p possessive pronoun, %r
+reflexive, %n name. %% is a literal percent sign; any other %-sequence (e.g. %x) is left exactly as typed. Runs
+SERVER-side at broadcast time, so "/me waves %d hand" reads right for each player's own pronouns. Shared by the /me
+emotes and the custom online/offline messages. Keep the token set in step with the client script-key resolver
+(resolve_scriptkey), which passes these same tokens through untouched. */
+string substitute_pronoun_vars(string text, string pkey, string dispname)
+{
+string result = "";
+uint i = 0;
+uint n = text.length();
+while(i < n)
+{
+string c = text.substr(i, 1);
+if(c != "%" or i+1 >= n) { result += c; i++; continue; } // a lone or trailing % is left literal
+string t = text.substr(i+1, 1);
+if(t == "%") { result += "%"; i += 2; continue; } // %% -> one literal %
+string low = string_to_lower_case(t);
+string word;
+if(low == "s") word = pronoun_word(pkey, "subject", dispname);
+else if(low == "o") word = pronoun_word(pkey, "object", dispname);
+else if(low == "d") word = pronoun_word(pkey, "possessive", dispname);
+else if(low == "p") word = pronoun_word(pkey, "possessivepronoun", dispname);
+else if(low == "r") word = pronoun_word(pkey, "reflexive", dispname);
+else if(low == "n") word = dispname;
+else { result += c; i++; continue; } // unknown token: leave the % literal, copy the letter next pass
+if(t != low and word.length() > 0) word = string_to_upper_case(word.substr(0, 1)) + word.substr(1); // uppercase token: capitalize the first letter
+result += word;
+i += 2;
+}
+return result;
+}
 /* The pronoun key new accounts get, and that a missing or invalid one falls back to at spawn: the configured
 option whose SUBJECT form is "they" (the neutral singular they) -- found by its grammar, so it survives the
 host renaming the key (e.g. "Singular" -> "Singular/they"). If there's no they/them option it uses the first
