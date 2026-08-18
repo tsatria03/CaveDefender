@@ -1,4 +1,5 @@
 New in 5.1.
+You can now choose how many players a game holds when you start an open one, rather than every game stopping at four. Pick two, four, eight, or an unlimited number of players for a co-op game, or two or four for player versus player, and the same limit sets how many people can watch. A solo game stays a single player but can still be watched by anyone.
 Free play now lets you set how often your continuously spawning items refill, anywhere from one second to sixty, from a new option in the cavern controls. Every continuous supply replenishes at the pace you pick, so items can trickle back slowly or come flooding back almost at once.
 Fixed attackers in a player versus player game being able to pick up the defenders' wood from outside the cave, which took it from the defenders and made its pickup sound ring out clearly to everyone outside. Only the defending side gathers wood now, the way it was always meant to work.
 Your custom online and offline messages can now be a little longer, up to ninety six characters instead of sixty four, giving you more room to say what you want.
