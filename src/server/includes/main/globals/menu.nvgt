@@ -727,8 +727,23 @@ void push_start_mode(int index)
 {
 string[] opts;
 opts.insert_last("Solo, single player");
-opts.insert_last("Open, up to four players");
+opts.insert_last("Open, multiple players");
 send_menu(players[index].peer_id, "startmode", "Choose who can play", opts);
+}
+/* Start-game cascade (OPEN games only): pick the player cap -- how many may JOIN and WATCH. PVE/EVP/free offer
+2/4/8/Unlimited (mapped to 2/4/8/0); PVP offers 2/4 only (it stays 1v1/2v2). Solo skips this step (single player).
+The choice rides in pending_maxplayers to the final startgame command. */
+void push_start_maxplayers(int index)
+{
+string[] opts;
+opts.insert_last("2 players");
+opts.insert_last("4 players");
+if(players[index].pending_mode != "pvp") // PVE/EVP/free may go bigger or unlimited; PVP stays 2 or 4
+{
+opts.insert_last("8 players");
+opts.insert_last("Unlimited players");
+}
+send_menu(players[index].peer_id, "startmaxplayers", "Choose how many players can join and watch", opts);
 }
 void push_start_size(int index)
 {
@@ -1868,13 +1883,21 @@ else if(id == "startgamemode")
 {
 if(choice < 0) return; // cancelled the mode picker
 players[player_index].pending_mode = (choice == 0) ? "evp" : (choice == 1) ? "pve" : (choice == 2) ? "pvp" : "free"; // 0 EVP, 1 PVE, 2 PVP, 3 Free play
-if(players[player_index].pending_mode == "pvp") { players[player_index].menu_pending = "open"; push_start_size(player_index); } // PVP is always multiplayer (1v1 or 2v2) -- skip the solo/open step and force Open (dead while PVP is hidden, kept intact for the restore)
+if(players[player_index].pending_mode == "pvp") { players[player_index].menu_pending = "open"; push_start_maxplayers(player_index); } // PVP is always multiplayer (1v1 or 2v2) -- skip the solo/open step, force Open, then ask its 2/4 player cap
 else push_start_mode(player_index); // on to who-can-play (every mode but PVP picks solo or open here, free play included)
 }
 else if(id == "startmode")
 {
 if(choice < 0) return;
 players[player_index].menu_pending = (choice == 0) ? "solo" : "open";
+if(choice == 0) { players[player_index].pending_maxplayers = 1; push_start_size(player_index); } // solo: a single player, skip the cap step
+else push_start_maxplayers(player_index); // open: pick the join+watch cap next
+}
+else if(id == "startmaxplayers")
+{
+if(choice < 0) return; // cancelled the player-cap picker
+if(players[player_index].pending_mode == "pvp") players[player_index].pending_maxplayers = (choice == 0) ? 2 : 4; // PVP: 2 or 4 only
+else players[player_index].pending_maxplayers = (choice == 0) ? 2 : (choice == 1) ? 4 : (choice == 2) ? 8 : 0; // PVE/EVP/free: 2/4/8, or 0 = unlimited
 push_start_size(player_index);
 }
 else if(id == "startsize")
@@ -1889,7 +1912,7 @@ size = pvp_sizes[choice];
 else size = (choice == 0) ? 25 : (choice == 1) ? 50 : (choice == 2) ? 75 : 100;
 players[player_index].pending_size = size; // carried across the reinforce step
 if(players[player_index].pending_mode == "evp" or players[player_index].pending_mode == "free")
-send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " 0 0", 0, true); // EVP and Free play have no reinforce or pile-up step; both unused, pass 0
+send(peer, "runcommand startgame " + size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " 0 0 " + players[player_index].pending_maxplayers, 0, true); // EVP and Free play have no reinforce or pile-up step; both unused, pass 0. Last arg = player cap.
 else
 push_start_reinforce(player_index); // PVE/PVP: ask the wall reinforce limit next
 }
@@ -1901,7 +1924,7 @@ players[player_index].pending_reinforce = rein; // carried across the PVE pile-u
 if(players[player_index].pending_mode == "pve")
 push_start_pileup(player_index); // PVE only: ask the bot pile-up question next
 else
-send(peer, "runcommand startgame " + players[player_index].pending_size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " " + rein + " 0", 0, true); // PVP: no attacking bots to pile up, pass 0
+send(peer, "runcommand startgame " + players[player_index].pending_size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " " + rein + " 0 " + players[player_index].pending_maxplayers, 0, true); // PVP: no attacking bots to pile up, pass 0. Last arg = player cap.
 }
 else if(id == "freereinforce")
 {
@@ -1916,7 +1939,7 @@ else if(id == "startpileup")
 {
 if(choice < 0) return; // cancelled the pile-up picker
 int pileup = (choice == 0) ? 1 : 0; // Yes (first) = pile up, No = leave
-send(peer, "runcommand startgame " + players[player_index].pending_size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " " + players[player_index].pending_reinforce + " " + pileup, 0, true);
+send(peer, "runcommand startgame " + players[player_index].pending_size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " " + players[player_index].pending_reinforce + " " + pileup + " " + players[player_index].pending_maxplayers, 0, true); // last arg = player cap
 }
 else if(id.substr(0, 8) == "confirm:")
 {

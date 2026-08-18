@@ -2752,7 +2752,11 @@ else if(size!=25 and size!=50 and size!=75 and size!=100) size=50;
 double rcap = (parsed.length()>4) ? string_to_number(parsed[4]) : 0; // wall reinforce cap multiplier (2/4/8, or 0 = no limit); PVE/PVP only, EVP sends 0
 if(rcap < 0) rcap = 0;
 bool pileup = (parsed.length()>5 and parsed[5]=="1"); // PVE only: a fallen wall's bots pile onto the standing walls (Yes); EVP/PVP send 0
-int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo, mode, rcap, pileup);
+int maxp = (parsed.length()>6) ? int(string_to_number(parsed[6])) : 4; // player JOIN + WATCH cap (0 = unlimited); validated per mode just below
+if(solo) maxp = 1; // solo is a single player regardless of what was sent
+else if(mode=="pvp") { if(maxp != 2 and maxp != 4) maxp = 4; } // PVP: only 2 (1v1) or 4 (2v2)
+else if(maxp != 0 and maxp != 2 and maxp != 4 and maxp != 8) maxp = 4; // PVE/EVP/free: 2/4/8, or 0 = unlimited; anything else falls back to 4
+int gid=create_game(players[index].room_id, players[index].name, event.peer_id, size, solo, mode, rcap, pileup, maxp);
 players[index].pregame_room = players[index].room_id; // the host started from their room; leaving the game returns them there
 send(event.peer_id, "gamejoined "+gid+" "+size+" "+(solo?"solo":"open")+" "+mode+" "+players[index].name+"\n"+display_name_flagged(index), 0,true);
 set_room_scope(index, gid);
