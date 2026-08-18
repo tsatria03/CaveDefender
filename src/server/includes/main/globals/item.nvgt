@@ -248,7 +248,9 @@ if(category == "ammo") return ammo_cap(s);
 if(category == "wood") return wood_cap(s);
 return wood_cap(s) + ammo_cap(s); // "both": the wood and ammo ceilings combined
 }
-const int cavern_item_maintain_ms = 1000; // FREE PLAY (item 5): how often a continuous-spawn rule tops the ground back up to its target
+// FREE PLAY (item 6b, 5.1): bounds for the adjustable continuous-spawn interval, in SECONDS. The interval itself lives per-game as game.item_maintain_ms (default 1000ms = 1s, the original fixed cadence).
+const int cavern_spawn_time_min_s = 1;
+const int cavern_spawn_time_max_s = 60;
 /* FREE PLAY (item 5): a continuous-spawn rule -- keep `target` items of this category/kind on the cavern floor,
 replenishing as they're picked up (maintain_cavern_items). category "wood"/"ammo"/"both"; kind a specific type or "all". */
 class cavern_item_rule
@@ -269,13 +271,13 @@ for(uint i=0; i<items.length(); i++)
 if(@items[i]!=null and items[i].room_id==room_id and items[i].type==kind) n++;
 return n;
 }
-/* FREE PLAY (item 5): every cavern_item_maintain_ms, top each continuous-spawn rule's category/kind back up to its
-target on the ground (bounded by the per-category ground cap inside add_free_items). Called from gametick for a free
-arena (after the paused check, so a paused arena doesn't refill); a no-op when there are no rules. */
+/* FREE PLAY (item 5): every game.item_maintain_ms (item 6b: host/guest-adjustable, default 1s), top each continuous-spawn
+rule's category/kind back up to its target on the ground (bounded by the per-category ground cap inside add_free_items).
+Called from gametick for a free arena (after the paused check, so a paused arena doesn't refill); a no-op when there are no rules. */
 void maintain_cavern_items(int gi)
 {
 if(games[gi].mode != "free" or games[gi].item_rules.length() == 0) return;
-if(games[gi].item_maintain_timer.elapsed < cavern_item_maintain_ms) return;
+if(games[gi].item_maintain_timer.elapsed < games[gi].item_maintain_ms) return;
 games[gi].item_maintain_timer.restart();
 for(uint r=0; r<games[gi].item_rules.length(); r++)
 {

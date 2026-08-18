@@ -2541,6 +2541,25 @@ push_set_wall_health_wall(index);
 }
 }
 }
+else if(parsed[0]=="spawntimesecs" and index>-1 and parsed.length()>1)
+{
+/* Free play (item 6b, 5.1): the typed continuous-spawn interval comes back here (ask_input prefix "spawntimesecs").
+Re-validate the arena; REJECT anything outside cavern_spawn_time_min_s..max_s seconds with a message (rather than
+silently clamping), else store it as ms on the game -- maintain_cavern_items reads it live, so the new pace takes
+effect on the next top-up. */
+int gi=get_game_index(players[index].room_id);
+if(!can_use_cavern(gi, index)) { } // any live free-arena member (host or guest), not a spectator
+else
+{
+int secs = int(string_to_number(parsed[1]));
+if(secs < cavern_spawn_time_min_s or secs > cavern_spawn_time_max_s) send(event.peer_id, "misc Enter a spawn time between " + cavern_spawn_time_min_s + " and " + cavern_spawn_time_max_s + " seconds.", 0, true);
+else
+{
+games[gi].item_maintain_ms = secs * 1000;
+send(event.peer_id, "misc Continuously spawning items will now refill every " + secs + (secs == 1 ? " second." : " seconds."), 0, true);
+}
+}
+}
 else if(parsed[0]=="cavernbuildercount" and index>-1 and parsed.length()>1)
 {
 /* Free play, Add cavern builders: the typed count (ask_input prefix "cavernbuildercount"). Re-validate

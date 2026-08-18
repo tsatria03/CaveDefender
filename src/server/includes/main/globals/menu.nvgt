@@ -472,6 +472,8 @@ if(clitems_tally != "") clitems_label += ": " + clitems_tally + ".";
 opts.insert_last(clitems_label); players[index].menu_actions.insert_last("clearitems");
 // Modify wall health: a test tool that directly sets a wall's current strength (host AND guests). After the clears; undone by Reset cavern map's fresh walls.
 opts.insert_last("Modify wall health"); players[index].menu_actions.insert_last("setwallhealth");
+// Set continuous item spawn time: how often "spawn continuously" items refill the floor (host AND guests); applies live to every rule. The current value is prefilled in the input box when chosen, so the label stays static.
+opts.insert_last("Set continuous item spawn time"); players[index].menu_actions.insert_last("setspawntime");
 // The full reset (and Enable wall damage, from the arena menu) stays HOST-ONLY.
 if(ishost) { opts.insert_last("Reset cavern map"); players[index].menu_actions.insert_last("clearmap"); }
 send_menu(peer, "cavern", "Cavern controls. The arena is active.", opts);
@@ -495,6 +497,7 @@ else ask_input(peer, "How many builder bots?", "cavernbuildercount", false); // 
 }
 else if(act == "additems") push_cavern_item_type(player_index); // What item? -> kind -> How many?
 else if(act == "setwallhealth") ask_input(peer, "Set a wall to what percentage of its full strength? Enter 1 or higher.", "setwallhealthpct", false); // free play, host + guests: a direct wall-strength set (no upper cap); the wall is chosen next
+else if(act == "setspawntime") ask_input(peer, "How many seconds between item respawns? Enter 1 to 60.", "spawntimesecs", false, false, "" + (games[gi].item_maintain_ms / 1000)); // free play, host + guests: paces continuous-spawn refills; box prefilled with the current value in seconds
 else if(act == "clearbots")
 {
 if(!ishost)

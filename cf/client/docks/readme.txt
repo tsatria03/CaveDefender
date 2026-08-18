@@ -231,6 +231,8 @@ The guest's how many box starts filled in with the most they can clear, their ca
 
 Modify wall health, which anyone in the cavern can use, sets a chosen wall, or all four at once, straight to a strength you type, one percent of its full strength or higher, as if you had piled on that much wood in an instant. It ignores the reinforce limit, so you can push a wall well past what wood alone would allow, which makes it handy for testing your weapons against a much tougher wall; reset cavern map returns the walls to normal along with everything else.
 
+Set continuous item spawn time, also open to anyone in the cavern, changes how quickly your continuously spawning items refill. You type how many seconds to wait between top ups, from one to sixty, and it takes effect at once for every continuous supply you have running, so items can trickle back slowly or flood the floor almost instantly. It starts at one second, and the box opens with the current setting already filled in.
+
 Any wall you or your bots smash all the way down does not stay broken; it builds itself back up about ten seconds later at a fresh random strength, so there is always something to break. Everyone in the cavern is told the moment a wall goes down and again when it comes back up.
 
 Because both toolkits are live, all the attacker keys and all the defender keys work here at once. Gather wood and reinforce the walls as a defender does in the other modes, and swing or fire your weapons and gather ammo as an attacker does; the wall strength keys, the locate keys, and the rest all behave as they do elsewhere.

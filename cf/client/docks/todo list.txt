@@ -2,12 +2,11 @@
 
 **Unfinished. Add the ability to set how many players can join a game, no more than 2.
 **Unfinished. Fix uploading of onoffs not doing anything after the user has saved one.
-**Unfinished. Add support for putting variable substitutions in emote messages.
-**Unfinished. Add support for putting variable substitutions in custom onoff messages.
-**Unfinished. Add the ability to adjust the spawn time of continuous  items in the free play game.
+**Unfinished. Add support for putting variable substitutions in emote, custom onoff, and script key messages.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a free play cavern control that sets how often continuously spawning items refill, from one to sixty seconds.
 **Finished. Fix attackers in a player versus player game picking up the defenders' wood from outside the cave, which took it from the defenders and made its pickup sound play clearly to outside players.
 **Finished. Add script keys, Alt and Alt plus Shift number row shortcuts that run lines of an editable scriptkeys file as chat commands, with fill-in prompts.
 **Finished. Add the slash gl, slash lc, slash st, and slash tm channel commands that send the rest of a line to a chat channel from any box.
