@@ -290,6 +290,14 @@ send_menu(peer, "gamekick", "Choose a player to kick from your game. " + players
 /* The list of games in the player's room for either joining or stopping. mode = "join" (skip full and
 others' solo games) or "stop" (staff see all, others only their own). Game ids go in menu_targets;
 the actual join/stop is enforced by the existing joingame/stopgame handlers. */
+/* A game-list label's player-count fragment: "N of M players" for an open, capped game, or plain "N player(s)"
+for a solo game or an unlimited open one (max_players 0 = unlimited). Shared by the join and watch lists. */
+string game_players_phrase(uint i)
+{
+uint n = games[i].members.length();
+if(!games[i].solo and games[i].max_players != 0) return n + " of " + games[i].max_players + " players";
+return n + (n == 1 ? " player" : " players");
+}
 void push_game_list(int index, string mode)
 {
 int peer = players[index].peer_id;
@@ -309,7 +317,7 @@ else if(!staff and games[i].host != players[index].name) continue;      // stop:
 players[index].menu_targets.insert_last("" + games[i].id);
 string label;
 if(mode == "join" and games[i].solo) label = "Your single-player " + mode_tag(games[i].mode) + " game, " + games[i].size + " by " + games[i].size;
-else label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " " + mode_tag(games[i].mode) + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
+else label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " " + mode_tag(games[i].mode) + " game, " + game_players_phrase(i) + ", " + games[i].size + " by " + games[i].size;
 if(games[i].phase != "idle") label += ", in progress";
 opts.insert_last(label);
 }
@@ -322,7 +330,7 @@ send_menu(peer, (mode == "join") ? "joingame" : "stopgame", (mode == "join") ? "
 }
 /* The list of games a player can WATCH: every game in their room, any mode (solo or open) and any phase
 (idle through in-progress) -- unlike the Join list, which hides solo and started games. Game ids go in
-menu_targets; do_spectate enforces the 4-watcher cap. */
+menu_targets; do_spectate enforces the per-game watch cap (max_players; solo = unlimited). */
 void push_watch_list(int index)
 {
 int peer = players[index].peer_id;
@@ -337,7 +345,7 @@ bool ismember = false;
 for(uint m = 0; m < games[i].members.length(); m++) if(games[i].members[m] == peer) { ismember = true; break; }
 if(ismember) continue; // can't watch a game you're playing in
 players[index].menu_targets.insert_last("" + games[i].id);
-string label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " " + mode_tag(games[i].mode) + " game, " + games[i].members.length() + (games[i].members.length() == 1 ? " player" : " players") + ", " + games[i].size + " by " + games[i].size;
+string label = display_name_flagged_for(games[i].host) + "'s " + (games[i].solo ? "single-player" : "open") + " " + mode_tag(games[i].mode) + " game, " + game_players_phrase(i) + ", " + games[i].size + " by " + games[i].size;
 if(games[i].phase != "idle") label += ", in progress";
 int sc = spectator_count(games[i].id);
 if(sc > 0) label += ", " + sc + (sc == 1 ? " watcher" : " watchers");

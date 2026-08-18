@@ -127,7 +127,7 @@ Anyone in a room can invite someone to it. Choose Invite to room from the room m
 
 Games.
 
-Inside a room you can start a game, choosing a game mode, then who can play, then a map size, and finally, in this mode, a wall reinforce limit and whether the enemy bots pile onto the remaining walls when one is destroyed, both explained below. Others can join your open games while a game still has room. There are four modes. This section describes the original, player versus environment, or PVE, where you defend four walls that each start at a random strength; the other three, environment versus player, player versus player, and free play, each have their own section below. If you host the game, press enter for the round menu, where you begin the round.
+Inside a room you can start a game, choosing a game mode, then who can play, then, for an open game, how many players can join and watch, then a map size, and finally, in this mode, a wall reinforce limit and whether the enemy bots pile onto the remaining walls when one is destroyed, both explained below. When you make a game open you choose its player limit: two, four, or eight players, or an unlimited number, and that same limit caps how many people can watch it; player versus player offers only two or four, to keep its sides even, while a solo game is always a single player but can still be watched by any number of people. Others can join your open games while a game still has room. There are four modes. This section describes the original, player versus environment, or PVE, where you defend four walls that each start at a random strength; the other three, environment versus player, player versus player, and free play, each have their own section below. If you host the game, press enter for the round menu, where you begin the round.
 
 If your game is open, that menu also has Invite to game and Kick from game, which are the same idea as the room's Invite to room and Kick from room but one step further in.
 
@@ -239,7 +239,7 @@ Because both toolkits are live, all the attacker keys and all the defender keys 
 
 Watching games.
 
-You can also watch a game instead of playing it. Choose watch game from the room menu to see every game in the room, including single-player games and games already in progress, and pick one; up to four people can watch a game at once.
+You can also watch a game instead of playing it. Choose watch game from the room menu to see every game in the room, including single-player games and games already in progress, and pick one; how many people can watch a game matches the player limit its host chose, so a game that allows eight players allows eight watchers and an unlimited game takes unlimited watchers, while a single-player game can be watched by any number of people.
 
 You float on a deck above the cavern and roam it freely while the whole battle plays out below you, and the players are told you are watching. You are only an observer, so you carry no wood, cannot reinforce, and the enemies ignore you, but you hear everything and can still chat and use voice with the players.
 

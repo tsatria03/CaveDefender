@@ -1,11 +1,11 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Add the ability to set how many players can join a game, no more than 2.
 **Unfinished. Fix uploading of onoffs not doing anything after the user has saved one.
 **Unfinished. Add support for putting variable substitutions in emote, custom onoff, and script key messages.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add a start-game step letting the host cap how many players can join and watch an open game, two, four, eight, or unlimited for the co-op modes and two or four for player versus player.
 **Finished. Add a free play cavern control that sets how often continuously spawning items refill, from one to sixty seconds.
 **Finished. Fix attackers in a player versus player game picking up the defenders' wood from outside the cave, which took it from the defenders and made its pickup sound play clearly to outside players.
 **Finished. Add script keys, Alt and Alt plus Shift number row shortcuts that run lines of an editable scriptkeys file as chat commands, with fill-in prompts.
