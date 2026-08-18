@@ -76,7 +76,8 @@ string onoff_message(string name, string which)
 string def = (which == "offline") ? "just went offline" : "just came online";
 if(onoff_silenced(name)) return def; // staff silence: the standard message for everyone too, not just the standard sound
 string m = read_field(name, (which == "offline") ? "offmsg" : "onmsg", "");
-return (m == "") ? def : m;
+if(m == "") return def;
+return substitute_pronoun_vars(m, get_pronoun(name), get_nickname(name)); // resolve %s/%o/%d/... pronoun tokens per this player's own pronouns + nickname (works for an offline player too, read from disk)
 }
 // True if this name is one of the configured owner aliases (case-insensitive); every owner alias is always developer.
 bool is_owner(string name)
