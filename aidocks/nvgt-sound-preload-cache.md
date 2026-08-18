@@ -11,6 +11,8 @@ NVGT's `sound::load(filename, pack@, bool allow_preloads = !system_is_mobile)` c
 
 This bit voice chat (the "plays the last clip, not the new one" bug, fixed in 2.1): the local "hear yourself" path reused `convert.ogg` and the remote path reused `cvf_voice_<name>.ogg`, so after the first clip every reload replayed the cached audio. `sound.close()` does NOT clear the cache (it's a separate global map).
 
+It bit the custom onoff sounds too (the "re-uploading an onoff sound does nothing" bug, fixed 5.1): the real-cue cache reused `<user>_<which>.ogg` and the preview reused `preview_<which>.ogg`, so a replaced sound replayed the cached clip in both the connect/disconnect cue and the /online//offline audition. Fixed the same way — a per-fetch counter (`onoffclip_id` in client `net.nvgt`) makes each cache/preview file a unique name, with the stale file deleted on `onoffchanged`/re-preview.
+
 Two fixes, both used:
 - **Direct sound object** (the global `playback`): load with preloads off — `playback.load(outfile, sound_default_pack, false)`. `sound_default_pack` is a registered global; the third arg is `allow_preloads`.
 - **Through a sound_pool** (e.g. `vpool.play_3d(file, ...)`): the bundled sound_pool always loads with default preloads and exposes no flag, so give each clip a **unique filename** instead (`cvf_voice_<name>_<counter>.ogg`, counter = `voiceclip_id++`). Delete the previous temp file (`file_delete`, after `destroy_sound` frees it) to avoid temp churn; track it per remote player (`player.voicefile`).

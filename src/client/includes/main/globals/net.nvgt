@@ -799,6 +799,8 @@ or the cache file's path; a missing key means not yet fetched. onoff_pending tra
 whether to PLAY the sound when it lands ("1") or just warm the cache ("0"). */
 dictionary onoff_cache;
 dictionary onoff_pending;
+int onoffclip_id = 0; // ++ per onoff/preview fetch so each cache file gets a UNIQUE name -- NVGT's filename-keyed preload cache (sound::load) would otherwise replay the STALE clip after a re-upload (see nvgt-sound-preload-cache); same class of bug as the voice-chat 2.1 fix.
+string onoff_preview_file = ""; // the last preview temp file, deleted when the next preview is written so auditions don't pile up.
 const int64 onoff_max_bytes = 131072; // ~128 KB cap on a custom onoff sound (mirrors the server); with the 3-second length check it enforces the snappy, no-WAV rule when a player picks a file for upload.
 bool myonoff_received = false; // set true when a "myonoffstate" reply lands, so the settings form knows its preload arrived
 int myonoff_online = 0, myonoff_offline = 0, myonoff_master = 0; // this account's own onoff state (raw file presence for online/offline + the master flag), from the last getmyonoff
@@ -812,7 +814,7 @@ bool is_onoff_ignored(string user)
 	return false;
 }
 string onoff_key(string user, string which) { return string_to_lower_case(user) + "|" + which; }
-string onoff_cachefile(string user, string which) { return DIRECTORY_APPDATA + "tsatria03/CaveDefender/onoffcache/" + string_to_lower_case(user) + "_" + which + ".ogg"; }
+string onoff_cachefile(string user, string which) { return DIRECTORY_APPDATA + "tsatria03/CaveDefender/onoffcache/" + string_to_lower_case(user) + "_" + which + "_" + (onoffclip_id++) + ".ogg"; } // UNIQUE per call (counter) so a re-upload's fresh bytes aren't masked by NVGT's preload cache (see nvgt-sound-preload-cache)
 void play_builtin_onoff(string which) { p.play_stationary("sounds/ui/misc/" + which + ".ogg", false); }
 void play_cached_onoff(string which, string val) { if(val == "none") play_builtin_onoff(which); else p.play_stationary(val, false); }
 /* The /playsound soundboard: clips live on the server (sounds/player/... and sounds/staff/...) and are heard by
@@ -962,13 +964,16 @@ void netloop_impl()
 		{
 			/* A player changed their onoff settings, or staff silenced/unsilenced them. Drop our cached answers so the
 			next online/offline event re-fetches the current truth instead of replaying a now-stale sound. The next
-			getonoff reply overwrites any on-disk cache file, so only the in-memory keys need clearing. "onoffchanged *"
+			getonoff reply now writes a FRESH filename (onoff_cachefile bumps a counter), so NVGT's preload cache can't replay the old clip; the stale cache file is deleted here too. "onoffchanged *"
 			(from /muteall, which hits everyone) clears the whole cache at once. */
 			if(parsed[1] == "*") onoff_cache.delete_all();
 			else
 			{
 				string ok = onoff_key(parsed[1], "online"), fk = onoff_key(parsed[1], "offline");
-				if(onoff_cache.exists(ok)) onoff_cache.delete(ok);
+				string ov, fv;
+					if(onoff_cache.get(ok, ov) and ov != "none" and ov != "") file_delete(ov); // remove the stale cache file (a fresh name is written on re-fetch)
+					if(onoff_cache.get(fk, fv) and fv != "none" and fv != "") file_delete(fv);
+					if(onoff_cache.exists(ok)) onoff_cache.delete(ok);
 				if(onoff_cache.exists(fk)) onoff_cache.delete(fk);
 			}
 		}
@@ -987,9 +992,10 @@ void netloop_impl()
 			{
 				string dir = DIRECTORY_APPDATA + "tsatria03/CaveDefender/onoffcache";
 				if(!directory_exists(dir)) directory_create(dir);
-				string path = dir + "/preview_" + which + ".ogg";
+				if(onoff_preview_file != "") file_delete(onoff_preview_file); // drop the prior audition temp so previews don't pile up
+					string path = dir + "/preview_" + which + "_" + (onoffclip_id++) + ".ogg"; // FRESH name each preview so the preload cache can't replay a stale audition (see nvgt-sound-preload-cache)
 				file f;
-				if(f.open(path, "wb")) { f.write(string_base64_decode(payload, STRING_BASE64_DEFAULT)); f.close(); p.play_stationary(path, false); }
+				if(f.open(path, "wb")) { f.write(string_base64_decode(payload, STRING_BASE64_DEFAULT)); f.close(); onoff_preview_file = path; p.play_stationary(path, false); }
 			}
 		}
 		else if (parsed[0] == "connevent" and message.length() > parsed[0].length()+1)
