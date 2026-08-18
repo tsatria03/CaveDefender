@@ -9,6 +9,6 @@ metadata:
 
 Do NOT compile the game yourself — don't run `cfcm.py`/`cfsm.py`, `nvgt -c`, or otherwise invoke the NVGT compiler to build the client or server. Make the code edits and stop; the user compiles and verifies builds on their own machine.
 
-**Why:** the user prefers to control the build/verify step themselves (and compiling spawns the pinned `C:\nvgt2` runtime, see [[engine-pinned-to-nvgt2]]).
+**Why:** the user prefers to control the build/verify step themselves (and compiling spawns the pinned `C:\nvgt` runtime, see [[engine-pinned-to-nvgt2]]).
 
 **How to apply:** after editing `.nvgt` (or build) files, just report the change and the Files changed / Relaunch list. It's fine to read code, reason about correctness, and note "this should compile," but never actually run a compile to check. (Running other read-only diagnostics is still fine.)

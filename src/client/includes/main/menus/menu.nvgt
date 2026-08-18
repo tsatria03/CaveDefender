@@ -178,7 +178,7 @@ void onoff_sounds_form()
 }
 /* The "Change your online and offline messages" form (player panel). Loads your current custom messages from the
 server, then lets you set or clear the action shown after your name when you connect or disconnect. Empty a field
-reverts that one to the default. Each is capped at 64 chars and filtered server-side, which confirms in your misc buffer. */
+reverts that one to the default. Each is capped at 96 chars and filtered server-side, which confirms in your misc buffer. */
 void onoff_messages_form()
 {
 	mymsgs_received = false;
@@ -195,8 +195,8 @@ void onoff_messages_form()
 	string origOn = mymsg_online, origOff = mymsg_offline; // raw current messages ("" = default)
 	form.reset();
 	form.create_window("Online and offline messages", false); // virtual dialog over the game window, like the other in-game forms
-	int onBox = form.create_input_box("Online message, shown after your name when you connect. Leave blank for the default.", origOn, "", 64);
-	int offBox = form.create_input_box("Offline message, shown after your name when you disconnect. Leave blank for the default.", origOff, "", 64);
+	int onBox = form.create_input_box("Online message, shown after your name when you connect. Leave blank for the default.", origOn, "", 96);
+	int offBox = form.create_input_box("Offline message, shown after your name when you disconnect. Leave blank for the default.", origOff, "", 96);
 	int saveBtn = form.create_button("&Save changes");
 	int cancelBtn = form.create_button("&Cancel changes", false, true); // cancel=true, so Escape also cancels
 	form.focus(onBox);

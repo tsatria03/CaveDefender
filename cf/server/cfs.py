@@ -9,9 +9,9 @@ from pathlib import Path
 # passes that same cwd to the server it spawns. Run as a .py (python.exe) so a console is present;
 # subprocess.run blocks until downcheck exits, keeping the window open for the whole session. Close this
 # window to stop the server for good. (To run the server once WITHOUT supervision, launch
-# "C:\nvgt2\nvgt.exe src/server/cfs.nvgt" from this folder by hand instead.)
+# "C:\nvgt\nvgt.exe src/server/cfs.nvgt" from this folder by hand instead.)
 
-NVGT = r"C:\nvgt2\nvgt.exe"
+NVGT = r"C:\nvgt\nvgt.exe"
 HERE = Path(__file__).resolve().parent
 SCRIPT = HERE.parent.parent / "src" / "server" / "downcheck.nvgt"
 VERSION_TXT = HERE.parent.parent / "build" / "version.txt"

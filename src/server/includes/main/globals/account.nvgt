@@ -69,8 +69,8 @@ string onoff_flags(string name)
 return (has_onoff_sound(name, "online") ? "1" : "0") + " " + (has_onoff_sound(name, "offline") ? "1" : "0");
 }
 // The ACTION half of a player's connect/disconnect line -- their custom online/offline message (onmsg.usr/offmsg.usr, capped
-// at 64 chars, empty = none), or the default. The client shows "<display name> <action>", so this never carries the name.
-const uint onoff_msg_max = 64;
+// at 96 chars, empty = none), or the default. The client shows "<display name> <action>", so this never carries the name.
+const uint onoff_msg_max = 96;
 string onoff_message(string name, string which)
 {
 string def = (which == "offline") ? "just went offline" : "just came online";

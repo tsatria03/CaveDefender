@@ -15,7 +15,7 @@ The server inherits downcheck's working directory, so downcheck MUST run from cf
 launcher, downcheck.py, sets that cwd, exactly as the server's own cfs.py does). Nothing here touches
 existing server code -- downcheck is purely additive. */
 
-const string engine = "C:\\nvgt2\\nvgt.exe";              // the pinned NVGT runtime (dev / interpreted)
+const string engine = "C:\\nvgt\\nvgt.exe";              // the pinned NVGT runtime (dev / interpreted)
 const string server_exe = "cfs.exe";                       // the compiled server (production), beside downcheck.exe in cf/server
 const string server_script = "../../src/server/cfs.nvgt";  // server source, resolved from cwd = cf/server (dev)
 const int relaunch_delay = 2000;   // ms to pause between relaunches, so the port and the single-instance lock have time to release

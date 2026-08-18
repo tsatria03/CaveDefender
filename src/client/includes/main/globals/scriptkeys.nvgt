@@ -1,19 +1,19 @@
-/* Script keys: user-defined keyboard shortcuts that run a line of cf/client/scriptkeys.txt as if it were typed into
-chat. Line N maps to key N by position. Keys 1-14 are Alt + the number row (grave, 1-0, minus, equals, backspace);
+/* Script keys: user-defined keyboard shortcuts that run a line of cf/client/data/scriptkeys.srk as if it were typed
+into chat. Line N maps to key N by position. Keys 1-14 are Alt + the number row (grave, 1-0, minus, equals, backspace);
 keys 15-28 are Alt+Shift + those same keys. The file is RE-READ fresh on every press (it's tiny and presses are rare
 and user-driven), so a hand-edit is live on the very next press with no restart. A line's leading / makes it a command,
 otherwise it's a global chat message; a % starts a prompt whose text (up to the next %) is asked in an input box and
-whose answer is substituted in. The file ships loose beside the game (never boxed) so players can edit it. See the
-readme and [[scriptkeys]]. */
+whose answer is substituted in. The file ships loose in the data folder beside the game (never boxed) so players can
+edit it. See the readme and [[scriptkeys]]. */
 
-/* Read scriptkeys.txt fresh (empty array if it's missing or unreadable). Blank lines are KEPT so line N stays mapped
-to key N. Read on demand, not cached, so editing the file while the game runs takes effect on the next press. */
+/* Read data/scriptkeys.srk fresh (empty array if it's missing or unreadable). Blank lines are KEPT so line N stays
+mapped to key N. Read on demand, not cached, so editing the file while the game runs takes effect on the next press. */
 string[] read_scriptkeys()
 {
 string[] lines;
-if(!file_exists("scriptkeys.txt")) return lines;
+if(!file_exists("data/scriptkeys.srk")) return lines;
 file f;
-if(!f.open("scriptkeys.txt", "rb")) return lines;
+if(!f.open("data/scriptkeys.srk", "rb")) return lines;
 string content = f.read();
 f.close();
 return split_lines(content); // CRLF-normalizes and splits on \n, keeping empty lines
