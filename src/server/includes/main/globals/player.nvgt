@@ -33,6 +33,7 @@ string menu_pending;   // a value carried across a cascading menu (e.g. the chos
 string pending_mode;   // the gameplay mode (pve/evp) chosen at the first start-game step, carried through the rest of the cascade to the startgame command.
 int pending_size=50;   // the map size chosen at the size step, carried across the reinforce (and PVE pile-up) steps to the final startgame command.
 int pending_reinforce=0; // the wall reinforce cap chosen at the reinforce step (2/4/8/0), carried across the PVE pile-up step to the final startgame command.
+int pending_maxplayers=4; // the player join+watch cap chosen at the max-players step (2/4/8, 0 = unlimited; 2/4 for PVP; 1 for solo), carried to the final startgame command.
 inventory inv; // what this player is carrying (wood, etc.); authoritative here, mirrored to the client. Wired in 6c.
 inventory mag; // ranged magazines: LOADED rounds per WEAPON (each weapon keeps its own mag, even when two share an ammo kind), separate from inv's gathered per-kind reserve. Filled to max_ammo on the weapon's first draw of the round, -1 per shot, refilled from reserve on reload; reset each round.
 int wood_collected=0;     // wood this player has personally picked up off the ground this game run; reset at each build start, reported at game over.
