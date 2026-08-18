@@ -1,4 +1,5 @@
 New in 5.1.
+The form for setting your online and offline messages now has a show button for each one, which fills in your pronoun codes and shows you the finished line, name and all, just as everyone will read it. You can check a message, even before you save it, so you can see how your codes expand and whether the message still fits.
 The developer editdata and viewdata browsers no longer open a player's onoffs folder, where their connect and disconnect sounds live. Those are audio files that editing as text would corrupt, so only a player's info folder, holding their text fields, can be browsed now.
 The preview buttons in the online and offline sounds form now play a sound you have just picked, before you save it, so you can hear a new choice right away. When you have not picked a new one, they still play your saved sound as before.
 Fixed your custom online and offline sounds not updating after you replaced one: uploading a new sound would seem to do nothing and the old one kept playing. A replacement now takes effect right away, both when you preview it and when it plays for real on connect and disconnect.
