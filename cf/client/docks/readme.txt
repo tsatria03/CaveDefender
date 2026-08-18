@@ -99,7 +99,7 @@ Online and offline messages.
 
 Alongside your sounds, you can set your own online and offline messages, the words shown after your name when you connect and disconnect. Normally everyone sees your name followed by just came online or just went offline; a custom message replaces those words, so with an online message of has entered the cave, everyone sees your name followed by has entered the cave. Your name is always kept, so people still know who it is.
 
-To set them, type slash onmsg followed by your message, for example slash onmsg has entered the cave, and slash offmsg for your disconnect line. Type slash onmsg default, or slash offmsg default, to go back to the standard wording. You can also set both at once from the change your online and offline messages option in your player panel, which opens a form with a field for each; leave a field blank to use the default. Each message is a single line of up to sixty four characters and is filtered like chat, and only you are told when you change it. Use slash online or slash offline any time to hear your sound and read your message exactly as others will get them.
+To set them, type slash onmsg followed by your message, for example slash onmsg has entered the cave, and slash offmsg for your disconnect line. Type slash onmsg default, or slash offmsg default, to go back to the standard wording. You can also set both at once from the change your online and offline messages option in your player panel, which opens a form with a field for each; leave a field blank to use the default. Each message is a single line of up to ninety six characters and is filtered like chat, and only you are told when you change it. Use slash online or slash offline any time to hear your sound and read your message exactly as others will get them.
 
 Soundboard.
 
@@ -107,7 +107,7 @@ You can play a short sound to everyone on the server, chosen from a library the 
 
 Script keys.
 
-Script keys are your own keyboard shortcuts that run a chat command, or send a message, from anywhere in the game with a single keystroke. They live in a plain text file called scriptkeys dot txt that sits next to the game, which you can open and edit in any text editor. You put one command per line, exactly as you would type it into a chat box, so a line that starts with a slash is a command, such as slash lb, and a line without one is a global chat message. Line one is the first key, line two the second, and so on.
+Script keys are your own keyboard shortcuts that run a chat command, or send a message, from anywhere in the game with a single keystroke. They live in a plain text file called scriptkeys dot s r k, inside the data folder that sits next to the game, which you can open and edit in any text editor. You put one command per line, exactly as you would type it into a chat box, so a line that starts with a slash is a command, such as slash lb, and a line without one is a global chat message. Line one is the first key, line two the second, and so on.
 
 To run a script key, hold Alt and press a key along the number row, the grave key for the first, then 1 through 0, the minus, the equals, and finally backspace for the fourteenth. Holding Alt and Shift together with those same keys runs a second set of fourteen, so there are twenty eight in all. If the line for a key is empty, or the file has no such line, you are told, for example, scriptkey 15 not found.
 
@@ -378,7 +378,7 @@ Escape. In a game, open the pause menu, or stop watching if you are a spectator.
 
 Script keys.
 
-Alt, or Alt plus Shift, with a number row key runs one of your twenty eight script keys, the chat command shortcuts you keep in the scriptkeys dot txt file beside the game. See the Script keys section earlier in this readme for how they work.
+Alt, or Alt plus Shift, with a number row key runs one of your twenty eight script keys, the chat command shortcuts you keep in the scriptkeys dot s r k file, in the data folder beside the game. See the Script keys section earlier in this readme for how they work.
 
 In a game.
 

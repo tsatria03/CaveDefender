@@ -1,5 +1,12 @@
 ####These are the things that need to be finished for future versions of the game.
 
+**Unfinished. Add the ability to set how many players can join a game, no more than 2.
+**Unfinished. Fix hereing wood pickup sounds in pvp when you are outside the cave.
+**Unfinished. Fix uploading of onoffs not doing anything after the user has saved one.
+**Unfinished. Add support for putting variable substitutions in emote messages.
+**Unfinished. Add support for putting variable substitutions in custom onoff messages.
+**Unfinished. Add the ability to adjust the spawn time of continuous  items in the free play game.
+
 ##These are the things that are already finished from earlier versions of the game.
 
 **Finished. Add script keys, Alt and Alt plus Shift number row shortcuts that run lines of an editable scriptkeys file as chat commands, with fill-in prompts.

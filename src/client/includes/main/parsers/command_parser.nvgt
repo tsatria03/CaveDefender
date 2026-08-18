@@ -129,7 +129,7 @@ void comparse(string text, string channel = "global")
 	{
 		/* Set your own online/offline MESSAGE, the action shown after your name on connect/disconnect. Text sets it,
 		"default" reverts, no text just shows usage (use /online or /offline to read your current one). The body keeps
-		its original case; the server validates (single line, 64 chars, filtered) and confirms in your misc buffer. */
+		its original case; the server validates (single line, 96 chars, filtered) and confirms in your misc buffer. */
 		string which = (base == "/offlinemsg" or base == "/offmsg") ? "offline" : "online";
 		if(parsed.length() < 2) { syntax_error(base + " text, or " + base + " default"); return; }
 		string body = text.substr(parsed[0].length()).trim_whitespace(); // everything after the command word, original case

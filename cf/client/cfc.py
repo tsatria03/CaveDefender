@@ -14,7 +14,7 @@ import ctypes
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT = os.path.normpath(os.path.join(HERE, "..", "..", "src", "client", "cfc.nvgt"))
-NVGT = r"C:\nvgt2\nvgt.exe"
+NVGT = r"C:\nvgt\nvgt.exe"
 VERSION_TXT = os.path.normpath(os.path.join(HERE, "..", "..", "build", "version.txt"))
 VERSION_NVGT = os.path.normpath(os.path.join(HERE, "..", "..", "src", "client", "includes", "version.nvgt"))
 # How long (seconds) to watch the client for an early exit before assuming it compiled and detaching. A failed

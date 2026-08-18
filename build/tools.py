@@ -28,14 +28,16 @@ SRC_CLIENT    = os.path.join(REPO_DIR, "src", "client")
 SRC_SERVER    = os.path.join(REPO_DIR, "src", "server")
 ASSETS_CLIENT = os.path.join(REPO_DIR, "cf", "client")
 ASSETS_SERVER = os.path.join(REPO_DIR, "cf", "server")
-CLIENT_ASSETS = ["lib", "sounds", "docks"]
+# The client's data/ folder holds scriptkeys.srk (the script-keys file). It ships LOOSE -- NOT in
+# CLIENT_EMBEDDED_FOLDERS -- so it stays a real, editable file next to the exe: it's read fresh on every script-key
+# press so hand-edits go live, and the Enigma box only embeds sounds/docks, so a data/ file is never boxed.
+CLIENT_ASSETS = ["lib", "sounds", "docks", "data"]
 # The server's sounds/ folder holds the soundboard clips (/playsound). It ships LOOSE like data/ -- NOT in
 # SERVER_EMBEDDED_FOLDERS -- so the host can add and remove clips, and the server can read them off disk to stream.
 SERVER_ASSETS = ["data", "docks", "sounds"]
-# Loose files copied into the bundle ROOT (not a subfolder). scriptkeys.txt must stay a real, editable file next to
-# the exe -- it is read fresh on every script-key press so hand-edits go live -- and is deliberately kept OUT of the
-# Enigma box (the .evb only embeds sounds/docks, never root files), so it ships loose and stays editable by players.
-CLIENT_LOOSE = ["scriptkeys.txt"]
+# Loose files copied into the bundle ROOT (not a subfolder). Currently unused -- scriptkeys.srk now ships inside the
+# client's data/ folder above -- but kept for any future root-level loose file.
+CLIENT_LOOSE = []
 SERVER_LOOSE = []
 CLIENT_BUNDLE = os.path.join(SRC_CLIENT, CLIENT_OUT)
 SERVER_BUNDLE = os.path.join(SRC_SERVER, SERVER_OUT)
@@ -122,7 +124,8 @@ def sync_version_files(version):
 def compile_side(label, nvgt_file, src_dir, bundle, assets_dir, asset_folders, dest, out_name, loose_files=None):
     # Compile one side from src/<side> (so the bundle lands there), copy its assets in, and move it into
     # the release folder. Mirrors the old cfcm.py / cfsm.py, now unified here. loose_files are individual files
-    # copied into the bundle ROOT (next to the exe) rather than into a subfolder -- e.g. scriptkeys.txt.
+    # copied into the bundle ROOT (next to the exe) rather than into a subfolder. Currently none (scriptkeys.srk
+    # now ships inside the client's data/ folder), but the mechanism is kept for any future root-level loose file.
     print(f"Compiling {label}...")
     if not run_cmd([NVGT, "-c", "-Q", nvgt_file], cwd=src_dir):
         print(f"ERROR: {label} compilation failed.")

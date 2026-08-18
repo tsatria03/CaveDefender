@@ -22,7 +22,7 @@ Repo root holds three top-level folders, with **source and assets deliberately s
 
 Each launcher runs the `src/<side>` script but with **cwd set to `cf/<side>/`**, so every cwd-relative path (`lib/…`, `sounds/…`, `docks/…`, `data/…`) resolves against `cf/<side>/`; `build/tools.py` copies assets into the bundle at compile time (no `#pragma asset`). Full path map and the runtime/build split: **[[path-conventions]]**.
 
-The engine is the **pinned legacy NVGT fork** at `C:\nvgt2\nvgt.exe`; upstream NVGT is incompatible — **[[engine-pinned-to-nvgt2]]**.
+The engine is the **pinned legacy NVGT fork** at `C:\nvgt\nvgt.exe`; upstream NVGT is incompatible — **[[engine-pinned-to-nvgt2]]**.
 
 ## Client / server split
 

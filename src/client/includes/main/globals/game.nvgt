@@ -206,7 +206,7 @@ buffercheck();
 			else if(activity_timer.elapsed>=auto_afk_ms) { afk=true; send(0, "afk", 0, true); }
 		}
 		else activity_timer.restart();
-		/* Script keys (Alt / Alt+Shift + the number row): run a line of scriptkeys.txt as if typed. Checked here, in the
+		/* Script keys (Alt / Alt+Shift + the number row): run a line of data/scriptkeys.srk as if typed. Checked here, in the
 		active state only (the frozen and paused branches above already continued), so they work anywhere you have normal
 		control -- lobby, room, game, watching. A handled press swallows the frame so it doesn't also move or equip. */
 		if(scriptkey_loop()) continue;
