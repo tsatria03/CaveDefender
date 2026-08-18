@@ -49,6 +49,7 @@ wall_heal@[] heals;        // FREE PLAY only: downed walls waiting to self-heal 
 string[] recover_walls;    // FREE PLAY only (item 4): walls whose attacker bots RESPAWN when the wall recovers ("spawn on wall recovery" = Yes -> bots kept through the breach and resume). A wall NOT listed drops its attacker bots when it falls. Set per add-attacker-bots action; cleared on Clear cavern attacker bots / Clear cavern map.
 cavern_item_rule@[] item_rules; // FREE PLAY only (item 5): active "spawn continuously" rules -- each keeps `target` items of its category/kind on the floor (maintain_cavern_items). Cleared on Clear cavern items / Clear cavern map.
 timer item_maintain_timer;      // FREE PLAY only (item 5): paces maintain_cavern_items so continuous refills aren't instant/spammy.
+int item_maintain_ms = 1000;    // FREE PLAY only (item 6b, 5.1): how often continuous-spawn rules top the floor back up, in ms; host/guests set it in seconds via the cavern controls "Set continuous spawn time" (1-60s). Default 1s = the original fixed cadence. Read live by maintain_cavern_items.
 game(int gid, int proom, string hostname, int hostpeer, int sz, bool sl, string md)
 {
 id=gid;
