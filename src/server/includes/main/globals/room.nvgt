@@ -206,16 +206,24 @@ if(rooms[i].members[j]==peer) { rooms[i].members.remove_at(j); return; }
 }
 }
 }
-/* Play a room cue (joinroom.ogg / leaveroom.ogg) to every CURRENT member of a room except skippeer, so others
-already in the room hear someone arrive or leave -- the room-scoped mirror of the server-wide online/offline cues,
-non-positional. `file` is a ui/misc name. The actor hears their OWN cue client-side (off roomjoined/roomleft), so
-callers pass the actor's peer as skippeer on join; on leave the actor is already removed, so pass -1. */
+/* Play a room cue (joinroom.ogg / leaveroom.ogg / kick.ogg) to every member currently STANDING IN the room
+(room_id == roomid) except skippeer, so others in the room hear someone arrive or leave -- the room-scoped mirror
+of the server-wide online/offline cues, non-positional. `file` is a ui/misc name. A member who has descended into a
+game inside the room stays in members but has room_id = the game's id, so the room_id check keeps room cues from
+sounding while they're off in a game (or otherwise away). The actor hears their OWN cue client-side (off
+roomjoined/roomleft), so callers pass the actor's peer as skippeer on join; on leave the actor is already removed, so pass -1. */
 void cue_room_others(int roomid, int skippeer, string file)
 {
 int ri = get_room_index(roomid);
 if(ri < 0) return;
 for(uint k=0; k<rooms[ri].members.length(); k++)
-if(rooms[ri].members[k] != skippeer) send(rooms[ri].members[k], "play "+file, 0, true);
+{
+int mpeer = rooms[ri].members[k];
+if(mpeer == skippeer) continue;
+int mpi = get_player_index(mpeer);
+if(mpi < 0 or players[mpi].room_id != roomid) continue; // only players actually in the room hear it, not those off in a game inside it
+send(mpeer, "play "+file, 0, true);
+}
 }
 /* Called when a peer disconnects from the server. Every room they host closes (up to one public and
 one private), and any remaining members in those rooms are sent back to the lobby. They are also
