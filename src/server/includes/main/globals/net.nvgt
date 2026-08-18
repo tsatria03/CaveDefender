@@ -2367,6 +2367,31 @@ else if(parsed[0]=="getmyonoffmsgs" and index>-1)
 string n = players[index].name;
 send(event.peer_id, "myonoffmsgs\n"+read_field(n, "onmsg", "")+"\n"+read_field(n, "offmsg", ""), 0, true);
 }
+else if(parsed[0]=="previewonoffmsg" and index>-1)
+{
+/* A DRY RUN of a custom online/offline message the player is editing but has NOT saved: "previewonoffmsg <online|offline>\n<text>".
+It runs the SAME validation and pronoun substitution the real broadcast does, then hands back the whole line exactly as everyone
+would read it on connect ("onoffmsgpreview ok\n<display name> <resolved action>"), so a player can see how their %s/%o/%d tokens
+expand, and whether the result runs long, without saving and reconnecting. Blank or "default" previews the standard line; a message
+that would be rejected on save (too long, forbidden words) comes back as "onoffmsgpreview bad\n<reason>" instead. */
+int nl = string_contains(message, "\n", 1);
+if(nl >= 1)
+{
+string[] hp = string_split(message.substr(0, nl), " ", true);
+string which = (hp.length() > 1 and hp[1] == "offline") ? "offline" : "online";
+string text = message.substr(nl+1).trim_whitespace();
+bool isdefault = (text == "" or string_to_lower_case(text) == "default"); // blank box or the literal word revert to the standard line
+if(!isdefault and text.length() > onoff_msg_max)
+send(event.peer_id, "onoffmsgpreview bad\nYour "+which+" message must be "+onoff_msg_max+" characters or fewer.", 0, true);
+else if(!isdefault and (filter_crash(text) or filter_chat(text)))
+send(event.peer_id, "onoffmsgpreview bad\nThat message contains forbidden words, and therefore cannot be used.", 0, true);
+else
+{
+string action = isdefault ? ((which == "offline") ? "just went offline" : "just came online") : substitute_pronoun_vars(text, players[index].pronoun, display_name(index));
+send(event.peer_id, "onoffmsgpreview ok\n"+display_name_flagged(index)+" "+action, 0, true); // whole line, name first, just as everyone sees it
+}
+}
+}
 else if(parsed[0]=="getreports" and index>-1)
 {
 /* Staff (moderator+) view every report on record, read-only, newest first, in the doc viewer. Unlike the
@@ -2928,7 +2953,7 @@ send(event.peer_id, "That is a single-player game.", 0,true);
 }
 else if(games[gi].max_players != 0 and games[gi].members.length() >= games[gi].max_players)
 {
-send(event.peer_id, "That game is full.", 0,true);
+send(event.peer_id, "That game is full, " + game_players_phrase(gi) + ".", 0,true);
 }
 else if(!game_joinable(gi))
 {

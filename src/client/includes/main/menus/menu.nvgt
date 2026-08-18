@@ -179,6 +179,25 @@ void onoff_sounds_form()
 /* The "Change your online and offline messages" form (player panel). Loads your current custom messages from the
 server, then lets you set or clear the action shown after your name when you connect or disconnect. Empty a field
 reverts that one to the default. Each is capped at 96 chars and filtered server-side, which confirms in your misc buffer. */
+/* Ask the server to resolve a message the player has typed but not saved, and show the whole connect/disconnect line back to
+them exactly as everyone will read it, pronoun tokens expanded. The server does the substitution (only it knows the pronoun
+forms) and also validates, so a too-long or filtered message comes back as a plain reason instead of a resolved line. */
+void show_onoff_message_preview(string which, string text)
+{
+	onoffmsg_preview_received = false;
+	send(0, "previewonoffmsg " + which + "\n" + (text == "" ? "default" : text), 0, true); // blank box previews the default line
+	timer t; t.restart();
+	while(t.elapsed < 3000)
+	{
+		wait(5);
+		netloop();
+		if(!connected) return;
+		if(onoffmsg_preview_received) break;
+	}
+	if(!onoffmsg_preview_received) { speak("Your message preview could not be loaded. Please try again."); return; }
+	if(onoffmsg_preview_ok) speak("Your " + which + " message will read: " + onoffmsg_preview_text);
+	else speak(onoffmsg_preview_text); // a rejection reason (too long, forbidden words)
+}
 void onoff_messages_form()
 {
 	mymsgs_received = false;
@@ -197,6 +216,8 @@ void onoff_messages_form()
 	form.create_window("Online and offline messages", false); // virtual dialog over the game window, like the other in-game forms
 	int onBox = form.create_input_box("Online message, shown after your name when you connect. Leave blank for the default.", origOn, "", 96);
 	int offBox = form.create_input_box("Offline message, shown after your name when you disconnect. Leave blank for the default.", origOff, "", 96);
+	int showOnBtn = form.create_button("Show o&nline message");  // dry-run how the typed (unsaved) message reads, pronoun tokens expanded
+	int showOffBtn = form.create_button("Show of&fline message");
 	int saveBtn = form.create_button("&Save changes");
 	int cancelBtn = form.create_button("&Cancel changes", false, true); // cancel=true, so Escape also cancels
 	form.focus(onBox);
@@ -206,6 +227,8 @@ void onoff_messages_form()
 		wait(5);
 		form.monitor();
 		net_keepalive();
+		if(form.is_pressed(showOnBtn)) show_onoff_message_preview("online", form.get_text(onBox).trim_whitespace());   // audition the message you've typed but not yet saved
+		if(form.is_pressed(showOffBtn)) show_onoff_message_preview("offline", form.get_text(offBox).trim_whitespace());
 		if(form.is_pressed(saveBtn)) { act = "save"; break; }
 		if(form.is_pressed(cancelBtn)) { act = "cancel"; break; }
 	}

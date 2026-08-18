@@ -806,6 +806,8 @@ bool myonoff_received = false; // set true when a "myonoffstate" reply lands, so
 int myonoff_online = 0, myonoff_offline = 0, myonoff_master = 0; // this account's own onoff state (raw file presence for online/offline + the master flag), from the last getmyonoff
 bool mymsgs_received = false; // set true when a "myonoffmsgs" reply lands, so the messages form knows its preload arrived
 string mymsg_online = "", mymsg_offline = ""; // this account's own RAW custom online/offline message ("" = none/default), from the last getmyonoffmsgs
+bool onoffmsg_preview_received = false, onoffmsg_preview_ok = false; // set when a "onoffmsgpreview" reply lands; ok=true means it carries the resolved line, false a rejection reason
+string onoffmsg_preview_text = ""; // the resolved connect/disconnect line (ok) or the rejection reason (bad) from the last message preview
 string[] onoff_ignored; // usernames (lowercased) whose custom onoffs I've personally muted; synced from the server (onoffignorelist) and enforced locally: standard cue + default message for these players, for me only.
 bool is_onoff_ignored(string user)
 {
@@ -1044,6 +1046,13 @@ void netloop_impl()
 			mymsg_online = (firstline.length() > 1) ? firstline[1] : "";
 			mymsg_offline = (firstline.length() > 2) ? firstline[2] : "";
 			mymsgs_received = true;
+		}
+		else if (parsed[0] == "onoffmsgpreview")
+		{
+			// Reply to previewonoffmsg: "ok" carries the resolved connect/disconnect line for the messages form to show; "bad" carries a rejection reason.
+			onoffmsg_preview_ok = (parsed.length() > 1 and parsed[1] == "ok");
+			onoffmsg_preview_text = (firstline.length() > 1) ? firstline[1] : "";
+			onoffmsg_preview_received = true;
 		}
 		else if (parsed[0] == "kicked")
 		{
