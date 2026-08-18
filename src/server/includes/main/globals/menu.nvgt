@@ -232,7 +232,7 @@ void push_game_invite_area(int index)
 int peer = players[index].peer_id;
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) return;
-if(games[gi].members.length() >= game_capacity) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full
+if(games[gi].max_players != 0 and games[gi].members.length() >= games[gi].max_players) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full (max_players 0 = unlimited)
 string[] opts;
 opts.insert_last("Lobby");     // option 0
 opts.insert_last("Your room"); // option 1
@@ -248,7 +248,7 @@ int peer = players[index].peer_id;
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) return;
 int wantroom = from_lobby ? 0 : games[gi].parent_room;
-if(games[gi].members.length() >= game_capacity) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full
+if(games[gi].max_players != 0 and games[gi].members.length() >= games[gi].max_players) { send(peer, "misc You cannot invite any more players to this game.", 0, true); return; } // the game is full (max_players 0 = unlimited)
 players[index].menu_targets.resize(0);
 string[] opts;
 for(uint i = 0; i < players.length(); i++)
@@ -303,7 +303,7 @@ if(games[i].parent_room != rid) continue;
 if(mode == "join")
 {
 if(games[i].solo and games[i].host != players[index].name) continue; // others can't join a solo game
-if(games[i].members.length() >= game_capacity) continue;                          // full
+if(games[i].max_players != 0 and games[i].members.length() >= games[i].max_players) continue;   // full (max_players 0 = unlimited)
 }
 else if(!staff and games[i].host != players[index].name) continue;      // stop: non-staff only their own
 players[index].menu_targets.insert_last("" + games[i].id);
@@ -743,7 +743,7 @@ if(players[index].pending_mode != "pvp") // PVE/EVP/free may go bigger or unlimi
 opts.insert_last("8 players");
 opts.insert_last("Unlimited players");
 }
-send_menu(players[index].peer_id, "startmaxplayers", "Choose how many players can join and watch", opts);
+send_menu(players[index].peer_id, "startmaxplayers", "Choose how many players can join and watch the game", opts);
 }
 void push_start_size(int index)
 {

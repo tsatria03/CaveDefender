@@ -2926,7 +2926,7 @@ else if(games[gi].solo and games[gi].host_peer != event.peer_id)
 // A Solo game is unjoinable by others, but its own host may rejoin it after stepping out.
 send(event.peer_id, "That is a single-player game.", 0,true);
 }
-else if(games[gi].members.length() >= game_capacity)
+else if(games[gi].max_players != 0 and games[gi].members.length() >= games[gi].max_players)
 {
 send(event.peer_id, "That game is full.", 0,true);
 }
