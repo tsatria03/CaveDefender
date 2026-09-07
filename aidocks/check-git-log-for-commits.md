@@ -13,3 +13,5 @@ The user commits changes themselves, not me. Before asking "want me to commit?" 
 **Why:** they were mildly annoyed at being asked about a commit they'd already made; the git log is the source of truth for what's landed.
 
 **How to apply:** after an editing turn, run a quick `git log`/`git status` to see whether they've already committed before mentioning commits at all. Still never commit for them unless explicitly asked. Relates to [[list-modified-files]] and [[dont-compile-yourself]] (they own the commit/build/verify loop).
+
+**Section-built features (dev instruction 2026-09):** when a feature is built in SECTIONS (they commit between them), verify each section's commit state via `git log --oneline -5` + `git status --short` before starting the next section — UNLESS they already said that section was committed. Watch for follow-up edits made AFTER they said "committed" (e.g. the `seen.usr` rename landed after "section 1 committed"), and note anything still in the working tree so it isn't lost or merged into the wrong section. Applies to all future features.

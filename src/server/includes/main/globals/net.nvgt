@@ -89,9 +89,9 @@ date stamps: a plain string compare on this format is chronological, so tie-brea
 string leaderboard_stamp() { return "" + DATE_YEAR + "-" + pad2(DATE_MONTH) + "-" + pad2(DATE_DAY) + " " + pad2(TIME_HOUR) + ":" + pad2(TIME_MINUTE); }
 /* Last-seen tracking for the player list (/prl). We record WHEN an account was last online -- stamped in offline_line(),
 the single choke point every genuine departure passes through -- as a string-SORTABLE leaderboard_stamp ("YYYY-MM-DD HH:MM")
-in lastseen.usr, so the offline list sorts newest-first with a plain string compare. It's shown in the friendly house style. */
-void mark_last_seen(string name) { if(account_exists(name)) write_field(name, "lastseen", leaderboard_stamp()); } // guarded so a rename/delete (account folder gone) can't write a stray file
-string get_last_seen(string name) { return read_field(name, "lastseen", ""); } // the raw sortable stamp, or "" if never recorded
+in seen.usr, so the offline list sorts newest-first with a plain string compare. It's shown in the friendly house style. */
+void mark_last_seen(string name) { if(account_exists(name)) write_field(name, "seen", leaderboard_stamp()); } // guarded so a rename/delete (account folder gone) can't write a stray file
+string get_last_seen(string name) { return read_field(name, "seen", ""); } // the raw sortable stamp, or "" if never recorded
 // A month number (1-12) to its English name, for formatting a stored stamp (report_time_stamp uses the engine's current-month global, which is no help for an arbitrary past date).
 string month_name(int m) { string[] n = {"January","February","March","April","May","June","July","August","September","October","November","December"}; return (m >= 1 and m <= 12) ? n[m-1] : ""; }
 /* Turn a stored "YYYY-MM-DD HH:MM" stamp into the friendly house style "July 4, 2026 at 1:32 PM" (month name, 12-hour,
@@ -1879,6 +1879,20 @@ string board = string_to_lower_case(parsed[2]);
 bool ok = (board=="round") or (board=="wood" and parsed[1]=="PVE") or (board=="ammo" and parsed[1]=="EVP");
 if(ok) push_leaderboard(index, parsed[1], board);
 else send(event.peer_id, "misc The boards are round for either mode, wood for PVE, and ammo for EVP.", 0,true);
+}
+}
+else if(parsed[0]=="playerlist" and index>-1)
+{
+/* /prl (and /playerlist): a menu of every account, online and offline. Bare request opens an online/offline picker;
+a filter word opens that list directly. Online = the live roster, alphabetical; offline = every other account, by last
+seen newest first. Filter words are case-INSENSITIVE, unlike the leaderboard's uppercase modes. */
+if(parsed.length()==1) push_playerlist_modes(index);
+else
+{
+string f = string_to_lower_case(parsed[1]);
+if(f=="on" or f=="online") push_playerlist(index, "on");
+else if(f=="off" or f=="offline") push_playerlist(index, "off");
+else send(event.peer_id, "misc Use /prl on for online players or /prl off for offline players.", 0,true);
 }
 }
 else if(parsed[0]=="channel" and index>-1)
