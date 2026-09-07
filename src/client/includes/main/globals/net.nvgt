@@ -30,8 +30,9 @@ net.disconnect_peer_forcefully(serverpeer);
 return false;
 }
 event=net.request();
-if(connectiontimer.elapsed>=connectingtime and connected==false or event.type==event_disconnect)
+if(connectiontimer.elapsed>=connectingtime and connected==false or (event.type==event_disconnect and event.peer_id==serverpeer))
 {
+// Only THIS connection failing counts; a stale disconnect from a just-ended session (e.g. right after a ban) carries the old peer id and must be ignored, or it wrongly reads as "could not reach" before the ban rejection arrives.
 dlgmessage("Could not reach the server. Please try again.");
 connectiontimer.restart();
 connected=false;
