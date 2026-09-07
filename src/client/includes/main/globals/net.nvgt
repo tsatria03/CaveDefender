@@ -597,12 +597,14 @@ void handle_playerinfo(string message)
 		bool can_setnick = (fl.length() > 7 and fl[7] == "1"); // Set-nickname button: any staff may set another online player's nickname
 		bool can_onoff_mute = (fl.length() > 8 and fl[8] == "1"); // personal onoff-mute checkbox: shown for any other player (staff included)
 		bool already_onoff_ignored = (fl.length() > 9 and fl[9] == "1"); // its current state: am I already onoff-muting them
+		bool can_reset = (fl.length() > 10 and fl[10] == "1"); // Reset-password button: administrator+, at-or-below rank (routes to /changepass <user>)
+		bool can_delete = (fl.length() > 11 and fl[11] == "1"); // Delete-account button: administrator+, at-or-below, never the owner (routes to /delchar <user>)
 	bool can_promote = (prom != "");
 	bool can_demote = (demo != "");
 	form.reset();
 	form.create_window(title, false, false, false);
 	int infobox = form.create_input_box("Player information", body, read_only: true, multiline: true);
-	int mutebox = -1, pmbtn = -1, kickbtn = -1, banbtn = -1, prombtn = -1, demobtn = -1, notifybtn = -1, warnbtn = -1, silencebtn = -1, setnickbtn = -1, onoffmutebox = -1;
+	int mutebox = -1, pmbtn = -1, kickbtn = -1, banbtn = -1, prombtn = -1, demobtn = -1, notifybtn = -1, warnbtn = -1, silencebtn = -1, setnickbtn = -1, onoffmutebox = -1, resetbtn = -1, deletebtn = -1;
 	if(!is_self)
 	{
 		if(can_mute) mutebox = form.create_checkbox("personally &mute this player's chats", already_ignored); // Alt+M: personal ignore of their chat and voice, affecting only you (hidden for staff targets)
@@ -616,6 +618,8 @@ void handle_playerinfo(string message)
 		if(can_warn) warnbtn = form.create_button("&warn this player"); // Alt+W
 		if(can_silence) silencebtn = form.create_button("&silence this player"); // Alt+S: staff channel mute/unmute (everyone), distinct from the personal Mute checkbox
 		if(can_setnick) setnickbtn = form.create_button("s&et this player's nickname"); // Alt+E: staff nickname form
+		if(can_reset) resetbtn = form.create_button("rese&t this player's password"); // Alt+T: routes to /changepass <user> (opens the new-password form)
+		if(can_delete) deletebtn = form.create_button("de&lete this player's account"); // Alt+L: routes to /delchar <user> (warns first)
 	}
 	int infoclose = form.create_button("&close", false, true);
 	form.focus(infobox);
@@ -638,6 +642,8 @@ void handle_playerinfo(string message)
 		if(can_warn and form.is_pressed(warnbtn)) { action = "warn"; break; }
 		if(can_silence and form.is_pressed(silencebtn)) { action = "silence"; break; }
 		if(can_setnick and form.is_pressed(setnickbtn)) { action = "setnick"; break; }
+		if(can_reset and form.is_pressed(resetbtn)) { action = "reset"; break; }
+		if(can_delete and form.is_pressed(deletebtn)) { action = "delete"; break; }
 		if(form.is_pressed(infoclose)) break;
 	}
 	// Persist any change to the mute checkbox (server stores it on the account) before we leave the card.
@@ -771,6 +777,8 @@ void handle_playerinfo(string message)
 		if(nn != "") comparse("/nick " + uname + " " + nn);
 		else speak("canceled");
 	}
+	else if(action == "reset") comparse("/changepass " + uname); // the /changepass admin flow opens a new-password form, then sends changepassadmin
+	else if(action == "delete") comparse("/delchar " + uname); // the /delchar admin flow warns, then sends delcharadmin
 }
 /* A server-driven flow needs a typed value. Format: askinput\n<prompt>\n<command prefix>\n<mask>. We show a
 local box (masked when <mask> is 1) and send "<prefix> <text>"; the server command handler does the work. */
