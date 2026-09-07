@@ -1076,7 +1076,7 @@ void settingsmenu()
 			if(form.is_pressed(preffsok))
 			{
 				writepreffs();
-				if(in_game) speak("Settings saved."); // in a game a dialog would steal focus from the cavern; just say it
+				if(connected) speak("Settings saved."); // in-server (Alt+P) a dialog would steal focus; just say it, matching the "canceled" cue above
 				else dlgmessage("Settings saved. Press enter to continue.");
 				return;
 			}
