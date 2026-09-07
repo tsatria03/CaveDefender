@@ -3,7 +3,8 @@ into chat. Line N maps to key N by position. Keys 1-14 are Alt + the number row 
 keys 15-28 are Alt+Shift + those same keys. The file is RE-READ fresh on every press (it's tiny and presses are rare
 and user-driven), so a hand-edit is live on the very next press with no restart. A line's leading / makes it a command,
 otherwise it's a global chat message; a % starts a prompt whose text (up to the next %) is asked in an input box and
-whose answer is substituted in. The file ships loose in the data folder beside the game (never boxed) so players can
+whose answer is substituted in, EXCEPT the reserved pronoun codes %s %o %d %p %r %n (and %% for a literal %), which
+pass through untouched to the server and resolve there in a /me emote or an onmsg/offmsg. The file ships loose in the data folder beside the game (never boxed) so players can
 edit it. See the readme and [[scriptkeys]]. */
 
 /* Read data/scriptkeys.srk fresh (empty array if it's missing or unreadable). Blank lines are KEPT so line N stays
@@ -25,20 +26,35 @@ to the next % or the end of the line) is replaced by what the player types in an
 player cancels (or leaves blank) any prompt, which aborts the whole command. */
 string resolve_scriptkey(string line)
 {
-string[] parts = string_split(line, "%", true);
-string result = parts[0]; // literal text before the first %
-for(uint k = 1; k < parts.length(); k++)
+/* Char-by-char scan (not a plain split on %) so pronoun tokens and prompt markers can share the % sign. At each %,
+peek the next character: "%%" passes through unchanged (the server collapses it to a literal %, matching what typing
+it directly does); % followed by a pronoun letter (s o d p r n, upper or lower) passes through unchanged so the
+server resolves it in a /me emote or an onmsg/offmsg; any other % opens a fill-in PROMPT exactly as before -- its
+text runs to the next % of any kind, trailing whitespace is kept as an argument separator, and cancelling or leaving
+any prompt blank aborts the whole line. */
+string result = "";
+uint i = 0;
+uint n = line.length();
+while(i < n)
 {
-string seg = parts[k];
+if(line.substr(i, 1) != "%") { result += line.substr(i, 1); i++; continue; }
+string nextc = (i + 1 < n) ? line.substr(i+1, 1) : ""; // the character after this %
+if(nextc == "%") { result += "%%"; i += 2; continue; } // %% escape: pass through for the server to collapse
+if(nextc != "" and string_contains("sodprnSODPRN", nextc, 1) >= 0) { result += "%" + nextc; i += 2; continue; } // reserved pronoun token: pass through to the server
+// Otherwise it's a prompt: its text runs from here to the NEXT % (of any kind), or the end of the line.
+uint j = i + 1;
+while(j < n and line.substr(j, 1) != "%") j++;
+string seg = line.substr(i+1, j - (i+1));
 // Peel the trailing whitespace off the segment: it's the separator to the next argument, kept as literal.
 uint end = seg.length();
 while(end > 0 and (seg.substr(end-1, 1) == " " or seg.substr(end-1, 1) == "\t")) end--;
 string prompt = seg.substr(0, end).trim_whitespace();
 string trailing = seg.substr(end);
-if(prompt == "") { result += trailing; continue; } // a stray % with no prompt text: drop it, keep any separator
+if(prompt == "") { result += trailing; i = j; continue; } // a stray % with no prompt text: drop it, keep any separator
 string answer = vd.input_box("Script key", prompt, "");
 if(answer == "") return ""; // cancelled or left blank -> abort the whole command
 result += answer + trailing;
+i = j;
 }
 return result;
 }
