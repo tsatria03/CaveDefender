@@ -988,6 +988,31 @@ for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "alert "+oldanno
 broadcast_pos(ti); // refresh the nickname shown in the player tracker
 return true;
 }
+/* Offline counterpart of apply_nickname: set (or reset to "default") a NOT-connected player's nickname on disk. No live
+broadcast or tracker refresh (they aren't here); the actor gets a confirmation and other staff a quiet note, like the
+other offline moderation actions. Returns false (with a reason sent) on any validation failure. */
+bool apply_nickname_offline(int actorindex, string target, string requested)
+{
+int issuer_peer = players[actorindex].peer_id;
+string uname = read_field(target, "username", target); // canonical account casing
+string newnick;
+if(string_to_lower_case(requested) == "default") newnick = uname; // revert to the account username
+else
+{
+if(requested.length() < 3 or requested.length() > 24) { send(issuer_peer, "misc Nicknames must be between 3 and 24 characters.", 0, true); return false; }
+if(filterchar(requested, true)) { send(issuer_peer, "misc Nicknames may only contain letters, numbers, hyphens and underscores.", 0, true); return false; }
+newnick = requested;
+}
+if(string_to_lower_case(newnick) == string_to_lower_case(get_nickname(uname))) { send(issuer_peer, "misc This player's nickname is already set to "+get_nickname(uname)+".", 0, true); return false; }
+for(uint i=0; i<players.length(); i++) // must be unique among online players (nick or username)
+if(string_to_lower_case(players[i].nickname) == string_to_lower_case(newnick) or string_to_lower_case(players[i].name) == string_to_lower_case(newnick))
+{ send(issuer_peer, "misc This nickname is already taken. Try again.", 0, true); return false; }
+if(string_to_lower_case(newnick) != string_to_lower_case(uname) and account_exists(newnick)) { send(issuer_peer, "misc This nickname is already taken. Try again.", 0, true); return false; } // no other account's username either
+set_nickname(uname, newnick);
+send(issuer_peer, "misc You set "+uname+"'s nickname to "+newnick+".", 0, true);
+notify_staff_audit(afk_prefix(actorindex)+display_name_flagged(actorindex)+" set "+uname+"'s nickname to "+newnick+" while they were offline.", -1);
+return true;
+}
 /* Move a player to a new room scope (0 = lobby) and keep everyone's rosters in sync. Position, beacons
 and voice are scoped per room: on a move we tell the old scope to drop the player (despawn) and the
 new scope to pick them up (exchanging positions both ways). Server-wide online/offline presence is
@@ -3545,13 +3570,11 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                     }
                     else if(rank_level(players[index].rank) >= 1)
                     {
-                        // Staff form: /nick <username> <altname> (all staff, targets an online player by username).
+                        // Staff form: /nick <username> <altname> (all staff). Works on an offline account too, resolved on disk by username (nicknames only resolve online).
                         int ti = get_player_index_from(parsed[1]);
-                        if(ti < 0)
-                        {
-                            reply_target_not_found(event.peer_id, parsed[1]);
-                        }
-                        else apply_nickname(ti, parsed[2], event.peer_id, false);
+                        if(ti > -1) apply_nickname(ti, parsed[2], event.peer_id, false);
+                        else if(account_exists(parsed[1])) apply_nickname_offline(index, parsed[1], parsed[2]);
+                        else reply_target_not_found(event.peer_id, parsed[1]);
                     }
                     else send(event.peer_id, "Usage: /nick name, or /nick default.", 0, true);
                 }
