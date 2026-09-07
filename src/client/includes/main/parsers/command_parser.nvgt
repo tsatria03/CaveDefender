@@ -100,7 +100,7 @@ void comparse(string text, string channel = "global")
 		/* The player list: every account, online and offline. Bare command opens an online/offline picker; a filter
 		word (on/off/online/offline) opens that list directly. The filter is validated server-side. */
 		if(parsed.length() > 2) { syntax_error("/prl, /prl on, or /prl off"); return; }
-		string req = "playerlist";
+		string req = "prl"; // NOT "playerlist" -- that wire word is already taken by the F6 player list
 		if(parsed.length() >= 2) req += " " + parsed[1];
 		send(0, req, 0, true);
 	}

@@ -14,7 +14,8 @@
 - [List modified files](list-modified-files.md) — end every editing turn with a "Files changed:" list, bare filenames tagged with client or server (dev reviews via screen reader)
 - [Relaunch notice](relaunch-notice.md) — after the Files changed list, say whether the server and/or client must be relaunched (.nvgt code = relaunch that side; data/docks = usually none)
 - [Stage commits before big changes](stage-commits-before-big-changes.md) — proactively flag a commit break point before a large/risky stage, so safe pieces get committed on their own and the big change stays isolated
-- [Check git log for commits](check-git-log-for-commits.md) — the user commits their own work between turns; check git log/status before asking about or assuming commit state
+- [Check git log for commits](check-git-log-for-commits.md) — the user commits their own work between turns; check git log/status before asking about or assuming commit state; for section-built features verify each section's commit before the next
+- [Final section: dock updates](final-section-dock-updates.md) — when building a feature in sections, reserve the LAST section for changelog/readme/help; earlier sections are code only
 - [Ask one question at a time](ask-one-question-at-a-time.md) — when clarifying a plan, surface ONE question per turn and wait; don't batch a numbered list of questions
 - [Post changes: no changelog](post-changes-no-changelog.md) — a "post change" is a quiet pre-release touch-up; document in readme if needed, but no changelog entry and no version bump
 - [Sound placeholders](sound-placeholders.md) — when a sound is requested, wire up the playback code referencing the intended filename now; user adds the .ogg later. No dummy files
