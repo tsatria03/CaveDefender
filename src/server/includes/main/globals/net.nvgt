@@ -359,11 +359,12 @@ simply takes the session over into wherever it was. Rebind repoints members[]/ho
 spawn_player then replays their game/room/watch scope with inventory and host status intact. */
 int oldpeer=players[i].peer_id;
 bool washeld=players[i].held;
-if(!washeld) send(oldpeer, "displaced", 0, true); // a live old socket (a real second login): tell that client so it shows a notice and tears itself down, rather than yanking its socket (which would make it auto-reconnect and fight to steal the session back). A held session has no live client to notify. After the rebind below, the old peer is inert (no roster entry -> every index>-1 handler ignores it) until the client drops.
+if(!washeld) send(oldpeer, "displaced", 0, true); // a live old socket (a real second login): tell that client so it shows a notice and tears itself down, rather than yanking its socket (which would make it auto-reconnect and fight to steal the session back). A held session has no live client to notify. After the rebind below, the old peer is inert (no roster entry -> every index>-1 handler ignores it) until the client drops. The account's offline cue plays ONLY to the new signing-in session (via takeover_offline below), not to everyone -- the account never actually left, so others hear nothing.
 rebind_peer(oldpeer, event.peer_id);
 players[i].held=false;
 players[i].restoring=true;
 players[i].restore_reannounce=washeld; // held sessions were announced offline, so restore re-announces them online; a live takeover never went offline, so it stays quiet
+players[i].takeover_offline=!washeld; // a live takeover: on restore, play the account's offline cue to the NEW session too, so the person signing in hears their other device get booted
 verified_logins.delete(""+oldpeer);
 verified_logins.set(""+event.peer_id, name);
 send(event.peer_id, "done", 0,true);
@@ -1330,6 +1331,8 @@ send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true
 send(event.peer_id, "autoafk "+autoafk, 0, true); // the host's idle-timeout policy (conf.svr's autoafk); re-sent on reconnect in case the client restarted
 if(players[index].restore_reannounce) send(0, online_line(players[index].name, players[index].rank, players[index].nickname), 0,true); // only if they were held (announced offline); a live takeover was never offline.
 players[index].restore_reannounce=false;
+if(players[index].takeover_offline) send(event.peer_id, "playoffline "+players[index].name, 0, true); // a live takeover: let the freshly-signed-in device hear its OTHER session's offline cue as it was booted
+players[index].takeover_offline=false;
 send(event.peer_id, "voicemutestate "+(is_muted_now(index, "voice") ? "1" : "0"), 0, true); // silent voice-mute state so the client can warn on O without opening the mic; no message or sound
 send_yourrooms(event.peer_id, players[index].name);
 restore_scope(index);

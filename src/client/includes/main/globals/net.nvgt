@@ -951,6 +951,11 @@ void netloop_impl()
 				add_buffer_item("connections", offdisp + " " + offaction);
 			remove_player(parsed[1]); // remove from the scoped roster by the username key
 		}
+		else if (parsed[0] == "playoffline" and parsed.length() > 1)
+		{
+			// A duplicate login just booted this player's OTHER session; play its departure cue only. The account is still online (the new session took over), so nothing is removed from any roster or buffer.
+			do_onoff(parsed[1], "offline", "?", true);
+		}
 		else if (parsed[0] == "onoffdata" and parsed.length() >= 3)
 		{
 			/* Reply to a getonoff request: "onoffdata <user> <which>\n<base64 audio>", or "...\nnone" when there's no
