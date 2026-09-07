@@ -1267,6 +1267,8 @@ int csilence = (other and vlevel>=2 and !is_staff(players[ti].rank)) ? 1 : 0; //
 int csetnick = (other and vlevel>=1) ? 1 : 0; // Set-nickname button (/nick <user> <name>): any staff may set any other online player's nickname
 int conoffmute = other ? 1 : 0; // personal onoff-mute checkbox: shown for ANY other player (staff included -- an onoff cue is cosmetic, not communication)
 int onoffign = player_onoff_ignores(viewer_index, players[ti].name) ? 1 : 0; // its current state: am I already onoff-muting this player
+int creset = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0; // Reset-password button (/changepass <user>): administrator+, at-or-below rank
+int cdelete = (other and vlevel>=2 and tlevel<=vlevel and !is_owner(players[ti].name)) ? 1 : 0; // Delete-account button (/delchar <user>): administrator+, at-or-below, never the owner
 string[] RANKS = {"player", "moderator", "administrator", "developer"};
 string prom = ""; // ranks the viewer may PROMOTE the target to: above the target's current, up to the viewer's own (the grant cap)
 if(other and vlevel>=1 and tlevel<=vlevel)
@@ -1274,7 +1276,7 @@ for(int L=tlevel+1; L<=vlevel; L++) prom += (prom=="" ? "" : ",") + RANKS[L];
 string demo = ""; // ranks the viewer may DEMOTE the target to: below the target's current (moderator+, owner protected)
 if(other and vlevel>=1 and tlevel<=vlevel and tlevel>=1 and !is_owner(players[ti].name))
 for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
-send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm+" "+csilence+" "+csetnick+" "+conoffmute+" "+onoffign + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
+send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm+" "+csilence+" "+csetnick+" "+conoffmute+" "+onoffign+" "+creset+" "+cdelete + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
 }
 /* Offline counterpart of push_player_info: the SAME read-only card, built entirely from DISK, for an account that isn't
 connected (opened from the /prl offline list). Drops the online-only lines (AFK, location, client version) and adds a
@@ -1319,7 +1321,9 @@ int csetnick = 0; // set-nickname is online-only today -> hidden until it can ta
 int conoffmute = other ? 1 : 0; // personal onoff mute (client-side, works offline)
 int onoffign = player_onoff_ignores(viewer_index, name) ? 1 : 0;
 int ign = player_ignores(viewer_index, name) ? 1 : 0;
-send(peer, "playerinfo\n" + name + "\n" + ign + "\n0\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm+" "+csilence+" "+csetnick+" "+conoffmute+" "+onoffign + "\n\n\n" + title + "\n" + body, 0, true); // self=0; prom/demo empty (promote/demote online-only)
+int creset = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0; // Reset password works offline (changepassadmin resolves on disk)
+int cdelete = (other and vlevel>=2 and tlevel<=vlevel and !is_owner(name)) ? 1 : 0; // Delete account works offline (delcharadmin resolves on disk), never the owner
+send(peer, "playerinfo\n" + name + "\n" + ign + "\n0\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm+" "+csilence+" "+csetnick+" "+conoffmute+" "+onoffign+" "+creset+" "+cdelete + "\n\n\n" + title + "\n" + body, 0, true); // self=0; prom/demo empty (promote/demote online-only)
 }
 /* --- Leaderboard (server-wide, persistent) ---
 Ranks every account by a stored record, online or not. Built ON DEMAND (no live state): walk the account folders,
