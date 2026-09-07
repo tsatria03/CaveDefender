@@ -1317,13 +1317,20 @@ int cnotify = 0; // notify is online-only
 int cmute = (other and !is_staff(rk)) ? 1 : 0;                  // personal chat mute (client-side; never on a staff member)
 int cpm = 0;     // PM hidden on the offline card (dev's call)
 int csilence = (other and vlevel>=2 and !is_staff(rk)) ? 1 : 0; // /mute has an offline branch
-int csetnick = 0; // set-nickname is online-only today -> hidden until it can target offline accounts
+int csetnick = (other and vlevel>=1) ? 1 : 0; // set-nickname now has an offline branch (apply_nickname_offline)
 int conoffmute = other ? 1 : 0; // personal onoff mute (client-side, works offline)
 int onoffign = player_onoff_ignores(viewer_index, name) ? 1 : 0;
 int ign = player_ignores(viewer_index, name) ? 1 : 0;
 int creset = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0; // Reset password works offline (changepassadmin resolves on disk)
 int cdelete = (other and vlevel>=2 and tlevel<=vlevel and !is_owner(name)) ? 1 : 0; // Delete account works offline (delcharadmin resolves on disk), never the owner
-send(peer, "playerinfo\n" + name + "\n" + ign + "\n0\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm+" "+csilence+" "+csetnick+" "+conoffmute+" "+onoffign+" "+creset+" "+cdelete + "\n\n\n" + title + "\n" + body, 0, true); // self=0; prom/demo empty (promote/demote online-only)
+string[] RANKS = {"player", "moderator", "administrator", "developer"};
+string prom = ""; // ranks the viewer may PROMOTE this offline account to (promote now has an offline branch); above its current, up to the viewer's own
+if(other and vlevel>=1 and tlevel<=vlevel)
+for(int L=tlevel+1; L<=vlevel; L++) prom += (prom=="" ? "" : ",") + RANKS[L];
+string demo = ""; // ranks the viewer may DEMOTE it to: below its current (owner protected)
+if(other and vlevel>=1 and tlevel<=vlevel and tlevel>=1 and !is_owner(name))
+for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
+send(peer, "playerinfo\n" + name + "\n" + ign + "\n0\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm+" "+csilence+" "+csetnick+" "+conoffmute+" "+onoffign+" "+creset+" "+cdelete + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true); // self=0
 }
 /* --- Leaderboard (server-wide, persistent) ---
 Ranks every account by a stored record, online or not. Built ON DEMAND (no live state): walk the account folders,
