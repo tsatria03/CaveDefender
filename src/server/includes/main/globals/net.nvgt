@@ -3640,7 +3640,10 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                     {
                         string tname = parsed[1];
                         string newrank = string_to_lower_case(parsed[2]);
-                        int ti = get_player_index_from(tname); // online-only, by username or nickname
+                        int ti = get_player_index_from(tname); // online by username or nickname, else -1
+                        string target = (ti > -1) ? players[ti].name : tname; // resolve to the account username (nicknames only work online)
+                        string trank = (ti > -1) ? players[ti].rank : get_rank(target); // rank from the roster if online, else from disk
+                        string tdisp = (ti > -1) ? display_name_flagged(ti) : read_field(target, "nickname", target); // display/nickname-aware, online or off
                         if(newrank != "moderator" && newrank != "administrator" && newrank != "developer")
                         {
                             send(event.peer_id, "Invalid rank. Choose moderator, administrator, or developer.", 0, true);
@@ -3649,26 +3652,28 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                         {
                             send(event.peer_id, "You can't promote someone above your own rank.", 0, true);
                         }
-                        else if(ti < 0)
+                        else if(!account_exists(target))
                         {
-                            reply_target_not_found(event.peer_id, tname);
+                            send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
-                        else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
+                        else if(rank_level(trank) > rank_level(players[index].rank))
                         {
                             send(event.peer_id, "You can't change the rank of someone above your own rank.", 0, true);
                         }
-                        else if(rank_level(newrank) <= rank_level(players[ti].rank))
+                        else if(rank_level(newrank) <= rank_level(trank))
                         {
-                            send(event.peer_id, "alert "+display_name_flagged(ti)+" is already that rank or higher. Use /demote to lower a rank.", 0, true);
+                            send(event.peer_id, "alert "+tdisp+" is already that rank or higher. Use /demote to lower a rank.", 0, true);
                         }
                         else
                         {
-                            string oldrank = players[ti].rank;
-                            set_rank(players[ti].name, newrank);
-                            players[ti].rank = newrank;
-                            send(players[ti].peer_id, "rankchange promoted "+oldrank+" "+newrank, 0, true);
-                            send(event.peer_id, "alert "+display_name_flagged(ti)+" has been promoted to "+newrank+".", 0, true);
-                            notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" promoted "+afk_prefix(ti)+display_name_flagged(ti)+" to "+newrank+".", -1);
+                            set_rank(target, newrank);
+                            if(ti > -1)
+                            {
+                                players[ti].rank = newrank;
+                                send(players[ti].peer_id, "rankchange promoted "+trank+" "+newrank, 0, true);
+                            }
+                            send(event.peer_id, "alert "+tdisp+" has been promoted to "+newrank+".", 0, true);
+                            notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" promoted "+(ti > -1 ? afk_prefix(ti) : "")+tdisp+" to "+newrank+(ti > -1 ? "." : " while they were offline."), -1);
                         }
                     }
                     else
@@ -3682,35 +3687,40 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                     {
                         string tname = parsed[1];
                         string newrank = string_to_lower_case(parsed[2]);
-                        int ti = get_player_index_from(tname); // online-only, by username or nickname
+                        int ti = get_player_index_from(tname); // online by username or nickname, else -1
+                        string target = (ti > -1) ? players[ti].name : tname;
+                        string trank = (ti > -1) ? players[ti].rank : get_rank(target);
+                        string tdisp = (ti > -1) ? display_name_flagged(ti) : read_field(target, "nickname", target);
                         if(newrank != "player" && newrank != "moderator" && newrank != "administrator")
                         {
                             send(event.peer_id, "Invalid rank. Choose player, moderator, or administrator.", 0, true);
                         }
-                        else if(ti < 0)
+                        else if(!account_exists(target))
                         {
-                            reply_target_not_found(event.peer_id, tname);
+                            send(event.peer_id, "misc This player does not exist.", 0, true);
                         }
-                        else if(is_owner(players[ti].name))
+                        else if(is_owner(target))
                         {
                             send(event.peer_id, "misc You can't demote yourself as a developer.", 0, true);
                         }
-                        else if(rank_level(players[ti].rank) > rank_level(players[index].rank))
+                        else if(rank_level(trank) > rank_level(players[index].rank))
                         {
                             send(event.peer_id, "You can't demote someone above your own rank.", 0, true);
                         }
-                        else if(rank_level(newrank) >= rank_level(players[ti].rank))
+                        else if(rank_level(newrank) >= rank_level(trank))
                         {
-                            send(event.peer_id, "alert "+display_name_flagged(ti)+" is already that rank or lower. Use /promote to raise a rank.", 0, true);
+                            send(event.peer_id, "alert "+tdisp+" is already that rank or lower. Use /promote to raise a rank.", 0, true);
                         }
                         else
                         {
-                            string oldrank = players[ti].rank;
-                            set_rank(players[ti].name, newrank);
-                            players[ti].rank = newrank;
-                            send(players[ti].peer_id, "rankchange demoted "+oldrank+" "+newrank, 0, true);
-                            send(event.peer_id, "alert "+display_name_flagged(ti)+" has been demoted to "+newrank+".", 0, true);
-                            notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" demoted "+afk_prefix(ti)+display_name_flagged(ti)+" to "+newrank+".", -1);
+                            set_rank(target, newrank);
+                            if(ti > -1)
+                            {
+                                players[ti].rank = newrank;
+                                send(players[ti].peer_id, "rankchange demoted "+trank+" "+newrank, 0, true);
+                            }
+                            send(event.peer_id, "alert "+tdisp+" has been demoted to "+newrank+".", 0, true);
+                            notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" demoted "+(ti > -1 ? afk_prefix(ti) : "")+tdisp+" to "+newrank+(ti > -1 ? "." : " while they were offline."), -1);
                         }
                     }
                     else
