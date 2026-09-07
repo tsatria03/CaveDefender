@@ -87,6 +87,26 @@ return pad2(DATE_MONTH) + "/" + pad2(DATE_DAY) + "/" + DATE_YEAR + " at " + h12 
 /* The current local moment as a string-SORTABLE "YYYY-MM-DD HH:MM" (24-hour), used for the leaderboard best-round
 date stamps: a plain string compare on this format is chronological, so tie-breaks need no date parsing. */
 string leaderboard_stamp() { return "" + DATE_YEAR + "-" + pad2(DATE_MONTH) + "-" + pad2(DATE_DAY) + " " + pad2(TIME_HOUR) + ":" + pad2(TIME_MINUTE); }
+/* Last-seen tracking for the player list (/prl). We record WHEN an account was last online -- stamped in offline_line(),
+the single choke point every genuine departure passes through -- as a string-SORTABLE leaderboard_stamp ("YYYY-MM-DD HH:MM")
+in lastseen.usr, so the offline list sorts newest-first with a plain string compare. It's shown in the friendly house style. */
+void mark_last_seen(string name) { if(account_exists(name)) write_field(name, "lastseen", leaderboard_stamp()); } // guarded so a rename/delete (account folder gone) can't write a stray file
+string get_last_seen(string name) { return read_field(name, "lastseen", ""); } // the raw sortable stamp, or "" if never recorded
+// A month number (1-12) to its English name, for formatting a stored stamp (report_time_stamp uses the engine's current-month global, which is no help for an arbitrary past date).
+string month_name(int m) { string[] n = {"January","February","March","April","May","June","July","August","September","October","November","December"}; return (m >= 1 and m <= 12) ? n[m-1] : ""; }
+/* Turn a stored "YYYY-MM-DD HH:MM" stamp into the friendly house style "July 4, 2026 at 1:32 PM" (month name, 12-hour,
+uppercase AM/PM, no seconds), matching report_time_stamp/created. "" (never recorded) reads as "unknown". */
+string format_last_seen(string stamp)
+{
+if(stamp == "") return "unknown";
+int mon = int(string_to_number(stamp.substr(5, 2)));
+int day = int(string_to_number(stamp.substr(8, 2)));
+int hh = int(string_to_number(stamp.substr(11, 2)));
+int mm = int(string_to_number(stamp.substr(14, 2)));
+string ampm = (hh < 12) ? "AM" : "PM";
+int h12 = hh % 12; if(h12 == 0) h12 = 12;
+return month_name(mon) + " " + day + ", " + stamp.substr(0, 4) + " at " + h12 + ":" + pad2(mm) + " " + ampm;
+}
 // Players currently LIVE (connected, not on a 45s reconnect hold) -- the server-wide count the peak tracks.
 int live_player_count()
 {
@@ -916,6 +936,7 @@ return "online "+nm+" "+rk+" "+nk+" "+onoff_flags(nm)+"\n"+onoff_message(nm, "on
 }
 string offline_line(string nm, string rk, string nk)
 {
+mark_last_seen(nm); // every genuine departure passes through here -> record when this account was last online, for the /prl offline list
 return "offline "+nm+" "+rk+" "+nk+"\n"+onoff_message(nm, "offline"); // 2nd line = offline action
 }
 /* Sync a player's personal onoff-ignore list to their own client, which enforces it (plays the builtin cue + default
