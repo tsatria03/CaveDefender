@@ -1270,6 +1270,64 @@ players[index].menu_targets.insert_last("EVP");
 string[] opts = {"PVE", "EVP"};
 send_menu(players[index].peer_id, "lbmode", "Choose a game leaderboard to view.", opts);
 }
+/* /prl with no filter: the online/offline picker, modeled on the leaderboard's mode picker. The chosen value (on/off)
+rides in menu_targets; on_menu_result "prlmode" forwards it to push_playerlist. */
+void push_playerlist_modes(int index)
+{
+players[index].menu_targets.resize(0);
+players[index].menu_targets.insert_last("on");
+players[index].menu_targets.insert_last("off");
+string[] opts = {"Online players", "Offline players"};
+send_menu(players[index].peer_id, "prlmode", "Choose which players to list.", opts);
+}
+/* Build and push one player list. filter "on" = every online account (the live roster, skipping held sessions, which
+read as offline), alphabetical by display name; "off" = every OTHER account on disk, by last seen, newest first (unknown
+last). Each row reads "[AFK ][rank ]name[ (username)] (online)" or "...(offline) Last seen, <friendly>."; usernames ride
+in menu_targets so picking a row opens that player's card (offline card lands in a later section). Rows are assembled as
+"sortkey\nlabel\nusername" so a single lexical sort orders the whole list, then split back out. */
+void push_playerlist(int index, string filter)
+{
+players[index].menu_targets.resize(0);
+string[] entries;
+if(filter == "on")
+{
+for(uint i=0; i<players.length(); i++)
+{
+if(players[i].held) continue; // held = disconnected within the grace window; it reads as offline everywhere
+string label = afk_prefix(int(i)) + display_name(int(i));
+if(string_to_lower_case(players[i].nickname) != string_to_lower_case(players[i].name)) label += " (" + players[i].name + ")"; // show the real username when a nickname is set
+label += " (online)";
+entries.insert_last(string_to_lower_case(players[i].nickname) + "\n" + label + "\n" + players[i].name);
+}
+if(entries.length() > 1) entries.sort_ascending(); // alphabetical by nickname (the leading sortkey)
+}
+else
+{
+string[] dirs = find_directories("data/players/*");
+for(uint i=0; i<dirs.length(); i++)
+{
+string name = dirs[i];
+if(!account_exists(name)) continue;
+if(get_online_index(name) > -1) continue; // currently online (held reads as offline via get_online_index) -> it belongs on the online list
+string rk = get_rank(name);
+string nick = get_nickname(name);
+string label = (is_staff(rk) ? rk + " " : "") + nick;
+if(string_to_lower_case(nick) != string_to_lower_case(name)) label += " (" + name + ")";
+label += " (offline) Last seen, " + format_last_seen(get_last_seen(name)) + ".";
+entries.insert_last(get_last_seen(name) + "\n" + label + "\n" + name); // sortkey = the sortable seen stamp ("" for never-seen)
+}
+if(entries.length() > 1) entries.sort_descending(); // newest seen first; "" (unknown) sinks to the bottom
+}
+if(entries.length() == 0) { send(players[index].peer_id, "misc " + (filter == "on" ? "No players are online." : "No offline players are on record."), 0, true); return; }
+string[] opts;
+for(uint i=0; i<entries.length(); i++)
+{
+string[] parts = string_split(entries[i], "\n", true);
+opts.insert_last(parts[1]);
+players[index].menu_targets.insert_last(parts[2]);
+}
+send_menu(players[index].peer_id, "prllist", (filter == "on" ? "Online players" : "Offline players"), opts);
+}
 /* True when best-round entry A outranks entry B: a higher round always wins; on an equal round the record set
 FIRST wins (earlier "YYYY-MM-DD HH:MM" stamp, a plain string compare), a dated record beats an undated legacy one,
 and with nothing left to separate them it falls to the name alphabetically (case-insensitive). */
@@ -2010,6 +2068,20 @@ else if(id == "lbmode")
 {
 if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
 push_board_picker(player_index, players[player_index].menu_targets[choice]); // chose PVE or EVP: now pick which of that mode's boards
+}
+else if(id == "prlmode")
+{
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+push_playerlist(player_index, players[player_index].menu_targets[choice]); // chose Online or Offline: build that list
+}
+else if(id == "prllist")
+{
+/* Picked a row on a player list. Online -> the full info card, as today. Offline -> the trimmed disk-read card lands
+in a later section; for now just report them offline. */
+if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
+int ti = get_online_index(players[player_index].menu_targets[choice]);
+if(ti > -1) push_player_info(player_index, ti);
+else send(peer, "misc That player is offline.", 0, true);
 }
 else if(id.substr(0, 12) == "lbboardpick:")
 {

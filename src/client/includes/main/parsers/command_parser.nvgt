@@ -95,6 +95,15 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() >= 3) req += " " + parsed[2];
 		send(0, req, 0, true);
 	}
+	else if(base == "/prl" or base == "/playerlist")
+	{
+		/* The player list: every account, online and offline. Bare command opens an online/offline picker; a filter
+		word (on/off/online/offline) opens that list directly. The filter is validated server-side. */
+		if(parsed.length() > 2) { syntax_error("/prl, /prl on, or /prl off"); return; }
+		string req = "playerlist";
+		if(parsed.length() >= 2) req += " " + parsed[1];
+		send(0, req, 0, true);
+	}
 	else if(base == "/where")
 	{
 		// Everyone: ask the server where an online player is; it answers with a misc-buffer line like the F6 card.
