@@ -1,6 +1,6 @@
 /gl /me %what do you want to emote in global chat?
 /lc /me %what do you want to emote in local chat?
-/st /me %what do you want to emote in staff chat?
+/sc /me %what do you want to emote in staff chat?
 /tm /me %what do you want to emote in team chat?
 /pm %who do you want to message? %what do you want to say?
 /r %what do you want to reply?

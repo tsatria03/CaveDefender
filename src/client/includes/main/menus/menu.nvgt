@@ -1076,7 +1076,8 @@ void settingsmenu()
 			if(form.is_pressed(preffsok))
 			{
 				writepreffs();
-				dlgmessage("Settings saved. Press enter to continue.");
+				if(in_game) speak("Settings saved."); // in a game a dialog would steal focus from the cavern; just say it
+				else dlgmessage("Settings saved. Press enter to continue.");
 				return;
 			}
 			if(form.is_pressed(ttscfg))
