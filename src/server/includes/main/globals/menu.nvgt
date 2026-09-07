@@ -1391,9 +1391,9 @@ string nick = get_nickname(name);
 string label = (is_staff(rk) ? rk + " " : "") + nick;
 if(string_to_lower_case(nick) != string_to_lower_case(name)) label += " (" + name + ")";
 label += " (last seen, " + format_last_seen(get_last_seen(name)) + ")"; // no "(offline)" -- you're in the offline list, and the last-seen parenthetical already implies it
-entries.insert_last(get_last_seen(name) + "\n" + label + "\n" + name); // sortkey = the sortable seen stamp ("" for never-seen)
+entries.insert_last(string_to_lower_case(nick) + "\n" + label + "\n" + name); // sortkey = nickname, for an alphabetical list (last-seen is an absolute date, so recency-sorting it isn't worth the loss of easy lookup)
 }
-if(entries.length() > 1) entries.sort_descending(); // newest seen first; "" (unknown) sinks to the bottom
+if(entries.length() > 1) entries.sort_ascending(); // alphabetical by nickname, same as the online list
 }
 if(entries.length() == 0) { send(players[index].peer_id, "misc " + (filter == "on" ? "No players are online." : "No offline players are on record."), 0, true); return; }
 string[] opts;

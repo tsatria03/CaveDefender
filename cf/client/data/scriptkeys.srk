@@ -6,9 +6,9 @@
 /r %what do you want to reply?
 /where %who do you want to locate?
 /report %who are you reporting? %what happened?
-/playsound
-/lb
-/invtime
-/afk
 /feedback %what is your feedback or bug report?
 /nick %what nickname do you want?
+/pls
+/lb
+/invtime
+/prl
