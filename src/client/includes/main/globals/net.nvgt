@@ -881,6 +881,7 @@ void netloop_impl()
 	immediately, start a background reconnect; the game loop keeps running while we try to get back on. */
 	if (event.type == event_disconnect)
 	{
+		if (kicked) { connected = false; return; } // a deliberate server logout (kick/ban) already set kicked; never reconnect into it -- let game() fall through to the connection menu
 		start_reconnect();
 		return;
 	}
@@ -1063,6 +1064,7 @@ void netloop_impl()
 			speak(kreason == "" ? "You have been kicked from the server." : "You have been kicked from the server: " + kreason, true);
 			kicked = true;
 			connected = false;
+			reconnecting = false; // likewise cancel any reconnect a race started; a kick ends the session
 		}
 		else if (parsed[0] == "agreedrules")
 			{
@@ -1157,6 +1159,7 @@ void netloop_impl()
 			else add_buffer_item("alerts", "You have been banned permanently" + bsuffix);
 			kicked = true;
 			connected = false;
+			reconnecting = false; // in case a drop already started a reconnect: a ban ends the session, so cancel it
 		}
 		else if (parsed[0] == "banannounce" and parsed.length() > 1)
 		{

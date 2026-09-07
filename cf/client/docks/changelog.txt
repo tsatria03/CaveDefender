@@ -1,3 +1,5 @@
+New in 5.2.
+Fixed being unable to sign back in after a temporary ban: getting banned while online could leave the game stuck trying to reconnect, so it never told you how long the ban had left, and even after the ban ran out it still refused you until you fully closed and reopened the game. A ban now cleanly returns you to the connection menu, where signing in tells you how much time is left, and works normally the moment the ban expires.
 New in 5.1.
 The form for setting your online and offline messages now has a show button for each one, which fills in your pronoun codes and shows you the finished line, name and all, just as everyone will read it. You can check a message, even before you save it, so you can see how your codes expand and whether the message still fits.
 The developer editdata and viewdata browsers no longer open a player's onoffs folder, where their connect and disconnect sounds live. Those are audio files that editing as text would corrupt, so only a player's info folder, holding their text fields, can be browsed now.
