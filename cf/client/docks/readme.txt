@@ -16,6 +16,8 @@ You reach a server with an account, and there are a few ways on. Sign in as, fol
 
 If you use more than one account on this computer, Account storage keeps them for you: add, edit, or remove your saved accounts there, and Select an account chooses which one is active, the one that Sign in as will use. After you set up or create an account, the game also offers to save it here. As with servers, you cannot save the same account twice.
 
+An account can only be signed in from one place at a time. If you sign in while it is already signed in on another device, that other device is signed out and told it lost its connection, and your new sign-in takes over right where that session was, in the same room or game.
+
 The server rules.
 
 The first time you sign in you must read the server's rules and agree to them before you can play. Type /rules to read the player rules, then close the page for a quick menu asking whether you agree: yes enters the lobby, no leaves. Everyone must read the player rules to agree; staff must read both the player and staff rules, and may open the staff rules only after reading their own. You only agree once, and are asked again just if the server's rules are later updated. You can reread the rules at any time with /rules, or /rules player and /rules staff to read either page.
