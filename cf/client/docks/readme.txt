@@ -115,7 +115,7 @@ To run a script key, hold Alt and press a key along the number row, the grave ke
 
 A line can also ask you for parts of the command as you run it. Anywhere in the line, a percent sign followed by some words is a prompt, and when you press the key the game asks you that question in a box and puts your answer into the command in that spot, asking each prompt in turn from left to right. For example, a line reading slash pm followed by a prompt for who to message and a prompt for what to say asks you both, then sends the private message. Cancelling any prompt, or leaving it blank, cancels the whole command.
 
-The file is read fresh every time you press a script key, so you can edit it while the game is running and your changes work on the very next press, with no need to restart. To send to a channel other than global from a script key, begin the line with one of the channel commands, slash gl for global, slash lc for local, slash st for staff chat, or slash tm for your team, for example slash lc followed by a prompt for a local message.
+The file is read fresh every time you press a script key, so you can edit it while the game is running and your changes work on the very next press, with no need to restart. To send to a channel other than global from a script key, begin the line with one of the channel commands, slash gl for global, slash lc for local, slash sc for staff chat, or slash tm for your team, for example slash lc followed by a prompt for a local message.
 
 Rooms.
 

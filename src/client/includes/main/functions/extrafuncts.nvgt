@@ -39,7 +39,11 @@ key_down only reads state, so gameplay still sees the input. Every key counts as
 the keyboard, even reading buffers, keeps you present -- so the timer resets on anything. */
 bool any_key_down()
 {
-	for(uint k=4; k<=285; k++) if(key_down(k)) return true;
+	for(uint k=4; k<=285; k++)
+	{
+		if(k==KEY_LGUI or k==KEY_RGUI) continue; // the Windows key tabs you out to the desktop -- that's leaving, not playing, so it shouldn't hold off auto-AFK
+		if(key_down(k)) return true;
+	}
 	return false;
 }
 
@@ -50,6 +54,8 @@ bool afk_wake_key_pressed()
 		if(k==KEY_COMMA or k==KEY_PERIOD or k==KEY_LBRACKET or k==KEY_RBRACKET) continue;
 		if(k==KEY_M or k==KEY_C or k==KEY_BACKSLASH) continue;
 		if(k==KEY_LSHIFT or k==KEY_RSHIFT or k==KEY_LALT or k==KEY_RALT or k==KEY_LCTRL or k==KEY_RCTRL) continue;
+		if(k==KEY_LGUI or k==KEY_RGUI) continue; // Windows key: tabbing out to the desktop shouldn't count as coming back
+
 		if(k==KEY_SLASH or k==KEY_APOSTROPHE or k==KEY_ESCAPE) continue;
 		if(k==KEY_F1 or k==KEY_F2 or k==KEY_F3 or k==KEY_F4 or k==KEY_F5 or k==KEY_F6) continue;
 		if(k==KEY_G or k==KEY_L or k==KEY_R or k==KEY_P or k==KEY_D) continue;

@@ -1,6 +1,6 @@
 ---
 name: scriptkeys
-description: Script keys — Alt/Alt+Shift number-row hotkeys that run lines from cf/client/data/scriptkeys.srk as chat commands, with %prompt placeholders. Plus the /gl /lc /st /tm channel-routing commands (DONE). Read before building the key loader/executor or touching the channel commands.
+description: Script keys — Alt/Alt+Shift number-row hotkeys that run lines from cf/client/data/scriptkeys.srk as chat commands, with %prompt placeholders. Plus the /gl /lc /sc /tm channel-routing commands (DONE; staff chat is /sc, renamed from /st in 5.2). Read before building the key loader/executor or touching the channel commands.
 metadata:
   type: project
 ---
@@ -18,7 +18,7 @@ metadata:
 - No comment syntax (every line maps to a key by position, so a comment would consume a key slot).
 - Execution = resolve all `%prompts` into the final text, then call `comparse(text)` (the normal client router), so rank gating and validation apply.
 
-**Channel-routing commands — BUILT (client-only, in command_parser.nvgt, after the /channel block):** `/gl` global, `/lc` local, `/st` staff (staff only: `my_rank_level()<1` → unknown_command; hidden like other staff commands), `/tm` team where possible. Each re-runs the remainder of the line via `comparse(rest, <channel>)`, so plain text → that channel's chat and `/me` → that channel's emote, reusing the existing `localchat`/`staffchat`/`teamchat` + `localme`/`staffme`/`teamme` wire messages — NO new server code. Bare command (no text) → `syntax_error(base + " message")`. They solve the "which channel does /me use from a hotkey?" problem AND let you cross-post from any chat box (e.g. `/gl hi` from the local box). Docs done: player help (/gl,/lc,/tm), staff help (/st), changelog entry. See [[new-command-checklist]], [[command-parser-conventions]].
+**Channel-routing commands — BUILT (client-only, in command_parser.nvgt, after the /channel block):** `/gl` global, `/lc` local, `/sc` staff (renamed from `/st` in 5.2; staff only: `my_rank_level()<1` → unknown_command; hidden like other staff commands), `/tm` team where possible. Each re-runs the remainder of the line via `comparse(rest, <channel>)`, so plain text → that channel's chat and `/me` → that channel's emote, reusing the existing `localchat`/`staffchat`/`teamchat` + `localme`/`staffme`/`teamme` wire messages — NO new server code. Bare command (no text) → `syntax_error(base + " message")`. They solve the "which channel does /me use from a hotkey?" problem AND let you cross-post from any chat box (e.g. `/gl hi` from the local box). Docs done: player help (/gl,/lc,/tm), staff help (/sc), changelog entry. See [[new-command-checklist]], [[command-parser-conventions]].
 
 **Empty slot (dev-locked):** pressing a key whose line is blank/missing speaks exactly `"scriptkey N not found"` (N = the key's 1–28 number) and does nothing else.
 

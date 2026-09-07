@@ -1,6 +1,8 @@
 ####These are the things that need to be finished for future versions of the game.
 
 **Unfinished. Add support for putting pronoun variable substitutions in script key messages.
+**Unfinished. Make logging into an account that is already signed in elsewhere automatically log the other session out, so the new login takes its place.
+**Unfinished. Add a player list command, slash playerlist or slash prl, opening a menu of every account, online and offline, each showing its rank, nickname, and away state, whether it is online or offline, and how long ago an offline one was last seen; choosing a player opens a trimmed version of their information card.
 
 ##These are the things that are already finished from earlier versions of the game.
 
@@ -11,7 +13,7 @@
 **Finished. Add a free play cavern control that sets how often continuously spawning items refill, from one to sixty seconds.
 **Finished. Fix attackers in a player versus player game picking up the defenders' wood from outside the cave, which took it from the defenders and made its pickup sound play clearly to outside players.
 **Finished. Add script keys, Alt and Alt plus Shift number row shortcuts that run lines of an editable scriptkeys file as chat commands, with fill-in prompts.
-**Finished. Add the slash gl, slash lc, slash st, and slash tm channel commands that send the rest of a line to a chat channel from any box.
+**Finished. Add the slash gl, slash lc, slash sc, and slash tm channel commands that send the rest of a line to a chat channel from any box.
 **Finished. Add a slash playsound command that plays a server-hosted sound to everyone, with a menu picker and separate player and staff sound folders.
 **Finished. Let staff silence a player's online and offline sounds through the mute command.
 **Finished. Let players personally mute another player's online and offline sounds from their information card or a command.
