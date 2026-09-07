@@ -1,11 +1,11 @@
 ####These are the things that need to be finished for future versions of the game.
 
 **Unfinished. Add support for putting pronoun variable substitutions in script key messages.
-**Unfinished. Make logging into an account that is already signed in elsewhere automatically log the other session out, so the new login takes its place.
 **Unfinished. Add a player list command, slash playerlist or slash prl, opening a menu of every account, online and offline, each showing its rank, nickname, and away state, whether it is online or offline, and how long ago an offline one was last seen; choosing a player opens a trimmed version of their information card.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Make signing in to an account that is already signed in elsewhere take over that session, signing the other device out with a notice, so the two no longer fight over the account.
 **Finished. Add the ability to test your online and offline messages when changing them from the player pannel.
 **Finished. Fix custom online and offline sounds not updating after you replaced one, so a newly uploaded sound takes effect right away instead of replaying the old one.
 **Finished. Add pronoun variable substitutions to emote and custom online and offline messages, using short percent tokens that fill in a player's chosen pronouns.

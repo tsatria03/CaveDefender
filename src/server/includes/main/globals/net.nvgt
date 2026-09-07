@@ -359,7 +359,7 @@ simply takes the session over into wherever it was. Rebind repoints members[]/ho
 spawn_player then replays their game/room/watch scope with inventory and host status intact. */
 int oldpeer=players[i].peer_id;
 bool washeld=players[i].held;
-if(!washeld) net.disconnect_peer_forcefully(oldpeer); // a live old socket (real second client, or a not-yet-timed-out ghost): drop it so two clients don't both drive one session
+if(!washeld) send(oldpeer, "displaced", 0, true); // a live old socket (a real second login): tell that client so it shows a notice and tears itself down, rather than yanking its socket (which would make it auto-reconnect and fight to steal the session back). A held session has no live client to notify. After the rebind below, the old peer is inert (no roster entry -> every index>-1 handler ignores it) until the client drops.
 rebind_peer(oldpeer, event.peer_id);
 players[i].held=false;
 players[i].restoring=true;

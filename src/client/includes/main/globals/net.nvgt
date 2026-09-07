@@ -2,6 +2,7 @@ int port=25562;
 string ip="reality-breaker-studios.net"; // fresh-install / post-reset default: the Central server (no saved ip/port yet). Mirror of CENTRAL_IP/CENTRAL_PORT in storage_presets.nvgt -- kept in sync by hand (global init order can't reference those constants here).
 bool server_custom=false; // true = on a manually entered (non-preset) server; forces the label to "Custom" even if ip/port happen to match a preset
 bool encrypting=true, connected, registering, pinging, connection_dropped, kicked, justregistered, reconnect_aborted, reconnecting, reconnected;
+bool displaced; // set when the server signs this session out because the account logged in from somewhere else; ends the session cleanly (no reconnect), like kicked but with its own notice
 
 timer connectiontimer, pingtimer, reconnect_overall, reconnect_attempt;
 int connectingtime=10000;
@@ -88,6 +89,14 @@ if(kicked)
 kicked=false;
 fade_multi_pool(fademode);
 net.disconnect_peer_forcefully(serverpeer);
+return false;
+}
+if(displaced)
+{
+displaced=false;
+fade_multi_pool(fademode);
+net.disconnect_peer_forcefully(serverpeer);
+dlgmessage("You have lost your connection. Please log in again."); // this account signed in elsewhere; a deliberate, generic notice, then back to the connection menu
 return false;
 }
 if(reconnected)
@@ -1286,6 +1295,13 @@ void netloop_impl()
 			else if (parsed[0] == "play" and parsed.length() > 1)
 		{
 			roompool.play_stationary("sounds/ui/misc/"+parsed[1], false); // a server-pushed cue for others in your room or game (room join/leave via cue_room_others, or a game kick) -- on roompool so a busy p can't drop it
+		}
+		else if (parsed[0] == "displaced")
+		{
+			// The account signed in from somewhere else; the server handed the session to that login. End cleanly and DON'T reconnect (that would fight to steal it back).
+			displaced = true;
+			connected = false;
+			reconnecting = false;
 		}
 		else if (parsed[0] == "terminate")
 		{
