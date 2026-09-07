@@ -5,6 +5,7 @@
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Make promote, demote, and set nickname work on offline players, and show those buttons on an offline player's card.
 **Finished. Add reset password and delete account buttons to a player's information card, for administrators, working whether the player is online or offline.
 **Finished. Add a player list command, slash playerlist or slash prl, listing every account online and offline with last-seen times, whose rows open each player's information card.
 **Finished. Make signing in to an account that is already signed in elsewhere take over that session, signing the other device out with a notice, so the two no longer fight over the account.
