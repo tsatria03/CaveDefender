@@ -1296,11 +1296,10 @@ body += "Pronouns: " + get_pronoun(name) + "\r\n";
 body += "Member since: " + read_field(name, "created", "Unknown") + "\r\n";
 body += "Channel: " + get_language(name) + "\r\n";
 body += "Rank: " + rk + "\r\n";
-body += "Status: Offline. Last seen, " + format_last_seen(get_last_seen(name)) + ".\r\n"; // replaces the online card's AFK/location lines
-body += "Agreed to rules: " + (has_agreed_rules(name) ? "Yes" : "No") + "\r\n";
+body += "Agreed to rules: " + (has_agreed_rules(name) ? "Yes" : "No") + "\r\n"; // no status/last-seen line: the /prl row already shows "(offline) Last seen, ..."
 int wins = get_wins(name);
 int losses = get_losses(name);
-body += "\r\nPVP record: " + wins + (wins==1 ? " win" : " wins") + ", " + losses + (losses==1 ? " loss" : " losses");
+body += "PVP record: " + wins + (wins==1 ? " win" : " wins") + ", " + losses + (losses==1 ? " loss" : " losses"); // no leading blank line before the records on the offline card
 body += "\r\nPVE best round: " + get_pve_best_round(name);
 body += "\r\nPVE total wood: " + get_total_wood(name);
 body += "\r\nEVP best round: " + get_evp_best_round(name);
@@ -1350,7 +1349,12 @@ void push_playerlist_modes(int index)
 players[index].menu_targets.resize(0);
 players[index].menu_targets.insert_last("on");
 players[index].menu_targets.insert_last("off");
-string[] opts = {"Online players", "Offline players"};
+int onc = 0; // online = live roster minus held (held reads as offline)
+for(uint i=0; i<players.length(); i++) if(!players[i].held) onc++;
+int offc = 0; // offline = every account on disk not currently online
+string[] dirs = find_directories("data/players/*");
+for(uint i=0; i<dirs.length(); i++) if(account_exists(dirs[i]) and get_online_index(dirs[i]) < 0) offc++;
+string[] opts = {"Online players, " + onc, "Offline players, " + offc};
 send_menu(players[index].peer_id, "prlmode", "Choose which players to list.", opts);
 }
 /* Build and push one player list. filter "on" = every online account (the live roster, skipping held sessions, which
@@ -1386,7 +1390,7 @@ string rk = get_rank(name);
 string nick = get_nickname(name);
 string label = (is_staff(rk) ? rk + " " : "") + nick;
 if(string_to_lower_case(nick) != string_to_lower_case(name)) label += " (" + name + ")";
-label += " (offline) Last seen, " + format_last_seen(get_last_seen(name)) + ".";
+label += " (last seen, " + format_last_seen(get_last_seen(name)) + ")"; // no "(offline)" -- you're in the offline list, and the last-seen parenthetical already implies it
 entries.insert_last(get_last_seen(name) + "\n" + label + "\n" + name); // sortkey = the sortable seen stamp ("" for never-seen)
 }
 if(entries.length() > 1) entries.sort_descending(); // newest seen first; "" (unknown) sinks to the bottom
