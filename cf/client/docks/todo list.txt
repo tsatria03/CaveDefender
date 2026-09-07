@@ -1,10 +1,10 @@
 ####These are the things that need to be finished for future versions of the game.
 
-**Unfinished. Add support for putting pronoun variable substitutions in script key messages.
 
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Let pronoun codes be used inside script keys, passing through to fill in on a slash me emote or an online or offline message instead of being treated as prompts.
 **Finished. Make promote, demote, and set nickname work on offline players, and show those buttons on an offline player's card.
 **Finished. Add reset password and delete account buttons to a player's information card, for administrators, working whether the player is online or offline.
 **Finished. Add a player list command, slash playerlist or slash prl, listing every account online and offline with last-seen times, whose rows open each player's information card.

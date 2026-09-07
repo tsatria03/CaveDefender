@@ -11,10 +11,10 @@ metadata:
 
 **Grammar (dev-locked):**
 - A line is interpreted exactly like text typed into a chat box: leading `/` = command, otherwise = GLOBAL chat (a script key has no channel context, so slash-less text always goes global).
-- `%` starts a PROMPT: text after it (until the next `%`) is the question shown in a single-field input box; the player's typed answer is substituted at that spot. Prompts are asked in order, left to right.
+- `%` starts a PROMPT: text after it (until the next `%`) is the question shown in a single-field input box; the player's typed answer is substituted at that spot. Prompts are asked in order, left to right. CAVEAT: a prompt runs to the next `%`, so literal words can't sit BETWEEN a prompt and a following token — put them before the prompt or after a token.
 - No `%` at all → runs instantly (e.g. `/lb`).
 - Cancel any prompt → the whole command cancels ("canceled"), nothing sent.
-- NO reserved tokens: the original sample's `%user` (= last person who messaged you) was CUT to keep one consistent rule.
+- RESERVED tokens (added 5.2): the pronoun codes `%s %o %d %p %r %n` (+ uppercase) and `%%` are NOT prompts — resolve_scriptkey passes them through untouched so the SERVER substitutes them (only in a `/me` emote or onmsg/offmsg; elsewhere literal). This is why resolve_scriptkey is a char-scanner, not a plain split-on-`%`. (The original `%user` idea was still cut; these pronoun tokens are the only reserved set.)
 - No comment syntax (every line maps to a key by position, so a comment would consume a key slot).
 - Execution = resolve all `%prompts` into the final text, then call `comparse(text)` (the normal client router), so rank gating and validation apply.
 
