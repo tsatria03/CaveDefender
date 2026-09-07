@@ -1881,9 +1881,10 @@ if(ok) push_leaderboard(index, parsed[1], board);
 else send(event.peer_id, "misc The boards are round for either mode, wood for PVE, and ammo for EVP.", 0,true);
 }
 }
-else if(parsed[0]=="playerlist" and index>-1)
+else if(parsed[0]=="prl" and index>-1)
 {
 /* /prl (and /playerlist): a menu of every account, online and offline. Bare request opens an online/offline picker;
+The wire word is "prl", not "playerlist" -- the latter is already the F6 online-roster command above.
 a filter word opens that list directly. Online = the live roster, alphabetical; offline = every other account, by last
 seen newest first. Filter words are case-INSENSITIVE, unlike the leaderboard's uppercase modes. */
 if(parsed.length()==1) push_playerlist_modes(index);

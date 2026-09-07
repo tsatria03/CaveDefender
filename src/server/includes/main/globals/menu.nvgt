@@ -1193,6 +1193,23 @@ if(ch.length() == 0) return "Not muted.";
 if(ch.length() == 4) return "Muted in all channels.";
 return "Muted in " + oxford_join(ch) + ".";
 }
+/* Name-based (disk) counterpart of player_mute_phrase, for the offline card: reads each channel's mute straight from
+disk and skips a timed mute that has already lapsed. Mirrors the online phrase (global/local/voice/team; not onoff). */
+string player_mute_phrase_for(string name)
+{
+string[] ch;
+string[] chans = {"global", "local", "voice", "team"};
+for(uint i=0; i<chans.length(); i++)
+{
+int64 u = get_channel_mute(name, chans[i]); // -1 not muted, 0 indefinite, >0 epoch
+if(u < 0) continue;
+if(u > 0 and u - now_epoch() <= 0) continue; // a timed mute that has already lapsed
+ch.insert_last(chans[i]);
+}
+if(ch.length() == 0) return "Not muted.";
+if(ch.length() == 4) return "Muted in all channels.";
+return "Muted in " + oxford_join(ch) + ".";
+}
 /* Build and send the F6 read-only info card for one player to the viewer. viewer_index decides whether the
 staff-only moderation lines (mute/ban/warnings) are included. The client renders it in an inline read-only
 box. Title and body are joined by a single newline; the body's own lines are CRLF-separated for the box. */
@@ -1258,6 +1275,51 @@ string demo = ""; // ranks the viewer may DEMOTE the target to: below the target
 if(other and vlevel>=1 and tlevel<=vlevel and tlevel>=1 and !is_owner(players[ti].name))
 for(int L=0; L<tlevel; L++) demo += (demo=="" ? "" : ",") + RANKS[L];
 send(peer, "playerinfo\n" + players[ti].name + "\n" + ign + "\n" + self + "\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm+" "+csilence+" "+csetnick+" "+conoffmute+" "+onoffign + "\n" + prom + "\n" + demo + "\n" + title + "\n" + body, 0, true);
+}
+/* Offline counterpart of push_player_info: the SAME read-only card, built entirely from DISK, for an account that isn't
+connected (opened from the /prl offline list). Drops the online-only lines (AFK, location, client version) and adds a
+"Status: Offline. Last seen, ..." line. Action buttons are TRIMMED to what works on an offline account: ban, warn,
+silence, and the two personal mutes. Kick/PM/notify are online-only; promote/demote/set-nickname stay hidden until those
+commands can target offline accounts (a later feature). Rank gating mirrors the online card. */
+void push_player_info_offline(int viewer_index, string name)
+{
+int peer = players[viewer_index].peer_id;
+string rk = get_rank(name);
+string nick = get_nickname(name);
+string title = "Viewing info for " + (is_staff(rk) ? rk + " " : "") + nick;
+string body = "Username: " + name + "\r\n";
+body += "Nickname: " + nick + "\r\n";
+if(is_staff(players[viewer_index].rank)) body += "Email: " + read_field(name, "email") + "\r\n"; // staff-only PII, same as the online card
+body += "Pronouns: " + get_pronoun(name) + "\r\n";
+body += "Member since: " + read_field(name, "created", "Unknown") + "\r\n";
+body += "Channel: " + get_language(name) + "\r\n";
+body += "Rank: " + rk + "\r\n";
+body += "Status: Offline. Last seen, " + format_last_seen(get_last_seen(name)) + ".\r\n"; // replaces the online card's AFK/location lines
+body += "Agreed to rules: " + (has_agreed_rules(name) ? "Yes" : "No") + "\r\n";
+int wins = get_wins(name);
+int losses = get_losses(name);
+body += "\r\nPVP record: " + wins + (wins==1 ? " win" : " wins") + ", " + losses + (losses==1 ? " loss" : " losses");
+body += "\r\nPVE best round: " + get_pve_best_round(name);
+body += "\r\nPVE total wood: " + get_total_wood(name);
+body += "\r\nEVP best round: " + get_evp_best_round(name);
+body += "\r\nEVP total ammo: " + get_total_ammo(name);
+body += "\r\nWarnings: " + warning_count(name);
+if(is_staff(players[viewer_index].rank)) body += "\r\nMute status: " + player_mute_phrase_for(name);
+int vlevel = rank_level(players[viewer_index].rank);
+int tlevel = rank_level(rk);
+bool other = (string_to_lower_case(name) != string_to_lower_case(players[viewer_index].name)); // your own account is never offline, but guard anyway
+int ckick = 0;   // kick is online-only
+int cban  = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;   // /ban has an offline branch (perform_offline_ban)
+int cwarn = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;   // /warn works offline
+int cnotify = 0; // notify is online-only
+int cmute = (other and !is_staff(rk)) ? 1 : 0;                  // personal chat mute (client-side; never on a staff member)
+int cpm = 0;     // PM hidden on the offline card (dev's call)
+int csilence = (other and vlevel>=2 and !is_staff(rk)) ? 1 : 0; // /mute has an offline branch
+int csetnick = 0; // set-nickname is online-only today -> hidden until it can target offline accounts
+int conoffmute = other ? 1 : 0; // personal onoff mute (client-side, works offline)
+int onoffign = player_onoff_ignores(viewer_index, name) ? 1 : 0;
+int ign = player_ignores(viewer_index, name) ? 1 : 0;
+send(peer, "playerinfo\n" + name + "\n" + ign + "\n0\n" + ckick+" "+cban+" "+cwarn+" "+cnotify+" "+cmute+" "+cpm+" "+csilence+" "+csetnick+" "+conoffmute+" "+onoffign + "\n\n\n" + title + "\n" + body, 0, true); // self=0; prom/demo empty (promote/demote online-only)
 }
 /* --- Leaderboard (server-wide, persistent) ---
 Ranks every account by a stored record, online or not. Built ON DEMAND (no live state): walk the account folders,
@@ -2076,12 +2138,12 @@ push_playerlist(player_index, players[player_index].menu_targets[choice]); // ch
 }
 else if(id == "prllist")
 {
-/* Picked a row on a player list. Online -> the full info card, as today. Offline -> the trimmed disk-read card lands
-in a later section; for now just report them offline. */
+/* Picked a row on a player list. Online -> the full info card, as today. Offline -> the trimmed disk-read card. */
 if(choice < 0 or choice >= int(players[player_index].menu_targets.length())) return; // cancelled
-int ti = get_online_index(players[player_index].menu_targets[choice]);
+string uname = players[player_index].menu_targets[choice];
+int ti = get_online_index(uname);
 if(ti > -1) push_player_info(player_index, ti);
-else send(peer, "misc That player is offline.", 0, true);
+else push_player_info_offline(player_index, uname);
 }
 else if(id.substr(0, 12) == "lbboardpick:")
 {
