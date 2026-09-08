@@ -810,6 +810,36 @@ if(total==1) head="There is 1 staff member on this game. ";
 else head="There are "+total+" staff members on this game. ";
 return head+list+".";
 }
+/* Like build_staff_list() but for a single rank -- backs /admins, /mods, and /devs. Takes the exact
+rank string (as stored in rank.usr) plus the singular noun for the header ("administrator", etc.). */
+string build_rank_list(string rank, string singular)
+{
+string[] files=find_directories("data/players/*");
+string[] members;
+for(uint i=0; i<files.length(); i++)
+{
+string acct=files[i];
+if(acct=="" or acct=="." or acct=="..") continue;
+string r=read_field(acct, "rank", "player");
+if(r!=rank) continue;
+string dispname=read_field(acct, "username");
+if(dispname=="") dispname=acct;
+int oi=get_online_index(dispname);
+string status=(oi>-1)? "Online" : "Offline";
+string afkp=(oi>-1 and players[oi].afk)? "AFK " : "";
+string nick=get_nickname(dispname);
+string namepart=(string_to_lower_case(nick)!=string_to_lower_case(dispname)) ? nick+" ("+dispname+")" : dispname;
+members.insert_last(afkp+staff_label(rank)+" "+namepart+" ("+status+")");
+}
+int total=int(members.length());
+string plural=singular+"s";
+if(total==0) return "There are no "+plural+" on this game.";
+string list=oxford_join(members);
+string head;
+if(total==1) head="There is 1 "+singular+" on this game. ";
+else head="There are "+total+" "+plural+" on this game. ";
+return head+list+".";
+}
 /* Tells a player which of their saved rooms exist so the client can warn before the create flow.
 Sends "yourrooms <0/1 public> <0/1 private>". */
 void send_yourrooms(int peer, string name)
@@ -1888,6 +1918,18 @@ send_onoff_ignore_list(index);
 else if(parsed[0]=="staff" and index>-1)
 {
 send(event.peer_id, "stafflist "+build_staff_list(), 0,true);
+}
+else if(parsed[0]=="admins" and index>-1)
+{
+send(event.peer_id, "stafflist "+build_rank_list("administrator","administrator"), 0,true);
+}
+else if(parsed[0]=="mods" and index>-1)
+{
+send(event.peer_id, "stafflist "+build_rank_list("moderator","moderator"), 0,true);
+}
+else if(parsed[0]=="devs" and index>-1)
+{
+send(event.peer_id, "stafflist "+build_rank_list("developer","developer"), 0,true);
 }
 else if(parsed[0]=="leaderboard" and index>-1)
 {
