@@ -1,4 +1,5 @@
 New in 5.2.
+You can now open the form for your online and offline messages straight from chat by typing slash onoffmsg, the same form your player panel opens.
 You can now list one kind of staff on its own with slash administrators, slash moderators, or slash developers, shortened to slash admins, slash mods, or slash devs, each showing just the administrators, moderators, or developers, online or offline.
 The staff list now has a shorter alias, so you can type slash st in place of slash staff to see everyone who is staff.
 Your pronoun codes now work inside a script key, so a single key can send a slash me emote, or set an online or offline message, that fills in your pronouns just as typing the codes yourself would. Put a code such as percent d in the key's line and it passes straight through to fill in, rather than asking you for it like an ordinary prompt.

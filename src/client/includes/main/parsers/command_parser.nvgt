@@ -139,6 +139,11 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/onoff"); return; }
 		onoff_sounds_form(); // opens the online and offline sounds form, same as F7 or the player panel option
 	}
+	else if(base == "/onoffmsg")
+	{
+		if(parsed.length() != 1) { syntax_error("/onoffmsg"); return; }
+		onoff_messages_form(); // opens the online and offline messages form, same as the player panel option
+	}
 	else if(base == "/playsound" or base == "/pls")
 	{
 		/* The soundboard: play a server sound clip to everyone. No path opens the picker (players browse the player
