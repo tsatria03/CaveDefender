@@ -1,4 +1,5 @@
 New in 5.2.
+You can now check on anyone with slash seen followed by a name, which tells you whether they are online now or, if not, when they were last seen.
 You can now open the form for your online and offline messages straight from chat by typing slash onoffmsg, the same form your player panel opens.
 You can now list one kind of staff on its own with slash administrators, slash moderators, or slash developers, shortened to slash admins, slash mods, or slash devs, each showing just the administrators, moderators, or developers, online or offline.
 The staff list now has a shorter alias, so you can type slash st in place of slash staff to see everyone who is staff.

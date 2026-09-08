@@ -99,6 +99,11 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/developers, or /devs"); return; }
 		send(0, "devs", 0, true);
 	}
+	else if(base == "/seen")
+	{
+		if(parsed.length() != 2) { syntax_error("/seen name"); return; }
+		send(0, "seen " + parsed[1], 0, true); // one name (username or, for an online player, nickname)
+	}
 	else if(base == "/lb" or base == "/leaderboard")
 	{
 		/* Server-wide leaderboards. Bare command opens a PVE/EVP mode picker; a mode alone opens that mode's board
