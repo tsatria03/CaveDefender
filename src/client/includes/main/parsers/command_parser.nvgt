@@ -79,9 +79,9 @@ void comparse(string text, string channel = "global")
 		else if(parsed.length() == 2 and (parsed[1] == "player" or parsed[1] == "staff")) send(0, "rules "+parsed[1], 0, true);
 		else { syntax_error("/rules, /rules player, or /rules staff"); return; }
 	}
-	else if(base == "/staff")
+	else if(base == "/staff" or base == "/st")
 	{
-		if(parsed.length() != 1) { syntax_error("/staff"); return; }
+		if(parsed.length() != 1) { syntax_error("/staff, or /st"); return; }
 		send(0, "staff", 0, true);
 	}
 	else if(base == "/lb" or base == "/leaderboard")
