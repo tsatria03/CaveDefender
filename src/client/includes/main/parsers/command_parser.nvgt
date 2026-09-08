@@ -84,6 +84,21 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/staff, or /st"); return; }
 		send(0, "staff", 0, true);
 	}
+	else if(base == "/admins")
+	{
+		if(parsed.length() != 1) { syntax_error("/admins"); return; }
+		send(0, "admins", 0, true);
+	}
+	else if(base == "/mods")
+	{
+		if(parsed.length() != 1) { syntax_error("/mods"); return; }
+		send(0, "mods", 0, true);
+	}
+	else if(base == "/devs")
+	{
+		if(parsed.length() != 1) { syntax_error("/devs"); return; }
+		send(0, "devs", 0, true);
+	}
 	else if(base == "/lb" or base == "/leaderboard")
 	{
 		/* Server-wide leaderboards. Bare command opens a PVE/EVP mode picker; a mode alone opens that mode's board
