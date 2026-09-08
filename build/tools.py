@@ -31,7 +31,9 @@ ASSETS_SERVER = os.path.join(REPO_DIR, "cf", "server")
 # The client's data/ folder holds scriptkeys.srk (the script-keys file). It ships LOOSE -- NOT in
 # CLIENT_EMBEDDED_FOLDERS -- so it stays a real, editable file next to the exe: it's read fresh on every script-key
 # press so hand-edits go live, and the Enigma box only embeds sounds/docks, so a data/ file is never boxed.
-CLIENT_ASSETS = ["lib", "sounds", "docks", "data"]
+# docks/ is deliberately NOT shipped with the client -- the changelog/readme/credits/todo are dev-facing and
+# the in-game reader points elsewhere, so the client bundle carries no docks folder at all (neither loose nor boxed).
+CLIENT_ASSETS = ["lib", "sounds", "data"]
 # The server's sounds/ folder holds the soundboard clips (/playsound). It ships LOOSE like data/ -- NOT in
 # SERVER_EMBEDDED_FOLDERS -- so the host can add and remove clips, and the server can read them off disk to stream.
 SERVER_ASSETS = ["data", "docks", "sounds"]
@@ -64,7 +66,7 @@ SERVER_BUILD  = os.path.join(SERVER_DEST, SERVER_OUT)   # the finished server bu
 # Enigma boxing: each side's .evb (src/<side>/cf?.evb) embeds its audio DLLs and asset folders into the exe;
 # afterward we strip those from the shipped build -- the DLLs from lib/, the folders entirely -- since they now
 # live virtually inside the exe (the screen-reader DLLs stay as real files). The client embeds opus +
-# sounds/docks; the server embeds no opus but does embed docks.
+# sounds (its docks are not shipped); the server embeds no opus but does embed docks.
 # Disable with box_project = 0 under [game] in tools.ini (defaults on; the old box_client key is still honored).
 BOX_PROJECT   = _cfg["game"].get("box_project", _cfg["game"].get("box_client", "1")) == "1"
 CLIENT_EVB    = os.path.join(SRC_CLIENT, f"{CLIENT_OUT}.evb")   # src/client/cfc.evb
@@ -72,9 +74,9 @@ SERVER_EVB    = os.path.join(SRC_SERVER, f"{SERVER_OUT}.evb")   # src/server/cfs
 CLIENT_EMBEDDED_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "opus.dll", "phonon.dll"]
 SERVER_EMBEDDED_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "phonon.dll"]
 # Each .evb also embeds these whole asset folders, so strip them from the shipped build after boxing (they
-# live virtually inside the exe). The client embeds sounds + docks; the server embeds docks (help/rules,
-# read-only), so no external docks folder ships with it either.
-CLIENT_EMBEDDED_FOLDERS = ["sounds", "docks"]
+# live virtually inside the exe). The client embeds only sounds now -- its docks are not shipped at all; the
+# server still embeds docks (help/rules, read-only), so no external docks folder ships with it either.
+CLIENT_EMBEDDED_FOLDERS = ["sounds"]
 SERVER_EMBEDDED_FOLDERS = ["docks"]
 
 # The server supervisor (downcheck) compiles to a single bare exe -- src/server/downcheck.properties sets
@@ -213,8 +215,8 @@ def compile_downcheck():
     return True
 
 def box_side(label, out_name, evb, dlls, build_dir, strip_folders=None):
-    # Wrap one compiled side with Enigma Virtual Box: embed its audio DLLs (and, on the client, the sounds/docks
-    # asset folders) into <out>.exe per its .evb, replace the unboxed exe with the boxed one, then delete the
+    # Wrap one compiled side with Enigma Virtual Box: embed its audio DLLs (and, on the client, the sounds
+    # asset folder) into <out>.exe per its .evb, replace the unboxed exe with the boxed one, then delete the
     # now-embedded DLLs from lib/ and any embedded asset folders so they aren't shipped twice. The screen-reader
     # DLLs stay as real files in lib/.
     exe   = os.path.join(build_dir, f"{out_name}.exe")         # <out>.exe (unboxed input)
@@ -250,7 +252,7 @@ def box_side(label, out_name, evb, dlls, build_dir, strip_folders=None):
         if os.path.exists(p):
             os.remove(p)
             removed.append(dll)
-    # Remove any now-embedded asset folders (client: sounds/, docks/; server: docks/) from the shipped build.
+    # Remove any now-embedded asset folders (client: sounds/; server: docks/) from the shipped build.
     stripped = []
     for folder in (strip_folders or []):
         fp = os.path.join(build_dir, folder)
@@ -262,8 +264,8 @@ def box_side(label, out_name, evb, dlls, build_dir, strip_folders=None):
     return True
 
 def box_project():
-    # Box both sides. Client embeds 5 audio DLLs (incl. opus) plus the sounds/docks folders; server embeds 4
-    # DLLs (no opus) plus the docks folder -- so neither side ships an external docks folder.
+    # Box both sides. Client embeds 5 audio DLLs (incl. opus) plus the sounds folder (its docks are not shipped);
+    # server embeds 4 DLLs (no opus) plus the docks folder -- so the server still ships no external docks folder.
     if not box_side("client", CLIENT_OUT, CLIENT_EVB, CLIENT_EMBEDDED_DLLS, CLIENT_BUILD, CLIENT_EMBEDDED_FOLDERS):
         return False
     if not box_side("server", SERVER_OUT, SERVER_EVB, SERVER_EMBEDDED_DLLS, SERVER_BUILD, SERVER_EMBEDDED_FOLDERS):

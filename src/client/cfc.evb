@@ -3845,64 +3845,6 @@
                   </File>
                 </Files>
               </File>
-              <File>
-                <Type>3</Type>
-                <Name>docks</Name>
-                <Action>0</Action>
-                <OverwriteDateTime>False</OverwriteDateTime>
-                <OverwriteAttributes>False</OverwriteAttributes>
-                <HideFromDialogs>0</HideFromDialogs>
-                <Files>
-                  <File>
-                    <Type>2</Type>
-                    <Name>changelog.txt</Name>
-                    <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\docks\changelog.txt</File>
-                    <ActiveX>False</ActiveX>
-                    <ActiveXInstall>False</ActiveXInstall>
-                    <Action>0</Action>
-                    <OverwriteDateTime>False</OverwriteDateTime>
-                    <OverwriteAttributes>False</OverwriteAttributes>
-                    <PassCommandLine>False</PassCommandLine>
-                    <HideFromDialogs>0</HideFromDialogs>
-                  </File>
-                  <File>
-                    <Type>2</Type>
-                    <Name>credits.txt</Name>
-                    <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\docks\credits.txt</File>
-                    <ActiveX>False</ActiveX>
-                    <ActiveXInstall>False</ActiveXInstall>
-                    <Action>0</Action>
-                    <OverwriteDateTime>False</OverwriteDateTime>
-                    <OverwriteAttributes>False</OverwriteAttributes>
-                    <PassCommandLine>False</PassCommandLine>
-                    <HideFromDialogs>0</HideFromDialogs>
-                  </File>
-                  <File>
-                    <Type>2</Type>
-                    <Name>readme.txt</Name>
-                    <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\docks\readme.txt</File>
-                    <ActiveX>False</ActiveX>
-                    <ActiveXInstall>False</ActiveXInstall>
-                    <Action>0</Action>
-                    <OverwriteDateTime>False</OverwriteDateTime>
-                    <OverwriteAttributes>False</OverwriteAttributes>
-                    <PassCommandLine>False</PassCommandLine>
-                    <HideFromDialogs>0</HideFromDialogs>
-                  </File>
-                  <File>
-                    <Type>2</Type>
-                    <Name>todo list.txt</Name>
-                    <File>C:\Users\tonys\OneDrive\Documents\github\tsatria03\games\CaveDefender\cf\client\docks\todo list.txt</File>
-                    <ActiveX>False</ActiveX>
-                    <ActiveXInstall>False</ActiveXInstall>
-                    <Action>0</Action>
-                    <OverwriteDateTime>False</OverwriteDateTime>
-                    <OverwriteAttributes>False</OverwriteAttributes>
-                    <PassCommandLine>False</PassCommandLine>
-                    <HideFromDialogs>0</HideFromDialogs>
-                  </File>
-                </Files>
-              </File>
         </Files>
       </File>
     </Files>
