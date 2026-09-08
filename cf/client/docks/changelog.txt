@@ -1,5 +1,5 @@
 New in 5.2.
-You can now list one kind of staff on its own with slash admins, slash mods, or slash devs, each showing just the administrators, moderators, or developers, online or offline.
+You can now list one kind of staff on its own with slash administrators, slash moderators, or slash developers, shortened to slash admins, slash mods, or slash devs, each showing just the administrators, moderators, or developers, online or offline.
 The staff list now has a shorter alias, so you can type slash st in place of slash staff to see everyone who is staff.
 Your pronoun codes now work inside a script key, so a single key can send a slash me emote, or set an online or offline message, that fills in your pronouns just as typing the codes yourself would. Put a code such as percent d in the key's line and it passes straight through to fill in, rather than asking you for it like an ordinary prompt.
 Staff can now promote, demote, or set the nickname of a player who is offline, not only one who is signed in, so an account can be adjusted without waiting for its owner to come online. An offline change takes effect the next time that player signs in and, like the other offline staff actions, is noted quietly to the other staff; these also appear as buttons on an offline player's card, opened from the player list.
