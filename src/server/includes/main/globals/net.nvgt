@@ -1941,8 +1941,12 @@ string target = (ti > -1) ? players[ti].name : parsed[1];
 if(!account_exists(target)) send(event.peer_id, "misc This player does not exist.", 0, true);
 else
 {
+/* Rank-aware, like /who and /staff: a staff member's rank prefixes the name (always shown here, not gated on the
+attention flag), with the nickname and, when it differs, the real username in parentheses. */
+string r = (ti > -1) ? players[ti].rank : get_rank(target);
 string nick = get_nickname(target);
-string disp = (string_to_lower_case(nick) != string_to_lower_case(target)) ? nick+" ("+target+")" : target;
+string namepart = (string_to_lower_case(nick) != string_to_lower_case(target)) ? nick+" ("+target+")" : target;
+string disp = (is_staff(r) ? r+" " : "") + namepart;
 if(ti > -1) send(event.peer_id, "misc "+disp+" is online now"+(players[ti].afk ? ", but away." : "."), 0, true);
 else send(event.peer_id, "misc "+disp+" is offline, last seen, "+format_last_seen(get_last_seen(target))+".", 0, true);
 }
