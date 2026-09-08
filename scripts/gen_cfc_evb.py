@@ -1,9 +1,10 @@
 """Regenerate src/client/cfc.evb — the Enigma Virtual Box project for the client.
 
 The .evb embeds, into cfc.exe: the 5 audio DLLs (bass, bassmix, bass_fx, opus, phonon) plus the ENTIRE
-sounds/ asset folder. The client's docks are NOT shipped, so they are not embedded. Screen-reader DLLs are
-deliberately left out so they stay real files in lib/. Enigma has no wildcard support, so every embedded file
-needs its own explicit entry; this script walks the real asset folders (cf/client) and writes them all out.
+sounds/ asset folder. The client's docks/ is NOT embedded -- it ships as a loose folder next to the exe so
+the in-game reader can read it. Screen-reader DLLs are deliberately left out so they stay real files in lib/.
+Enigma has no wildcard support, so every embedded file needs its own explicit entry; this script walks the
+real asset folders (cf/client) and writes them all out.
 
 Note: the .evb lives in src/client, but the assets it references stay in cf/client — an .evb's location is
 independent of the source paths inside it.
@@ -38,7 +39,8 @@ OUT           = os.path.join(CLIENT_SRC, f"{CLIENT_OUT}.evb")
 # Only these DLLs get embedded; the screen-reader DLLs stay real files in lib/.
 LIB_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "opus.dll", "phonon.dll"]
 # Whole asset folders to embed (walked recursively). docks/ is intentionally excluded -- the client's docks
-# are not shipped at all, so they are neither embedded here nor stripped by tools.py.
+# ship as a LOOSE folder next to the exe (so the in-game reader can read them), so they are neither embedded
+# here nor stripped by tools.py.
 EMBED_FOLDERS = ["sounds"]
 
 # The DLL list is fixed (not discovered), so verify each one exists in lib/ before writing -- otherwise the
