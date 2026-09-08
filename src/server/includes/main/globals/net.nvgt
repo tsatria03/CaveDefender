@@ -1931,6 +1931,22 @@ else if(parsed[0]=="devs" and index>-1)
 {
 send(event.peer_id, "stafflist "+build_rank_list("developer","developer"), 0,true);
 }
+else if(parsed[0]=="seen" and index>-1 and parsed.length()>=2)
+{
+/* /seen <name>: report whether an account is online now (AFK-aware) or, if offline, when it was last seen
+(reusing get_last_seen/format_last_seen, so "unknown" covers accounts never recorded). Online lookup takes a
+username or nickname; an offline one resolves on disk by username, like the other name-lookup commands. */
+int ti = get_player_index_from(parsed[1]); // online by username or nickname, else -1
+string target = (ti > -1) ? players[ti].name : parsed[1];
+if(!account_exists(target)) send(event.peer_id, "misc This player does not exist.", 0, true);
+else
+{
+string nick = get_nickname(target);
+string disp = (string_to_lower_case(nick) != string_to_lower_case(target)) ? nick+" ("+target+")" : target;
+if(ti > -1) send(event.peer_id, "misc "+disp+" is online now"+(players[ti].afk ? ", but away." : "."), 0, true);
+else send(event.peer_id, "misc "+disp+" is offline, last seen, "+format_last_seen(get_last_seen(target))+".", 0, true);
+}
+}
 else if(parsed[0]=="leaderboard" and index>-1)
 {
 /* /lb (and /leaderboard): the server-wide leaderboards. Bare request opens the PVE/EVP mode picker; a mode alone
