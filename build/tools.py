@@ -31,9 +31,11 @@ ASSETS_SERVER = os.path.join(REPO_DIR, "cf", "server")
 # The client's data/ folder holds scriptkeys.srk (the script-keys file). It ships LOOSE -- NOT in
 # CLIENT_EMBEDDED_FOLDERS -- so it stays a real, editable file next to the exe: it's read fresh on every script-key
 # press so hand-edits go live, and the Enigma box only embeds sounds/docks, so a data/ file is never boxed.
-# docks/ is deliberately NOT shipped with the client -- the changelog/readme/credits/todo are dev-facing and
-# the in-game reader points elsewhere, so the client bundle carries no docks folder at all (neither loose nor boxed).
-CLIENT_ASSETS = ["lib", "sounds", "data"]
+# docks/ ships as a LOOSE folder (like data/): copied into the bundle but deliberately kept OUT of
+# CLIENT_EMBEDDED_FOLDERS, so it is never embedded into the exe or stripped -- it stays a visible, editable
+# folder next to cfc.exe. The client's in-game documentation reader (main menu / Alt+K) reads these .txt files
+# from disk, so they must be present in the shipped build.
+CLIENT_ASSETS = ["lib", "sounds", "docks", "data"]
 # The server's sounds/ folder holds the soundboard clips (/playsound). It ships LOOSE like data/ -- NOT in
 # SERVER_EMBEDDED_FOLDERS -- so the host can add and remove clips, and the server can read them off disk to stream.
 SERVER_ASSETS = ["data", "docks", "sounds"]
@@ -66,7 +68,7 @@ SERVER_BUILD  = os.path.join(SERVER_DEST, SERVER_OUT)   # the finished server bu
 # Enigma boxing: each side's .evb (src/<side>/cf?.evb) embeds its audio DLLs and asset folders into the exe;
 # afterward we strip those from the shipped build -- the DLLs from lib/, the folders entirely -- since they now
 # live virtually inside the exe (the screen-reader DLLs stay as real files). The client embeds opus +
-# sounds (its docks are not shipped); the server embeds no opus but does embed docks.
+# sounds (docks ship loose, so they are not embedded); the server embeds no opus but does embed docks.
 # Disable with box_project = 0 under [game] in tools.ini (defaults on; the old box_client key is still honored).
 BOX_PROJECT   = _cfg["game"].get("box_project", _cfg["game"].get("box_client", "1")) == "1"
 CLIENT_EVB    = os.path.join(SRC_CLIENT, f"{CLIENT_OUT}.evb")   # src/client/cfc.evb
@@ -74,8 +76,9 @@ SERVER_EVB    = os.path.join(SRC_SERVER, f"{SERVER_OUT}.evb")   # src/server/cfs
 CLIENT_EMBEDDED_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "opus.dll", "phonon.dll"]
 SERVER_EMBEDDED_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "phonon.dll"]
 # Each .evb also embeds these whole asset folders, so strip them from the shipped build after boxing (they
-# live virtually inside the exe). The client embeds only sounds now -- its docks are not shipped at all; the
-# server still embeds docks (help/rules, read-only), so no external docks folder ships with it either.
+# live virtually inside the exe). The client embeds only sounds -- its docks ship as a loose folder (see
+# CLIENT_ASSETS) so the in-game reader can read them, so docks are NOT listed here. The server still embeds
+# its docks (help/rules, read-only), so no external docks folder ships with the server.
 CLIENT_EMBEDDED_FOLDERS = ["sounds"]
 SERVER_EMBEDDED_FOLDERS = ["docks"]
 
@@ -264,7 +267,7 @@ def box_side(label, out_name, evb, dlls, build_dir, strip_folders=None):
     return True
 
 def box_project():
-    # Box both sides. Client embeds 5 audio DLLs (incl. opus) plus the sounds folder (its docks are not shipped);
+    # Box both sides. Client embeds 5 audio DLLs (incl. opus) plus the sounds folder (docks ship loose, not embedded);
     # server embeds 4 DLLs (no opus) plus the docks folder -- so the server still ships no external docks folder.
     if not box_side("client", CLIENT_OUT, CLIENT_EVB, CLIENT_EMBEDDED_DLLS, CLIENT_BUILD, CLIENT_EMBEDDED_FOLDERS):
         return False
