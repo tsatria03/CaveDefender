@@ -84,19 +84,19 @@ void comparse(string text, string channel = "global")
 		if(parsed.length() != 1) { syntax_error("/staff, or /st"); return; }
 		send(0, "staff", 0, true);
 	}
-	else if(base == "/admins")
+	else if(base == "/administrators" or base == "/admins")
 	{
-		if(parsed.length() != 1) { syntax_error("/admins"); return; }
+		if(parsed.length() != 1) { syntax_error("/administrators, or /admins"); return; }
 		send(0, "admins", 0, true);
 	}
-	else if(base == "/mods")
+	else if(base == "/moderators" or base == "/mods")
 	{
-		if(parsed.length() != 1) { syntax_error("/mods"); return; }
+		if(parsed.length() != 1) { syntax_error("/moderators, or /mods"); return; }
 		send(0, "mods", 0, true);
 	}
-	else if(base == "/devs")
+	else if(base == "/developers" or base == "/devs")
 	{
-		if(parsed.length() != 1) { syntax_error("/devs"); return; }
+		if(parsed.length() != 1) { syntax_error("/developers, or /devs"); return; }
 		send(0, "devs", 0, true);
 	}
 	else if(base == "/lb" or base == "/leaderboard")
