@@ -1,6 +1,6 @@
 ---
 name: cavedefender-voice-chat-mode
-description: Voice chat mode — live streaming vs record-then-send voice messages; prefs list + tagged opus channel-3 wire format, implemented and confirmed working in-game (2026-07-06)
+description: COMPLETE — voice chat mode, live streaming vs record-then-send voice messages; prefs list + tagged opus channel-3 wire format, implemented and confirmed working in-game (2026-07-06)
 metadata:
   node_type: memory
   type: project

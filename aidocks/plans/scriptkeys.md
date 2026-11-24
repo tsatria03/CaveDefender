@@ -1,6 +1,6 @@
 ---
 name: scriptkeys
-description: Script keys — Alt/Alt+Shift number-row hotkeys that run lines from cf/client/data/scriptkeys.srk as chat commands, with %prompt placeholders. Plus the /gl /lc /sc /tm channel-routing commands (DONE; staff chat is /sc, renamed from /st in 5.2). Read before building the key loader/executor or touching the channel commands.
+description: COMPLETE (shipped in 5.0, pronoun codes in 5.2) — script keys, Alt/Alt+Shift number-row hotkeys that run lines from cf/client/data/scriptkeys.srk as chat commands, with %prompt placeholders. Plus the /gl /lc /sc /tm channel-routing commands (DONE; staff chat is /sc, renamed from /st in 5.2). Read before changing the key loader/executor or the channel commands.
 metadata:
   type: project
 ---
@@ -34,4 +34,4 @@ metadata:
 - Wired in `game.nvgt` main loop right after the AFK/auto-afk block (`else activity_timer.restart();`) as `if(scriptkey_loop()) continue;` — only reached in the ACTIVE state (frozen/paused branches `continue` earlier), so it works in lobby/room/game/watching. Plain number row is weapon quick-equip (`weapon_hotkey_loop`), so requiring Alt keeps them clear; scriptkey_loop runs before it and continues, so Alt+number never leaks to weapon-equip.
 - Docs: changelog entry + readme "Script keys." section (NOT the player help — help is slash-commands-only). Todo Finished. Sample `cf/client/data/scriptkeys.srk` shipped loose. Build copies the client `data/` folder via `CLIENT_ASSETS` (see above).
 
-**Design notes for future:** while AFK, a script key press wakes you (any non-modifier key does) rather than firing — acceptable. Prompts are single-line (chat is single-line); empty answer == cancel (vd.input_box returns "" for both). The whole feature is BUILT & awaiting dev test.
+**Design notes for future:** while AFK, a script key press wakes you (any non-modifier key does) rather than firing — acceptable. Prompts are single-line (chat is single-line); empty answer == cancel (vd.input_box returns "" for both). The whole feature is BUILT and shipped in 5.0.

@@ -8,7 +8,7 @@ metadata:
   modified: 2026-07-20T17:36:34.363Z
 ---
 
-The C++ source for the pinned engine (see [[engine-pinned-to-nvgt2]]) is checked out at:
+The C++ source for the pinned engine (see [[engine-pinned-legacy-nvgt]]) is checked out at:
 `C:\Users\tonys\OneDrive\Documents\github\tsatria03\misc\Legacy-NVGT`
 
 **IMPORTANT: this is OUTSIDE the CaveDefender repo** — it's a sibling under the parent `tsatria03/` folder, NOT inside `tsatria03/games/CaveDefender/`. So repo-rooted searches (Glob/Grep/find from the project cwd) will NOT find it and a repo-scoped Explore agent will report "no misc/Legacy-NVGT". Always use the ABSOLUTE path above (e.g. `grep -rn "..." "C:/Users/tonys/OneDrive/Documents/github/tsatria03/misc/Legacy-NVGT/src"`).

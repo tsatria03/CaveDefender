@@ -1,6 +1,6 @@
 ---
 name: pvp-recode-rationale
-description: Why PVP was pulled from the menu in 4.7 and what the from-scratch recode must fix — the dev's reasons cross-checked against the current code (the inset-ring map split is the core issue; muffle/weapons already fixed)
+description: COMPLETE (recode done, PVP back in the menu since 5.0) — why PVP was pulled from the menu in 4.7 and what the from-scratch recode had to fix — the dev's reasons cross-checked against the current code (the inset-ring map split is the core issue; muffle/weapons already fixed)
 metadata:
   type: project
 ---

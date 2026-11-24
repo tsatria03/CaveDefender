@@ -1,6 +1,6 @@
 ---
 name: soundboard
-description: The /playsound (/pls) soundboard — play a server-hosted clip to everyone, base64-streamed with client cache, path-safe + rank-scoped, with a menu picker reusing the editdata/viewdata browser pattern. Read before touching /playsound, the sound browser, or the sounds/player and sounds/staff trees.
+description: COMPLETE (shipped in 5.0) — the /playsound (/pls) soundboard — play a server-hosted clip to everyone, base64-streamed with client cache, path-safe + rank-scoped, with a menu picker reusing the editdata/viewdata browser pattern. Read before touching /playsound, the sound browser, or the sounds/player and sounds/staff trees.
 metadata:
   type: project
 ---

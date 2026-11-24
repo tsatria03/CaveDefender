@@ -11,4 +11,4 @@ When a code comment spans more than one line, write it as a single `/* ... */` b
 
 **Why:** the dev's preferred house style; stacked `//` blocks read as clutter and are harder to reflow.
 
-**How to apply:** any new multi-line comment I author uses `/* */`; when I edit an existing stacked-`//` block, convert it while I'm there. Example: the client `net.nvgt` reconnect doc and `netfuncts.nvgt` [[is_hoster]] doc were converted during the netfuncts extraction.
+**How to apply:** any new multi-line comment I author uses `/* */`; when I edit an existing stacked-`//` block, convert it while I'm there. Example: the client `net.nvgt` reconnect doc and `netfuncts.nvgt` `is_hoster()` doc were converted during the netfuncts extraction.

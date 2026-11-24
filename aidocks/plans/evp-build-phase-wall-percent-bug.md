@@ -1,6 +1,6 @@
 ---
 name: evp-build-phase-wall-percent-bug
-description: 4.7 todo/bug — in EVP the wall % doesn't visibly escalate during the build phase on later rounds; root cause traced (escalation is a wave-start top-up, not a build-phase climb), NOT YET FIXED
+description: 4.7 todo/bug — in EVP the wall % doesn't visibly escalate during the build phase on later rounds; COMPLETE: fixed in 4.7 with a build-phase ramp (evp_fortify_from + evp_build_fortify_tick) and confirmed working in-game by the dev; the root-cause trace is kept as the record
 metadata:
   type: project
 ---

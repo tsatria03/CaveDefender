@@ -1,6 +1,6 @@
 ---
 name: ban-tiers-and-hwid-limits
-description: "The three ban tiers (account/IP/machine), how ipbans.svr & compbans.svr would be shaped, and the hard engine finding that a TRUE hardware ID is not achievable in this project — pure NVGT can't read hardware and GameEngine64.dll can't be modified."
+description: "The three ban tiers (account/IP/machine), how ipbans.svr & compbans.svr would be shaped, and the hard engine finding that a TRUE hardware ID is not achievable in this project — pure NVGT can't read hardware, and a real HWID would need a brand-new native DLL."
 metadata: 
   node_type: memory
   type: reference
@@ -21,7 +21,7 @@ Design exploration (not built — recorded for later) of how banning could exten
 - **No** disk-serial / MAC / motherboard / Windows `MachineGuid` API, **no** registry read, **no** command execution (no run/exec/system/popen). `PROCESSOR_COUNT`, `PROCESSOR_ARCHITECTURE`, `process_id` exist but aren't machine-unique.
 - Therefore a TRUE hardware id is **not achievable in pure NVGT script.**
 
-**Route B (add get_hwid to GameEngine64.dll) is OFF THE TABLE:** that DLL is external, third-party, written in PureBasic, and NOT the dev's to modify — its only job is spawning map objects. See [[game-engine-dll]].
+**Route B (add get_hwid to GameEngine64.dll) no longer exists:** that third-party PureBasic DLL was never the dev's to modify, and it has been gone entirely since 2026-07-14 (replaced by the native tile store — see [[game-engine-dll]]). There is no existing native DLL in the game to extend.
 
 **What's actually reachable today = Route A, the "install ID":** `uuid_generate()` once on first launch, stored in client appdata (see [[path-conventions]]), sent at login, banned in `compbans.svr`. Weak: it's an install fingerprint, not hardware — deleting the file, a fresh install, a different Windows user profile, or a new PC all mint a new id. A genuine HWID would need a brand-new separate native DLL loaded via `library` (a real project, outside the current toolset).
 

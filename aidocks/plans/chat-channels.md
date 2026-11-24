@@ -1,6 +1,6 @@
 ---
 name: chat-channels
-description: "CaveDefender's chat channel design — Global, Local, Staff, Team (keys, scopes, build order)"
+description: "COMPLETE (all four channels built) — CaveDefender's chat channel design: Global, Local, Staff, Team (keys, scopes, build order)"
 metadata: 
   node_type: memory
   type: project

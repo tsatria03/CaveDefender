@@ -1,6 +1,6 @@
 ---
 name: user-facing-improvements
-description: Player-visible bug backlog from the 4.5 full-game review — ALL CLEARED in 4.6 (case-match, ban/kick enforcement, movement bounds-clamp); kept as a record + the consciously-deferred full anti-teleport option
+description: COMPLETE — player-visible bug backlog from the 4.5 full-game review, ALL CLEARED in 4.6 (case-match, ban/kick enforcement, movement bounds-clamp); kept as a record + the consciously-deferred full anti-teleport option
 metadata:
   type: project
 ---
