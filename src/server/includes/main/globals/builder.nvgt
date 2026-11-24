@@ -228,7 +228,7 @@ int wx=items[wfound].x, wy=items[wfound].y, wid=items[wfound].id;
 string wtype=items[wfound].type;
 items.remove_at(wfound);
 send_to_game(gid, "removeitem "+wid);
-send_to_game(gid, "footstep equipment/items/wood/"+wtype+"/take "+wx+" "+wy);
+send_to_game(gid, "footstep game/equipments/items/wood/"+wtype+"/take "+wx+" "+wy);
 builders[i].carrying=true;
 builders[i].carried_type=wtype; // remember the species so the repair and place sound match the piece it grabbed
 builders[i].target_wall=weakest_standing_wall(gid, s);

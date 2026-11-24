@@ -94,9 +94,9 @@ Feature plans, open and completed; a finished plan stays here as the record.
 
 Open (the late-2026 reorganization; suggested order: data, sounds, build, docs):
 - [Data repointing](plans/data-repointing.md) — OPEN: point the server at data/equipments (gamedata.nvgt lines 122/159/174 = the fix), then comments, server help docs, memories; optional missing-file warning
-- [Sound path repointing](plans/sound-path-repointing.md) — OPEN: ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach decided: rewrite in place
+- [Sound path repointing](plans/sound-path-repointing.md) — DONE IN CODE (client + server; awaiting in-game test + 5.3): ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach decided: rewrite in place
 - [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — OPEN: six reviewed sections in tools.py dropping the Enigma stage (menu 1-10, CLI 4 flags)
-- [Reorg docs and version](plans/reorg-docs-and-version.md) — OPEN, runs last: 5.3 bump, changelog decision, stale memory updates, retire the boxing memories
+- [Reorg docs and version](plans/reorg-docs-and-version.md) — OPEN, runs last: 5.3 bump, the 5.3 changelog block (sound reorg entry agreed, drafts saved), stale memory updates, retire the boxing memories
 - [Privacy cleanup](plans/privacy-cleanup.md) — MOSTLY DONE: player data untracked, history rewritten + force-pushed, dirty releases deleted; left: GitHub Support purge, VPS re-clone check, optional player notice
 
 Completed:

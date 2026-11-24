@@ -1,6 +1,6 @@
 ---
 name: sound-path-repointing
-description: "OPEN — repoint all client sound paths (and the server's footstep wire strings) to the reorganized cf/client/sounds/main + sounds/game layout. Until done the client is mostly silent. Approach decided 2026-11-24: rewrite paths in place."
+description: "DONE IN CODE 2026-11-24 (awaiting the dev's in-game test and the 5.3 release) — repoint all client sound paths (and the server's footstep wire strings) to the reorganized cf/client/sounds/main + sounds/game layout. Until done the client is mostly silent. Approach decided 2026-11-24: rewrite paths in place."
 metadata:
   type: project
 ---
@@ -25,7 +25,7 @@ The server's own `cf/server/sounds/` (soundboard clips) did NOT move; its 4 "sou
 
 **Approach — DECIDED 2026-11-24: (A) rewrite in place.** Every old path string is changed directly to its new location; no shared folder constants. Dev: "I'd say rewrite in place. I've done this reorg before, but on a much smaller scale." Rejected (B): shared folder constants (e.g. SND_UI, SND_EQUIP), which would make a future reorg one-line changes but reshape ~180 lines and hide the full path a screen-reader reviewer reads on each line.
 
-**Progress (2026-11-24): CLIENT SIDE DONE.** Stage 3 plus every client part of stage 4 (local pieced paths, Learn Sounds, the step strings the client sends, net.nvgt's incoming equipments/items checks) — 173 strings across 18 files rewritten by a scratchpad script that only touched quoted sound strings (line endings verified unchanged), plus 12 stale comments by hand in 8 files. Checker: every client sound path resolves except sounds/main/misc/gameover.ogg (3 uses) and roundcleared.ogg (1), which never existed in git: they are sound placeholders ([[sound-placeholders]]) for the dev to add. 0 old folder names left anywhere in src/client. **Left: the server's three footstep strings** (builder.nvgt 231, net.nvgt 1191/1233); until then wood/ammo pickup sounds sent by the server are silent on the new client.
+**Progress (2026-11-24): CLIENT SIDE DONE.** Stage 3 plus every client part of stage 4 (local pieced paths, Learn Sounds, the step strings the client sends, net.nvgt's incoming equipments/items checks) — 173 strings across 18 files rewritten by a scratchpad script that only touched quoted sound strings (line endings verified unchanged), plus 12 stale comments by hand in 8 files. Checker: every client sound path resolves except sounds/main/misc/gameover.ogg (3 uses) and roundcleared.ogg (1), which never existed in git: they are sound placeholders ([[sound-placeholders]]) for the dev to add. 0 old folder names left anywhere in src/client. **SERVER SIDE DONE (2026-11-24) — PLAN COMPLETE in code:** the three footstep strings (builder.nvgt 231, net.nvgt 1191/1233) now send `footstep game/equipments/items/...`, matching the client's incoming checks; all 9 wood/ammo take.ogg files exist. A search of both src trees finds 0 old sound folder names. Remaining for release: the 5.3 bump + changelog in [[reorg-docs-and-version]], and the dev's in-game test (Verify after, below).
 
 **Verify after:** 0 old-folder strings in any .nvgt on either side; in game: Learn Sounds plays every category, pick up wood and ammo, draw/fire each weapon, walls, footsteps, ambience, music, dialogs and typing sounds.
 

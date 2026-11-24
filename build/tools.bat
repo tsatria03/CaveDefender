@@ -1,4 +1,9 @@
 @echo off
 cd /d "%~dp0"
-"C:\Users\tonys\AppData\Local\Programs\Python\Python312\python.exe" tools.py
+where py >nul 2>nul
+if errorlevel 1 (
+    "%LOCALAPPDATA%\Programs\Python\Launcher\py.exe" -3.12 tools.py
+) else (
+    py -3.12 tools.py
+)
 pause

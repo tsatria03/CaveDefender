@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-**Why:** the dev no longer wants Enigma boxing. `src/client/cfc.evb`, `src/server/cfs.evb`, `scripts/gen_cfc_evb.py`, `scripts/gen_cfs_evb.py` are deleted (committed), but tools.py still references them, so its box step would fail. Effect on shipped builds: client `sounds/` ships as a loose folder and the 5 audio DLLs (bass, bassmix, bass_fx, opus, phonon) stay real in `lib/`; server `docks/` ships loose (already in SERVER_ASSETS), so hosts can edit help/rules. Compile, asset copy, `sanitize_server_bundle`, downcheck, 7z packaging and GitHub release are unchanged. tools.bat and tools.ini need nothing (tools.bat now runs the per-user Python 3.12 at AppData\Local\Programs\Python\Python312).
+**Why:** the dev no longer wants Enigma boxing. `src/client/cfc.evb`, `src/server/cfs.evb`, `scripts/gen_cfc_evb.py`, `scripts/gen_cfs_evb.py` are deleted (committed), but tools.py still references them, so its box step would fail. Effect on shipped builds: client `sounds/` ships as a loose folder and the 5 audio DLLs (bass, bassmix, bass_fx, opus, phonon) stay real in `lib/`; server `docks/` ships loose (already in SERVER_ASSETS), so hosts can edit help/rules. Compile, asset copy, `sanitize_server_bundle`, downcheck, 7z packaging and GitHub release are unchanged. tools.bat and tools.ini need nothing (since 2026-11-24 tools.bat runs `py -3.12 tools.py` through the py launcher, in all six of the dev's projects, so a Python reinstall or move can't break it again).
 
 **Sections (line numbers as of 2026-11-23):**
 1. Settings: rewrite comments on CLIENT_ASSETS / SERVER_ASSETS (~31-41); delete ENIGMA (~56-57) and the whole boxing block (~68-83: BOX_PROJECT, CLIENT_EVB, SERVER_EVB, *_EMBEDDED_DLLS, *_EMBEDDED_FOLDERS).
