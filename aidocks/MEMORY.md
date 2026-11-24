@@ -81,7 +81,7 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 - [Free Play game mode](general/game-mode-free.md) — AS-BUILT reference for the 4th mode, a solo/open sandbox shipped whole in 4.4: empty cavern you stock via Cavern controls (Tab), Enter arena menu with Begin arena + one-way Enable wall damage ricochet lock, self-healing walls, both toolkits live; BUILT and feature-complete 4.4a-e, tested end to end
 - [Game host client sync](general/game-host-client-sync.md) — client gates host controls on current_game_host==name, kept in sync with server host_peer via the gamehost broadcast (announce_game_host at every migration site); read before touching host migration, the round menu, or host hotkeys
 - [Ranged weapon architecture](general/ranged-weapon-architecture.md) — as-built ranged weapons: ammo+reload, a server-authoritative bullet that hits WALLS ONLY (never players), synced via the resolve-on-fire A-plus model; BUILT (server bullet.nvgt)
-- [Game data-file layout](general/game-data-file-layout.md) — the data-driven file tree for weapons/items (data/weapons + data/objects/items), extensions (.mel/.exp/.arc, .mtr material, .amt ammunition), the 4 wood types + 4 ammo types, and what each file configures; read before building the data loader
+- [Game data-file layout](general/game-data-file-layout.md) — the data-driven file tree for weapons/items (cf/server/data/equipments/{weapons,items} since the 2026-11 reorg), extensions (.mel/.exp/.arc/.art, .mtr material, .amt ammunition), the 4 wood types + 5 ammo types, and what each file configures; read before building the data loader
 - [Audio and sounds](general/audio-and-sounds.md) — sound_pool/HRTF model and the cf/client/sounds/ folder layout (ui, objects/walls, platforms, items, weapons); read when wiring a sound or referencing a sound path
 
 ## Open backlogs
@@ -93,11 +93,11 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 Feature plans, open and completed; a finished plan stays here as the record.
 
 Open (the late-2026 reorganization; suggested order: data, sounds, build, docs):
-- [Data repointing](plans/data-repointing.md) — OPEN: point the server at data/equipments (gamedata.nvgt lines 122/159/174 = the fix), then comments, server help docs, memories; optional missing-file warning
+- [Data repointing](plans/data-repointing.md) — sections 1, 2 and 4 DONE (loader, comments, memories); left: section 3 server help docs (in the final docs pass), the dev's in-game check, optional missing-file warning
 - [Sound path repointing](plans/sound-path-repointing.md) — DONE IN CODE (client + server; awaiting in-game test + 5.3): ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach decided: rewrite in place
 - [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — OPEN: six reviewed sections in tools.py dropping the Enigma stage (menu 1-10, CLI 4 flags)
 - [Reorg docs and version](plans/reorg-docs-and-version.md) — OPEN, runs last: 5.3 bump, the 5.3 changelog block (sound reorg entry agreed, drafts saved), stale memory updates, retire the boxing memories
-- [Privacy cleanup](plans/privacy-cleanup.md) — MOSTLY DONE: player data untracked, history rewritten + force-pushed, dirty releases deleted; left: GitHub Support purge, VPS re-clone check, optional player notice
+- [Privacy cleanup](plans/privacy-cleanup.md) — MOSTLY DONE: player data untracked, history rewritten + force-pushed, dirty releases deleted; left: GitHub Support purge, optional player notice (no other clones exist)
 
 Completed:
 - [Chat channels](plans/chat-channels.md) — COMPLETE: Global (/), Local (\ current map instance, covers lobby/room/game), Staff (' all staff), Team (; PVP-only, your side); all four built

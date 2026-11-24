@@ -1,7 +1,7 @@
 /* Server-side data-file loader (task #6, the foundation of the data-driven weapon/item system). Reads the
 weapon and item data files under data/ at boot into lookup tables the rest of the server queries by name:
-  data/equipment/weapons/melee/*.mel, data/equipment/weapons/explosive/*.exp, data/equipment/weapons/archery/*.arc
-  data/equipment/items/wood/*.mtr, data/equipment/items/ammo/*.amt
+  data/equipments/weapons/melee/*.mel, data/equipments/weapons/explosive/*.exp, data/equipments/weapons/archery/*.arc
+  data/equipments/items/wood/*.mtr, data/equipments/items/ammo/*.amt
 This file is PURELY ADDITIVE -- it only loads and exposes the values; the callers that switch over to them
 (weapon damage, the four wood types, the ammo reserves) are tasks #7/#8/#9, so nothing here changes gameplay
 yet. See the memory game-data-file-layout for the field spec and the format convention below.

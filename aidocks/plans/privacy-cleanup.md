@@ -1,6 +1,6 @@
 ---
 name: privacy-cleanup
-description: "MOSTLY DONE (2026-11-24) — removing player account data from the public repo: untracked + gitignored, history rewritten with git-filter-repo and force-pushed, old release archives deleted. Left: GitHub Support cache purge, VPS re-clone check, optional player notice."
+description: "MOSTLY DONE (2026-11-24) — removing player account data from the public repo: untracked + gitignored, history rewritten with git-filter-repo and force-pushed, old release archives deleted. Left: GitHub Support cache purge, optional player notice (no other clones exist, so no re-clone needed)."
 metadata:
   type: project
 ---
@@ -15,7 +15,7 @@ metadata:
 
 **Left:**
 1. Dev: ask GitHub Support (sensitive-data removal) to purge cached old commits; they stay reachable by old SHA until then.
-2. If the VPS (or any other machine) has a git clone, re-clone it; never push from an old clone.
+2. ~~Re-clone other copies~~ — NOT NEEDED (dev, 2026-11-24: there is no separate clone of this repo; the VPS has none). The only copy is the dev's working folder, already reset onto the new history.
 3. Optional: tell players their email may have been visible and suggest a password change. Longer term, consider whether email needs storing at all.
 
 **Tools:** git-filter-repo 2.47.0 is installed for Python 3.12 at `C:\Users\tonys\AppData\Roaming\Python\Python312\Scripts\git-filter-repo.exe` (not on PATH; call by full path). See [[commit-style]] (Claude never pushes, the force push was a one-off).

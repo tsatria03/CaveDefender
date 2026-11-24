@@ -1,6 +1,6 @@
 ---
 name: game-data-file-layout
-description: "The data-driven file tree for CaveDefender weapons and items -- now under cf/server/data/equipment/{weapons,items} (reorged 2026-07-16), the per-category extensions (.mel/.arc/.exp/.art, .mtr/.amt), the 12-weapon roster across 4 classes, 4 wood types + 5 ammo types, and what each file configures."
+description: "The data-driven file tree for CaveDefender weapons and items -- now under cf/server/data/equipments/{weapons,items} (reorged 2026-07-16 into equipment/, renamed to equipments/ 2026-11-23), the per-category extensions (.mel/.arc/.exp/.art, .mtr/.amt), the 12-weapon roster across 4 classes, 4 wood types + 5 ammo types, and what each file configures."
 metadata: 
   node_type: memory
   type: reference
@@ -10,7 +10,8 @@ metadata:
 The on-disk layout for the data-driven weapon/item system. SERVER holds the DATA; CLIENT holds the matching SOUNDS; the two mirror type-for-type. Verify against disk before relying on this.
 
 **2026-07-16 EXPANSION (supersedes the paths/rosters below; the format/field spec below still holds):**
-- **PATHS REORGED into `equipment/`** (dev moved the folders; code repointed the same day): server data = `data/equipment/weapons/<class>/*.<ext>` + `data/equipment/items/{wood,ammo}/*`; client sounds = `sounds/equipment/weapons/<class>/<name>/` + `sounds/equipment/items/{wood,ammo}/<type>/`. Walls did NOT move (`sounds/objects/walls/` unchanged). The wire strings (step/footstep relays) carry the `equipment/...` prefix.
+- **CURRENT PATHS (since the 2026-11-23/24 reorg):** server data = `data/equipments/weapons/<class>/*.<ext>` + `data/equipments/items/{wood,ammo}/*` (read by gamedata.nvgt; a missing file silently falls back to code defaults, see [[data-repointing]]); client sounds = `sounds/game/equipments/weapons/<class>/<name>/` + `sounds/game/equipments/items/{wood,ammo}/<type>/`; walls and platforms = `sounds/game/objects/construction/{walls,platforms}/`. The wire strings (step/footstep relays) carry the `game/equipments/...` prefix ([[sound-path-repointing]]).
+- History: on 2026-07-16 the dev first moved these into `equipment/` (server `data/equipment/...`, client `sounds/equipment/...`, walls unchanged at `sounds/objects/walls/`); the 2026-11 reorg renamed and regrouped them as above.
 - **NEW 4th weapon class: `artillery` (`.art`)** -- `machinegun` (fire mode=1 AUTO, repeat time=100, dmg 6,12, mag 15) and `pistol` (fire mode=0, spam 200, dmg 8,14, mag 5), both range 10 / speed 30, ammo type=`normal`.
 - **NEW 5th ammo type: `normal`** (`normal.amt`, starter 8,16 / bonus 15,25), shared by both guns; wire "ammo" msg now 5 counts (arrow gas grenade powder normal).
 - **NEW unarmed melee: `fist` (dmg 1,2 / swing 250 / spam 200) + `feet` (1,3 / 350 / 250)** -- the weakest, quickest tier, below the axe; player-only (bots stay on ids 1-4; fist=5, feet=6 in the id maps). ROSTER IS NOW 12: melee axe/bat/crowbar/hammer/fist/feet, archery crossbow, explosive cannon/firebomb/grenade, artillery machinegun/pistol. Weapon-menu tabs: All, Archery, Artillery, Explosive, Melee.
@@ -24,7 +25,7 @@ SPEC COMPLETE (2026-07-15). All data pieces are now settled: the format conventi
 **Server data tree** (`cf/server/data/`):
 - `weapons/melee/*.mel`, `weapons/explosive/*.exp`, `weapons/archery/*.arc`
 - `objects/items/wood/*.mtr`, `objects/items/ammo/*.amt`
-(Server items moved from the old `data/items/` to `data/objects/items/` so they parallel the client's `sounds/objects/items/`.)
+(History: server items first moved from `data/items/` to `data/objects/items/` to parallel the client's then `sounds/objects/items/`; both later moved again, see CURRENT PATHS above.)
 
 **Client sound tree** (`cf/client/sounds/`):
 - `weapons/<class>/<name>/` (melee/archery/explosive)
