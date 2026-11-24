@@ -48,7 +48,7 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 - [Launchers and running](general/launchers-and-running.md) — cf/<side> Python launchers (cwd trick, client errors.txt compile-watch, server keeps console), no test suite/linter, build/tools.py compile step; read when touching launchers or the build
 - [Enigma boxing](general/enigma-boxing.md) — release exes boxed with Enigma Virtual Box (embeds audio DLLs + client sounds/docks; screen-reader DLLs stay real); .evb generator gencfcevb.py + regen rule, tools.py box stage; read before packaging or adding sounds
 - [file_exists boxed-sound trap](general/file-exists-boxed-sound-trap.md) — file_exists reads false for Enigma-boxed sounds so never gate sound playback on it (silently kills it in release); all 3 sound victims (bullet loop, item loops, shell casings) fixed; one dock file_exists left to verify
-- [Game engine DLL (removed)](general/game-engine-dll.md) — HISTORY: GameEngine64.dll is GONE since 2026-07-14 (commit 64b2f0b), replaced by the native tile store in client game/platform.nvgt (handle-based spawn_platform/get_tile_at/remove_platform/clear_map); no DLL is loaded via library any more
+- [Game engine DLL (removed)](general/game-engine-dll.md) — HISTORY: GameEngine64.dll is GONE since 2026-07-14 (commit c26ac21), replaced by the native tile store in client game/platform.nvgt (handle-based spawn_platform/get_tile_at/remove_platform/clear_map); no DLL is loaded via library any more
 - [VPS hosting on UpCloud](general/vps-hosting-upcloud.md) — the public server runs on an UpCloud Windows VPS; one inbound UDP 25562 rule in Windows Firewall is the whole network setup
 
 ## Engine, NVGT and AngelScript
