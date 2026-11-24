@@ -14,3 +14,7 @@ cf/server/lib/
 
 # Live player accounts (passwords, emails, stats). Private data; the repo is public.
 cf/server/data/players/
+
+# Player-submitted feedback and reports, written by the running server. Private data.
+cf/server/data/preffs/main/feedback.svr
+cf/server/data/preffs/main/reports.svr
