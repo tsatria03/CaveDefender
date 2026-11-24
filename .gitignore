@@ -6,6 +6,7 @@ __pycache__/
 
 # Compiled release builds
 release/
+user/
 
 # Binary engine libraries (DLLs + bundled tools.
 cf/client/lib/
