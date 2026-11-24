@@ -10,3 +10,6 @@ release/
 # Binary engine libraries (DLLs + bundled tools.
 cf/client/lib/
 cf/server/lib/
+
+# Live player accounts (passwords, emails, stats). Private data; the repo is public.
+cf/server/data/players/
