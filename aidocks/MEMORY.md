@@ -8,7 +8,7 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 - [Ask one question at a time](general/ask-one-question-at-a-time.md) — when clarifying a plan, surface ONE question per turn and wait; don't batch a numbered list of questions
 - [Verify code while fixing](general/verify-code-while-fixing.md) — when fixing, read the surrounding code carefully, confirm the finding's line numbers/claims are actually true (they drift), and catch/flag adjacent errors; don't blindly patch the reported spot
 - [Check git log for commits](general/check-git-log-for-commits.md) — the user commits their own work between turns; check git log/status before asking about or assuming commit state; for section-built features verify each section's commit before the next
-- [Commit style](general/commit-style.md) — "Major/Minor <area> enhancements." subjects, or a feature's changelog entry word for word (several entries go in the body); one commit per area; memory/aidocks commits are "Major/Minor dock enhancements." by file count and size of the change; Claude's own commits MAY carry a Co-Authored-By line here (unlike StrideRush); Claude NEVER pushes, the dev pushes
+- [Commit style](general/commit-style.md) — "Major/Minor <area> enhancements." subjects, or a feature's changelog entry word for word (several entries go in the body); one commit per area; memory/aidocks commits are "Major/Minor dock enhancements." by file count and size of the change; Claude's own commits MAY carry a Co-Authored-By line here (unlike StrideRush); the dev makes their own commits (Claude commits only when asked, e.g. to split a large pile); Claude NEVER pushes
 - [Stage commits before big changes](general/stage-commits-before-big-changes.md) — proactively flag a commit break point before a large/risky stage, so safe pieces get committed on their own and the big change stays isolated
 - [Final section: dock updates](general/final-section-dock-updates.md) — when building a feature in sections, reserve the LAST section for changelog/readme/help; earlier sections are code only
 - [List modified files](general/list-modified-files.md) — end every editing turn with a "Files changed:" list, bare filenames tagged with client or server (dev reviews via screen reader)
@@ -90,7 +90,16 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 - [Deferred dedup refactors](general/deferred-dedup-refactors.md) — risky refactors left undone for their own sessions: /promote↔/demote merge, client preset menu machinery in menu.nvgt, and splitting the two giant netloop dispatch functions (server ~1450 / client ~700 lines)
 
 ## Plans (aidocks/plans/)
-Feature plans, open and completed; a finished plan stays here as the record. All 11 below are COMPLETE.
+Feature plans, open and completed; a finished plan stays here as the record.
+
+Open (the late-2026 reorganization; suggested order: data, sounds, build, docs):
+- [Data repointing](plans/data-repointing.md) — OPEN: point the server at data/equipments (gamedata.nvgt lines 122/159/174 = the fix), then comments, server help docs, memories; optional missing-file warning
+- [Sound path repointing](plans/sound-path-repointing.md) — OPEN: ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach question (in place vs shared constants) awaits the dev
+- [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — OPEN: six reviewed sections in tools.py dropping the Enigma stage (menu 1-10, CLI 4 flags)
+- [Reorg docs and version](plans/reorg-docs-and-version.md) — OPEN, runs last: 5.3 bump, changelog decision, stale memory updates, retire the boxing memories
+- [Privacy cleanup](plans/privacy-cleanup.md) — MOSTLY DONE: player data untracked, history rewritten + force-pushed, dirty releases deleted; left: GitHub Support purge, VPS re-clone check, optional player notice
+
+Completed:
 - [Chat channels](plans/chat-channels.md) — COMPLETE: Global (/), Local (\ current map instance, covers lobby/room/game), Staff (' all staff), Team (; PVP-only, your side); all four built
 - [Voice chat mode feature](plans/cavedefender-voice-chat-mode.md) — COMPLETE: live-streaming vs record-then-send voice messages: prefs "Voice chat mode" list + tagged channel-3 wire format (l=live, m=message); confirmed working in-game 2026-07-06
 - [PVP game mode design](plans/game-mode-pvp.md) — COMPLETE: full design spec + as-built reference for PVP (humans on both sides, real inside/outside, team chat, muffled cross-wall audio); built 3.1-3.2, hidden in 4.7, rebuilt and back in the start-game menu since 5.0
