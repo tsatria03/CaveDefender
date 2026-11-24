@@ -8,7 +8,7 @@ So the whoosh reports every hit while the single sustained loop tells you the wa
 
 Everything rides its OWN pool, burnpool (listener-following, like the wall-hit sounds): a defender inside the cave
 hears the fire reverberant, an attacker outside hears it dry. The clips live beside the other wall sounds under
-game/objects/walls/wallwood/ (burnstart / burning / burnstop). Positioned ACROSS the burning wall's full span (a line
+game/objects/construction/walls/wallwood/ (burnstart / burning / burnstop). Positioned ACROSS the burning wall's full span (a line
 source, like the wall-hit sounds), so the fire stays at a constant distance as you move along the wall. */
 
 class client_burn
@@ -65,7 +65,7 @@ else if(dir=="east") { minx=s; maxx=s; miny=0; maxy=s; }
 else if(dir=="north") { minx=0; maxx=s; miny=s; maxy=s; }
 else if(dir=="south") { minx=0; maxx=s; miny=0; maxy=0; }
 else return -1;
-int h = burnpool.play_extended_3d("sounds/game/objects/walls/wallwood/"+file, me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, looping, 0, 0, 0, 100, false);
+int h = burnpool.play_extended_3d("sounds/game/objects/construction/walls/wallwood/"+file, me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, looping, 0, 0, 0, 100, false);
 burnpool.update_sound_3d(h, minx, miny, 0);
 burnpool.update_sound_range_3d(h, 0, maxx-minx, 0, maxy-miny, 0, 0);
 return h;

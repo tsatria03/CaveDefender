@@ -7,13 +7,13 @@ class ambience
 {
 double minx, maxx, miny, maxy;
 double volume;
-string source; // the type only, e.g. "lobby" -> sounds/game/objects/ambience/lobby.ogg (the class adds the path + .ogg)
+string source; // the type only, e.g. "lobby" -> sounds/game/objects/audio/ambience/lobby.ogg (the class adds the path + .ogg)
 int handle = -1;
 bool is_playing = false;
 ambience(double x1, double x2, double y1, double y2, string src, double vol)
 {
 minx = x1; maxx = x2; miny = y1; maxy = y2; source = src; volume = vol;
-handle = ambpool.play_extended_3d("sounds/game/objects/ambience/" + source + ".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, true, 0, 0, volume, 100, false);
+handle = ambpool.play_extended_3d("sounds/game/objects/audio/ambience/" + source + ".ogg", me.x, me.y, me.z, minx, miny, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, true, 0, 0, volume, 100, false);
 ambpool.update_sound_3d(handle, minx, miny, 0);
 ambpool.update_sound_range_3d(handle, 0, maxx - minx, 0, maxy - miny, 0, int(spectate_height)); // extend the vertical earshot up to the spectator deck so the bed doesn't fade for watchers above
 is_playing = true;

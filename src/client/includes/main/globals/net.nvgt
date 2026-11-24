@@ -1401,7 +1401,7 @@ void netloop_impl()
 			int bx = string_to_number(parsed[2]);
 			int by = string_to_number(parsed[3]);
 			set_clientbot(string_to_number(parsed[1]), bx, by);
-			botpool.play_3d("sounds/game/objects/platforms/concrete/step" + random(1, 5) + ".ogg", me.x, me.y, me.z, bx, by, 0, calculate_theta(me_rotation), false); // botpool carries the cave reverb (source-side), so you hear the bots echoey from outside.
+			botpool.play_3d("sounds/game/objects/construction/platforms/concrete/step" + random(1, 5) + ".ogg", me.x, me.y, me.z, bx, by, 0, calculate_theta(me_rotation), false); // botpool carries the cave reverb (source-side), so you hear the bots echoey from outside.
 		}
 		else if (parsed[0] == "botclear")
 		{

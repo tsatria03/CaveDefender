@@ -337,9 +337,9 @@ void learnsoundsmenu()
 	// Walls -- only the destructible wooden walls carry a full sound set (all modes).
 	dictionary walls;
 	string alclause = ": used in all modes";
-	ls_add(walls, "Crate wall bump" + alclause, "game/objects/walls/wallcrate/bump.ogg");
-	ls_add(walls, "Woodpile wall bump" + alclause, "game/objects/walls/wallwoodpile/bump.ogg");
-	string wwdir = "game/objects/walls/wallwood/";
+	ls_add(walls, "Crate wall bump" + alclause, "game/objects/construction/walls/wallcrate/bump.ogg");
+	ls_add(walls, "Woodpile wall bump" + alclause, "game/objects/construction/walls/wallwoodpile/bump.ogg");
+	string wwdir = "game/objects/construction/walls/wallwood/";
 	ls_add(walls, "Wooden wall bump" + alclause, wwdir + "bump.ogg");
 	ls_addv(walls, "Wooden wall hit" + alclause, wwdir, "hurt", 3);
 	ls_add(walls, "Wooden wall break" + alclause, wwdir + "death.ogg");
@@ -348,9 +348,9 @@ void learnsoundsmenu()
 	ls_add(walls, "Wooden wall extinguish" + alclause, wwdir + "burnstop.ogg");
 	// Surfaces -- footsteps, one entry per surface (each with five step variants); context clause, not a mode.
 	dictionary surfaces;
-	ls_addv(surfaces, "Concrete step: used when you walk on concrete", "game/objects/platforms/concrete/", "step", 5);
-	ls_addv(surfaces, "Gravel step: used when you walk on gravel", "game/objects/platforms/gravel/", "step", 5);
-	ls_addv(surfaces, "Woodpile step: used when you walk on a woodpile", "game/objects/platforms/woodpile/", "step", 5);
+	ls_addv(surfaces, "Concrete step: used when you walk on concrete", "game/objects/construction/platforms/concrete/", "step", 5);
+	ls_addv(surfaces, "Gravel step: used when you walk on gravel", "game/objects/construction/platforms/gravel/", "step", 5);
+	ls_addv(surfaces, "Woodpile step: used when you walk on a woodpile", "game/objects/construction/platforms/woodpile/", "step", 5);
 	// Interface -- the eleven curated game cues; mode clause for the round cues, context clause for the rest.
 	dictionary interfacecat;
 	ls_add(interfacecat, "Build phase: used in PVE and EVP", "main/misc/buildprep.ogg");

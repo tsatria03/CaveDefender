@@ -12,7 +12,7 @@ platform@[] platforms;
 class platform
 {
 double minx, maxx, miny, maxy;
-string tile; // tile name, e.g. "carpet" or "wallwood" -> sound folder game/objects/platforms|walls/<tile>/
+string tile; // tile name, e.g. "carpet" or "wallwood" -> sound folder game/objects/construction/platforms|walls/<tile>/
 platform(double mnx, double mxx, double mny, double mxy, string ty)
 {
 minx=mnx;
