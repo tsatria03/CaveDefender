@@ -7,7 +7,7 @@ metadata:
 
 **Context:** the dev renamed `cf/server/data/equipment` to `cf/server/data/equipments` (21 files, contents unchanged, committed in c76e74d "Major server data enhancements."). `gamedata.nvgt`'s `read_kv()` returns false on a missing file and each loader just returns, so callers fall back to code defaults (damage 1, wood reinforce 10-20, ammo starter 5-10...). Nothing crashes and no files are written. Every other data path (players, preffs, client data/scriptkeys.srk, docks) was checked and still matches.
 
-**Section 1 — the loader (the actual fix).** `src/server/includes/main/globals/gamedata.nvgt`: line 122 `data/equipment/weapons/` → `data/equipments/weapons/`; line 159 `data/equipment/items/wood/` → `data/equipments/items/wood/`; line 174 `data/equipment/items/ammo/` → `data/equipments/items/ammo/`. Relaunch the server. Verify: no `"data/equipment/"` left in src/server; in game, melee damage, wood reinforce and starting ammo match the data files.
+**Section 1 — the loader (the actual fix). DONE 2026-11-24** (all 21 roster paths verified to exist under cf/server/data/equipments; awaiting the dev's in-game check). `src/server/includes/main/globals/gamedata.nvgt`: line 122 `data/equipment/weapons/` → `data/equipments/weapons/`; line 159 `data/equipment/items/wood/` → `data/equipments/items/wood/`; line 174 `data/equipment/items/ammo/` → `data/equipments/items/ammo/`. Relaunch the server. Verify: no `"data/equipment/"` left in src/server; in game, melee damage, wood reinforce and starting ammo match the data files.
 
 **Section 2 — comments only.** gamedata.nvgt lines 3-4 (header), `cfs.nvgt` line 110, `game/enemy.nvgt` line 123, `game/item.nvgt` lines 125, 147, 175, 199.
 

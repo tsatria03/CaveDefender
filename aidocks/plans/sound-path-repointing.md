@@ -1,6 +1,6 @@
 ---
 name: sound-path-repointing
-description: "OPEN — repoint all client sound paths (and the server's footstep wire strings) to the reorganized cf/client/sounds/main + sounds/game layout. Until done the client is mostly silent. Waiting on the dev's approach choice: rewrite paths in place (recommended) vs shared folder-name constants."
+description: "OPEN — repoint all client sound paths (and the server's footstep wire strings) to the reorganized cf/client/sounds/main + sounds/game layout. Until done the client is mostly silent. Approach decided 2026-11-24: rewrite paths in place."
 metadata:
   type: project
 ---
@@ -22,7 +22,7 @@ The server's own `cf/server/sounds/` (soundboard clips) did NOT move; its 4 "sou
 - server sends: builder.nvgt 231, net.nvgt 1191 and 1233 (`footstep equipment/items/...`); the server's step relay (net.nvgt ~1826) passes paths verbatim, no change
 **Wire change** → a 5.2 client would hear silence from a new server, so this ships as 5.3 (the login version check then refuses mismatches). See [[networking-protocol]].
 
-**Approach (OPEN QUESTION to the dev):** (A, recommended) rewrite strings in place, smallest and easiest to verify; (B) introduce shared folder constants (e.g. SND_UI, SND_EQUIP) so a future reorg is one-line changes, but a bigger refactor over the same ~180 lines.
+**Approach — DECIDED 2026-11-24: (A) rewrite in place.** Every old path string is changed directly to its new location; no shared folder constants. Dev: "I'd say rewrite in place. I've done this reorg before, but on a much smaller scale." Rejected (B): shared folder constants (e.g. SND_UI, SND_EQUIP), which would make a future reorg one-line changes but reshape ~180 lines and hide the full path a screen-reader reviewer reads on each line.
 
 **Verify after:** 0 old-folder strings in any .nvgt on either side; in game: Learn Sounds plays every category, pick up wood and ammo, draw/fire each weapon, walls, footsteps, ambience, music, dialogs and typing sounds.
 
