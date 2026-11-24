@@ -48,15 +48,15 @@ if(mapname=="lobby")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallbuilding");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "carpet");
-spawn_ambience(minx, maxx, miny, maxy, "lobby", ambvolume); // sounds/ambience/lobby.ogg across the whole lobby.
-spawn_music(minx, maxx, miny, maxy, "lobby", musvolume); // sounds/music/lobby.ogg across the whole lobby.
+spawn_ambience(minx, maxx, miny, maxy, "lobby", ambvolume); // sounds/game/objects/ambience/lobby.ogg across the whole lobby.
+spawn_music(minx, maxx, miny, maxy, "lobby", musvolume); // sounds/game/objects/music/lobby.ogg across the whole lobby.
 }
 if(mapname=="office")
 {
 spawn_platform(minx, maxx, miny, maxy, "wallgeneric");
 spawn_platform(minx+1, maxx-1, miny+1, maxy-1, "marble");
-spawn_ambience(minx, maxx, miny, maxy, "room", ambvolume); // sounds/ambience/room.ogg across the whole office.
-spawn_music(minx, maxx, miny, maxy, "room", musvolume); // sounds/music/room.ogg across the whole office.
+spawn_ambience(minx, maxx, miny, maxy, "room", ambvolume); // sounds/game/objects/ambience/room.ogg across the whole office.
+spawn_music(minx, maxx, miny, maxy, "room", musvolume); // sounds/game/objects/music/room.ogg across the whole office.
 }
 if(mapname=="cavern")
 {
@@ -118,7 +118,7 @@ return;
 }
 if (string_contains(gmt(),"wall",1)>-1)
 {
-string subpath="objects/walls/"+gmt()+"/bump";
+string subpath="game/objects/walls/"+gmt()+"/bump";
 /* Play the bump in 3D at the wall tile. me is standing on it until bounce() runs, so once we step back
 the listener hears the bump coming from the wall, the way SimpleFighter's playstep does it. */
 wallslot = p.play_3d("sounds/"+subpath+".ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
@@ -127,7 +127,7 @@ bounce();
 }
 else
 {
-string subpath="objects/platforms/"+gmt()+"/step"+random(1,5);
+string subpath="game/objects/platforms/"+gmt()+"/step"+random(1,5);
 tileslot = p.play_stationary("sounds/"+subpath+".ogg",false);
 send(0, "step "+subpath+" "+int(me.x)+" "+int(me.y), 0, true);
 }
@@ -158,6 +158,6 @@ if(dir==Left) sx = me.x-1;
 else if(dir==Right) sx = me.x+1;
 else if(dir==Forward) sy = me.y+1;
 else if(dir==Backward) sy = me.y-1;
-p.play_3d("sounds/ui/misc/turn.ogg", me.x, me.y, me.z, sx, sy, 0, calculate_theta(me_rotation), false);
-send(0, "step ui/misc/turn "+int(me.x)+" "+int(me.y), 0, true);
+p.play_3d("sounds/main/misc/turn.ogg", me.x, me.y, me.z, sx, sy, 0, calculate_theta(me_rotation), false);
+send(0, "step main/misc/turn "+int(me.x)+" "+int(me.y), 0, true);
 }

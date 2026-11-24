@@ -27,7 +27,7 @@ speak("This buffer can not be muted.",true);
 else
 {
 muted = !muted;
-spool.play_stationary(muted ? "sounds/ui/misc/toggleoff.ogg" : "sounds/ui/misc/toggleon.ogg", false);
+spool.play_stationary(muted ? "sounds/main/misc/toggleoff.ogg" : "sounds/main/misc/toggleon.ogg", false);
 speak(name + " " + (muted ? "muted" : "unmuted"), true);
 writepreffs();
 }
@@ -173,7 +173,7 @@ void announce_buffer()
 {
 if(bufferpos<0 or bufferpos>=int(buffers.length())) return;
 int vc=visible_buffer_count(), vp=visible_buffer_position();
-spool.play_stationary_extended("sounds/ui/buffer/switch.ogg",false,0,convert_to_pan(vc+1,vp,-50,50),0,max(20,convert_to_pitch(vc+1,vp,20,200)),false);
+spool.play_stationary_extended("sounds/main/ui/buffer/switch.ogg",false,0,convert_to_pan(vc+1,vp,-50,50),0,max(20,convert_to_pitch(vc+1,vp,20,200)),false);
 string binfo = buffers[bufferpos].name + (buffers[bufferpos].muted ? ", muted, " : ", ") + (buffers[bufferpos].items.length() > 0 ? format_number(buffers[bufferpos].bpos + 1) + " of " + format_number(buffers[bufferpos].items.length()) : "empty") + ".";
 if (buffers[bufferpos].items.length() > 0) binfo += " " + buffers[bufferpos].items[buffers[bufferpos].bpos].name;
 speak(binfo, true);
@@ -231,7 +231,7 @@ return;
 bool moved=false;
 if(buffers[bufferpos].bpos < int(buffers[bufferpos].items.length()-1)) { buffers[bufferpos].bpos++; moved=true; }
 if(!moved and buffers[bufferpos].items.length()>1) return;
-spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
+spool.play_stationary_extended("sounds/main/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
 void previous_buffer_item()
@@ -246,7 +246,7 @@ return;
 bool moved=false;
 if(buffers[bufferpos].bpos > 0) { buffers[bufferpos].bpos--; moved=true; }
 if(!moved and buffers[bufferpos].items.length()>1) return;
-spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
+spool.play_stationary_extended("sounds/main/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
 void top_buffer_item()
@@ -260,7 +260,7 @@ return;
 bool moved=(buffers[bufferpos].bpos!=0);
 buffers[bufferpos].bpos=0;
 if(!moved and buffers[bufferpos].items.length()>1) return; // already at the top of several: hard stop; a lone item re-announces
-spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
+spool.play_stationary_extended("sounds/main/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
 void bottom_buffer_item()
@@ -274,7 +274,7 @@ return;
 bool moved=(buffers[bufferpos].bpos!=int(buffers[bufferpos].items.length()-1));
 buffers[bufferpos].bpos=int(buffers[bufferpos].items.length()-1);
 if(!moved and buffers[bufferpos].items.length()>1) return; // already at the bottom of several: hard stop; a lone item re-announces
-spool.play_stationary_extended("sounds/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
+spool.play_stationary_extended("sounds/main/ui/buffer/choose.ogg",false,0,convert_to_pan(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,-50,50),0,max(20,convert_to_pitch(buffers[bufferpos].items.length()+1,buffers[bufferpos].bpos,20,200)),false);
 speak(buffers[bufferpos].items[buffers[bufferpos].bpos].name);
 }
 void copy_buffer_item()

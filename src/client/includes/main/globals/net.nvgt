@@ -319,7 +319,7 @@ void handle_roundover(string message)
 {
 	string[] parsed = string_split(message, " ", true);
 	if(parsed.length() < 2) return; // malformed/truncated packet: degrade quietly instead of indexing past the end
-	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
+	p.play_stationary("sounds/main/misc/gameover.ogg", false);
 	int secs = string_to_number(parsed[1]);
 	int collected = (parsed.length() > 2) ? string_to_number(parsed[2]) : 0;
 	int rounds = (parsed.length() > 3) ? string_to_number(parsed[3]) : 0;
@@ -353,7 +353,7 @@ void handle_pvp_result(string message)
 {
 	string[] parsed = string_split(message, " ", true);
 	if(parsed.length() < 3) return; // malformed/truncated packet: degrade quietly instead of indexing past the end
-	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
+	p.play_stationary("sounds/main/misc/gameover.ogg", false);
 	string winner = parsed[1]; // "attack" or "defend"
 	int down = string_to_number(parsed[2]);
 	string myteam = (parsed.length() > 3) ? parsed[3] : "";
@@ -388,7 +388,7 @@ void handle_evp_over(string message)
 {
 	string[] parsed = string_split(message, " ", true);
 	if(parsed.length() < 2) return; // malformed/truncated packet: degrade quietly instead of indexing past the end
-	p.play_stationary("sounds/ui/misc/gameover.ogg", false);
+	p.play_stationary("sounds/main/misc/gameover.ogg", false);
 	int cleared = string_to_number(parsed[1]);
 	int collected = (parsed.length() > 2) ? string_to_number(parsed[2]) : 0; // ammo gathered this whole EVP game (mirror of PVE's collected wood)
 	int milestone = (parsed.length() > 3) ? string_to_number(parsed[3]) : 0; // new personal best (0 = not a new best); a new best earned bonus ammo
@@ -835,7 +835,7 @@ bool is_onoff_ignored(string user)
 }
 string onoff_key(string user, string which) { return string_to_lower_case(user) + "|" + which; }
 string onoff_cachefile(string user, string which) { return DIRECTORY_APPDATA + "tsatria03/CaveDefender/onoffcache/" + string_to_lower_case(user) + "_" + which + "_" + (onoffclip_id++) + ".ogg"; } // UNIQUE per call (counter) so a re-upload's fresh bytes aren't masked by NVGT's preload cache (see nvgt-sound-preload-cache)
-void play_builtin_onoff(string which) { p.play_stationary("sounds/ui/misc/" + which + ".ogg", false); }
+void play_builtin_onoff(string which) { p.play_stationary("sounds/main/misc/" + which + ".ogg", false); }
 void play_cached_onoff(string which, string val) { if(val == "none") play_builtin_onoff(which); else p.play_stationary(val, false); }
 /* The /playsound soundboard: clips live on the server (sounds/player/... and sounds/staff/...) and are heard by
 everyone when someone plays one. Each clip is fetched once per session (base64), written to a client cache file, and
@@ -916,7 +916,7 @@ void netloop_impl()
 		if (message == "ping_response")
 		{
 			pinging=false;
-			p.play_stationary("sounds/ui/misc/pingstop.ogg", false);
+			p.play_stationary("sounds/main/misc/pingstop.ogg", false);
 			add_buffer_item("connections", "The ping took " + pingtimer.elapsed + " ms");
 		}
 		else if (parsed[0] == "online" and parsed.length() > 1)
@@ -926,7 +926,7 @@ void netloop_impl()
 			string hasoff = (parsed.length() > 5) ? parsed[5] : "0";
 			do_onoff(parsed[1], "online", hason, true);    // play their arrival cue: their custom sound, or the builtin
 			do_onoff(parsed[1], "offline", hasoff, false); // warm the cache with their departure cue so it's ready when they leave
-			if(onstaff) p.play_stationary("sounds/ui/misc/staffin.ogg", false);
+			if(onstaff) p.play_stationary("sounds/main/misc/staffin.ogg", false);
 			string onname = (parsed.length() > 3) ? parsed[3] : parsed[1]; // nickname for display, fallback to username
 			string ondisp = onstaff ? parsed[2] + " " + onname : onname;
 			string onaction = (is_onoff_ignored(parsed[1]) or firstline.length() <= 1 or firstline[1] == "") ? "just came online" : firstline[1]; // their custom online message (2nd line), or the default when absent or I've onoff-muted them
@@ -934,14 +934,14 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "newchar" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/newchar.ogg", false);
+			p.play_stationary("sounds/main/misc/newchar.ogg", false);
 			add_buffer_item("alerts", parsed[1] + " just created a new account");
 		}
 		else if (parsed[0] == "playerjoinedgame" and message.length() > parsed[0].length()+1)
 		{
 			/* Someone else joined the game you're in: play the join cue and note who (rank-aware) in the player
 			events buffer. The name may contain a space (rank prefix), so take everything after the command. */
-			p.play_stationary("sounds/ui/misc/joingame.ogg", false);
+			p.play_stationary("sounds/main/misc/joingame.ogg", false);
 			add_buffer_item("player events", message.substr(parsed[0].length()+1) + " joined the game.");
 		}
 		else if (parsed[0] == "event" and message.length() > parsed[0].length()+1)
@@ -1080,7 +1080,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "kicked")
 		{
-			p.play_stationary("sounds/ui/misc/kick.ogg", false);
+			p.play_stationary("sounds/main/misc/kick.ogg", false);
 			/* "kicked" or "kicked <reason>": the reason, when present, is spoken along with the notice (staff-only text,
 			never in the public "was kicked" announcement). */
 			string kreason = (message.length() > parsed[0].length()+1) ? message.substr(parsed[0].length()+1) : "";
@@ -1091,13 +1091,13 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "agreedrules")
 			{
-				p.play_stationary("sounds/ui/misc/welcome.ogg", false);
+				p.play_stationary("sounds/main/misc/welcome.ogg", false);
 				add_buffer_item("misc", "You have agreed to the server rules. You can now play.");
 			}
 			else if (parsed[0] == "declinedrules")
 			{
 				// You chose No on the rules agree menu (declined): the server drops you; return to the connection menu like a kick.
-				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				p.play_stationary("sounds/main/misc/kick.ogg", false);
 				speak("You did not agree to the server rules, so you have been returned to the connection menu.", true);
 				kicked = true;
 				connected = false;
@@ -1114,7 +1114,7 @@ void netloop_impl()
 					if (string_to_lower_case(accounts[ai].uname) == string_to_lower_case(name)) { accounts[ai].pword = password; break; } // keep the saved account preset in step with the new password
 				}
 				writepreffs();
-				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				p.play_stationary("sounds/main/misc/kick.ogg", false);
 				speak("Your password has been changed, so you have been returned to the connection menu.", true);
 				kicked = true;
 				connected = false;
@@ -1123,7 +1123,7 @@ void netloop_impl()
 			{
 				/* An administrator reset our password: we don't know the new one, so we're logged out and the saved
 				password is left as-is; staff tell us the new password to sign in with. */
-				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				p.play_stationary("sounds/main/misc/kick.ogg", false);
 				speak("Your password has been reset by staff, so you have been returned to the connection menu.", true);
 				kicked = true;
 				connected = false;
@@ -1132,7 +1132,7 @@ void netloop_impl()
 			{
 				/* An administrator renamed our account. The password is unchanged; we sign back in under the new name,
 				updating (or re-adding) our saved account with it. We're returned to the connection menu like a kick. */
-				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				p.play_stationary("sounds/main/misc/kick.ogg", false);
 				speak("You have been renamed to " + parsed[1] + ", so you have been returned to the connection menu to sign in again with your new name.", true);
 				kicked = true;
 				connected = false;
@@ -1142,7 +1142,7 @@ void netloop_impl()
 				/* Our own /delchar succeeded: the account is gone. Forget it locally (so it can't be re-selected) and
 				return to the connection menu. */
 				clear_last_account();
-				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				p.play_stationary("sounds/main/misc/kick.ogg", false);
 				speak("Your account has been deleted, so you have been returned to the connection menu.", true);
 				kicked = true;
 				connected = false;
@@ -1151,7 +1151,7 @@ void netloop_impl()
 			{
 				// An administrator deleted our account: forget it locally and return to the connection menu.
 				clear_last_account();
-				p.play_stationary("sounds/ui/misc/kick.ogg", false);
+				p.play_stationary("sounds/main/misc/kick.ogg", false);
 				speak("Your account has been deleted by staff, so you have been returned to the connection menu.", true);
 				kicked = true;
 				connected = false;
@@ -1160,12 +1160,12 @@ void netloop_impl()
 			{
 				/* Someone's account was deleted (their own or by staff): play the offline cue and note the pre-built,
 				flag/AFK/nickname-aware sentence in the alerts buffer, mirroring the new-account notice. */
-				p.play_stationary("sounds/ui/misc/offline.ogg", false);
+				p.play_stationary("sounds/main/misc/offline.ogg", false);
 				add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 			}
 			else if (parsed[0] == "kickannounce" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/kick.ogg", false);
+			p.play_stationary("sounds/main/misc/kick.ogg", false);
 			string kn = (parsed.length() > 3) ? parsed[3] : parsed[1]; // nickname for display, fallback to username
 			string kdisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + kn : kn;
 				add_buffer_item("connections", kdisp + " was kicked from the server");
@@ -1173,7 +1173,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "banned" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/ban.ogg", false);
+			p.play_stationary("sounds/main/misc/ban.ogg", false);
 			int rem = string_to_number(parsed[1]);
 			string breason = ""; // everything after the seconds token is the optional reason
 			for(uint r = 2; r < parsed.length(); r++) breason += (breason == "" ? "" : " ") + parsed[r];
@@ -1186,7 +1186,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "banannounce" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/ban.ogg", false);
+			p.play_stationary("sounds/main/misc/ban.ogg", false);
 			string bn = (parsed.length() > 3) ? parsed[3] : parsed[1]; // nickname for display, fallback to username
 			string bdisp = (parsed.length() > 2 and parsed[2] != "player") ? parsed[2] + " " + bn : bn;
 				add_buffer_item("connections", bdisp + " was banned from the server");
@@ -1204,21 +1204,21 @@ void netloop_impl()
 		else if (parsed[0] == "roominvite")
 		{
 			// A room invitation: "roominvite\n<message>". Play the invite cue and route the text to the misc buffer.
-			p.play_stationary("sounds/ui/misc/invite.ogg", false);
+			p.play_stationary("sounds/main/misc/invite.ogg", false);
 			string[] ril = string_split(message, "\n", true);
 			if(ril.length() > 1) add_buffer_item("misc", ril[1]);
 		}
 		else if (parsed[0] == "invitexpired")
 		{
 			// A pending room invitation ran out before you answered it.
-			p.play_stationary("sounds/ui/misc/invtime.ogg", false);
+			p.play_stationary("sounds/main/misc/invtime.ogg", false);
 			add_buffer_item("misc", "Your invitation has expired.");
 		}
 		else if (parsed[0] == "alert" and message.length() > parsed[0].length()+1)
 		{
 			/* Generic server announcement → alerts buffer, with the standard alert cue (used by alerts that
 			don't carry their own dedicated sound, e.g. mute notices and nickname changes). */
-			p.play_stationary("sounds/ui/misc/alert.ogg", false);
+			p.play_stationary("sounds/main/misc/alert.ogg", false);
 			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "alertsilent" and message.length() > parsed[0].length()+1)
@@ -1234,7 +1234,7 @@ void netloop_impl()
 			differs. Into the mutable "leaderboards" buffer -- a muted buffer means no cue and no speech. */
 			int lb = get_buffer_index("leaderboards");
 			bool lbmuted = (lb > -1 and buffers[lb].muted);
-			if(!lbmuted) p.play_stationary(parsed[1] == "1" ? "sounds/ui/misc/lbrank.ogg" : "sounds/ui/misc/lbupdate.ogg", false);
+			if(!lbmuted) p.play_stationary(parsed[1] == "1" ? "sounds/main/misc/lbrank.ogg" : "sounds/main/misc/lbupdate.ogg", false);
 			add_buffer_item("leaderboards", message.substr(parsed[0].length()+1 + parsed[1].length()+1));
 		}
 		else if (parsed[0] == "flagswitch" and parsed.length() > 1)
@@ -1242,7 +1242,7 @@ void netloop_impl()
 			/* A staff member flipped their attention flag: everyone hears the sound and gets the alert.
 			Format: "flagswitch <0|1>\n<alert text>". */
 			bool fon = (parsed[1] == "1");
-			p.play_stationary(fon ? "sounds/ui/misc/flagon.ogg" : "sounds/ui/misc/flagoff.ogg", false);
+			p.play_stationary(fon ? "sounds/main/misc/flagon.ogg" : "sounds/main/misc/flagoff.ogg", false);
 			int fnl = string_contains(message, "\n", 1);
 			if(fnl > -1) add_buffer_item("alerts", message.substr(fnl + 1));
 		}
@@ -1263,10 +1263,10 @@ void netloop_impl()
 			{
 				int snl = string_contains(message, "\n", 1);
 				string sreason = (snl > -1) ? message.substr(snl + 1) : "";
-				p.play_stationary("sounds/ui/misc/afkon.ogg", false);
+				p.play_stationary("sounds/main/misc/afkon.ogg", false);
 				add_buffer_item("misc", sreason == "" ? "You are now AFK." : "You are now AFK: " + sreason);
 			}
-			else { p.play_stationary("sounds/ui/misc/afkoff.ogg", false); add_buffer_item("misc", "You are no longer AFK."); }
+			else { p.play_stationary("sounds/main/misc/afkoff.ogg", false); add_buffer_item("misc", "You are no longer AFK."); }
 		}
 		else if (parsed[0] == "afkannounce" and parsed.length() > 1)
 		{
@@ -1278,12 +1278,12 @@ void netloop_impl()
 			string areason = (alines.length() > 2) ? alines[2] : "";
 			if(parsed[1] == "1")
 			{
-				p.play_stationary("sounds/ui/misc/afkon.ogg", false);
+				p.play_stationary("sounds/main/misc/afkon.ogg", false);
 				add_buffer_item("player events", areason == "" ? adisp + " is now AFK." : adisp + " is now AFK: " + areason);
 			}
 			else
 			{
-				p.play_stationary("sounds/ui/misc/afkoff.ogg", false);
+				p.play_stationary("sounds/main/misc/afkoff.ogg", false);
 				add_buffer_item("player events", adisp + " is no longer AFK.");
 			}
 		}
@@ -1297,7 +1297,7 @@ void netloop_impl()
 				int wl = string_to_number(parsed[1]);
 				if(wl < 1) wl = 1;
 				if(wl > 4) wl = 4;
-				p.play_stationary("sounds/ui/misc/warn"+wl+".ogg", false);
+				p.play_stationary("sounds/main/misc/warn"+wl+".ogg", false);
 				add_buffer_item("alerts", "You've been given a level "+wl+" warning from "+wlines[1]+". "+wlines[2]);
 			}
 		}
@@ -1307,7 +1307,7 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "play" and parsed.length() > 1)
 		{
-			roompool.play_stationary("sounds/ui/misc/"+parsed[1], false); // a server-pushed cue for others in your room or game (room join/leave via cue_room_others, or a game kick) -- on roompool so a busy p can't drop it
+			roompool.play_stationary("sounds/main/misc/"+parsed[1], false); // a server-pushed cue for others in your room or game (room join/leave via cue_room_others, or a game kick) -- on roompool so a busy p can't drop it
 		}
 		else if (parsed[0] == "displaced")
 		{
@@ -1354,9 +1354,9 @@ void netloop_impl()
 				if(pvp_crosswall(fx, fy)) crosspool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 				else p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 			}
-			else if(string_contains(parsed[1], "equipment/items/ammo/", 1) > -1)
+			else if(string_contains(parsed[1], "game/equipments/items/ammo/", 1) > -1)
 				ammopool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false); // ammo take/place: the attacker's own resource, clear (listener pool), not cave-muffled
-			else if(string_contains(parsed[1], "equipment/items/", 1) > -1)
+			else if(string_contains(parsed[1], "game/equipments/items/", 1) > -1)
 				woodpool.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
 			else
 				p.play_3d("sounds/" + parsed[1] + ".ogg", me.x, me.y, me.z, fx, fy, 0, calculate_theta(me_rotation), false);
@@ -1371,7 +1371,7 @@ void netloop_impl()
 			if(pi > -1)
 			{
 				string w = parsed[2];
-				string path = "sounds/equipment/weapons/" + weapon_class(w) + "/" + w + "/reload.ogg";
+				string path = "sounds/game/equipments/weapons/" + weapon_class(w) + "/" + w + "/reload.ogg";
 				sound_pool@ pool = (game_mode == "pvp" and pvp_crosswall(players[pi].x, players[pi].y)) ? @crosspool : @p;
 				if(players[pi].reloadsound != -1 and @players[pi].reloadpool != null) players[pi].reloadpool.destroy_sound(players[pi].reloadsound); // stop any previous one still ringing
 				players[pi].reloadsound = pool.play_3d(path, me.x, me.y, me.z, players[pi].x, players[pi].y, 0, calculate_theta(me_rotation), false);
@@ -1401,7 +1401,7 @@ void netloop_impl()
 			int bx = string_to_number(parsed[2]);
 			int by = string_to_number(parsed[3]);
 			set_clientbot(string_to_number(parsed[1]), bx, by);
-			botpool.play_3d("sounds/objects/platforms/concrete/step" + random(1, 5) + ".ogg", me.x, me.y, me.z, bx, by, 0, calculate_theta(me_rotation), false); // botpool carries the cave reverb (source-side), so you hear the bots echoey from outside.
+			botpool.play_3d("sounds/game/objects/platforms/concrete/step" + random(1, 5) + ".ogg", me.x, me.y, me.z, bx, by, 0, calculate_theta(me_rotation), false); // botpool carries the cave reverb (source-side), so you hear the bots echoey from outside.
 		}
 		else if (parsed[0] == "botclear")
 		{
@@ -1420,8 +1420,8 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "play_item" and parsed.length() > 2)
 		{
-			// A personal item sound for you, e.g. "play_item oak take" -> equipment/items/wood/oak/take.ogg (or ammo/arrow/take for ammo).
-			p.play_stationary("sounds/equipment/items/" + item_sound_category(parsed[1]) + "/" + parsed[1] + "/" + parsed[2] + ".ogg", false);
+			// A personal item sound for you, e.g. "play_item oak take" -> game/equipments/items/wood/oak/take.ogg (or ammo/arrow/take for ammo).
+			p.play_stationary("sounds/game/equipments/items/" + item_sound_category(parsed[1]) + "/" + parsed[1] + "/" + parsed[2] + ".ogg", false);
 		}
 		else if (parsed[0] == "wood" and parsed.length() > 4)
 		{
@@ -1512,13 +1512,13 @@ void netloop_impl()
 		{
 			// A wall fell: "walldestroyed <direction>". Death sound + re-tile the breach to a wood platform.
 			destroy_wall_client(parsed[1]);
-			if(game_mode == "free") { p.play_stationary("sounds/ui/misc/alert.ogg", false); add_buffer_item("alerts", "The " + parsed[1] + " wall has just gone down."); } // Free play announces both transitions to everyone with the alert cue; the "come back up" mate is added on rebuild (4.4c.2)
+			if(game_mode == "free") { p.play_stationary("sounds/main/misc/alert.ogg", false); add_buffer_item("alerts", "The " + parsed[1] + " wall has just gone down."); } // Free play announces both transitions to everyone with the alert cue; the "come back up" mate is added on rebuild (4.4c.2)
 		}
 		else if (parsed[0] == "wallrebuilt" and parsed.length() > 1)
 		{
 			// Free play: a downed wall self-healed. Re-tile the breach back to solid + announce its return.
 			rebuild_wall_client(parsed[1]);
-			if(game_mode == "free") { p.play_stationary("sounds/ui/misc/alert.ogg", false); add_buffer_item("alerts", "The " + parsed[1] + " wall has just come back up."); }
+			if(game_mode == "free") { p.play_stationary("sounds/main/misc/alert.ogg", false); add_buffer_item("alerts", "The " + parsed[1] + " wall has just come back up."); }
 		}
 		else if (parsed[0] == "cavernreset")
 		{
@@ -1550,7 +1550,7 @@ void netloop_impl()
 			/* EVP: you brought all four walls down -- round cleared! "evpcleared <round-number>". The build
 			phase for the next (tougher) round follows right after. */
 			int n = string_to_number(parsed[1]);
-			p.play_stationary("sounds/ui/misc/roundcleared.ogg", false); // add this cue; missing = silent until then
+			p.play_stationary("sounds/main/misc/roundcleared.ogg", false); // add this cue; missing = silent until then
 			add_buffer_item("alerts", "Round " + n + " cleared! The bots are rebuilding.");
 		}
 		else if (parsed[0] == "evpover" and parsed.length() > 1)
@@ -1591,8 +1591,8 @@ void netloop_impl()
 			myrank = parsed[3];
 			if(myrank == "player") remove_buffer("staff chats");
 			else ensure_buffer("staff chats");
-			if(parsed[1] == "promoted") p.play_stationary("sounds/ui/misc/promote.ogg", false);
-			else if(parsed[1] == "demoted") p.play_stationary("sounds/ui/misc/demote.ogg", false);
+			if(parsed[1] == "promoted") p.play_stationary("sounds/main/misc/promote.ogg", false);
+			else if(parsed[1] == "demoted") p.play_stationary("sounds/main/misc/demote.ogg", false);
 			add_buffer_item("misc", "You have been " + parsed[1] + " from " + parsed[2] + " to " + parsed[3] + ".");
 		}
 		else if (parsed[0] == "stafflist" and message.length() > parsed[0].length()+1)
@@ -1688,19 +1688,19 @@ void netloop_impl()
 		else if (parsed[0] == "datacancel") speak("canceled"); // the data browser (editdata/viewdata) closed at the root after Escaping up through the folders
 		else if (parsed[0] == "restartnotice" and message.length() > parsed[0].length()+1)
 		{
-			p.play_stationary("sounds/ui/misc/alert.ogg", false);
+			p.play_stationary("sounds/main/misc/alert.ogg", false);
 			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "notify" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/notify.ogg", false);
+			p.play_stationary("sounds/main/misc/notify.ogg", false);
 			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "report" and message.length() > parsed[0].length()+1)
 		{
 			/* A player filed a report; only online staff receive this live heads-up. Its own dedicated cue sets it
 			apart from ordinary alerts, and the full log is always available to staff with /reports. */
-			p.play_stationary("sounds/ui/misc/report.ogg", false);
+			p.play_stationary("sounds/main/misc/report.ogg", false);
 			add_buffer_item("alerts", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "offlinepm")
@@ -1714,7 +1714,7 @@ void netloop_impl()
 			{
 				last_pm_sender = message.substr(parsed[0].length()+1, nl - parsed[0].length() - 1);
 				add_buffer_item("private chats", message.substr(nl + 1));
-				p.play_stationary("sounds/ui/misc/privchat.ogg", false);
+				p.play_stationary("sounds/main/misc/privchat.ogg", false);
 			}
 		}
 		else if (parsed[0] == "voicemutestate" and parsed.length() > 1)
@@ -1723,7 +1723,7 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "muted" and parsed.length() > 2)
 		{
-			p.play_stationary("sounds/ui/misc/playermute.ogg", false);
+			p.play_stationary("sounds/main/misc/playermute.ogg", false);
 			string ch = parsed[1];
 			int rem = string_to_number(parsed[2]);
 			string what;
@@ -1737,7 +1737,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "unmuted" and parsed.length() > 1)
 		{
-			p.play_stationary("sounds/ui/misc/playerspeak.ogg", false);
+			p.play_stationary("sounds/main/misc/playerspeak.ogg", false);
 			string ch = parsed[1];
 			string what;
 			if(ch == "voice" or ch == "all") voice_muted = false;
@@ -1749,7 +1749,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "roomjoined" and parsed.length() > 3)
 		{
-			if(parsed.length() <= 4 or parsed[4] != "created") roompool.play_stationary("sounds/ui/misc/joinroom.ogg", false); // your own cue for ENTERING a room; a room you just CREATED skips it (the server sends roomcreate.ogg instead). Others already in a room you join get a server-sent joinroom cue. On roompool so the immediately-following draw_map / busy p can't drop it
+			if(parsed.length() <= 4 or parsed[4] != "created") roompool.play_stationary("sounds/main/misc/joinroom.ogg", false); // your own cue for ENTERING a room; a room you just CREATED skips it (the server sends roomcreate.ogg instead). Others already in a room you join get a server-sent joinroom cue. On roompool so the immediately-following draw_map / busy p can't drop it
 			clear_players();
 			current_room = string_to_number(parsed[1]);
 			current_room_private = (parsed[2] == "private");
@@ -1763,7 +1763,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "roomleft")
 		{
-			roompool.play_stationary((parsed.length() > 1 and parsed[1] == "kicked") ? "sounds/ui/misc/kick.ogg" : "sounds/ui/misc/leaveroom.ogg", false); // leaving a room plays leaveroom; kicking YOURSELF out via the kick menu (roomleft kicked) plays the kick cue instead. Someone else kicking you sends roomkicked (also kick.ogg). On roompool so the following draw_map / busy p can't drop it
+			roompool.play_stationary((parsed.length() > 1 and parsed[1] == "kicked") ? "sounds/main/misc/kick.ogg" : "sounds/main/misc/leaveroom.ogg", false); // leaving a room plays leaveroom; kicking YOURSELF out via the kick menu (roomleft kicked) plays the kick cue instead. Someone else kicking you sends roomkicked (also kick.ogg). On roompool so the following draw_map / busy p can't drop it
 			clear_players();
 			current_room = 0;
 			current_room_private = false;
@@ -1785,7 +1785,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "gamejoined" and parsed.length() > 5)
 		{
-			p.play_stationary("sounds/ui/misc/joingame.ogg", false); // personal cue: you entered a game
+			p.play_stationary("sounds/main/misc/joingame.ogg", false); // personal cue: you entered a game
 			clear_players();
 			int gsize = string_to_number(parsed[2]);
 			cavern_size = gsize;
@@ -1857,7 +1857,7 @@ void netloop_impl()
 			game_outside = false;
 			current_game = 0;
 			current_game_host = "";
-			p.play_stationary("sounds/ui/misc/kick.ogg", false);
+			p.play_stationary("sounds/main/misc/kick.ogg", false);
 			string[] gkl = string_split(message, "\n", true);
 			string gkhost = (gkl.length() > 1) ? gkl[1] : parsed[1]; // rank-aware host name; fall back to the plain username
 			add_buffer_item("misc", "You have been kicked from " + gkhost + "'s game.");
@@ -1868,7 +1868,7 @@ void netloop_impl()
 		else if (parsed[0] == "spectatejoined" and parsed.length() > 5)
 		{
 			// We're now watching a game from the overhead deck: "spectatejoined <gameid> <size> <mode> <host>\n<hostdisplay>".
-			p.play_stationary("sounds/ui/misc/joingame.ogg", false);
+			p.play_stationary("sounds/main/misc/joingame.ogg", false);
 			clear_players();
 			int gsize = string_to_number(parsed[2]);
 			cavern_size = gsize;
@@ -1917,7 +1917,7 @@ void netloop_impl()
 			game_phasetimer.restart();
 			if (game_phase == "build")
 			{
-				p.play_stationary("sounds/ui/misc/buildprep.ogg", false);
+				p.play_stationary("sounds/main/misc/buildprep.ogg", false);
 				if (game_outside) add_buffer_item("alerts", "Build phase. The bots are reinforcing for " + int(game_build_seconds) + " seconds.");
 				else if (game_mode == "pvp") add_buffer_item("alerts", "Build phase, " + int(game_build_seconds) + " seconds to prepare.");
 				else add_buffer_item("alerts", "Build phase. " + int(game_build_seconds) + " seconds to prepare.");
@@ -1926,7 +1926,7 @@ void netloop_impl()
 			{
 				wave_attacking = true; // the wave opens with an attack segment
 				wave_number = (parsed.length() > 3) ? string_to_number(parsed[3]) : 1; // round number rides on the message
-				p.play_stationary("sounds/ui/misc/wavestart.ogg", false);
+				p.play_stationary("sounds/main/misc/wavestart.ogg", false);
 				if (game_mode == "pvp") add_buffer_item("alerts", my_side == "attack" ? "The attack begins, smash the walls!" : "The attack begins, gather wood!");
 				else if (game_outside) add_buffer_item("alerts", "Round " + wave_number + ", tear down the walls!");
 				else add_buffer_item("alerts", "Round " + wave_number + ", the enemies are coming!");
@@ -1967,7 +1967,7 @@ void netloop_impl()
 			if (parsed[1] == "1")
 			{
 				wave_number = (parsed.length() > 2) ? string_to_number(parsed[2]) : wave_number + 1; // round number rides on the message
-				p.play_stationary("sounds/ui/misc/wavestart.ogg", false);
+				p.play_stationary("sounds/main/misc/wavestart.ogg", false);
 				resume_wall_burns(); // attack window reopened: any wall still on fire resumes burning (matches the server resuming its burn damage)
 				if (game_mode == "pvp") add_buffer_item("alerts", my_side == "attack" ? "Attack, smash the walls!" : "The attackers are striking, gather wood!");
 					else if (game_outside) add_buffer_item("alerts", "Attack, tear the walls down!");
@@ -1975,7 +1975,7 @@ void netloop_impl()
 			}
 			else
 			{
-				p.play_stationary("sounds/ui/misc/wavestop.ogg", false);
+				p.play_stationary("sounds/main/misc/wavestop.ogg", false);
 				pause_wall_burns(); // rest window: the server pauses the burn damage, so silence the fires until the next attack window
 				if (game_mode == "pvp") add_buffer_item("alerts", my_side == "attack" ? "Hold your fire, the walls are being repaired." : "Repair the walls now!");
 					else if (game_outside) add_buffer_item("alerts", "The bots are repairing, hold your fire.");
@@ -1986,7 +1986,7 @@ void netloop_impl()
 		{
 			/* A heads-up that the next wave lands soon: a single cue and alert, the same number of seconds
 			before every wave (build phase or rest segment). Everyone in the game hears it. */
-			p.play_stationary("sounds/ui/misc/alert.ogg", false);
+			p.play_stationary("sounds/main/misc/alert.ogg", false);
 			add_buffer_item("alerts", "The enemies will attack in " + parsed[1] + " seconds.");
 		}
 		else if (parsed[0] == "gamepaused")
@@ -1995,7 +1995,7 @@ void netloop_impl()
 			in the game loop, all gameplay input except Escape (to leave). Server is the authority. */
 			game_paused = true;
 			pause_pools();
-			p.play_stationary("sounds/ui/misc/pause.ogg", false);
+			p.play_stationary("sounds/main/misc/pause.ogg", false);
 			speak("Game paused.");
 		}
 		else if (parsed[0] == "gameresumed")
@@ -2003,7 +2003,7 @@ void netloop_impl()
 			// The host resumed (or the game auto-resumed / the host left): unfreeze audio and input.
 			game_paused = false;
 			resume_pools();
-			p.play_stationary("sounds/ui/misc/resume.ogg", false);
+			p.play_stationary("sounds/main/misc/resume.ogg", false);
 			speak("Game resumed.");
 		}
 		else if (parsed[0] == "worldfreeze")
@@ -2017,7 +2017,7 @@ void netloop_impl()
 			if(@voice_mic != null) voice_mic.flush_capture(); // so a held mic doesn't burst its backlog out on resume
 			int wfnl = string_contains(message, "\n", 1);
 			if(wfnl > -1) add_buffer_item("alerts", message.substr(wfnl + 1));
-			dlgplay("sounds/ui/misc/worldstop.ogg", false); // blocking (skippable=false) like SimpleFighter, so rapid /gamestop and /gamestart toggling can't be spammed -- the cue must finish first
+			dlgplay("sounds/main/misc/worldstop.ogg", false); // blocking (skippable=false) like SimpleFighter, so rapid /gamestop and /gamestart toggling can't be spammed -- the cue must finish first
 		}
 		else if (parsed[0] == "worldunfreeze")
 		{
@@ -2026,7 +2026,7 @@ void netloop_impl()
 			world_frozen = false;
 			int wfnl = string_contains(message, "\n", 1);
 			if(wfnl > -1) add_buffer_item("alerts", message.substr(wfnl + 1));
-			dlgplay("sounds/ui/misc/worldstart.ogg", false);
+			dlgplay("sounds/main/misc/worldstart.ogg", false);
 			if(!game_paused) resume_pools(); // resume the game's sounds only after the start cue finishes, so the wood and bots don't play over it
 		}
 		else if (parsed[0] == "pvpdesert" and parsed.length() > 2)
@@ -2072,17 +2072,17 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "staffmsg" and message.length() > parsed[0].length()+1)
 		{
-			p.play_stationary("sounds/ui/misc/staffchat.ogg", false);
+			p.play_stationary("sounds/main/misc/staffchat.ogg", false);
 			add_buffer_item("staff chats", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "localmsg" and message.length() > parsed[0].length()+1)
 		{
-			p.play_stationary("sounds/ui/misc/localchat.ogg", false);
+			p.play_stationary("sounds/main/misc/localchat.ogg", false);
 			add_buffer_item("local chats", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "teammsg" and message.length() > parsed[0].length()+1)
 		{
-			p.play_stationary("sounds/ui/misc/teamchat.ogg", false);
+			p.play_stationary("sounds/main/misc/teamchat.ogg", false);
 			add_buffer_item("team chats", message.substr(parsed[0].length()+1));
 		}
 		else if (parsed[0] == "roomkicked" and parsed.length() > 2)
@@ -2094,7 +2094,7 @@ void netloop_impl()
 			current_room = 0;
 			current_room_private = false;
 			current_room_host = "";
-			p.play_stationary("sounds/ui/misc/kick.ogg", false);
+			p.play_stationary("sounds/main/misc/kick.ogg", false);
 			string[] rkl = string_split(message, "\n", true);
 			string rkhost = (rkl.length() > 1) ? rkl[1] : parsed[1]; // rank-aware host name; fall back to the plain username
 			add_buffer_item("misc", "You have been kicked from " + rkhost + "'s " + parsed[2] + " room.");
@@ -2111,7 +2111,7 @@ void netloop_impl()
 			current_room = 0;
 			current_room_private = false;
 			current_room_host = "";
-			roompool.play_stationary("sounds/ui/misc/leaveroom.ogg", false); // your room (yours, or one staff deleted) is gone, so you are leaving it -- play the leave cue, like any other room exit
+			roompool.play_stationary("sounds/main/misc/leaveroom.ogg", false); // your room (yours, or one staff deleted) is gone, so you are leaving it -- play the leave cue, like any other room exit
 			string[] rdl = string_split(message, "\n", true);
 			string rdhost = (rdl.length() > 1) ? rdl[1] : parsed[1]; // rank-aware host name; fall back to the plain username
 			add_buffer_item("misc", rdhost + "'s " + parsed[2] + " room has been deleted.");
@@ -2129,14 +2129,14 @@ void netloop_impl()
 	{
 		string message = get_event_message();
 		add_buffer_item("global chats", message);
-		p.play_stationary("sounds/ui/misc/globalchat.ogg", false);
+		p.play_stationary("sounds/main/misc/globalchat.ogg", false);
 	}
 	// Channel 2: private messages.
 	if (event.type == event_receive and event.channel == 2)
 	{
 		string message = get_event_message();
 		add_buffer_item("private chats", message);
-		p.play_stationary("sounds/ui/misc/privchat.ogg", false);
+		p.play_stationary("sounds/main/misc/privchat.ogg", false);
 		/* Remember who PM'd us so /reply (/r) can answer them. The message reads
 		"PM from <display name>: ..."; the real username is the last word of the display name
 		(staff carry a rank prefix). Our own sent copies start with "PM to " and are ignored. */

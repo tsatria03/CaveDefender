@@ -11,7 +11,7 @@ return false;
 if (key_repeating(KEY_C) and dlgcoppy==true)
 {
 temp.destroy_all();
-temp.play_stationary("sounds/ui/dlg/coppy.ogg", false);
+temp.play_stationary("sounds/main/ui/dialog/coppy.ogg", false);
 string clean_message = string_replace(message, " Press enter to continue.", "", true);
 clipboard_copy_text(clean_message);
 speak("Text copied");
@@ -35,23 +35,23 @@ return false;
 }
 void dlgmessage(string messages)
 {
-temp.play_stationary("sounds/ui/dlg/open.ogg", false);
+temp.play_stationary("sounds/main/ui/dialog/open.ogg", false);
 string[] d = string_split(messages, "\r\n", true);
 bool escaped = dlg(d[0]);
 if (escaped)
 {
-temp.play_stationary("sounds/ui/dlg/close.ogg", false);
+temp.play_stationary("sounds/main/ui/dialog/close.ogg", false);
 return;
 }
 for (uint i = 1; i < d.length(); i++)
 {
-temp.play_stationary("sounds/ui/dlg/scroll.ogg", false);
+temp.play_stationary("sounds/main/ui/dialog/scroll.ogg", false);
 escaped = dlg(d[i]);
 if (escaped)
 {
-temp.play_stationary("sounds/ui/dlg/close.ogg", false);
+temp.play_stationary("sounds/main/ui/dialog/close.ogg", false);
 return;
 }
 }
-temp.play_stationary("sounds/ui/dlg/close.ogg", false);
+temp.play_stationary("sounds/main/ui/dialog/close.ogg", false);
 }

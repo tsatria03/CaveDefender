@@ -6,7 +6,7 @@ firing live in swingloop/fireloop below. */
 string current_weapon=""; // the equipped weapon's name (any of the 12), or "" when not armed.
 /* The weapon roster, grouped by class. weapon_classes() is the tab order (archery, artillery, explosive, melee); each
 class's weapons are listed alphabetically (matching SimpleFighter). available_weapons() is all of them alphabetically
-for the menu's "All" tab. These also drive the class segment of every weapon sound path (sounds/equipment/weapons/<class>/<name>/). */
+for the menu's "All" tab. These also drive the class segment of every weapon sound path (sounds/game/equipments/weapons/<class>/<name>/). */
 string[] weapon_classes()
 {
 string[] c;
@@ -82,8 +82,8 @@ if(wname=="" or wname==current_weapon) return; // unknown, or already drawn
 if(is_reloading) { speak("You can't switch weapons while reloading."); return; } // no switching mid-reload -- it would silently throw the reload away; wait it out. (System re-arms go through equip_weapon, which is NOT gated.)
 current_weapon = wname;
 p.destroy_sound(wepslot); // cut off the previous DRAW still ringing so switching weapons doesn't stack draws
-wepslot = p.play_3d("sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
-send(0, "step equipment/weapons/"+weapon_class(wname)+"/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
+wepslot = p.play_3d("sounds/game/equipments/weapons/"+weapon_class(wname)+"/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+send(0, "step game/equipments/weapons/"+weapon_class(wname)+"/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
 send(0, "setweapon "+wname, 0, true); // tell the server which weapon we have drawn, so a reconnect restores the same one
 add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
 }
@@ -142,8 +142,8 @@ void equip_weapon(string wname)
 current_weapon = wname;
 is_reloading = false; // a fresh arm cancels any reload in progress
 p.destroy_sound(wepslot);
-wepslot = p.play_3d("sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
-send(0, "step equipment/weapons/"+weapon_class(wname)+"/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
+wepslot = p.play_3d("sounds/game/equipments/weapons/"+weapon_class(wname)+"/"+wname+"/draw.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+send(0, "step game/equipments/weapons/"+weapon_class(wname)+"/"+wname+"/draw "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the draw in 3D at our spot
 send(0, "setweapon "+wname, 0, true); // tell the server which weapon we have drawn, so a reconnect restores the same one
 add_buffer_item("misc", wname + " equipped"); // speaks and logs to the misc buffer
 }
@@ -187,7 +187,7 @@ if(key_pressed(KEY_SPACE) and swingtimer.elapsed >= swing_recovery(current_weapo
 swinging=true;
 swing_weapon=current_weapon; // lock in this swing's weapon
 swingtimer.restart();
-string firepath = "equipment/weapons/"+weapon_class(swing_weapon)+"/"+swing_weapon+"/fire"+random(1,3); // pick the variant once so our local cue and the relayed one match
+string firepath = "game/equipments/weapons/"+weapon_class(swing_weapon)+"/"+swing_weapon+"/fire"+random(1,3); // pick the variant once so our local cue and the relayed one match
 /* Play the swing in 3D at our spot, UNTRACKED (no wepslot): so consecutive swings overlap and, crucially, a
 new swing never destroys a still-ringing hit clip (which the pool may have given a recycled slot). */
 p.play_3d("sounds/"+firepath+".ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
@@ -208,8 +208,8 @@ void fire_one_shot()
 {
 string cls = weapon_class(current_weapon);
 my_loaded--; // optimistic; the server re-syncs via "loaded" (a build-phase or rest-window shot spends nothing, so it comes back; a miss during a wave now costs the round)
-p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/fire.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
-send(0, "step equipment/weapons/"+cls+"/"+current_weapon+"/fire "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the shot in 3D
+p.play_3d("sounds/game/equipments/weapons/"+cls+"/"+current_weapon+"/fire.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+send(0, "step game/equipments/weapons/"+cls+"/"+current_weapon+"/fire "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the shot in 3D
 string fdir = (facing==Left) ? "west" : (facing==Right) ? "east" : (facing==Forward) ? "north" : "south"; // which wall the shot flies toward
 send(0, "fire "+fdir, 0, true); // the server ray-marches this facing to the target wall, spawns the bullet, and resolves the hit/ricochet on arrival
 }
@@ -226,7 +226,7 @@ if(my_loaded > 0)
 {
 if(key_down(KEY_SPACE) and firetimer.elapsed >= my_weapon_repeattime) { firetimer.restart(); fire_one_shot(); }
 }
-else if(key_pressed(KEY_SPACE)) p.play_3d("sounds/equipment/weapons/"+weapon_class(current_weapon)+"/"+current_weapon+"/empty.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // dry-fire: once per press
+else if(key_pressed(KEY_SPACE)) p.play_3d("sounds/game/equipments/weapons/"+weapon_class(current_weapon)+"/"+current_weapon+"/empty.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // dry-fire: once per press
 return;
 }
 // MANUAL (fire mode 0): one shot per Space press, paced by spam_time.
@@ -234,7 +234,7 @@ if(key_pressed(KEY_SPACE) and firetimer.elapsed >= my_weapon_spamtime)
 {
 firetimer.restart();
 if(my_loaded > 0) fire_one_shot();
-else p.play_3d("sounds/equipment/weapons/"+weapon_class(current_weapon)+"/"+current_weapon+"/empty.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // dry-fire: out of loaded ammo
+else p.play_3d("sounds/game/equipments/weapons/"+weapon_class(current_weapon)+"/"+current_weapon+"/empty.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // dry-fire: out of loaded ammo
 }
 }
 /* --- Reload (Shift+R, task 5c.3) ---
@@ -255,7 +255,7 @@ string at = weapon_ammo_type(current_weapon);
 if(my_loaded > 0) { speak("This weapon is already loaded with " + at + " ammo."); return; } // must be fully spent first, so a partial magazine can't be topped up (which would drain the reserve early)
 if(ammo_reserve_for(at) <= 0) { speak("You have no " + at + " ammo left to reload."); return; }
 string cls = weapon_class(current_weapon);
-reload_slot = p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/reload.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
+reload_slot = p.play_3d("sounds/game/equipments/weapons/"+cls+"/"+current_weapon+"/reload.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false);
 reload_duration = int(p.get_sound_length(reload_slot)); // the clip's length in ms drives the timer; a missing clip reads 0 -> instant
 send(0, "reloadrelay "+current_weapon, 0, true); // nearby players start a reload sound that FOLLOWS me (relayed as playerreload), instead of a one-shot left where I began
 is_reloading = true;
@@ -271,8 +271,8 @@ if(reloadtimer.elapsed >= reload_duration)
 is_reloading = false;
 reload_slot = -1; // the reload clip has played out
 string cls = weapon_class(current_weapon);
-p.play_3d("sounds/equipment/weapons/"+cls+"/"+current_weapon+"/ping.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // the reload-complete cue: the weapon is loaded and ready (the reload clip alone was hard to time)
-send(0, "step equipment/weapons/"+cls+"/"+current_weapon+"/ping "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the ready-ping in 3D at our spot too
+p.play_3d("sounds/game/equipments/weapons/"+cls+"/"+current_weapon+"/ping.ogg", me.x, me.y, me.z, me.x, me.y, me.z, calculate_theta(me_rotation), false); // the reload-complete cue: the weapon is loaded and ready (the reload clip alone was hard to time)
+send(0, "step game/equipments/weapons/"+cls+"/"+current_weapon+"/ping "+int(me.x)+" "+int(me.y), 0, true); // others nearby hear the ready-ping in 3D at our spot too
 send(0, "reload", 0, true); // server moves reserve into the magazine (up to max) and re-syncs loaded + the reserve counts
 }
 }

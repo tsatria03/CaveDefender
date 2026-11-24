@@ -46,7 +46,7 @@ else if(dir=="north") { b.tx=px; b.ty=s; }
 else if(dir=="south") { b.tx=px; b.ty=0; }
 else return;
 b.flight_ms = flight_ms;
-string loop = "sounds/equipment/weapons/"+weapon_class(wname)+"/"+wname+"/loop.ogg";
+string loop = "sounds/game/equipments/weapons/"+weapon_class(wname)+"/"+wname+"/loop.ogg";
 b.slot = bulletpool.play_3d(loop, me.x, me.y, me.z, b.ox, b.oy, 0, calculate_theta(me_rotation), true); // looping travel source on the dedicated bulletpool, played directly (no file_exists guard -- it reads false for the boxed/virtual-FS sound and was silencing every loop); a missing file just fails into an invalid slot
 b.travel.restart();
 client_bullets.insert_last(b);

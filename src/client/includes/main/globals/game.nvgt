@@ -133,7 +133,7 @@ buffercheck();
 			{
 				afk_counting=false;
 				afk_reason=""; // canceled: drop any reason so it can't carry over to a later /afk
-				p.play_stationary("sounds/ui/misc/afkoff.ogg", false);
+				p.play_stationary("sounds/main/misc/afkoff.ogg", false);
 				add_buffer_item("misc", "You are no longer going AFK.");
 			}
 			else if(afk_timer.elapsed>=1000)
@@ -149,7 +149,7 @@ buffercheck();
 					afk_reason=""; // consumed
 
 				}
-				else p.play_stationary("sounds/ui/misc/afktimer.ogg", false);
+				else p.play_stationary("sounds/main/misc/afktimer.ogg", false);
 			}
 		}
 		else if(afk)
@@ -307,7 +307,7 @@ buffercheck();
 			{
 				// Alt+R toggles auto-running anywhere you can move; saved so it sticks next session.
 				autorun = !autorun;
-				p.play_stationary(autorun ? "sounds/ui/misc/toggleon.ogg" : "sounds/ui/misc/toggleoff.ogg", false);
+				p.play_stationary(autorun ? "sounds/main/misc/toggleon.ogg" : "sounds/main/misc/toggleoff.ogg", false);
 				speak(autorun ? "auto running enabled" : "auto running disabled");
 				writepreffs();
 			}
@@ -399,13 +399,13 @@ buffercheck();
 			pinging=true;
 			pingtimer.restart();
 			send(0, "ping_request", 0, true);
-			p.play_stationary("sounds/ui/misc/pingstart.ogg", false);
+			p.play_stationary("sounds/main/misc/pingstart.ogg", false);
 			add_buffer_item("connections", "Pinging");
 		}
 		if(pinging and pingtimer.elapsed>=pingtimeout)
 		{
 			pinging=false;
-			p.play_stationary("sounds/ui/misc/pingstop.ogg", false);
+			p.play_stationary("sounds/main/misc/pingstop.ogg", false);
 			add_buffer_item("connections", "Ping lost");
 		}
 		if(key_pressed(KEY_F4))
@@ -417,12 +417,12 @@ buffercheck();
 			beacons_enabled=!beacons_enabled;
 			if(beacons_enabled)
 			{
-				p.play_stationary("sounds/ui/misc/toggleon.ogg", false);
+				p.play_stationary("sounds/main/misc/toggleon.ogg", false);
 				speak("beacons enabled");
 			}
 			else
 			{
-				p.play_stationary("sounds/ui/misc/toggleoff.ogg", false);
+				p.play_stationary("sounds/main/misc/toggleoff.ogg", false);
 				speak("beacons disabled");
 			}
 		}

@@ -163,7 +163,7 @@ void recordcheck()
 	if(want and !recording and spamtimer.elapsed >= spamtime)
 	{
 		recording = true;
-		p.play_stationary("sounds/ui/misc/von.ogg", false);
+		p.play_stationary("sounds/main/misc/von.ogg", false);
 		if(!messages) send(0, "voicecue on", 0, true); // LIVE mode only: relay a von cue to everyone in your space so they hear you key the mic in 3D. Message mode plays the cues around the message PLAYBACK, receiver-side (see play_remote_message / voiceloop), so they wrap what listeners actually hear rather than the silent recording window.
 		voice_mic.flush_capture();
 		if(messages) { voice_enc.reset_state(); voice_msg_reset(); rectimer.restart(); } // fresh encoder (self-contained stream to match the receiver's fresh decoder) + message buffer + length clock
@@ -174,7 +174,7 @@ void recordcheck()
 	{
 		if(messages) voice_msg_capture(); // grab any frames buffered since the last drain so the tail isn't lost
 		recording = false;
-		p.play_stationary("sounds/ui/misc/voff.ogg", false);
+		p.play_stationary("sounds/main/misc/voff.ogg", false);
 		if(!messages) send(0, "voicecue off", 0, true); // LIVE mode only (see the on-cue above); the message-mode voff plays when the clip finishes on the receiver
 		if(messages) voice_msg_send(); // ship the whole recording as one reliable "m" message, then play it back locally
 		spamtimer.restart();
@@ -215,7 +215,7 @@ wall) for a cross-wall PVP source, otherwise p. Shared by the LIVE voicecue hand
 speaker's record start/stop) and the MESSAGE-mode cues that wrap a recorded message's playback below. */
 void play_voice_cue_at(double cx, double cy, string onoff)
 {
-	string cuefile = (onoff == "on") ? "ui/misc/von" : "ui/misc/voff";
+	string cuefile = (onoff == "on") ? "main/misc/von" : "main/misc/voff";
 	if(game_mode == "pvp" and pvp_crosswall(cx, cy)) crosspool.play_3d("sounds/" + cuefile + ".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
 	else p.play_3d("sounds/" + cuefile + ".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
 }
@@ -225,7 +225,7 @@ crosspool (muffled through the wall) for a cross-wall PVP source, otherwise p. D
 players hear each other typing; key is one of type/space/delete/return, already validated on the server. */
 void play_type_cue_at(double cx, double cy, string key)
 {
-	string cuefile = "ui/keyboard/" + key;
+	string cuefile = "main/ui/keyboard/" + key;
 	if(game_mode == "pvp" and pvp_crosswall(cx, cy)) crosspool.play_3d("sounds/" + cuefile + ".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
 	else p.play_3d("sounds/" + cuefile + ".ogg", me.x, me.y, me.z, cx, cy, 0, calculate_theta(me_rotation), false);
 }

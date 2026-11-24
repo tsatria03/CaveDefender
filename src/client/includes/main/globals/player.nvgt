@@ -106,7 +106,7 @@ for(uint i=0; i<players.length(); i++)
 if(!players[i].tracked) continue; // skip voice-only entries (e.g. a spectator) -- no beacon for them
 if(players[i].beacontimer.elapsed>=beacontime)
 {
-players[i].beaconsound=beaconpool.play_extended_3d("sounds/ui/misc/beacon.ogg", me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, players[i].beaconpitch, false);
+players[i].beaconsound=beaconpool.play_extended_3d("sounds/main/misc/beacon.ogg", me.x, me.y, me.z, players[i].x, players[i].y, 0, calculate_theta(me_rotation), 0, 0, 0, 0, 0, 0, false, 0, 0, 0, players[i].beaconpitch, false);
 players[i].beacontimer.restart();
 }
 }
