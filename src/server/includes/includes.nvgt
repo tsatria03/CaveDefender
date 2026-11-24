@@ -1,5 +1,6 @@
 #include"version.nvgt"
 
+#include"game/*"
 #include"main/deps/*"
 #include"main/functions/*"
 #include"main/globals/*"
