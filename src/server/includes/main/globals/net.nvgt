@@ -73,7 +73,7 @@ string format_uptime(int uptime_seconds)
     uptime_message += string(seconds) + (seconds == 1 ? " second." : " seconds.");
     return uptime_message;
 }
-/* --- All-time peak concurrent players (reported alongside uptime on F4), persisted in data/preffs/main/peak.svr ---
+/* --- All-time peak concurrent players (reported alongside uptime on F4), persisted in data/host/main/peak.svr ---
 Zero-pad a non-negative int to at least 2 digits ("5" -> "05") for the peak timestamp. */
 string pad2(int n) { string s = "" + n; return (s.length() < 2) ? "0" + s : s; }
 // The current local date and time like "12/22/2022 at 5:45 PM" (US M/D/Y, 12-hour clock, no seconds).
@@ -114,23 +114,23 @@ int n = 0;
 for(uint i=0; i<players.length(); i++) if(!players[i].held) n++;
 return n;
 }
-// Load the all-time peak from data/preffs/main/peak.svr (line 1 = count, line 2 = the formatted date/time). Missing file = no peak yet.
+// Load the all-time peak from data/host/main/peak.svr (line 1 = count, line 2 = the formatted date/time). Missing file = no peak yet.
 void load_peak()
 {
 peak_players = 0; peak_when = "";
-if(!file_exists("data/preffs/main/peak.svr")) return;
+if(!file_exists("data/host/main/peak.svr")) return;
 file pf;
-if(!pf.open("data/preffs/main/peak.svr", "rb")) return;
+if(!pf.open("data/host/main/peak.svr", "rb")) return;
 string raw = pf.read(); pf.close();
 string[] lines = string_split(raw, "\r\n", true);
 if(lines.length() >= 1) peak_players = int(string_to_number(lines[0].trim_whitespace()));
 if(lines.length() >= 2) peak_when = lines[1];
 }
-// Persist the current peak to data/preffs/main/peak.svr.
+// Persist the current peak to data/host/main/peak.svr.
 void save_peak()
 {
 file pf;
-if(!pf.open("data/preffs/main/peak.svr", "wb")) return;
+if(!pf.open("data/host/main/peak.svr", "wb")) return;
 pf.write("" + peak_players + "\r\n" + peak_when + "\r\n");
 pf.close();
 }
@@ -146,7 +146,7 @@ with the alert cue. Fires from the very first player up, so "a new peak of 1 pla
 send(0, "alert We've reached a new peak of "+n+(n==1?" player":" players")+"!", 0, true);
 }
 }
-/* --- Player reports (filed with /report, reviewed by staff with /reports), persisted in data/preffs/main/reports.svr ---
+/* --- Player reports (filed with /report, reviewed by staff with /reports), persisted in data/host/main/reports.svr ---
 A readable local timestamp for a report, e.g. "July 8, 2026 at 3:42 PM" (month name, 12-hour, no seconds),
 matching the "Member since" style on the account card. */
 string report_time_stamp()
@@ -156,29 +156,29 @@ string ampm = (h < 12) ? "AM" : "PM";
 int h12 = h % 12; if(h12 == 0) h12 = 12;
 return DATE_MONTH_NAME + " " + DATE_DAY + ", " + DATE_YEAR + " at " + h12 + ":" + pad2(TIME_MINUTE) + " " + ampm;
 }
-/* Append one report to data/preffs/main/reports.svr. One report per line, TAB-delimited:
+/* Append one report to data/host/main/reports.svr. One report per line, TAB-delimited:
 <stamp>\t<reporter>\t<reported>\t<location>\t<reason>. Tabs, not the colon used elsewhere, because the readable
 stamp contains colons; the reason is last so it may contain anything (including tabs, rejoined on read). Nothing
 is ever deleted -- a host hand-clears the file if it grows too long. Rewrites the whole file (reports are rare). */
 void add_report(string reporter, string reported, string location, string reason)
 {
 string existing = "";
-if(file_exists("data/preffs/main/reports.svr"))
+if(file_exists("data/host/main/reports.svr"))
 {
-file rf; if(rf.open("data/preffs/main/reports.svr", "rb")) { existing = rf.read(); rf.close(); }
+file rf; if(rf.open("data/host/main/reports.svr", "rb")) { existing = rf.read(); rf.close(); }
 }
 string line = report_time_stamp() + "\t" + reporter + "\t" + reported + "\t" + location + "\t" + reason;
 file wf;
-if(!wf.open("data/preffs/main/reports.svr", "wb")) return;
+if(!wf.open("data/host/main/reports.svr", "wb")) return;
 wf.write(existing + line + "\n");
 wf.close();
 }
 // The staff /reports viewer: every report on record, newest first, numbered, in three-line blocks.
 string format_reports()
 {
-if(!file_exists("data/preffs/main/reports.svr")) return "There are no reports on record.";
+if(!file_exists("data/host/main/reports.svr")) return "There are no reports on record.";
 file rf;
-if(!rf.open("data/preffs/main/reports.svr", "rb")) return "There are no reports on record.";
+if(!rf.open("data/host/main/reports.svr", "rb")) return "There are no reports on record.";
 string raw = rf.read(); rf.close();
 string[] lines = string_split(raw, "\n", true);
 string listing = "";
@@ -199,30 +199,30 @@ if(listing == "") return "There are no reports on record.";
 return listing;
 }
 /* --- Player feedback / bug reports (filed with /feedback or /fb, reviewed by DEVELOPERS with /feedbacks or /fbs),
-persisted in data/preffs/main/feedback.svr. The sibling of the report system above: same tab-delimited, append-only,
+persisted in data/host/main/feedback.svr. The sibling of the report system above: same tab-delimited, append-only,
 never-auto-deleted file, but with no reported-player field since feedback targets no one. --- */
-/* Append one feedback entry to data/preffs/main/feedback.svr. One per line, TAB-delimited:
+/* Append one feedback entry to data/host/main/feedback.svr. One per line, TAB-delimited:
 <stamp>\t<submitter>\t<location>\t<text>. The text is last so it may contain anything (including tabs, rejoined
 on read). Nothing is ever deleted -- a host hand-clears the file if it grows too long. Rewrites the whole file. */
 void add_feedback(string submitter, string location, string text)
 {
 string existing = "";
-if(file_exists("data/preffs/main/feedback.svr"))
+if(file_exists("data/host/main/feedback.svr"))
 {
-file ff; if(ff.open("data/preffs/main/feedback.svr", "rb")) { existing = ff.read(); ff.close(); }
+file ff; if(ff.open("data/host/main/feedback.svr", "rb")) { existing = ff.read(); ff.close(); }
 }
 string line = report_time_stamp() + "\t" + submitter + "\t" + location + "\t" + text;
 file wf;
-if(!wf.open("data/preffs/main/feedback.svr", "wb")) return;
+if(!wf.open("data/host/main/feedback.svr", "wb")) return;
 wf.write(existing + line + "\n");
 wf.close();
 }
 // The developer /feedbacks viewer: every feedback entry on record, newest first, numbered, in three-line blocks (mirrors format_reports).
 string format_feedback()
 {
-if(!file_exists("data/preffs/main/feedback.svr")) return "There is no feedback on record.";
+if(!file_exists("data/host/main/feedback.svr")) return "There is no feedback on record.";
 file ff;
-if(!ff.open("data/preffs/main/feedback.svr", "rb")) return "There is no feedback on record.";
+if(!ff.open("data/host/main/feedback.svr", "rb")) return "There is no feedback on record.";
 string raw = ff.read(); ff.close();
 string[] lines = string_split(raw, "\n", true);
 string listing = "";
@@ -247,7 +247,7 @@ live on offline account folders, so there's no in-memory list -- we scan them al
 skipped. Listed in the order find_directories returns (there's no ban timestamp to sort by). */
 string format_all_bans()
 {
-string[] dirs = find_directories("data/players/*");
+string[] dirs = find_directories("data/host/game/players/*");
 string listing = "";
 int shown = 0;
 for(uint i=0; i<dirs.length(); i++)
@@ -776,7 +776,7 @@ hierarchy first (developers, then administrators, then moderators), each tagged 
 (Offline) based on the current roster. */
 string build_staff_list()
 {
-string[] files=find_directories("data/players/*");
+string[] files=find_directories("data/host/game/players/*");
 string[] devs, admins, mods;
 for(uint i=0; i<files.length(); i++)
 {
@@ -814,7 +814,7 @@ return head+list+".";
 rank string (as stored in rank.usr) plus the singular noun for the header ("administrator", etc.). */
 string build_rank_list(string rank, string singular)
 {
-string[] files=find_directories("data/players/*");
+string[] files=find_directories("data/host/game/players/*");
 string[] members;
 for(uint i=0; i<files.length(); i++)
 {
@@ -1403,7 +1403,7 @@ and stay enforced; we deliberately DON'T re-announce them (no message or sound) 
 players[existing].restoring=false;
 index=existing;
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
-send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true); // the host's cave-acoustics presets (effects.gvr); re-sent on reconnect in case the client restarted
+send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true); // the host's cave-acoustics presets (effects.ini); re-sent on reconnect in case the client restarted
 send(event.peer_id, "autoafk "+autoafk, 0, true); // the host's idle-timeout policy (conf.svr's autoafk); re-sent on reconnect in case the client restarted
 if(players[index].restore_reannounce) send(0, online_line(players[index].name, players[index].rank, players[index].nickname), 0,true); // only if they were held (announced offline); a live takeover was never offline.
 players[index].restore_reannounce=false;
@@ -1451,7 +1451,7 @@ players[index].onoffignored = get_onoff_ignored(players[index].name); // persona
 send_onoff_ignore_list(index); // sync it to their client so it can enforce
 players[index].agreed = has_agreed_rules(players[index].name); // rules agreement (rules.usr vs rulesver); gates play until agreed. The reminder to read/agree is shown when they try to open the lobby, not at spawn.
 send(event.peer_id, "yourrank "+players[index].rank, 0,true);
-send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true); // the host's cave-acoustics presets (effects.gvr): the client adopts them for its reverb/muffle slots
+send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true); // the host's cave-acoustics presets (effects.ini): the client adopts them for its reverb/muffle slots
 send(event.peer_id, "autoafk "+autoafk, 0, true); // the host's idle-timeout policy (conf.svr's autoafk): 0 = off, else the client auto-goes-AFK after this many idle seconds
 /* New accounts are announced at creation time (see register_account), so logging in for the first time
 is just a normal "online" notice like anyone else. */
@@ -2352,7 +2352,7 @@ send(event.peer_id, "mutestext "+uname+"\n"+format_mutes(target), 0, true);
 }
 else if(parsed[0]=="getonoff" and index>-1 and parsed.length()==3)
 {
-/* A client requests a player's custom online/offline connect sound (data/players/<user>/onoffs/<which>.ogg).
+/* A client requests a player's custom online/offline connect sound (data/host/game/players/<user>/onoffs/<which>.ogg).
 The .ogg is binary, so it's base64-encoded to ride the space-delimited text protocol safely. Reply is
 "onoffdata <user> <which>\n<base64>", or "...\nnone" when the account has no custom file for that cue (the
 client then caches the "none" answer and plays its builtin fallback). Everything after the first newline is the
@@ -2897,7 +2897,7 @@ string mode="pve"; // gameplay mode; defaults to the original pve for a missing 
 if(parsed.length()>3 and parsed[3]=="evp") mode="evp";
 else if(parsed.length()>3 and parsed[3]=="pvp") mode="pvp";
 else if(parsed.length()>3 and parsed[3]=="free") mode="free";
-// Size validation is mode-aware: PVP allows any of its configurable pvp_sizes (conf.gvr), every other mode the fixed 25/50/75/100. An unrecognized size falls back to a sensible default rather than being rejected.
+// Size validation is mode-aware: PVP allows any of its configurable pvp_sizes (modes.ini), every other mode the fixed 25/50/75/100. An unrecognized size falls back to a sensible default rather than being rejected.
 if(mode=="pvp") { if(!pvp_size_allowed(size)) size = (pvp_sizes.length()>0) ? pvp_sizes[0] : 50; }
 else if(size!=25 and size!=50 and size!=75 and size!=100) size=50;
 double rcap = (parsed.length()>4) ? string_to_number(parsed[4]) : 0; // wall reinforce cap multiplier (2/4/8, or 0 = no limit); PVE/PVP only, EVP sends 0
@@ -3469,7 +3469,7 @@ if(event.type == event_receive && event.channel == 1 && !world_frozen) // world-
     {
         motd = string_replace(get_event_message(), "/motd ", "", true);
         file f;
-        if(f.open("data/preffs/main/motd.svr", "w")) // guard the write like write_field does; the MOTD is already live in memory either way
+        if(f.open("data/host/main/motd.svr", "w")) // guard the write like write_field does; the MOTD is already live in memory either way
         {
             f.write(motd);
             f.close();

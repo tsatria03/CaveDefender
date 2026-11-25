@@ -46,7 +46,7 @@ broadcast_wall_strength(games[gi].id);
 send_to_game(games[gi].id, "wallrebuilt "+dir); // clients re-tile the breach back to solid + announce the return
 }
 }
-/* FREE PLAY: directly set one wall's current strength to `pct` percent of its max (base = conf.gvr wallbase) health --
+/* FREE PLAY: directly set one wall's current strength to `pct` percent of its max (base = modes.ini wallbase) health --
 the Set wall health cavern control. A direct debug set, so it IGNORES the reinforce limit (that governs wood only). If
 the wall was DOWN (breached, health <= 0), re-raise it: cancel any pending self-heal for it and re-tile the breach back
 to solid on clients (mirrors heal_tick's rebuild). The caller broadcasts the new strengths once after setting. */

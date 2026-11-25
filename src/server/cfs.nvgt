@@ -18,13 +18,16 @@ exit();
 }
 svruptimer.restart();
 if(!directory_exists("data")) directory_create("data");
-if(!directory_exists("data/players")) directory_create("data/players");
-if(!directory_exists("data/preffs")) directory_create("data/preffs");
-if(!directory_exists("data/preffs/main")) directory_create("data/preffs/main"); // server-wide prefs (conf, motd, peak, chatfilter, languages, pronouns, reports) live one level down in main/
-load_peak(); // load the all-time concurrent-player record (data/preffs/main/peak.svr), reported with uptime on F4
-if(file_exists("data/preffs/main/conf.svr"))
+// host/ holds what only a server has: accounts under host/game/players, and the server-wide settings (conf, motd, peak,
+// chatfilter, languages, pronouns, reports, feedback) under host/main. config/ holds the game rules (equipments, modes, effects).
+if(!directory_exists("data/host")) directory_create("data/host");
+if(!directory_exists("data/host/game")) directory_create("data/host/game");
+if(!directory_exists("data/host/game/players")) directory_create("data/host/game/players");
+if(!directory_exists("data/host/main")) directory_create("data/host/main");
+load_peak(); // load the all-time concurrent-player record (data/host/main/peak.svr), reported with uptime on F4
+if(file_exists("data/host/main/conf.svr"))
 {
-f.open("data/preffs/main/conf.svr", "rb");
+f.open("data/host/main/conf.svr", "rb");
 string content=f.read();
 string[] prefs=string_split(content, "\r\n", true);
 string[] values;
@@ -95,21 +98,21 @@ f.close();
 was missing. This is the only routine rewrite -- owner changes still save immediately, and nothing else here changes
 at runtime, so the file is no longer rewritten on a timer (which used to overwrite a host's live edits). */
 writeprefs();
-    if(file_exists("data/preffs/main/motd.svr"))
+    if(file_exists("data/host/main/motd.svr"))
     {
-        f.open("data/preffs/main/motd.svr", "r");
+        f.open("data/host/main/motd.svr", "r");
         motd = f.read();
         f.close();
     }
     else
     {
-        f.open("data/preffs/main/motd.svr", "w");
+        f.open("data/host/main/motd.svr", "w");
         f.write(motd);
         f.close();
     }
-load_game_data(); // read the data-driven weapon/item files (data/equipments/weapons, data/equipments/items) into their lookup tables before play begins
-load_game_conf(); // read the game-tuning file (data/preffs/game/conf.gvr): the item spawn economy and the wall base health
-load_game_effects(); // read the cave-acoustics presets (data/preffs/game/effects.gvr), pushed to each client at spawn
+load_game_data(); // read the data-driven weapon/item files (data/config/game/equipments/weapons, data/config/game/equipments/items) into their lookup tables before play begins
+load_game_conf(); // read the game-tuning file (data/config/main/modes.ini): the item spawn economy and the wall base health
+load_game_effects(); // read the cave-acoustics presets (data/config/main/effects.ini), pushed to each client at spawn
 net.IPV6enabled = false; // use pure IPv4 (like BGT) so the server binds 0.0.0.0 and VPN/IPv4 clients (e.g. Radmin) can reach it; must be set before setup_server
 bool neth=net.setup_server(port, 5, 500);
 show_game_window("CaveDefender server, version "+version+", hosted on port "+port+", user limit "+userlimit);
@@ -130,7 +133,7 @@ lines, and comment text must never contain '=' (the loader splits each line on t
 void writeprefs()
 {
 file f;
-f.open("data/preffs/main/conf.svr", "wb");
+f.open("data/host/main/conf.svr", "wb");
 string ownerlist="";
 for(uint i=0; i<owners.length(); i++) ownerlist+=(i>0 ? "," : "")+owners[i];
 string what="";

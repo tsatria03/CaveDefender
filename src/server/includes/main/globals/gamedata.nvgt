@@ -1,12 +1,12 @@
 /* Server-side data-file loader (task #6, the foundation of the data-driven weapon/item system). Reads the
 weapon and item data files under data/ at boot into lookup tables the rest of the server queries by name:
-  data/equipments/weapons/melee/*.mel, data/equipments/weapons/explosive/*.exp, data/equipments/weapons/archery/*.arc
-  data/equipments/items/wood/*.mtr, data/equipments/items/ammo/*.amt
+  data/config/game/equipments/weapons/melee/*.mel, data/config/game/equipments/weapons/explosive/*.exp, data/config/game/equipments/weapons/archery/*.arc
+  data/config/game/equipments/items/wood/*.mtr, data/config/game/equipments/items/ammo/*.amt
 This file is PURELY ADDITIVE -- it only loads and exposes the values; the callers that switch over to them
 (weapon damage, the four wood types, the ammo reserves) are tasks #7/#8/#9, so nothing here changes gameplay
 yet. See the memory game-data-file-layout for the field spec and the format convention below.
 
-Format (settled): line-based key=value, split on the FIRST '='; blank lines and lines starting with '#' are
+Format (settled): line-based key=value, split on the FIRST '='; blank lines and comment lines (starting with ';', the ini style, or '#') are
 skipped; each line is trimmed (so a trailing CR from CRLF is harmless). A value is either a fixed number, a
 'min,max' random range (rolled fresh on each use, mirroring the old hardcoded random() calls), or -- only for
 the firebomb status -- a ':'-delimited multi-part value. */
@@ -39,7 +39,7 @@ string[] lines = string_split(content, "\n", true);
 for(uint i=0; i<lines.length(); i++)
 {
 string ln = lines[i].trim_whitespace();
-if(ln == "" or string_left(ln, 1) == "#") continue; // blanks and comments
+if(ln == "" or string_left(ln, 1) == ";" or string_left(ln, 1) == "#") continue; // blanks and comments (; is the ini style, # still accepted)
 int eq = string_contains(ln, "=", 1);
 if(eq < 1) continue; // no key before an '='
 keys.insert_last(string_left(ln, eq).trim_whitespace());
@@ -119,7 +119,7 @@ return null;
 void load_weapon_file(string clas, string name, string ext)
 {
 string[] keys, vals;
-if(!read_kv("data/equipments/weapons/"+clas+"/"+name+"."+ext, keys, vals)) return;
+if(!read_kv("data/config/game/equipments/weapons/"+clas+"/"+name+"."+ext, keys, vals)) return;
 weapon_data w;
 w.name = name;
 w.clas = clas;
@@ -156,7 +156,7 @@ weapons_db.insert_last(w);
 void load_wood_file(string name)
 {
 string[] keys, vals;
-if(!read_kv("data/equipments/items/wood/"+name+".mtr", keys, vals)) return;
+if(!read_kv("data/config/game/equipments/items/wood/"+name+".mtr", keys, vals)) return;
 wood_data d;
 d.name = name;
 int[] r = parse_range(kv_get(keys, vals, "reinforce", "10,20"));
@@ -171,7 +171,7 @@ wood_db.insert_last(d);
 void load_ammo_file(string name)
 {
 string[] keys, vals;
-if(!read_kv("data/equipments/items/ammo/"+name+".amt", keys, vals)) return;
+if(!read_kv("data/config/game/equipments/items/ammo/"+name+".amt", keys, vals)) return;
 ammo_data d;
 d.name = name;
 int[] s = parse_range(kv_get(keys, vals, "starter", "5,10"));
@@ -183,7 +183,7 @@ ammo_db.insert_last(d);
 /* Load every weapon and item data file into the lookup tables. Called once at server boot (cfs.nvgt), before
 setup_server. The roster is the known set of files; a dev tuning values edits the files, and this reloads them
 on the next start. Missing files are skipped silently, leaving get_*_data to return null for them. */
-/* --- Game tuning (data/preffs/game/conf.gvr, task #16) ---
+/* --- Game tuning (data/config/main/modes.ini, task #16) ---
 The item economy and wall strength, host-tunable. item* lines are the DEFAULTS for every item category
 (wood, ammo, and anything added later); a wood-or-ammo-prefixed line overrides just that category. count and cap
 values are "size:value" pairs matched by the map-size NUMBER -- the small/medium/big/large words in the
@@ -203,7 +203,7 @@ double wall_base_health = 400; // wallbase= -- the four destroyable walls' full 
 /* EVP per-round fortify escalation: at each wave start every standing wall is guaranteed to at least this fraction
 of its max health, and that fraction CLIMBS every cleared round -- so the bots' defence gets provably tougher round
 over round (the wall % readout keeps rising) instead of plateauing at whatever the build-phase wood supply allowed.
-base = the round-0 target (round 1 played), step = extra target added per cleared round. Tunable via conf.gvr. */
+base = the round-0 target (round 1 played), step = extra target added per cleared round. Tunable via modes.ini. */
 double evp_fortify_base = 1.5; // evpfortifybase= -- round-0 target as a multiple of max health (1.5 = 150%)
 double evp_fortify_step = 0.5; // evpfortifystep= -- extra target per cleared round (0.5 = +50% each round)
 // This round's guaranteed wall-fortify target, as a multiple of max health; never below full (1.0).
@@ -211,7 +211,7 @@ double evp_fortify_mult(int rounds_cleared) { double m = evp_fortify_base + roun
 
 /* EVP round timer (host-tunable, EVP-ONLY -- PVE has no survival clock and PVP uses its own pvp_round_seconds).
 The round is a budget of real ATTACKING seconds (the clock freezes during rest windows): a per-map-size base plus
-a bonus added for every round already cleared, so the clock loosens the deeper you get. Tunable via conf.gvr:
+a bonus added for every round already cleared, so the clock loosens the deeper you get. Tunable via modes.ini:
 evproundtime_<label>=<size>:<seconds> sets a size tier; evproundbonus=<seconds> is added per cleared round. */
 int[] evp_round_sizes; int[] evp_round_secs_vals; // parallel size -> base-seconds tiers, seeded in seed_evp_round_time (read via tier_value)
 int evp_round_bonus = 10; // evproundbonus= -- seconds added to the round timer per round already cleared
@@ -223,7 +223,7 @@ int[] secs = {75, 120, 180, 180};
 for(uint i=0; i<sizes.length(); i++) set_tier(evp_round_sizes, evp_round_secs_vals, sizes[i], secs[i]);
 }
 
-/* PVP map sizes (pvpsizes= in conf.gvr). PVP offers its OWN set of grid sizes, separate from the fixed 25/50/75/100
+/* PVP map sizes (pvpsizes= in modes.ini). PVP offers its OWN set of grid sizes, separate from the fixed 25/50/75/100
 the other modes use, so its walled arena can be made roomier (the interior and the attacker band are each ~a third of
 the size). Shown in the PVP size menu smallest-to-largest with Small/Medium/Big/Large labels in order. Server-only:
 the client just draws whatever size the server tells it, so retuning needs no new client build. */
@@ -265,7 +265,7 @@ set_tier(t.sizes_cap, t.vals_cap, sizes[i], caps[i]);
 }
 t.spawn_lo = 500; t.spawn_hi = 2000;
 }
-/* Apply one conf.gvr line to a tuning. field is the key with its category prefix already stripped
+/* Apply one modes.ini line to a tuning. field is the key with its category prefix already stripped
 ("count_small", "cap_big", "spawn"); the label after the '_' is ignored. count/cap values are "size:value";
 spawn is "min,max". Malformed or nonsense values are skipped, leaving the seeded default in place. */
 void apply_tuning_line(item_tuning@ t, string field, string val)
@@ -287,7 +287,7 @@ int[] r = parse_range(val);
 if(r[0] > 0 and r[1] >= r[0]) { t.spawn_lo = r[0]; t.spawn_hi = r[1]; }
 }
 }
-/* --- Cave acoustics (data/preffs/game/effects.gvr, task #17) ---
+/* --- Cave acoustics (data/config/main/effects.ini, task #17) ---
 Two global effect presets, host-tunable: reverb = what the cave interior sounds like, muffle = the
 through-the-wall filter. Pushed to each client once at spawn ("fx <reverb> <muffle>"); the client's own
 routing decides WHEN each applies (reverb inside the cave, muffle across a wall), so these only re-flavor
@@ -300,14 +300,14 @@ void load_game_effects()
 effect_reverb_preset = "freeverb:1.0:1.0:0.5:0.5:1.0";
 effect_muffle_preset = "lowpass:1500:5:0.5";
 string[] keys, vals;
-if(!read_kv("data/preffs/game/effects.gvr", keys, vals)) return;
+if(!read_kv("data/config/main/effects.ini", keys, vals)) return;
 string rv = kv_get(keys, vals, "reverb", "");
 string mf = kv_get(keys, vals, "muffle", "");
 if(string_left(rv, 9) == "freeverb:" and string_contains(rv, " ", 1) < 0) effect_reverb_preset = rv;
 if(string_left(mf, 8) == "lowpass:" and string_contains(mf, " ", 1) < 0) effect_muffle_preset = mf;
 }
 
-/* Load data/preffs/game/conf.gvr into the tunings. Called once at boot alongside load_game_data. Two passes
+/* Load data/config/main/modes.ini into the tunings. Called once at boot alongside load_game_data. Two passes
 so line order in the file never matters: the item* defaults land in every category first, then the
 per-category wood- and ammo-prefixed overrides go on top of them. */
 void load_game_conf()
@@ -321,7 +321,7 @@ seed_evp_round_time();
 evp_round_bonus = 10;
 seed_pvp_sizes();
 string[] keys, vals;
-if(!read_kv("data/preffs/game/conf.gvr", keys, vals)) return;
+if(!read_kv("data/config/main/modes.ini", keys, vals)) return;
 for(uint i=0; i<keys.length(); i++) // pass 1: wallbase + the EVP fortify escalation + the EVP round timer + the item* defaults (applied to every category)
 {
 if(keys[i] == "wallbase") { double wb = string_to_number(vals[i]); if(wb > 0) wall_base_health = wb; }

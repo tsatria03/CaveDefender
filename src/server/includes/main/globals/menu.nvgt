@@ -756,7 +756,7 @@ send_menu(players[index].peer_id, "startmaxplayers", "Choose how many players ca
 void push_start_size(int index)
 {
 string[] opts;
-if(players[index].pending_mode == "pvp") // PVP has its own configurable size set (conf.gvr pvpsizes); the startsize result maps back through pvp_sizes
+if(players[index].pending_mode == "pvp") // PVP has its own configurable size set (modes.ini pvpsizes); the startsize result maps back through pvp_sizes
 {
 string[] labels = {"Small", "Medium", "Big", "Large"};
 for(uint i=0; i<pvp_sizes.length(); i++)
@@ -817,7 +817,7 @@ send_menu(players[index].peer_id, "startpileup", "Should enemy bots pile onto th
 /* Called when a player answers a server menu. player_index is their roster index, id is the menu's
 id, choice is the 0-based option index they picked (or -1 if they cancelled). This is the hook
 feature code fills in — e.g. tally a poll, apply a choice, etc. Empty for now.
-Read the configured language channels (one per line, "English (Native)") from data/preffs/main/languages.svr,
+Read the configured language channels (one per line, "English (Native)") from data/host/main/languages.svr,
 skipping blanks and # comment lines. Read fresh each time so a host can edit the list without restarting.
 These small hand-editable .svr lists are read on many events but change only when a host edits the file, so
 each loader caches its parsed result and re-reads only when the file's modified time changes. A host's edit
@@ -827,13 +827,13 @@ string[] cached_languages; int64 languages_mtime = -1; bool language_cache_ready
 string[] load_language_channels()
 {
 int64 mt = -1;
-if(file_exists("data/preffs/main/languages.svr")) { timestamp ts = file_get_date_modified("data/preffs/main/languages.svr"); mt = ts; }
+if(file_exists("data/host/main/languages.svr")) { timestamp ts = file_get_date_modified("data/host/main/languages.svr"); mt = ts; }
 if(language_cache_ready and mt == languages_mtime) return cached_languages;
 string[] langs;
 if(mt != -1)
 {
 file lf;
-if(lf.open("data/preffs/main/languages.svr", "rb"))
+if(lf.open("data/host/main/languages.svr", "rb"))
 {
 string content = lf.read();
 lf.close();
@@ -897,19 +897,19 @@ opts.insert_last(label);
 send_menu(peer, "channel", "Select a language channel to use.", opts);
 }
 /* Read the configured pronoun options (one per line, "masculine (he/him/his/his/himself)") from
-data/preffs/main/pronouns.svr, skipping blanks and # comment lines. Cached and re-read only when the file's modified time changes (see
+data/host/main/pronouns.svr, skipping blanks and # comment lines. Cached and re-read only when the file's modified time changes (see
 load_language_channels), so a host can still edit the list without restarting. */
 string[] cached_pronouns; int64 pronouns_mtime = -1; bool pronoun_cache_ready = false;
 string[] load_pronoun_options()
 {
 int64 mt = -1;
-if(file_exists("data/preffs/main/pronouns.svr")) { timestamp ts = file_get_date_modified("data/preffs/main/pronouns.svr"); mt = ts; }
+if(file_exists("data/host/main/pronouns.svr")) { timestamp ts = file_get_date_modified("data/host/main/pronouns.svr"); mt = ts; }
 if(pronoun_cache_ready and mt == pronouns_mtime) return cached_pronouns;
 string[] opts;
 if(mt != -1)
 {
 file pf;
-if(pf.open("data/preffs/main/pronouns.svr", "rb"))
+if(pf.open("data/host/main/pronouns.svr", "rb"))
 {
 string content = pf.read();
 pf.close();
@@ -1352,7 +1352,7 @@ players[index].menu_targets.insert_last("off");
 int onc = 0; // online = live roster minus held (held reads as offline)
 for(uint i=0; i<players.length(); i++) if(!players[i].held) onc++;
 int offc = 0; // offline = every account on disk not currently online
-string[] dirs = find_directories("data/players/*");
+string[] dirs = find_directories("data/host/game/players/*");
 for(uint i=0; i<dirs.length(); i++) if(account_exists(dirs[i]) and get_online_index(dirs[i]) < 0) offc++;
 string[] opts = {"Online players, " + onc, "Offline players, " + offc};
 send_menu(players[index].peer_id, "prlmode", "Choose which players to list.", opts);
@@ -1380,7 +1380,7 @@ if(entries.length() > 1) entries.sort_ascending(); // alphabetical by nickname (
 }
 else
 {
-string[] dirs = find_directories("data/players/*");
+string[] dirs = find_directories("data/host/game/players/*");
 for(uint i=0; i<dirs.length(); i++)
 {
 string name = dirs[i];
@@ -1440,7 +1440,7 @@ void build_board(string mode, string board, string[]@ names, int[]@ vals, string
 string field = board_field(mode, board);
 string datefield = (board == "round") ? ((mode == "PVE") ? "pvebestrounddate" : "evpbestrounddate") : ""; // no first-to-reach date for a running gather total
 names.resize(0); vals.resize(0); dates.resize(0);
-string[] dirs = find_directories("data/players/*");
+string[] dirs = find_directories("data/host/game/players/*");
 for(uint i=0; i<dirs.length(); i++)
 {
 int v = int(string_to_number(read_field(dirs[i], field, "0")));
@@ -1560,15 +1560,16 @@ a[j+1] = cur;
 }
 /* Push the browse menu for a data folder (developer editdata/viewdata): its sub-folders (drill in) then its files
 (open). A folder or file the dev named directly is handled too -- a bare file path opens straight into the editor.
-The tree is only three levels deep, so drilling never goes far. The menu id carries the mode ("datanav:edit" or
+The tree is only a few levels deep (host/game/players/<user>/info is the deepest), so drilling never goes far. The menu id carries the mode ("datanav:edit" or
 "datanav:view") so the choice resolves back to the right action. */
-/* True for a per-account onoffs/ folder or any file inside it (data/players/<user>/onoffs...). Those hold binary
+/* True for a per-account onoffs/ folder or any file inside it (data/host/game/players/<user>/onoffs...). Those hold binary
 .ogg audio, which editdata would corrupt and viewdata can't show, so the data browser hides and refuses them -- only
-the info/ .usr text fields are reachable per player. Matched by POSITION (segment 2 under players/) so a username can't collide. */
+the info/ .usr text fields are reachable per player. Matched by POSITION (host/game/players/<user>/onoffs: segment 4,
+right after the username) so a username can't collide. */
 bool is_onoffs_path(string relpath)
 {
 string[] segs = string_split(relpath, "/", true);
-return segs.length() >= 3 and string_to_lower_case(segs[0]) == "players" and string_to_lower_case(segs[2]) == "onoffs";
+return segs.length() >= 5 and string_to_lower_case(segs[0]) == "host" and string_to_lower_case(segs[1]) == "game" and string_to_lower_case(segs[2]) == "players" and string_to_lower_case(segs[4]) == "onoffs";
 }
 void push_data_nav(int index, string relpath, bool edit)
 {
