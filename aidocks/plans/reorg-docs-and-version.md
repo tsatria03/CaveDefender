@@ -1,6 +1,6 @@
 ---
 name: reorg-docs-and-version
-description: "OPEN — the final docs/version section for the late-2026 reorganization (code into includes/game, sounds into main/ + game/, data/equipments, no more Enigma boxing): bump to 5.3, decide the changelog line, update the stale memories and CLAUDE.md. Runs LAST, after data-repointing, sound-path-repointing and build-tools-remove-boxing."
+description: "DONE 2026-11-24 (5.3 changelog block written, version.txt 5.3, memory sweep finished, boxing memories retired) — the final docs/version section for the late-2026 reorganization (code into includes/game, sounds into main/ + game/, data/equipments, no more Enigma boxing): bump to 5.3, decide the changelog line, update the stale memories and CLAUDE.md. Runs LAST, after data-repointing, sound-path-repointing and build-tools-remove-boxing."
 metadata:
   type: project
 ---

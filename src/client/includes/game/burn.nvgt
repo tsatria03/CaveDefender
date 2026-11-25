@@ -1,4 +1,4 @@
-/* Client audio for firebomb wall fire (task 5e.2). The server owns the burn (globals/burn.nvgt: it ticks the
+/* Client audio for firebomb wall fire (task 5e.2). The server owns the burn (game/burn.nvgt: it ticks the
 damage and decides when a wall lights or goes out); here we only play the fire, driven by two messages:
   "burnstart <dir>" -- sent on EVERY firebomb hit (the ignite AND each intensify). Play a short whoosh, and start
      the wall's BURNING loop only if it isn't already alight -- one loop per wall, never a second stacked on a re-hit.

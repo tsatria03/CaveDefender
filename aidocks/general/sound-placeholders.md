@@ -11,11 +11,11 @@ When the user asks for a feature to play a sound, **add the sound-playing code i
 
 - **Do NOT** create a dummy/empty/copied `.ogg` file. A "placeholder" here means the code, not a stand-in asset.
 - **Do NOT** withhold or comment out the playback code waiting for the file — wire it up as if the sound exists.
-- After wiring it, **remind the user which file to add and where** (e.g. "add `notify.ogg` to `client/sounds/ui/misc/`"), since it'll be silent until then.
+- After wiring it, **remind the user which file to add and where** (e.g. "add `notify.ogg` to `cf/client/sounds/main/misc/`"), since it'll be silent until then.
 
 How sounds are played in this codebase (match these patterns):
-- **Client, directly:** `p.play_stationary("sounds/ui/misc/<name>.ogg", false);` (or the relevant pool). UI sounds live under `client/sounds/ui/misc/`.
-- **Server-driven:** the server sends `"play <name>.ogg"` on channel 0, and the client's `play` handler plays `sounds/ui/misc/<name>.ogg`. Use this when the server decides a client should hear something.
+- **Client, directly:** `p.play_stationary("sounds/main/misc/<name>.ogg", false);` (or the relevant pool). Alert/cue sounds live under `cf/client/sounds/main/misc/`, menu/dialog/typing sounds under `cf/client/sounds/main/ui/` (full map in [[audio-and-sounds]]).
+- **Server-driven:** the server sends `"play <name>.ogg"` on channel 0, and the client's `play` handler plays `sounds/main/misc/<name>.ogg` (was `sounds/ui/misc/` before the 2026-11 reorg). Use this when the server decides a client should hear something.
 
 **Why:** the user designs features first and sources the "perfect" sound later; blocking on the asset (or faking one) just slows iteration. Wiring the real path now means the feature is complete the moment they drop the file in.
 

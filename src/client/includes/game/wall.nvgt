@@ -1,5 +1,5 @@
 /* Wall AUDIO for the player's CURRENT space. Walls are server-authoritative (their health lives in the
-server's globals/wall.nvgt); this module just turns wall events into sound -- weapon strikes, the wall's
+server's game/wall.nvgt); this module just turns wall events into sound -- weapon strikes, the wall's
 own creak, ricochets, and the death boom -- and re-tiles a breach to a walkable floor. Each wall's span
 is computed on the fly from cavern_size + direction (matching draw_map / spawn_ring_walls), so there is
 no per-wall object to track here. Wall sounds play through the `p` pool (see the path-conventions memory).

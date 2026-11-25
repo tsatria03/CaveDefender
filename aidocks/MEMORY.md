@@ -43,11 +43,11 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 - [No sound pack support](general/no-sound-pack-support.md) — CaveDefender will not have swappable sound packs (unlike SimpleFighter); sounds folder reorg was just for layout
 
 ## Project structure, build and hosting
-- [Path conventions](general/path-conventions.md) — src/ (code) + cf/ (assets+launchers) + release/ split; launchers run src script with cwd=cf/<side>; pragmas point at ../../play; appdata, sounds, server data, lib/ DLLs (no engine DLL since 2026-07-14)
-- [Include tree](general/include-tree.md) — the glob-include model (cfc/cfs pull in all of includes/main/) plus the file-by-file map of what each client/server .nvgt owns; read to find which file owns a feature
-- [Launchers and running](general/launchers-and-running.md) — cf/<side> Python launchers (cwd trick, client errors.txt compile-watch, server keeps console), no test suite/linter, build/tools.py compile step; read when touching launchers or the build
-- [Enigma boxing](general/enigma-boxing.md) — release exes boxed with Enigma Virtual Box (embeds audio DLLs + client sounds/docks; screen-reader DLLs stay real); .evb generator gencfcevb.py + regen rule, tools.py box stage; read before packaging or adding sounds
-- [file_exists boxed-sound trap](general/file-exists-boxed-sound-trap.md) — file_exists reads false for Enigma-boxed sounds so never gate sound playback on it (silently kills it in release); all 3 sound victims (bullet loop, item loops, shell casings) fixed; one dock file_exists left to verify
+- [Path conventions](general/path-conventions.md) — src/ (code: includes/game + includes/main) + cf/ (assets+launchers) + build/ + release/ + user/; the cwd trick; sounds/main + sounds/game; server data/equipments; players git-ignored; appdata; no boxing, no engine DLL
+- [Include tree](general/include-tree.md) — includes.nvgt globs game/* FIRST, then each main/ subfolder (a glob doesn't reach subfolders); the 10 gameplay modules in includes/game; file-by-file map of what each client/server .nvgt owns
+- [Launchers and running](general/launchers-and-running.md) — cf/<side> Python launchers (cwd trick, client errors.txt compile-watch, server under the downcheck supervisor with only its console visible), no test suite/linter, build/tools.py = compile, package, release (no boxing; 4-flag CLI; menu 1-10; tools.bat via py -3.12)
+- [Enigma boxing (removed)](general/enigma-boxing.md) — HISTORY: release exes were packed with Enigma Virtual Box until the dev dropped it 2026-11-23; tools.py's box stage removed 2026-11-24; all assets ship loose now; don't reintroduce it
+- [file_exists boxed-sound trap](general/file-exists-boxed-sound-trap.md) — HISTORY (boxing is gone, trap no longer applies) + the lasting rule: never gate sound playback on file_exists; detect optional sounds with a data/class flag
 - [Game engine DLL (removed)](general/game-engine-dll.md) — HISTORY: GameEngine64.dll is GONE since 2026-07-14 (commit c26ac21), replaced by the native tile store in client game/platform.nvgt (handle-based spawn_platform/get_tile_at/remove_platform/clear_map); no DLL is loaded via library any more
 - [VPS hosting on UpCloud](general/vps-hosting-upcloud.md) — the public server runs on an UpCloud Windows VPS; one inbound UDP 25562 rule in Windows Firewall is the whole network setup
 
@@ -82,7 +82,7 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 - [Game host client sync](general/game-host-client-sync.md) — client gates host controls on current_game_host==name, kept in sync with server host_peer via the gamehost broadcast (announce_game_host at every migration site); read before touching host migration, the round menu, or host hotkeys
 - [Ranged weapon architecture](general/ranged-weapon-architecture.md) — as-built ranged weapons: ammo+reload, a server-authoritative bullet that hits WALLS ONLY (never players), synced via the resolve-on-fire A-plus model; BUILT (server bullet.nvgt)
 - [Game data-file layout](general/game-data-file-layout.md) — the data-driven file tree for weapons/items (cf/server/data/equipments/{weapons,items} since the 2026-11 reorg), extensions (.mel/.exp/.arc/.art, .mtr material, .amt ammunition), the 4 wood types + 5 ammo types, and what each file configures; read before building the data loader
-- [Audio and sounds](general/audio-and-sounds.md) — sound_pool/HRTF model and the cf/client/sounds/ folder layout (ui, objects/walls, platforms, items, weapons); read when wiring a sound or referencing a sound path
+- [Audio and sounds](general/audio-and-sounds.md) — sound_pool/HRTF model and THE current cf/client/sounds/ folder map (main/ui, main/misc, game/equipments, game/objects/audio, game/objects/construction); sound paths travel in network messages, so a folder rename is a protocol change; read when wiring a sound or referencing a sound path
 
 ## Open backlogs
 - [Feature ideas backlog](general/feature-ideas.md) — living list of candidate FEATURE ideas to fill the PVP gap + general enhancements (achievements, difficulty selector, enemy variety, defender traps, power-ups, co-op scaling; leaderboard + learn-sounds already on the todo); MAINTAIN it: update whenever the dev promotes an idea to the todo or asks me to brainstorm. Includes the fleshed-out leaderboard design
@@ -96,7 +96,7 @@ Open (the late-2026 reorganization; suggested order: data, sounds, build, docs):
 - [Data repointing](plans/data-repointing.md) — sections 1-4 DONE (loader, comments, server help docs, memories); optional missing-file warning skipped; left: the dev's in-game check
 - [Sound path repointing](plans/sound-path-repointing.md) — DONE IN CODE (client + server; awaiting in-game test + 5.3): ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach decided: rewrite in place
 - [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — DONE: the Enigma stage is gone from tools.py (menu 1-10, CLI 4 flags); awaiting the dev's first real Compile only run
-- [Reorg docs and version](plans/reorg-docs-and-version.md) — OPEN, runs last: 5.3 bump, the 5.3 changelog block (COMPLETE, 4 entries; version.txt already 5.3), stale memory updates, retire the boxing memories
+- [Reorg docs and version](plans/reorg-docs-and-version.md) — DONE: 5.3 changelog block (4 entries), version.txt 5.3, memory sweep (path-conventions, include-tree, audio-and-sounds, launchers-and-running, changelog-rules), boxing memories retired
 - [Privacy cleanup](plans/privacy-cleanup.md) — MOSTLY DONE: player data untracked, history rewritten + force-pushed, dirty releases deleted; left: GitHub Support purge, optional player notice (no other clones exist)
 
 Completed:

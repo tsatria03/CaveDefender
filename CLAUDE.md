@@ -35,7 +35,7 @@ Each has its own `net.nvgt` with near-identical `send()`/`get_event_message()` b
 ## Where the detail lives (read before working in an area)
 
 - **Running & launchers** (how the game starts/compiles, the client `errors.txt` watch, no test suite) → **[[launchers-and-running]]**. Never compile yourself: **[[dont-compile-yourself]]**.
-- **Distribution boxing** (Enigma Virtual Box, the `.evb` files + `gencfcevb.py`) → **[[enigma-boxing]]**.
+- **Distribution** — no boxing since 2026-11-24: every asset folder ships loose next to the exe (history in **[[enigma-boxing]]**; don't reintroduce it).
 - **Networking** (enet, the 4 channels, `rscs123` encryption, the space-delimited message contract) → **[[networking-protocol]]**. Keepalive during blocking UI: **[[blocking-ui-network-keepalive]]**. IPv4/VPN gotcha: **[[nvgt-ipv6-networking]]**.
 - **Accounts** (the `data/players/<username>/` folder-per-account, Argon2id passwords, ranks & command gating, owner aliases, moderation, command targeting) → **[[accounts-system]]**. Nicknames: **[[nicknames]]**.
 - **Map tiles** (the native tile store that replaced `GameEngine64.dll` on 2026-07-14 — the DLL is gone, don't reintroduce it) → **[[game-engine-dll]]**. NVGT C++ source location: **[[nvgt-engine-source-location]]**.

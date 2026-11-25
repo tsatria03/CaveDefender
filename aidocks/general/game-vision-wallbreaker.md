@@ -7,6 +7,8 @@ metadata:
   originSessionId: cdaa5dd9-6bb0-480c-84f6-52b33171a7b8
 ---
 
+(Path note, 2026-11-24: the build log below names files as they were when written. Since the 2026-11 reorg, the gameplay modules it mentions as `globals/wall.nvgt`, `globals/item.nvgt`, `globals/enemy.nvgt` etc. live in `includes/game/`, and sounds moved to `sounds/main` + `sounds/game`; see [[include-tree]] and [[audio-and-sounds]] for current locations.)
+
 The core game of CaveDefender (beyond the finished chat-center milestone) is a **multiplayer, server-authoritative remake of the "Wallbreaker" mini-game** from the offline Sammy Center project. Reference source: `C:\Users\tonys\OneDrive\Desktop\Sammy Center\includes\` — `wallbreaker.nvgt` (main loop), `wallsmasher.nvgt` (enemies), `wood.nvgt` (resource).
 
 **Wallbreaker reference loop (single-player):** You're in a square arena (size ~25) with four walls — left/west, right/east, north, south — each with a strength %. Enemies ("wallsmashers") spawn over time, each assigned to one wall, each with a random weapon (axe/hammer/crowbar) that sets attack speed + damage; they continuously chip that wall's strength, heard via pan (left/right walls) and volume scaled to remaining strength. Wood spawns randomly on the map; you walk over it or grab nearby (Space). You repair the wall you're standing at (Enter) for +0-3 strength, costing 1 wood. If any wall drops below 0, the stronghold crumbles — game over, score = seconds survived. Keys: arrows move, C coords, W wood count, S wall strengths.

@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-**Feature (dev, 2026-08):** each account can have its OWN custom connect (`online.ogg`) and disconnect (`offline.ogg`) sound, stored server-side in `data/players/<user>/onoffs/`. When player X connects/disconnects, EVERYONE hears X's custom sound (not a generic one, and not a listener preference). If X has no custom file, clients play their builtin `sounds/ui/misc/online.ogg` / `offline.ogg` (the existing behavior). **V1 is HOST-MANAGED** (host drops the .ogg into the account's onoffs/ folder); in-game player self-upload is a SEPARATE later feature. The reorg that created info/ + onoffs/ per account is done (see [[accounts-system]]).
+**Feature (dev, 2026-08):** each account can have its OWN custom connect (`online.ogg`) and disconnect (`offline.ogg`) sound, stored server-side in `data/players/<user>/onoffs/`. When player X connects/disconnects, EVERYONE hears X's custom sound (not a generic one, and not a listener preference). If X has no custom file, clients play their builtin `sounds/main/misc/online.ogg` / `offline.ogg` (`sounds/ui/misc/` before the 2026-11 reorg) (the existing behavior). **V1 is HOST-MANAGED** (host drops the .ogg into the account's onoffs/ folder); in-game player self-upload is a SEPARATE later feature. The reorg that created info/ + onoffs/ per account is done (see [[accounts-system]]).
 
 **Rejected alternative (Daily Life BGT game's approach):** a fixed library of predefined sounds (online1..24) shipped in every client, selected by NAME, only the name sent over the wire — no audio transfer at all. Dev knows about it but WANTS the arbitrary-per-account model (richer, truly custom), accepting the transfer cost.
 
