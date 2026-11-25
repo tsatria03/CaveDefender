@@ -19,7 +19,7 @@ void mainmenu()
 		}
 		else if(sel=="connect")
 		{
-			connectionmenu();
+			gamemenu();
 		}
 		else if(sel=="learn")
 		{
@@ -418,7 +418,25 @@ void open_rules_shortcut()
 	if(r < 0) { speak("canceled"); return; } // escape backs out; no explicit cancel item
 	send(0, "rules " + m.selected_item_id, 0, true);
 }
-void connectionmenu()
+/* The main menu's game menu: the doorway to the ways of playing. For now it holds only the online menu; it is
+kept as its own menu so more ways to play can sit beside it later. */
+void gamemenu()
+{
+	while(true)
+	{
+		setupmenu(true);
+		m.add_item("online menu", "online");
+		m.add_item("back", "back");
+		m.intro_text="Game menu.";
+		int mres=m.run();
+		string sel=mres<0?"back":m.selected_item_id;
+		if(sel=="back") return;
+		if(sel=="online") onlinemenu();
+	}
+}
+/* The online menu: sign in or create an account, and pick which server to connect to. When a session ends
+(exit, kick, drop), login() returns here, so the player lands back in this menu. */
+void onlinemenu()
 {
 	while(true)
 	{
@@ -431,7 +449,7 @@ void connectionmenu()
 		m.add_item("change server port. Currently set to " + port, "changeport");
 		m.add_item("Server storage", "serverstorage");
 		m.add_item("back", "back");
-		m.intro_text="Game menu.";
+		m.intro_text="Online menu.";
 		int mres=m.run();
 		string sel=mres<0?"back":m.selected_item_id;
 		if(sel=="back") return;
