@@ -138,22 +138,24 @@ def sanitize_server_bundle(build_dir):
     # Strip host-specific and private data from the SHIPPED server bundle so the archive on itch.io is a clean, safe
     # slate for a new host. Operates ONLY on the assembled bundle copy (build_dir); the source under cf/server is
     # never touched. All of it is recreated/settable by the host on their own server:
-    #   1) Empty data/players -- remove every account (passwords, emails, records) but keep the empty store folder.
-    #   2) Blank the owners= line in conf.svr -- so no username ships pre-trusted as owner (otherwise whoever
+    # Everything private lives under data/host (data/config is the game rules, which ship as they are):
+    #   1) Empty data/host/game/players -- remove every account (passwords, emails, records) but keep the empty store folder.
+    #   2) Blank the owners= line in host/main/conf.svr -- so no username ships pre-trusted as owner (otherwise whoever
     #      registered that name on the new server would become owner). The host sets their own owner in conf.svr.
     #   3) Delete reports.svr + feedback.svr (private player-submitted logs) and peak.svr (this server's peak-players
-    #      stat) if present, so a fresh host starts these clean. Warnings need no handling here: they live per-account
-    #      in data/players/<name>/warnings.usr, already gone with (1).
-    #   4) Reset motd.svr to a neutral default welcome message, so the shipped server doesn't greet players with this
-    #      host's own message of the day.
+    #      stat) from host/main if present, so a fresh host starts these clean. Warnings need no handling here: they
+    #      live per-account in data/host/game/players/<name>/warnings.usr, already gone with (1).
+    #   4) Reset host/main/motd.svr to a neutral default welcome message, so the shipped server doesn't greet players
+    #      with this host's own message of the day.
     data = os.path.join(build_dir, "data")
-    players = os.path.join(data, "players")
+    hostmain = os.path.join(data, "host", "main")
+    players = os.path.join(data, "host", "game", "players")
     if os.path.isdir(players):
         for entry in os.listdir(players):
             ep = os.path.join(players, entry)
             shutil.rmtree(ep) if os.path.isdir(ep) else os.remove(ep)
-        print("Emptied data/players in the server build (kept the folder).")
-    conf = os.path.join(data, "preffs", "main", "conf.svr")
+        print("Emptied data/host/game/players in the server build (kept the folder).")
+    conf = os.path.join(hostmain, "conf.svr")
     if os.path.isfile(conf):
         with open(conf, "r", encoding="utf-8", newline="") as f:
             lines = f.read().splitlines(keepends=True)
@@ -169,11 +171,11 @@ def sanitize_server_bundle(build_dir):
                 f.writelines(lines)
             print("Blanked the owners list in the server build's conf.svr.")
     for fname in ("reports.svr", "feedback.svr", "peak.svr"):
-        fp = os.path.join(data, "preffs", "main", fname)
+        fp = os.path.join(hostmain, fname)
         if os.path.isfile(fp):
             os.remove(fp)
             print(f"Removed {fname} from the server build.")
-    motd = os.path.join(data, "preffs", "main", "motd.svr")
+    motd = os.path.join(hostmain, "motd.svr")
     with open(motd, "w", encoding="utf-8", newline="") as f:
         f.write("Welcome to CaveDefender. We hope you enjoy your stay here.")   # neutral default; the whole file is the MOTD, so no trailing newline
     print("Reset motd.svr to the default welcome message in the server build.")

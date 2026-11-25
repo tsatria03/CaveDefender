@@ -14,11 +14,7 @@ cf/server/lib/
 
 # Live player accounts (passwords, emails, stats). Private data; the repo is public.
 cf/server/data/host/game/players/
-# The pre-reorg location, kept so a server run before the repoint can't leak a fresh store.
-cf/server/data/players/
 
 # Player-submitted feedback and reports, written by the running server. Private data.
 cf/server/data/host/main/feedback.svr
 cf/server/data/host/main/reports.svr
-cf/server/data/preffs/main/feedback.svr
-cf/server/data/preffs/main/reports.svr
