@@ -82,4 +82,4 @@ Paths relative to `cf/client/sounds/`. `audio_prefix = "sounds/"`, each dictiona
 
 **Numbered-variant entries (for-loop + "multiple variants" note):** melee `fire1–3` & `hit1–3`, wallwood `hurt1–3`, surfaces `step1–5`, crossbow `rico1–2`, pistol/mg `rico1–12` & `shell1–2`. Everything else is a single file.
 
-Related: [[game-mode-free.md]] name-drops this as the "future home" of learn-sounds; [[audio-and-sounds]] has the folder layout; [[no-sound-pack-support]]; [[launchers-and-running]] (cwd = `cf/client`, so `sounds/…` paths resolve there).
+Related: [[game-mode-free]] name-drops this as the "future home" of learn-sounds; [[audio-and-sounds]] has the folder layout; [[no-sound-pack-support]]; [[launchers-and-running]] (cwd = `cf/client`, so `sounds/…` paths resolve there).
