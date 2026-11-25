@@ -4,13 +4,13 @@ CaveDefender is an online, audio only game. You sign in to an account on a serve
 
 Connecting and signing in.
 
-When you start the game you land on the main menu. Choose the game menu to open the connection menu, where you pick a server and sign in. The other main menu options are the documentation menu, which holds this readme, the changelog, and more, the learn sounds menu described just below, and the preferences menu for your sound and other settings.
+When you start the game you land on the main menu. Choose the game menu, then the online menu, where you pick a server and sign in. The other main menu options are the documentation menu, which holds this readme, the changelog, and more, the learn sounds menu described just below, and the preferences menu for your sound and other settings.
 
 Learn sounds.
 
 The main menu also has a learn sounds menu, a place to get familiar with the game's audio before you play. It works offline, so you can browse it without signing in. The sounds are grouped into categories, weapon, wood, ammo, wall, surface, and interface cues; choose a category, then move through its list and press enter on any sound to hear it. Each sound's name tells you where it is used in the game, such as which mode it belongs to, so you learn the cue and its meaning together, and sounds that come in several variations play a random one each time so you can hear how they differ. Choose go back, or press escape, to step out of a category, and again to leave the menu.
 
-The connection menu shows the server address and port it will connect to, and you can change either directly with change server IP and change server port. If you play on more than one server, open Server storage to keep them as presets: add a server by giving it a name, an address, and a port, and edit or remove your saved ones from the same place. Select a server then picks which saved server to use. The list always includes a built-in Central server, the game's official server, ready to pick without your having to add it; you can edit its address or port if you ever need to, but it cannot be removed. At the bottom of the list is a Custom entry that simply keeps whatever address you typed in by hand, so a server you did not save reads as Custom. You cannot save two servers with the same name or the same address.
+The online menu shows the server address and port it will connect to, and you can change either directly with change server IP and change server port. If you play on more than one server, open Server storage to keep them as presets: add a server by giving it a name, an address, and a port, and edit or remove your saved ones from the same place. Select a server then picks which saved server to use. The list always includes a built-in Central server, the game's official server, ready to pick without your having to add it; you can edit its address or port if you ever need to, but it cannot be removed. At the bottom of the list is a Custom entry that simply keeps whatever address you typed in by hand, so a server you did not save reads as Custom. You cannot save two servers with the same name or the same address.
 
 You reach a server with an account, and there are a few ways on. Sign in as, followed by a name, appears once you have an account set up or selected, and signs you straight in as that account. Set up an existing account remembers an account you already have, by its username and password, so you can sign in as it, without logging you in right away. New account creates a fresh one, asking for a username, an email, a password, and a second password to confirm it; once it is made the game asks whether to log in now.
 
@@ -401,7 +401,7 @@ Alt plus K. Open the documentation menu without leaving, the changelog, credits,
 Alt plus L. Open the learn sounds menu without leaving, the same sound browser you reach from the main menu; every game sound pauses while it is open so the previews play cleanly, and they all resume the moment you close it. Plain L still lists who is in the lobby.
 Shift plus H. Open the help without typing the command; you go straight to the player help, while staff are first asked whether to view the player or the staff help.
 Shift plus U. Open the rules without typing the command; you go straight to the player rules, while staff are first asked which page to view.
-Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the connection menu, asking you to confirm first if that setting is on.
+Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the online menu, asking you to confirm first if that setting is on.
 
 Script keys.
 

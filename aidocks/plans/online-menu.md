@@ -1,6 +1,6 @@
 ---
 name: online-menu
-description: "PLANNED (2026-11-25) — main menu > game menu becomes a small submenu whose first item is a new online menu; the online menu holds everything the old connection menu had (sign in, accounts, server IP/port, storage). First step toward offline play; 'connection menu' wording becomes 'online menu' in code, spoken messages and docs."
+description: "COMPLETE (2026-11-25; sections 1-2 tested in-game, ships in 5.3) — main menu > game menu becomes a small submenu whose first item is a new online menu; the online menu holds everything the old connection menu had (sign in, accounts, server IP/port, storage). First step toward offline play; 'connection menu' wording becomes 'online menu' in code, spoken messages and docs."
 metadata:
   type: project
 ---
@@ -20,6 +20,7 @@ metadata:
    - Client docs: readme.txt line 7, "Choose the game menu to open the connection menu, where you pick a server and sign in" becomes "Choose the game menu, then the online menu, where you pick a server and sign in". Line 404, "return to the connection menu" becomes "return to the online menu". One new entry at the top of the 5.3 changelog block (5.3 is unreleased; [[changelog-rules]]). Older changelog and todo-list lines stay as they are, because they record what was true then.
    - Memories: update [[include-tree]] (menu.nvgt now holds `gamemenu()` and `onlinemenu()`), [[accounts-system]] and [[feature-ideas]] where they say "connection menu"; mark this plan COMPLETE and update its MEMORY.md line.
    - Recheck every edited dock line against [[dock-line-length-1024]] (900 recommended).
+   - **DONE 2026-11-25:** server help/player.txt (3 lines), help/staff.txt (4), rules/player.txt (1); readme lines 7, 13 (a third mention the plan missed: "The online menu shows the server address and port") and 404; the 5.3 changelog entry "The game menu on the main menu now opens an online menu, which holds signing in, creating an account, and choosing your server, so the game menu has room for more ways to play."; memories include-tree, accounts-system, feature-ideas. No "connection menu" left in src, server docks, readme or general memories (old changelog and todo-list lines kept as history). All edited docks keep CRLF; longest lines still 890 (client) and 896 (server).
 
 **Q&A log:**
 - (none yet)
