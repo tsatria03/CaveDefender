@@ -28,8 +28,8 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 - [Input prompt: form vs dialog](general/input-prompt-form-vs-dialog.md) — one field uses a virtual dialog; more than one field uses a real tabbable audio form, not a chain of sequential dialogs
 - [Command full name before alias](general/command-full-name-before-alias.md) — in docks, write a command's full name before its short alias (e.g. /playerlist, or /prl)
 - [Docks and help](general/docks-and-help.md) — client docks/ (changelog/credits/readme/todo) + server-authoritative /help and /rules pages; read when updating docs, help, or rules
-- [Changelog rules](general/changelog-rules.md) — docks/changelog.txt: player-facing prose, sentence/entry caps, reverse-chronological, a record of what changed not a manual
-- [Dock line length limit](general/dock-line-length-1024.md) — keep every line in the player-facing docks (server rules, server help, client docks) at or under 1024 chars; the user's screen reader splits longer lines
+- [Changelog rules](general/changelog-rules.md) — docks/changelog.txt: player-facing prose, sentence/entry caps, reverse-chronological, a record of what changed not a manual; bump version.txt with each block; full audit 2026-11-24: all 44 versions (1.0-5.3) pass, so future checks only cover versions after 5.3
+- [Dock line length limit](general/dock-line-length-1024.md) — player-facing dock lines (server rules, server help, client docks): HARD CAP 1024 chars (the user's screen reader splits longer lines), RECOMMENDED 900 or less; split long lines at a sentence boundary, no words changed
 - [Todo list one sentence](general/todo-list-one-sentence.md) — every entry in docks/todo list.txt (finished or unfinished) must be ONE short sentence, not a run-on
 - [Post changes: no changelog](general/post-changes-no-changelog.md) — a "post change" is a quiet pre-release touch-up; document in readme if needed, but no changelog entry and no version bump
 - [Bump version.txt with each changelog block](general/dont-touch-version-txt.md) — bump build/version.txt to match each new "New in X.Y." changelog block; the dev's only override is temporarily setting it to another server's version for cross-server connection testing (their call to change back)
@@ -97,7 +97,7 @@ Open (the late-2026 reorganization; suggested order: data, sounds, build, docs):
 - [Sound path repointing](plans/sound-path-repointing.md) — DONE IN CODE (client + server; awaiting in-game test + 5.3): ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach decided: rewrite in place
 - [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — DONE: the Enigma stage is gone from tools.py (menu 1-10, CLI 4 flags); awaiting the dev's first real Compile only run
 - [Reorg docs and version](plans/reorg-docs-and-version.md) — DONE: 5.3 changelog block (4 entries), version.txt 5.3, memory sweep (path-conventions, include-tree, audio-and-sounds, launchers-and-running, changelog-rules), boxing memories retired
-- [Volume key announcements](plans/volume-key-announcements.md) — OPEN (agreed): Page up/down speak + log "track <dB>", Home/End "source <dB>", to the misc buffer, silent at the ends, keys fixed, 1 dB per step on Windows key repeat (key_repeating); matches StrideRush exactly
+- [Volume key announcements](plans/volume-key-announcements.md) — BUILT (awaiting in-game test): Page up/down speak + log "track <dB>", Home/End "source <dB>", to the misc buffer, silent at the ends, keys fixed, 1 dB per step on Windows key repeat (key_repeating); matches StrideRush exactly
 - [Privacy cleanup](plans/privacy-cleanup.md) — MOSTLY DONE: player data untracked, history rewritten + force-pushed, dirty releases deleted; left: GitHub Support purge, optional player notice (no other clones exist)
 
 Completed:
