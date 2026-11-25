@@ -97,6 +97,7 @@ Open (the late-2026 reorganization; suggested order: data, sounds, build, docs):
 - [Sound path repointing](plans/sound-path-repointing.md) — DONE IN CODE (client + server; awaiting in-game test + 5.3): ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach decided: rewrite in place
 - [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — DONE: the Enigma stage is gone from tools.py (menu 1-10, CLI 4 flags); awaiting the dev's first real Compile only run
 - [Reorg docs and version](plans/reorg-docs-and-version.md) — DONE: 5.3 changelog block (4 entries), version.txt 5.3, memory sweep (path-conventions, include-tree, audio-and-sounds, launchers-and-running, changelog-rules), boxing memories retired
+- [Volume key announcements](plans/volume-key-announcements.md) — OPEN (agreed): Page up/down speak + log "track <dB>", Home/End "source <dB>", to the misc buffer, silent at the ends, keys fixed, 1 dB per step on Windows key repeat (key_repeating); matches StrideRush exactly
 - [Privacy cleanup](plans/privacy-cleanup.md) — MOSTLY DONE: player data untracked, history rewritten + force-pushed, dirty releases deleted; left: GitHub Support purge, optional player notice (no other clones exist)
 
 Completed:
