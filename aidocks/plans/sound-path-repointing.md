@@ -1,6 +1,6 @@
 ---
 name: sound-path-repointing
-description: "DONE IN CODE 2026-11-24 (awaiting the dev's in-game test and the 5.3 release) — repoint all client sound paths (and the server's footstep wire strings) to the reorganized cf/client/sounds/main + sounds/game layout. Until done the client is mostly silent. Approach decided 2026-11-24: rewrite paths in place."
+description: "COMPLETE 2026-11-24 — tested in-game by the dev on client AND server ('The sound reorg works for the client and server'); ships in 5.3 — repoint all client sound paths (and the server's footstep wire strings) to the reorganized cf/client/sounds/main + sounds/game layout. Until done the client is mostly silent. Approach decided 2026-11-24: rewrite paths in place."
 metadata:
   type: project
 ---

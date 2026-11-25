@@ -1,6 +1,6 @@
 ---
 name: data-repointing
-description: "DONE IN CODE 2026-11-24 (sections 1-4; optional warning skipped; awaiting the dev's in-game check) — point the server at the renamed data/equipments folder (was data/equipment, renamed by the dev 2026-11-23). Four sections + one optional; until section 1 lands, the server silently plays on code-default weapon/item values."
+description: "COMPLETE 2026-11-24 (sections 1-4; optional warning skipped; the dev confirmed in-game that weapon damage, wood reinforce and starting amounts come from the data files again) — point the server at the renamed data/equipments folder (was data/equipment, renamed by the dev 2026-11-23). Four sections + one optional; until section 1 lands, the server silently plays on code-default weapon/item values."
 metadata:
   type: project
 ---

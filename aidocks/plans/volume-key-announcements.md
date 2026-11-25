@@ -1,6 +1,6 @@
 ---
 name: volume-key-announcements
-description: "BUILT 2026-11-24 (code + docks; awaiting the dev's in-game test) — speak + log the in-game volume keys exactly like StrideRush: Page up/down = 'track <dB>', Home/End = 'source <dB>', logged to the misc buffer, silent at either end, keys stay fixed (not bindable), 1 dB per step on Windows key repeat (key_repeating). Menu music stays silent, as in StrideRush."
+description: "COMPLETE 2026-11-24 — built (code + docks) and tested in-game by the dev ('Same for the volume keys'); ships in 5.3 — speak + log the in-game volume keys exactly like StrideRush: Page up/down = 'track <dB>', Home/End = 'source <dB>', logged to the misc buffer, silent at either end, keys stay fixed (not bindable), 1 dB per step on Windows key repeat (key_repeating). Menu music stays silent, as in StrideRush."
 metadata:
   type: project
 ---

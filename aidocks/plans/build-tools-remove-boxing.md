@@ -1,6 +1,6 @@
 ---
 name: build-tools-remove-boxing
-description: "DONE 2026-11-24 (all six sections; awaiting the dev's first real Compile only run) — remove the Enigma Virtual Box stage from build/tools.py (the dev dropped Enigma 2026-11-23 and deleted both .evb files and the gen_cf?_evb.py generators). Six sections, all in tools.py; reviewed, awaiting go-ahead."
+description: "COMPLETE 2026-11-24 (all six sections; the dev's real Compile only run passed, shipping sounds and docks as loose folders) — remove the Enigma Virtual Box stage from build/tools.py (the dev dropped Enigma 2026-11-23 and deleted both .evb files and the gen_cf?_evb.py generators). Six sections, all in tools.py; reviewed, awaiting go-ahead."
 metadata:
   type: project
 ---

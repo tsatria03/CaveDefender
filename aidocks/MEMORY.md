@@ -92,15 +92,15 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 ## Plans (aidocks/plans/)
 Feature plans, open and completed; a finished plan stays here as the record.
 
-Open (the late-2026 reorganization; suggested order: data, sounds, build, docs):
-- [Data repointing](plans/data-repointing.md) — sections 1-4 DONE (loader, comments, server help docs, memories); optional missing-file warning skipped; left: the dev's in-game check
-- [Sound path repointing](plans/sound-path-repointing.md) — DONE IN CODE (client + server; awaiting in-game test + 5.3): ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach decided: rewrite in place
-- [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — DONE: the Enigma stage is gone from tools.py (menu 1-10, CLI 4 flags); awaiting the dev's first real Compile only run
-- [Reorg docs and version](plans/reorg-docs-and-version.md) — DONE: 5.3 changelog block (4 entries), version.txt 5.3, memory sweep (path-conventions, include-tree, audio-and-sounds, launchers-and-running, changelog-rules), boxing memories retired
-- [Volume key announcements](plans/volume-key-announcements.md) — BUILT (awaiting in-game test): Page up/down speak + log "track <dB>", Home/End "source <dB>", to the misc buffer, silent at the ends, keys fixed, 1 dB per step on Windows key repeat (key_repeating); matches StrideRush exactly
+The late-2026 reorganization and 5.3 work (all COMPLETE and tested 2026-11-24, except the privacy cleanup's last two optional steps):
+- [Data repointing](plans/data-repointing.md) — COMPLETE (sections 1-4: loader, comments, server help docs, memories; tested in-game 2026-11-24); optional missing-file warning skipped
+- [Sound path repointing](plans/sound-path-repointing.md) — COMPLETE (tested in-game on client + server 2026-11-24; ships in 5.3): ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach decided: rewrite in place
+- [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — COMPLETE: the Enigma stage is gone from tools.py (menu 1-10, CLI 4 flags); the dev's real Compile only run passed 2026-11-24
+- [Reorg docs and version](plans/reorg-docs-and-version.md) — COMPLETE: 5.3 changelog block (now 5 entries with the volume keys), version.txt 5.3, memory sweep (path-conventions, include-tree, audio-and-sounds, launchers-and-running, changelog-rules), boxing memories retired
+- [Volume key announcements](plans/volume-key-announcements.md) — COMPLETE (tested in-game 2026-11-24; ships in 5.3): Page up/down speak + log "track <dB>", Home/End "source <dB>", to the misc buffer, silent at the ends, keys fixed, 1 dB per step on Windows key repeat (key_repeating); matches StrideRush exactly
 - [Privacy cleanup](plans/privacy-cleanup.md) — MOSTLY DONE: player data untracked, history rewritten + force-pushed, dirty releases deleted; left: GitHub Support purge, optional player notice (no other clones exist)
 
-Completed:
+Earlier completed plans:
 - [Chat channels](plans/chat-channels.md) — COMPLETE: Global (/), Local (\ current map instance, covers lobby/room/game), Staff (' all staff), Team (; PVP-only, your side); all four built
 - [Voice chat mode feature](plans/cavedefender-voice-chat-mode.md) — COMPLETE: live-streaming vs record-then-send voice messages: prefs "Voice chat mode" list + tagged channel-3 wire format (l=live, m=message); confirmed working in-game 2026-07-06
 - [PVP game mode design](plans/game-mode-pvp.md) — COMPLETE: full design spec + as-built reference for PVP (humans on both sides, real inside/outside, team chat, muffled cross-wall audio); built 3.1-3.2, hidden in 4.7, rebuilt and back in the start-game menu since 5.0
