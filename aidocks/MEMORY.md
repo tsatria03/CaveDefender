@@ -3,6 +3,7 @@
 The [[name]] links across these memories resolve to aidocks/general/<name>.md or aidocks/plans/<name>.md. Add a one-line pointer here for every new memory, under the heading that fits. "Memory" always means this folder (see [[memory-folder-layout]]).
 
 ## Working style
+- [Ask questions in chat](general/ask-questions-in-chat.md) — ask every question as plain chat text; never use the AskUserQuestion picker
 - [Memory folder layout](general/memory-folder-layout.md) — memories live in aidocks/: general/ for topics, rules and references, plans/ for feature plans both open AND completed (a finished plan stays in plans/ as the record); MEMORY.md indexes both
 - [Confirm before implementing](general/confirm-before-implementing.md) — treat design discussion as a question, never a green light; a `?` means respond and wait, don't edit
 - [Don't mention optional items](general/dont-mention-optional-items.md) — don't remind the dev of optional follow-ups at the end of replies; only bring them up if asked or genuinely needed; record them once in the plan instead
