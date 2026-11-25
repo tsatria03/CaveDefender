@@ -1,4 +1,5 @@
 New in 5.3.
+The volume keys now say what they change: Page up and Page down announce track followed by the music level, and Home and End announce source followed by the ambience level, each also added to the misc buffer. Each press now moves the volume by a single step, and holding a key repeats at your keyboard's own repeat speed.
 Game sounds now ship as an ordinary folder beside the game instead of being packed inside it, so you can see every sound the game uses.
 Server hosts can now edit the server's help and rules pages, which now ship as ordinary files beside the server instead of being packed inside it.
 The sounds folder is now split into a main folder, for the menus, dialogs, typing and the game's alerts, and a game folder, for weapons, items, walls, floors, ambience and music. The test speakers option in the main menu also plays a new sound.

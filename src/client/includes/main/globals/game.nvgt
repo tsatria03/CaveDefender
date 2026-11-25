@@ -431,17 +431,16 @@ buffercheck();
 			send(0, "playerlist", 0, true); // open the server-pushed player roster menu (like F1's who, but viewable)
 		}
 		if(key_pressed(KEY_F7)) onoff_sounds_form(); // open the online and offline sounds settings form, in-session (also reachable from the player panel)
-		/* Live world-volume keys: Page up/down adjust music, Home/End adjust ambience. Stepped by 2 and
-		clamped to -100..0 on a 50 ms repeat (so holding ramps smoothly), saved only when it changes. */
-		if(worldvoltimer.elapsed>=50)
-		{
-			bool volchanged=false;
-			if(key_down(KEY_PAGEUP)) { if(musvolume<0) { set_music_volume(musvolume+2); volchanged=true; } worldvoltimer.restart(); }
-			else if(key_down(KEY_PAGEDOWN)) { if(musvolume>-100) { set_music_volume(musvolume-2); volchanged=true; } worldvoltimer.restart(); }
-			else if(key_down(KEY_HOME)) { if(ambvolume<0) { set_ambience_volume(ambvolume+2); volchanged=true; } worldvoltimer.restart(); }
-			else if(key_down(KEY_END)) { if(ambvolume>-100) { set_ambience_volume(ambvolume-2); volchanged=true; } worldvoltimer.restart(); }
-			if(volchanged) writepreffs();
-		}
+		/* Live world-volume keys: Page up/down adjust music ("track"), Home/End adjust ambience ("source"). One
+		dB per step on the Windows key repeat (key_repeating), clamped to -100..0. Each change is spoken and logged to
+		the misc buffer as the raw dB value, e.g. "track -10"; at either end a press does nothing and says nothing.
+		Each key is read once (key_repeating is consumed on its first read each frame). Saved only when it changes. */
+		bool volchanged=false;
+		if(key_repeating(KEY_PAGEUP)) { if(musvolume<0) { set_music_volume(musvolume+1); volchanged=true; add_buffer_item("misc", "track "+int(musvolume)); } }
+		else if(key_repeating(KEY_PAGEDOWN)) { if(musvolume>-100) { set_music_volume(musvolume-1); volchanged=true; add_buffer_item("misc", "track "+int(musvolume)); } }
+		else if(key_repeating(KEY_HOME)) { if(ambvolume<0) { set_ambience_volume(ambvolume+1); volchanged=true; add_buffer_item("misc", "source "+int(ambvolume)); } }
+		else if(key_repeating(KEY_END)) { if(ambvolume>-100) { set_ambience_volume(ambvolume-1); volchanged=true; add_buffer_item("misc", "source "+int(ambvolume)); } }
+		if(volchanged) writepreffs();
 		if(key_pressed(KEY_SLASH))
 		{
 			string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "", multiline: true);

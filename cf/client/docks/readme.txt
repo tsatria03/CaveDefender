@@ -352,6 +352,7 @@ Page up. Raise the music volume.
 Page down. Lower the music volume.
 Home. Raise the ambience volume.
 End. Lower the ambience volume.
+Each press moves the volume by one step, and holding a key repeats at your keyboard's repeat speed. The game says track for the music or source for the ambience, followed by the new level from 0 at full volume down to -100, and adds it to the misc buffer.
 
 Voice chat.
 
