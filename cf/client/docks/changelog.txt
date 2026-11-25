@@ -1,3 +1,6 @@
+New in 5.3.
+The sounds folder is now split into a main folder, for the menus, dialogs, typing and the game's alerts, and a game folder, for weapons, items, walls, floors, ambience and music. The test speakers option in the main menu also plays a new sound.
+The server's weapon and item files now live in a folder called equipments inside the data folder.
 New in 5.2.
 You can now check on anyone with slash seen followed by a name, which tells you whether they are online now or, if not, when they were last seen.
 You can now open the form for your online and offline messages straight from chat by typing slash onoffmsg, the same form your player panel opens.

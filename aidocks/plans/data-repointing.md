@@ -1,6 +1,6 @@
 ---
 name: data-repointing
-description: "OPEN — point the server at the renamed data/equipments folder (was data/equipment, renamed by the dev 2026-11-23). Four sections + one optional; until section 1 lands, the server silently plays on code-default weapon/item values."
+description: "DONE IN CODE 2026-11-24 (sections 1-4; optional warning skipped; awaiting the dev's in-game check) — point the server at the renamed data/equipments folder (was data/equipment, renamed by the dev 2026-11-23). Four sections + one optional; until section 1 lands, the server silently plays on code-default weapon/item values."
 metadata:
   type: project
 ---
@@ -11,10 +11,10 @@ metadata:
 
 **Section 2 — comments only. DONE 2026-11-24** (0 `data/equipment` mentions left anywhere in src). gamedata.nvgt lines 3-4 (header), `cfs.nvgt` line 110, `game/enemy.nvgt` line 123, `game/item.nvgt` lines 125, 147, 175, 199.
 
-**Section 3 — server docs (final section per [[final-section-dock-updates]]).** `cf/server/docks/help/player.txt` lines 51 ("under data/equipment"), 61 (`data/equipment/weapons`), 63 (`data/equipment/items`); `cf/server/docks/help/staff.txt` line 77 ("in the equipment folder" → "equipments folder"). Line 75's "the equipment data files" describes files, leave it. Rules pages need nothing. Stay under 1024 chars per line ([[dock-line-length-1024]]).
+**Section 3 — server docs. DONE 2026-11-24** (dev chose to do it now rather than in the final pass; all 4 lines changed, longest lines 931/1003 chars, endings unchanged; /help reads the file fresh on each request, so no relaunch). Original spec: `cf/server/docks/help/player.txt` lines 51 ("under data/equipment"), 61 (`data/equipment/weapons`), 63 (`data/equipment/items`); `cf/server/docks/help/staff.txt` line 77 ("in the equipment folder" → "equipments folder"). Line 75's "the equipment data files" describes files, leave it. Rules pages need nothing. Stay under 1024 chars per line ([[dock-line-length-1024]]).
 
 **Section 4 — memories. DONE 2026-11-24** (game-data-file-layout now has a CURRENT PATHS line + history; ranged-weapon-architecture and the index line corrected; also fixed the stale "4 ammo types" to 5). [[game-data-file-layout]] (3 mentions), [[ranged-weapon-architecture]] (1), and the MEMORY.md index line.
 
-**Optional — missing-file warning.** Print one console line at boot for each data file not found, so a future rename can't silently fall back to defaults. New behavior; only if the dev wants it.
+**Optional — missing-file warning. SKIPPED (dev, 2026-11-24: "you can skip the optional warning step").** Kept here as a record in case it comes back. Warn about each data file not found at boot, so a future rename can't silently fall back to defaults. Finding: a console line is NOT possible — the legacy engine registers no print/cout function (checked misc/Legacy-NVGT src), and the server never speaks or prints to its host today. Options put to the dev: a warnings file, an in-game staff notice, or a dialog.
 
 Line numbers were checked 2026-11-24; re-locate by text if files moved ([[verify-code-while-fixing]]). Commit style: [[commit-style]].
