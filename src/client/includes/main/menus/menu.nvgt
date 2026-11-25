@@ -490,7 +490,7 @@ m.fade_music();
 		{
 			// "Sign in as <username>" only appears when an active account exists, so just sign in with it.
 			registering=false;
-			login(); // when the session ends (exit/kick/drop), fall back to the connection menu, not the main menu
+			login(); // when the session ends (exit/kick/drop), fall back to the online menu, not the main menu
 		}
 		else if(sel=="setupaccount")
 		{
@@ -505,7 +505,7 @@ m.fade_music();
 			if(newaccountform())
 			{
 				registering=true;
-				login(); // when the session ends (exit/kick/drop), fall back to the connection menu, not the main menu
+				login(); // when the session ends (exit/kick/drop), fall back to the online menu, not the main menu
 			}
 		}
 	}
@@ -650,8 +650,8 @@ string current_server_label()
 			if(servers[i].sip==ip and servers[i].sport==port) return servers[i].sname;
 	return "Custom";
 }
-/* Server presets are added/edited/removed from the connection menu's Server storage submenu and chosen from its
-Select a server option. Loading one fills in ip/port so the connection menu connects to it; saved in settings.cvf.
+/* Server presets are added/edited/removed from the online menu's Server storage submenu and chosen from its
+Select a server option. Loading one fills in ip/port so the online menu connects to it; saved in settings.cvf.
 Add/edit use a form with Name, IP, and Port fields (like the account form), not sequential dialogs.
 Add a server preset via a Name/IP/Port form. */
 void addserver()
@@ -687,7 +687,7 @@ void addserver()
 		}
 	}
 }
-/* Load a server preset into ip/port so the connection menu connects to it (it does not connect by itself).
+/* Load a server preset into ip/port so the online menu connects to it (it does not connect by itself).
 Custom is the last entry, below the presets: it keeps whatever ip/port are set (a manually entered, non-preset server). */
 void loadservermenu()
 {
@@ -700,7 +700,7 @@ void loadservermenu()
 	int mres=m.run();
 	string sel=mres<0?"back":m.selected_item_id;
 	if(sel=="back") { speak("canceled"); return; }
-	if(sel=="custom") { server_custom=true; writepreffs(); dlgmessage("Server changed to custom. Press enter to continue."); return; } // leave ip/port as set; change them from the connection menu
+	if(sel=="custom") { server_custom=true; writepreffs(); dlgmessage("Server changed to custom. Press enter to continue."); return; } // leave ip/port as set; change them from the online menu
 	int idx=string_to_number(sel);
 	if(idx<0 or idx>=int(servers.length())) return;
 	ip=servers[idx].sip;
@@ -796,7 +796,7 @@ void editserverdetails(int idx)
 		}
 	}
 }
-/* The connection menu's Server storage submenu: select which server to use, and add, edit, or remove saved
+/* The online menu's Server storage submenu: select which server to use, and add, edit, or remove saved
 server presets (add/edit use a Name/IP/Port form). Loops until you back out, so several changes fit in one visit. */
 void serverstoragemenu()
 {
@@ -993,7 +993,7 @@ void removeaccountmenu()
 	writepreffs();
 	dlgmessage(removed + " removed. Press enter to continue.");
 }
-/* The connection menu's Account storage submenu: select which saved account to use, and add, edit, or remove
+/* The online menu's Account storage submenu: select which saved account to use, and add, edit, or remove
 saved account presets (add/edit use a username+password form; remove is a menu). Loops until you back out. */
 void accountstoragemenu()
 {

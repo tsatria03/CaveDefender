@@ -18,7 +18,7 @@ const string CENTRAL_NAME = "Central server";
 const string CENTRAL_IP = "reality-breaker-studios.net";
 const int CENTRAL_PORT = 25562;
 
-/* Saved account presets, managed from the connection menu's Account storage. Selecting one fills name/password
+/* Saved account presets, managed from the online menu's Account storage. Selecting one fills name/password
 (the active account). Passwords are stored locally in the encrypted settings.cvf -- obfuscation-grade local
 convenience, the same place the last-used account is already cached. */
 class accountpreset

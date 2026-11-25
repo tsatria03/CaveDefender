@@ -230,7 +230,7 @@ st.add("password", password);
 st.save();
 }
 /* After the player's account is deleted, forget the cached active account and drop it from saved account storage,
-so the connection menu no longer offers a dead account. Called when the server confirms a /delchar. */
+so the online menu no longer offers a dead account. Called when the server confirms a /delchar. */
 void clear_last_account()
 {
 for(uint i=0; i<accounts.length(); i++)

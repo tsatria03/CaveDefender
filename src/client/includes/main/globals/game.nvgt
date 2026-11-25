@@ -63,7 +63,7 @@ buffercheck();
 			if(key_pressed(KEY_ESCAPE))
 			{
 				/* Escape stays live for everyone while frozen so no one is trapped: it offers the usual exit to the
-				connection menu (the same confirm as leaving from the lobby). Leaving a game back to its room isn't
+				online menu (the same confirm as leaving from the lobby). Leaving a game back to its room isn't
 				possible mid-freeze -- the server ignores that -- so escape quits the session instead. The disconnect
 				itself is handled outside the frozen dispatch, so it always goes through. */
 				bool doexit=true;

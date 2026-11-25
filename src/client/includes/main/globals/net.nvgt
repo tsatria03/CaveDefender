@@ -70,7 +70,7 @@ send(0, "login "+name+" "+password+" "+version, 0,true);
 }
 else
 {
-// Don't log in; just drop the connection and head back to the connection menu (the account is saved).
+// Don't log in; just drop the connection and head back to the online menu (the account is saved).
 net.disconnect_peer_forcefully(serverpeer);
 connected=false;
 return false;
@@ -96,7 +96,7 @@ if(displaced)
 displaced=false;
 fade_multi_pool(fademode);
 net.disconnect_peer_forcefully(serverpeer);
-dlgmessage("You have lost your connection. Please log in again."); // this account signed in elsewhere; a deliberate, generic notice, then back to the connection menu
+dlgmessage("You have lost your connection. Please log in again."); // this account signed in elsewhere; a deliberate, generic notice, then back to the online menu
 return false;
 }
 if(reconnected)
@@ -899,7 +899,7 @@ void netloop_impl()
 	immediately, start a background reconnect; the game loop keeps running while we try to get back on. */
 	if (event.type == event_disconnect)
 	{
-		if (kicked) { connected = false; return; } // a deliberate server logout (kick/ban) already set kicked; never reconnect into it -- let game() fall through to the connection menu
+		if (kicked) { connected = false; return; } // a deliberate server logout (kick/ban) already set kicked; never reconnect into it -- let game() fall through to the online menu
 		start_reconnect();
 		return;
 	}
@@ -1096,16 +1096,16 @@ void netloop_impl()
 			}
 			else if (parsed[0] == "declinedrules")
 			{
-				// You chose No on the rules agree menu (declined): the server drops you; return to the connection menu like a kick.
+				// You chose No on the rules agree menu (declined): the server drops you; return to the online menu like a kick.
 				p.play_stationary("sounds/main/misc/kick.ogg", false);
-				speak("You did not agree to the server rules, so you have been returned to the connection menu.", true);
+				speak("You did not agree to the server rules, so you have been returned to the online menu.", true);
 				kicked = true;
 				connected = false;
 			}
 			else if (parsed[0] == "passchanged")
 			{
 				/* Self /changepass succeeded: the server changed our password and logged us out. We know the new
-				password (pendingpass), so update the saved account, then return to the connection menu to sign in with it. */
+				password (pendingpass), so update the saved account, then return to the online menu to sign in with it. */
 				password = pendingpass;
 				pendingpass = "";
 				save_last_account();
@@ -1115,7 +1115,7 @@ void netloop_impl()
 				}
 				writepreffs();
 				p.play_stationary("sounds/main/misc/kick.ogg", false);
-				speak("Your password has been changed, so you have been returned to the connection menu.", true);
+				speak("Your password has been changed, so you have been returned to the online menu.", true);
 				kicked = true;
 				connected = false;
 			}
@@ -1124,35 +1124,35 @@ void netloop_impl()
 				/* An administrator reset our password: we don't know the new one, so we're logged out and the saved
 				password is left as-is; staff tell us the new password to sign in with. */
 				p.play_stationary("sounds/main/misc/kick.ogg", false);
-				speak("Your password has been reset by staff, so you have been returned to the connection menu.", true);
+				speak("Your password has been reset by staff, so you have been returned to the online menu.", true);
 				kicked = true;
 				connected = false;
 			}
 			else if (parsed[0] == "renamed" and parsed.length() > 1)
 			{
 				/* An administrator renamed our account. The password is unchanged; we sign back in under the new name,
-				updating (or re-adding) our saved account with it. We're returned to the connection menu like a kick. */
+				updating (or re-adding) our saved account with it. We're returned to the online menu like a kick. */
 				p.play_stationary("sounds/main/misc/kick.ogg", false);
-				speak("You have been renamed to " + parsed[1] + ", so you have been returned to the connection menu to sign in again with your new name.", true);
+				speak("You have been renamed to " + parsed[1] + ", so you have been returned to the online menu to sign in again with your new name.", true);
 				kicked = true;
 				connected = false;
 			}
 			else if (parsed[0] == "delchardone")
 			{
 				/* Our own /delchar succeeded: the account is gone. Forget it locally (so it can't be re-selected) and
-				return to the connection menu. */
+				return to the online menu. */
 				clear_last_account();
 				p.play_stationary("sounds/main/misc/kick.ogg", false);
-				speak("Your account has been deleted, so you have been returned to the connection menu.", true);
+				speak("Your account has been deleted, so you have been returned to the online menu.", true);
 				kicked = true;
 				connected = false;
 			}
 			else if (parsed[0] == "delcharkicked")
 			{
-				// An administrator deleted our account: forget it locally and return to the connection menu.
+				// An administrator deleted our account: forget it locally and return to the online menu.
 				clear_last_account();
 				p.play_stationary("sounds/main/misc/kick.ogg", false);
-				speak("Your account has been deleted by staff, so you have been returned to the connection menu.", true);
+				speak("Your account has been deleted by staff, so you have been returned to the online menu.", true);
 				kicked = true;
 				connected = false;
 			}

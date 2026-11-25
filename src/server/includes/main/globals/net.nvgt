@@ -456,7 +456,7 @@ return "Attention! The server will restart in "+mins+" minutes.";
 return "Attention! The server will restart in "+seconds+" seconds.";
 }
 /* Closes the server. Forcefully disconnects every client first so each one's enet sees the drop
-immediately and bounces back to its connection menu, pumps the host briefly so those
+immediately and bounces back to its online menu, pumps the host briefly so those
 disconnects actually flush out, then exits the process. Used by both /restart (after its
 countdown) and /fastrestart (immediately). Bringing the server back up is handled externally. */
 void do_restart()
@@ -2115,7 +2115,7 @@ else if(parsed[0]=="rules" and index>-1 and parsed.length()>1)
 string which=string_to_lower_case(parsed[1]);
 /* "agree"/"disagree" are the rules-gate answers, not pages. Agreeing requires having read the required
 pages first: everyone must read the PLAYER rules, and staff must also read the STAFF rules.
-Disagreeing drops the player back to the connection menu. Both are open to everyone. */
+Disagreeing drops the player back to the online menu. Both are open to everyone. */
 if(which=="agree")
 {
 if(players[index].agreed) send(event.peer_id, "misc You already agreed to the server rules.", 0,true);
@@ -2135,7 +2135,7 @@ else if(which=="disagree")
 if(players[index].agreed) { send(event.peer_id, "misc You already agreed to the server rules.", 0,true); }
 else
 {
-// They declined: tell the client (which returns to the connection menu) and drop them, like a normal disconnect.
+// They declined: tell the client (which returns to the online menu) and drop them, like a normal disconnect.
 send(event.peer_id, "declinedrules", 0,true);
 send(0, "alert "+afk_prefix(index)+display_name_flagged(index)+" has just disagreed to the game's rules.", 0, true); // tell everyone in the alerts buffer, with the alert cue, before they drop, AFK/rank/nickname aware
 send(0, offline_line(players[index].name, players[index].rank, players[index].nickname), 0,true);
@@ -2199,7 +2199,7 @@ else
 write_field(players[index].name, "password", password_blob(make_salt(), np));
 int tpeer = players[index].peer_id;
 send(0, offline_line(players[index].name, players[index].rank, players[index].nickname), 0, true); // announce them offline now
-send(tpeer, "passchanged", 0, true); // the client updates its saved password and returns to the connection menu
+send(tpeer, "passchanged", 0, true); // the client updates its saved password and returns to the online menu
 players.remove_at(index); // free the slot now so the ensuing disconnect doesn't hold it; disconnect cleans up rooms/games/verified_logins
 force_logout(tpeer); // don't wait on the client to leave: revoke identity + drop the socket so a modified client can't stay on the old password's session
 }
@@ -3614,7 +3614,7 @@ string fann = "flagswitch "+(players[index].flagged?"1":"0")+"\nAttention! "+pla
                                 send(event.peer_id, "misc You renamed "+display_name_flagged(ti)+" to "+newname+".", 0, true);
                                 notify_staff_audit(afk_prefix(index)+display_name_flagged(index)+" renamed "+afk_prefix(ti)+display_name_flagged(ti)+" to "+newname+".", -1);
                                 /* Log the renamed player out: announce them offline under the OLD name, tell their client to
-                                return to the connection menu, then drop them from the roster. The ensuing disconnect handles
+                                return to the online menu, then drop them from the roster. The ensuing disconnect handles
                                 host migration and room/game cleanup if they were hosting. */
                                 send(0, offline_line(oldname, oldrank, oldnick), 0, true);
                                 send(tpeer, "renamed "+newname, 0, true);
