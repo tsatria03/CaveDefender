@@ -28,16 +28,13 @@ SRC_CLIENT    = os.path.join(REPO_DIR, "src", "client")
 SRC_SERVER    = os.path.join(REPO_DIR, "src", "server")
 ASSETS_CLIENT = os.path.join(REPO_DIR, "cf", "client")
 ASSETS_SERVER = os.path.join(REPO_DIR, "cf", "server")
-# The client's data/ folder holds scriptkeys.srk (the script-keys file). It ships LOOSE -- NOT in
-# CLIENT_EMBEDDED_FOLDERS -- so it stays a real, editable file next to the exe: it's read fresh on every script-key
-# press so hand-edits go live, and the Enigma box only embeds sounds/docks, so a data/ file is never boxed.
-# docks/ ships as a LOOSE folder (like data/): copied into the bundle but deliberately kept OUT of
-# CLIENT_EMBEDDED_FOLDERS, so it is never embedded into the exe or stripped -- it stays a visible, editable
-# folder next to cfc.exe. The client's in-game documentation reader (main menu / Alt+K) reads these .txt files
-# from disk, so they must be present in the shipped build.
+# Every asset folder ships as an ordinary folder next to the exe (there is no packing step), so each one stays
+# visible and editable in the shipped build. Client: lib/ (audio + screen-reader DLLs), sounds/, docks/ (read from
+# disk by the in-game documentation reader, main menu / Alt+K) and data/ (scriptkeys.srk, read fresh on every
+# script-key press so hand-edits go live).
 CLIENT_ASSETS = ["lib", "sounds", "docks", "data"]
-# The server's sounds/ folder holds the soundboard clips (/playsound). It ships LOOSE like data/ -- NOT in
-# SERVER_EMBEDDED_FOLDERS -- so the host can add and remove clips, and the server can read them off disk to stream.
+# Server: data/, docks/ (the /help and /rules pages, which hosts can edit) and sounds/ (the /playsound soundboard
+# clips, which the host can add and remove and the server reads off disk to stream).
 SERVER_ASSETS = ["data", "docks", "sounds"]
 # Loose files copied into the bundle ROOT (not a subfolder). Currently unused -- scriptkeys.srk now ships inside the
 # client's data/ folder above -- but kept for any future root-level loose file.
@@ -53,8 +50,6 @@ SERVER_VERSION_NVGT = os.path.join(SRC_SERVER, "includes", "version.nvgt")
 NVGT    = _tools["tools"]["nvgt"]  # shared across all the legacy-engine games; set to the legacy build in ~/.game_tools/tools.ini
 SEVENZIP = _tools["tools"]["sevenzip"]
 GH      = _tools["tools"]["gh"]
-# Enigma Virtual Box console (client boxing). Override in ~/.game_tools/tools.ini [tools] enigma=..., else the default install path.
-ENIGMA  = _tools["tools"].get("enigma", r"C:\Program Files (x86)\Enigma Virtual Box\enigmavbconsole.exe")
 
 # Each side assembles into its own password-named folder under release/windows (release/ singular), e.g.
 # release/windows/CaveDefenderClient_password_is_WallSmasher/cfc and .../CaveDefenderServer_..._/cfs.
@@ -64,23 +59,6 @@ CLIENT_DEST   = os.path.join(REPO_DIR, "release", "windows", CLIENT_FOLDER)
 SERVER_DEST   = os.path.join(REPO_DIR, "release", "windows", SERVER_FOLDER)
 CLIENT_BUILD  = os.path.join(CLIENT_DEST, CLIENT_OUT)   # the finished client bundle (cfc)
 SERVER_BUILD  = os.path.join(SERVER_DEST, SERVER_OUT)   # the finished server bundle (cfs)
-
-# Enigma boxing: each side's .evb (src/<side>/cf?.evb) embeds its audio DLLs and asset folders into the exe;
-# afterward we strip those from the shipped build -- the DLLs from lib/, the folders entirely -- since they now
-# live virtually inside the exe (the screen-reader DLLs stay as real files). The client embeds opus +
-# sounds (docks ship loose, so they are not embedded); the server embeds no opus but does embed docks.
-# Disable with box_project = 0 under [game] in tools.ini (defaults on; the old box_client key is still honored).
-BOX_PROJECT   = _cfg["game"].get("box_project", _cfg["game"].get("box_client", "1")) == "1"
-CLIENT_EVB    = os.path.join(SRC_CLIENT, f"{CLIENT_OUT}.evb")   # src/client/cfc.evb
-SERVER_EVB    = os.path.join(SRC_SERVER, f"{SERVER_OUT}.evb")   # src/server/cfs.evb
-CLIENT_EMBEDDED_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "opus.dll", "phonon.dll"]
-SERVER_EMBEDDED_DLLS = ["bass.dll", "bassmix.dll", "bass_fx.dll", "phonon.dll"]
-# Each .evb also embeds these whole asset folders, so strip them from the shipped build after boxing (they
-# live virtually inside the exe). The client embeds only sounds -- its docks ship as a loose folder (see
-# CLIENT_ASSETS) so the in-game reader can read them, so docks are NOT listed here. The server still embeds
-# its docks (help/rules, read-only), so no external docks folder ships with the server.
-CLIENT_EMBEDDED_FOLDERS = ["sounds"]
-SERVER_EMBEDDED_FOLDERS = ["docks"]
 
 # The server supervisor (downcheck) compiles to a single bare exe -- src/server/downcheck.properties sets
 # build.windows_bundle=0, so no folder and no lib/ are produced (it uses no sound/tts/plugin libraries). We
@@ -204,7 +182,7 @@ def compile_downcheck():
     # Compile the server supervisor and place its bare exe in the finished server bundle. downcheck.properties
     # (build.windows_bundle=0) makes nvgt -c emit a single src/server/downcheck.exe with no folder/lib, so we
     # just copy that one file next to cfs.exe in the server build. Call after the server bundle is assembled
-    # (SERVER_BUILD must exist) and before boxing; boxing only touches cfs.exe, and downcheck needs no DLLs.
+    # (SERVER_BUILD must exist); downcheck needs no DLLs.
     print("Compiling downcheck (server supervisor)...")
     if not run_cmd([NVGT, "-c", "-Q", DOWNCHECK_FILE], cwd=SRC_SERVER):
         print("ERROR: downcheck compilation failed.")
@@ -215,64 +193,6 @@ def compile_downcheck():
     shutil.copy2(DOWNCHECK_SRC_EXE, os.path.join(SERVER_BUILD, DOWNCHECK_EXE))
     os.remove(DOWNCHECK_SRC_EXE)   # don't leave the compiled exe loose in the source tree
     print("downcheck.exe copied into the server bundle beside cfs.exe.\n")
-    return True
-
-def box_side(label, out_name, evb, dlls, build_dir, strip_folders=None):
-    # Wrap one compiled side with Enigma Virtual Box: embed its audio DLLs (and, on the client, the sounds
-    # asset folder) into <out>.exe per its .evb, replace the unboxed exe with the boxed one, then delete the
-    # now-embedded DLLs from lib/ and any embedded asset folders so they aren't shipped twice. The screen-reader
-    # DLLs stay as real files in lib/.
-    exe   = os.path.join(build_dir, f"{out_name}.exe")         # <out>.exe (unboxed input)
-    boxed = os.path.join(build_dir, f"{out_name}_boxed.exe")   # <out>_boxed.exe (Enigma output)
-    if not os.path.exists(ENIGMA):
-        print(f"ERROR: Enigma console not found at {ENIGMA}.")
-        return False
-    if not os.path.exists(evb):
-        print(f"ERROR: Enigma project not found at {evb}.")
-        return False
-    if not os.path.exists(exe):
-        print(f"ERROR: {label} exe not found at {exe} (compile first).")
-        return False
-    print(f"Boxing {label} with Enigma Virtual Box...")
-    if os.path.exists(boxed):
-        os.remove(boxed)
-    # Pass -input/-output so we never depend on the .evb's hard-coded (password-named) release paths, and so
-    # Enigma never reads and writes the same file. The .evb still supplies the embedded-file list from cf/<side>/lib.
-    if not run_cmd([ENIGMA, evb, "-input", exe, "-output", boxed]):
-        print(f"ERROR: Enigma boxing failed for {label}.")
-        return False
-    if not os.path.exists(boxed):
-        print(f"ERROR: Enigma reported success but the boxed {label} exe is missing.")
-        return False
-    # Swap the boxed exe in under the original name, keeping the clean exe until the last moment.
-    os.remove(exe)
-    shutil.move(boxed, exe)
-    # Strip the now-embedded audio DLLs from the shipped lib/.
-    lib_dir = os.path.join(build_dir, "lib")
-    removed = []
-    for dll in dlls:
-        p = os.path.join(lib_dir, dll)
-        if os.path.exists(p):
-            os.remove(p)
-            removed.append(dll)
-    # Remove any now-embedded asset folders (client: sounds/; server: docks/) from the shipped build.
-    stripped = []
-    for folder in (strip_folders or []):
-        fp = os.path.join(build_dir, folder)
-        if os.path.isdir(fp):
-            shutil.rmtree(fp)
-            stripped.append(folder)
-    folders_msg = f" + {'/'.join(stripped)} folder(s)" if stripped else ""
-    print(f"{label} boxed: embedded {len(removed)} audio DLL(s){folders_msg} into {out_name}.exe and stripped them from the build.\n")
-    return True
-
-def box_project():
-    # Box both sides. Client embeds 5 audio DLLs (incl. opus) plus the sounds folder (docks ship loose, not embedded);
-    # server embeds 4 DLLs (no opus) plus the docks folder -- so the server still ships no external docks folder.
-    if not box_side("client", CLIENT_OUT, CLIENT_EVB, CLIENT_EMBEDDED_DLLS, CLIENT_BUILD, CLIENT_EMBEDDED_FOLDERS):
-        return False
-    if not box_side("server", SERVER_OUT, SERVER_EVB, SERVER_EMBEDDED_DLLS, SERVER_BUILD, SERVER_EMBEDDED_FOLDERS):
-        return False
     return True
 
 # ── Commit ────────────────────────────────────────────────────────────────────
@@ -513,7 +433,7 @@ def do_reset(sha):
 
 # ── Release ───────────────────────────────────────────────────────────────────
 
-def run_release(skip_compile, skip_box, skip_package, skip_release, skip_empty_release, interactive=True):
+def run_release(skip_compile, skip_package, skip_release, skip_empty_release, interactive=True):
     version = get_version()
     if not version:
         print("ERROR: Could not read version from version.txt.")
@@ -576,21 +496,6 @@ def run_release(skip_compile, skip_box, skip_package, skip_release, skip_empty_r
         print("Both sides compiled and assembled.\n")
     elif skip_compile == SKIP:
         print("Skipping compilation.\n")
-
-    # Box — embed each side's audio DLLs into its exe with Enigma Virtual Box.
-    if BOX_PROJECT:
-        do_box = False
-        if skip_box == DO:
-            do_box = True
-        elif skip_box == SKIP:
-            do_box = ask("Do you want to box the project with Enigma Virtual Box?")
-        if do_box:
-            if not box_project():
-                return
-        elif skip_box == SKIP:
-            print("Skipping boxing.\n")
-    elif skip_box == DO:
-        print("Boxing is disabled (box_project = 0 in tools.ini).\n")
 
     # Package
     do_package = False
@@ -676,11 +581,10 @@ def menu():
         print(" --- Release ---")
         print(" 6. Full release")
         print(" 7. Compile only")
-        print(" 8. Box only")
-        print(" 9. Package only")
-        print(" 10. Release only")
+        print(" 8. Package only")
+        print(" 9. Release only")
         print(" ---")
-        print(" 11. Exit")
+        print(" 10. Exit")
         print("========================")
         choice = input("Choose an option: ").strip()
         print()
@@ -695,19 +599,17 @@ def menu():
         elif choice == "5":
             do_create_tag()
         elif choice == "6":
-            run_release(SKIP, SKIP, SKIP, SKIP, SKIP)
+            run_release(SKIP, SKIP, SKIP, SKIP)
         elif choice == "7":
-            run_release(DO, SILENT_SKIP, SILENT_SKIP, SILENT_SKIP, SILENT_SKIP)
+            run_release(DO, SILENT_SKIP, SILENT_SKIP, SILENT_SKIP)
         elif choice == "8":
-            run_release(SILENT_SKIP, DO, SILENT_SKIP, SILENT_SKIP, SILENT_SKIP)
+            run_release(SILENT_SKIP, DO, SILENT_SKIP, SILENT_SKIP)
         elif choice == "9":
-            run_release(SILENT_SKIP, SILENT_SKIP, DO, SILENT_SKIP, SILENT_SKIP)
+            run_release(SILENT_SKIP, SILENT_SKIP, DO, DO)
         elif choice == "10":
-            run_release(SILENT_SKIP, SILENT_SKIP, SILENT_SKIP, DO, DO)
-        elif choice == "11":
             sys.exit(0)
         else:
-            print("Invalid choice. Please enter 1-11.")
+            print("Invalid choice. Please enter 1-10.")
 
 if __name__ == "__main__":
     args = sys.argv[1:]
@@ -715,11 +617,11 @@ if __name__ == "__main__":
         menu()
     else:
         usage = (
-            "Usage: tools.py <skip_compile> <skip_box> <skip_package> <skip_release> <skip_empty_release>\n"
+            "Usage: tools.py <skip_compile> <skip_package> <skip_release> <skip_empty_release>\n"
             f"  Each flag must be {SKIP} (ask), {DO} (force run), or {SILENT_SKIP} (skip silently)."
         )
-        if len(args) != 5:
-            print(f"Error: expected 5 args, got {len(args)}.\n{usage}")
+        if len(args) != 4:
+            print(f"Error: expected 4 args, got {len(args)}.\n{usage}")
             sys.exit(2)
         try:
             flags = [int(a) for a in args]

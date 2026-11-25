@@ -95,8 +95,8 @@ Feature plans, open and completed; a finished plan stays here as the record.
 Open (the late-2026 reorganization; suggested order: data, sounds, build, docs):
 - [Data repointing](plans/data-repointing.md) — sections 1-4 DONE (loader, comments, server help docs, memories); optional missing-file warning skipped; left: the dev's in-game check
 - [Sound path repointing](plans/sound-path-repointing.md) — DONE IN CODE (client + server; awaiting in-game test + 5.3): ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach decided: rewrite in place
-- [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — OPEN: six reviewed sections in tools.py dropping the Enigma stage (menu 1-10, CLI 4 flags)
-- [Reorg docs and version](plans/reorg-docs-and-version.md) — OPEN, runs last: 5.3 bump, the 5.3 changelog block (WRITTEN with 2 entries; version.txt already 5.3; boxing lines to add after the build-tools plan), stale memory updates, retire the boxing memories
+- [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — DONE: the Enigma stage is gone from tools.py (menu 1-10, CLI 4 flags); awaiting the dev's first real Compile only run
+- [Reorg docs and version](plans/reorg-docs-and-version.md) — OPEN, runs last: 5.3 bump, the 5.3 changelog block (COMPLETE, 4 entries; version.txt already 5.3), stale memory updates, retire the boxing memories
 - [Privacy cleanup](plans/privacy-cleanup.md) — MOSTLY DONE: player data untracked, history rewritten + force-pushed, dirty releases deleted; left: GitHub Support purge, optional player notice (no other clones exist)
 
 Completed:
