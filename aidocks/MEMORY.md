@@ -5,6 +5,7 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 ## Working style
 - [Memory folder layout](general/memory-folder-layout.md) — memories live in aidocks/: general/ for topics, rules and references, plans/ for feature plans both open AND completed (a finished plan stays in plans/ as the record); MEMORY.md indexes both
 - [Confirm before implementing](general/confirm-before-implementing.md) — treat design discussion as a question, never a green light; a `?` means respond and wait, don't edit
+- [Don't mention optional items](general/dont-mention-optional-items.md) — don't remind the dev of optional follow-ups at the end of replies; only bring them up if asked or genuinely needed; record them once in the plan instead
 - [Ask one question at a time](general/ask-one-question-at-a-time.md) — when clarifying a plan, surface ONE question per turn and wait; don't batch a numbered list of questions
 - [Verify code while fixing](general/verify-code-while-fixing.md) — when fixing, read the surrounding code carefully, confirm the finding's line numbers/claims are actually true (they drift), and catch/flag adjacent errors; don't blindly patch the reported spot
 - [Check git log for commits](general/check-git-log-for-commits.md) — the user commits their own work between turns; check git log/status before asking about or assuming commit state; for section-built features verify each section's commit before the next
@@ -92,13 +93,13 @@ The [[name]] links across these memories resolve to aidocks/general/<name>.md or
 ## Plans (aidocks/plans/)
 Feature plans, open and completed; a finished plan stays here as the record.
 
-The late-2026 reorganization and 5.3 work (all COMPLETE and tested 2026-11-24, except the privacy cleanup's last two optional steps):
+The late-2026 reorganization and 5.3 work (all COMPLETE and tested 2026-11-24):
 - [Data repointing](plans/data-repointing.md) — COMPLETE (sections 1-4: loader, comments, server help docs, memories; tested in-game 2026-11-24); optional missing-file warning skipped
 - [Sound path repointing](plans/sound-path-repointing.md) — COMPLETE (tested in-game on client + server 2026-11-24; ships in 5.3): ~136 literal client sound paths + pieced paths + the footstep wire strings to the new sounds/main + sounds/game layout; ships as 5.3; approach decided: rewrite in place
 - [Build tools: remove boxing](plans/build-tools-remove-boxing.md) — COMPLETE: the Enigma stage is gone from tools.py (menu 1-10, CLI 4 flags); the dev's real Compile only run passed 2026-11-24
 - [Reorg docs and version](plans/reorg-docs-and-version.md) — COMPLETE: 5.3 changelog block (now 5 entries with the volume keys), version.txt 5.3, memory sweep (path-conventions, include-tree, audio-and-sounds, launchers-and-running, changelog-rules), boxing memories retired
 - [Volume key announcements](plans/volume-key-announcements.md) — COMPLETE (tested in-game 2026-11-24; ships in 5.3): Page up/down speak + log "track <dB>", Home/End "source <dB>", to the misc buffer, silent at the ends, keys fixed, 1 dB per step on Windows key repeat (key_repeating); matches StrideRush exactly
-- [Privacy cleanup](plans/privacy-cleanup.md) — MOSTLY DONE: player data untracked, history rewritten + force-pushed, dirty releases deleted; left: GitHub Support purge, optional player notice (no other clones exist)
+- [Privacy cleanup](plans/privacy-cleanup.md) — COMPLETE: player data untracked + gitignored, history rewritten + force-pushed, dirty releases deleted, GitHub Support contacted by the dev
 
 Earlier completed plans:
 - [Chat channels](plans/chat-channels.md) — COMPLETE: Global (/), Local (\ current map instance, covers lobby/room/game), Staff (' all staff), Team (; PVP-only, your side); all four built
