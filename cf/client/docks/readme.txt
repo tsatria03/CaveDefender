@@ -269,6 +269,12 @@ You float on a deck above the cavern and roam it freely while the whole battle p
 
 Most keys work as usual, including tab for the round status, n, e, s, w, and t for the walls, and P to locate the players, while the keys for your own wood and reinforcing do nothing. When you watch an environment versus player game, the deck sits out on the gravel to match, and the b key locates the builder bots as well. Press escape to stop watching and return to the room.
 
+Game rules files.
+
+A server keeps its game rules in two ini files, in the config slash main folder inside its data folder, which its host can edit to change how games play. modes dot ini tunes the modes: how much wood and ammo drop on each map size and how often, how many pieces may lie on the ground at once, the walls' full strength in every mode, how fast environment versus player walls grow tougher each round, the environment versus player round timer, and the map sizes offered for player versus player. effects dot ini sets how the cave sounds: the reverberation inside the cavern and the muffling of sounds heard through a wall.
+
+In both files, a line beginning with a semicolon is a comment the game skips, and every other line is a setting written as a name, an equals sign, and a value. Both are read when the server starts, so a change takes effect once the server restarts. Each setting is explained in the comments inside the file, and in the server's help for hosts.
+
 Keyboard commands.
 
 This is the full list of keys CaveDefender uses. Some keys only do something in the right place, for example the wall and weapon keys work only while you are in a game; where that matters it is noted. A few keys do one thing on their own and another with shift held, and both are listed.

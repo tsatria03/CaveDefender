@@ -1,6 +1,6 @@
 ---
 name: data-reorg-repointing
-description: "PLANNED (2026-11-25) — repoint the server and build tools and update docks after the dev's data reorg: server data/ split into host/ (server-only: players, main .svr settings) and config/ (game rules: equipments, modes.ini, effects.ini); the client gained a config/ copy of the game rules for offline play; ini comments switch from # to ; (reader accepts both). Client scriptkeys.srk stays at the data root. 3 sections: server, build, docks."
+description: "COMPLETE (2026-11-25; server section tested in-game) — repoint the server and build tools and update docks after the dev's data reorg: server data/ split into host/ (server-only: players, main .svr settings) and config/ (game rules: equipments, modes.ini, effects.ini); the client gained a config/ copy of the game rules for offline play; ini comments switch from # to ; (reader accepts both). Client scriptkeys.srk stays at the data root. 3 sections: server, build, docks."
 metadata:
   type: project
 ---
@@ -43,6 +43,7 @@ Client (cf/client/data):
    - Client changelog: fold into the unreleased 5.3 block, rewording the existing "The server's weapon and item files now live in a folder called equipments inside the data folder." entry to describe the new layout ([[changelog-rules]]).
    - Memories: [[path-conventions]], [[game-data-file-layout]], [[accounts-system]], [[include-tree]] if it names paths, CLAUDE.md's accounts line, and the other memories the grep finds; mark this plan COMPLETE.
    - Recheck every edited dock line against [[dock-line-length-1024]].
+   - **DONE 2026-11-25:** ini comments `#` to `;` (modes.ini 22 lines, effects.ini 3, on both sides; the copies stay byte-identical); server help/player.txt (8 lines: the data overview now names host/ and config/ and says `;` comments work in the ini, weapon and item files, plus every path in the hosting section), help/staff.txt (/editdata example now "editdata host slash main", and the startup-read file list names config slash main and modes dot ini / effects dot ini); readme gained a "Game rules files." section (2 paragraphs, server copy only) just before "Keyboard commands."; the 5.3 equipments changelog entry reworded to describe the host/config split and the ini files; memories path-conventions, game-data-file-layout, accounts-system, launchers-and-running, include-tree, feature-ideas, game-mode-evp, game-mode-free, ranged-weapon-architecture, relaunch-notice, screen-reader-crash-filter, dont-touch-version-txt, commit-style, nvgt-engine-source-location, no-crlf-normalization and CLAUDE.md. Longest dock lines still 896 (server) and 890 (client); each file kept its own line endings, and a stray CR in changelog line 2 (from the online-menu entry) was healed.
 
 Sections 1 and 3's ini comment change go in together before the server is run: the new reader accepts both `#` and `;`, so section 1 alone is safe, but the converted `;` comments need section 1's reader.
 

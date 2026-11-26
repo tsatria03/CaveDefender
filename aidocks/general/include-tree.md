@@ -36,6 +36,6 @@ metadata:
 - `globals/account.nvgt` — the on-disk account store (see [[accounts-system]]).
 - `globals/game.nvgt` — the cavern spaces and round lifecycle for **all three modes** (`games[].mode` = `pve`/`evp`/`pvp`): phases (idle → build → wave), wood drops, the host-only shared pause. PVE = defend; EVP = attack (see [[game-mode-evp]]); PVP = humans both sides (see [[game-mode-pvp]]).
 - `globals/builder.nvgt` — the EVP builder bots (roam, gather wood, `repair_wall`, `builder_tick`; broadcast `botspawn`/`botstep`/`botclear`).
-- `globals/gamedata.nvgt` — the boot-time loader for the weapon/item data files under `data/equipments/` (see [[game-data-file-layout]]).
+- `globals/gamedata.nvgt` — the boot-time loader for the weapon/item data files under `data/config/game/equipments/` (see [[game-data-file-layout]]).
 - `globals/menu.nvgt` — the server-pushed menus (`broadcast_menu`/`send_menu`, `on_menu_result`).
 - `functions/filterfuncts.nvgt` — chat filters via NVGT's native `regexp`: `filter_crash()` (the always-on TTS crash-string filter — see [[screen-reader-crash-filter]]), `filter_chat()` (the host word filter in `chatfilter.svr`, also on NVGT's own `regexp`; it no longer needs the old 32-bit BGT filter.dll), `filterchar()` (username/nickname character filter).
