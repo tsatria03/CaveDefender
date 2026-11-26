@@ -39,9 +39,9 @@ comments. Read fresh each call so a host can edit the list without restarting. E
 string[] load_filter_rules()
 {
 string[] rules;
-if(!file_exists("data/host/main/chatfilter.svr")) return rules;
+if(!file_exists(host_root + "main/chatfilter.svr")) return rules;
 file ff;
-if(!ff.open("data/host/main/chatfilter.svr", "rb")) return rules;
+if(!ff.open(host_root + "main/chatfilter.svr", "rb")) return rules;
 string content = ff.read();
 ff.close();
 string[] lines = string_split(content, "\n", true);

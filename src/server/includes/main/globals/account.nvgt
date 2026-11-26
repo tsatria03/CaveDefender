@@ -18,12 +18,12 @@ scan for an existing folder that matches ignoring case, and finally fall back to
 a brand-new account being created. */
 string account_dir(string name)
 {
-string direct = "data/host/game/players/" + name;
+string direct = host_root + "game/players/" + name;
 if(directory_exists(direct)) return direct;
 string want = string_to_lower_case(name);
-string[] dirs = find_directories("data/host/game/players/*");
+string[] dirs = find_directories(host_root + "game/players/*");
 for(uint i=0; i<dirs.length(); i++)
-if(string_to_lower_case(dirs[i]) == want) return "data/host/game/players/" + dirs[i];
+if(string_to_lower_case(dirs[i]) == want) return host_root + "game/players/" + dirs[i];
 return direct;
 }
 string field_path(string name, string field)
@@ -172,7 +172,7 @@ return v;
 bool write_field(string name, string field, string value)
 {
 if(!directory_exists("data")) directory_create("data");
-if(!directory_exists("data/host/game/players")) directory_create("data/host/game/players");
+if(!directory_exists(host_root + "game/players")) directory_create(host_root + "game/players");
 if(!directory_exists(account_dir(name))) directory_create(account_dir(name));
 if(!directory_exists(account_dir(name) + "/info")) directory_create(account_dir(name) + "/info"); // fields live in info/; make sure it exists so the write can't fail on a missing subfolder
 file f;
@@ -364,12 +364,12 @@ the folder move itself fails, in which case nothing was changed. */
 bool rename_account(string oldname, string newname)
 {
 string olddir = account_dir(oldname); // the real folder (resolved case-insensitively)
-string newdir = "data/host/game/players/" + newname;
+string newdir = host_root + "game/players/" + newname;
 if(!directory_rename(olddir, newdir)) return false;
 write_field(newname, "username", newname);
 write_field(newname, "nickname", newname); // the display name reverts to the new username
 replace_owner_alias(oldname, newname); // if the renamed account was an owner alias, keep the owners list pointed at its new name
-string[] dirs = find_directories("data/host/game/players/*");
+string[] dirs = find_directories(host_root + "game/players/*");
 string lowold = string_to_lower_case(oldname);
 for(uint i=0; i<dirs.length(); i++)
 {
@@ -396,7 +396,7 @@ bool delete_account(string name)
 if(!directory_delete(account_dir(name))) return false;
 remove_owner_alias(name); // if a deleted account was an owner alias, drop just that name from the owners list (the other aliases stay)
 string lowdel = string_to_lower_case(name);
-string[] dirs = find_directories("data/host/game/players/*");
+string[] dirs = find_directories(host_root + "game/players/*");
 for(uint i=0; i<dirs.length(); i++)
 {
 string[] list = get_ignored(dirs[i]);

@@ -827,13 +827,13 @@ string[] cached_languages; int64 languages_mtime = -1; bool language_cache_ready
 string[] load_language_channels()
 {
 int64 mt = -1;
-if(file_exists("data/host/main/languages.svr")) { timestamp ts = file_get_date_modified("data/host/main/languages.svr"); mt = ts; }
+if(file_exists(host_root + "main/languages.svr")) { timestamp ts = file_get_date_modified(host_root + "main/languages.svr"); mt = ts; }
 if(language_cache_ready and mt == languages_mtime) return cached_languages;
 string[] langs;
 if(mt != -1)
 {
 file lf;
-if(lf.open("data/host/main/languages.svr", "rb"))
+if(lf.open(host_root + "main/languages.svr", "rb"))
 {
 string content = lf.read();
 lf.close();
@@ -903,13 +903,13 @@ string[] cached_pronouns; int64 pronouns_mtime = -1; bool pronoun_cache_ready = 
 string[] load_pronoun_options()
 {
 int64 mt = -1;
-if(file_exists("data/host/main/pronouns.svr")) { timestamp ts = file_get_date_modified("data/host/main/pronouns.svr"); mt = ts; }
+if(file_exists(host_root + "main/pronouns.svr")) { timestamp ts = file_get_date_modified(host_root + "main/pronouns.svr"); mt = ts; }
 if(pronoun_cache_ready and mt == pronouns_mtime) return cached_pronouns;
 string[] opts;
 if(mt != -1)
 {
 file pf;
-if(pf.open("data/host/main/pronouns.svr", "rb"))
+if(pf.open(host_root + "main/pronouns.svr", "rb"))
 {
 string content = pf.read();
 pf.close();
@@ -1352,7 +1352,7 @@ players[index].menu_targets.insert_last("off");
 int onc = 0; // online = live roster minus held (held reads as offline)
 for(uint i=0; i<players.length(); i++) if(!players[i].held) onc++;
 int offc = 0; // offline = every account on disk not currently online
-string[] dirs = find_directories("data/host/game/players/*");
+string[] dirs = find_directories(host_root + "game/players/*");
 for(uint i=0; i<dirs.length(); i++) if(account_exists(dirs[i]) and get_online_index(dirs[i]) < 0) offc++;
 string[] opts = {"Online players, " + onc, "Offline players, " + offc};
 send_menu(players[index].peer_id, "prlmode", "Choose which players to list.", opts);
@@ -1380,7 +1380,7 @@ if(entries.length() > 1) entries.sort_ascending(); // alphabetical by nickname (
 }
 else
 {
-string[] dirs = find_directories("data/host/game/players/*");
+string[] dirs = find_directories(host_root + "game/players/*");
 for(uint i=0; i<dirs.length(); i++)
 {
 string name = dirs[i];
@@ -1440,7 +1440,7 @@ void build_board(string mode, string board, string[]@ names, int[]@ vals, string
 string field = board_field(mode, board);
 string datefield = (board == "round") ? ((mode == "PVE") ? "pvebestrounddate" : "evpbestrounddate") : ""; // no first-to-reach date for a running gather total
 names.resize(0); vals.resize(0); dates.resize(0);
-string[] dirs = find_directories("data/host/game/players/*");
+string[] dirs = find_directories(host_root + "game/players/*");
 for(uint i=0; i<dirs.length(); i++)
 {
 int v = int(string_to_number(read_field(dirs[i], field, "0")));

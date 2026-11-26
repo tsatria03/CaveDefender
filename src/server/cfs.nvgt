@@ -11,23 +11,38 @@ if(SCRIPT_COMPILED and read_environment_variable("CFS_SUPERVISED", "") != "1")
 run("downcheck.exe", "", false, true); // launch downcheck hidden (background); it relaunches us -- visibly -- with the marker set
 exit();
 }
+@servstence = instance("cavedefender_server"); // the single-instance lock, taken here and not as a global so offline play (which never runs main) never holds it
 if(servstence.is_already_running)
 {
 alert("error", "You can only have one instance of this server running!");
 exit();
 }
+server_init();
+while(true)
+{
+wait(5);
+server_tick();
+}
+}
+/* Everything the server sets up before play: folders, settings, game data, the network and the lobby walls. main()
+calls it for the real server; offline play (the client running this code as a module) calls it directly, skipping
+main()'s supervision hand-off and instance lock, which only make sense for the real program. */
+void server_init()
+{
 svruptimer.restart();
 if(!directory_exists("data")) directory_create("data");
-// host/ holds what only a server has: accounts under host/game/players, and the server-wide settings (conf, motd, peak,
-// chatfilter, languages, pronouns, reports, feedback) under host/main. config/ holds the game rules (equipments, modes, effects).
-if(!directory_exists("data/host")) directory_create("data/host");
-if(!directory_exists("data/host/game")) directory_create("data/host/game");
-if(!directory_exists("data/host/game/players")) directory_create("data/host/game/players");
-if(!directory_exists("data/host/main")) directory_create("data/host/main");
+/* host_root (dec.nvgt) holds what only a server has: accounts under game/players, and the server-wide settings (conf,
+motd, peak, chatfilter, languages, pronouns, reports, feedback) under main. It is data/host/ for the real server;
+offline it is the player's saves folder. config/ (data/config) holds the game rules (equipments, modes, effects). */
+string host_dir = host_root.substr(0, host_root.length() - 1); // without the trailing slash
+if(!directory_exists(host_dir)) directory_create(host_dir);
+if(!directory_exists(host_root + "game")) directory_create(host_root + "game");
+if(!directory_exists(host_root + "game/players")) directory_create(host_root + "game/players");
+if(!directory_exists(host_root + "main")) directory_create(host_root + "main");
 load_peak(); // load the all-time concurrent-player record (data/host/main/peak.svr), reported with uptime on F4
-if(file_exists("data/host/main/conf.svr"))
+if(file_exists(host_root + "main/conf.svr"))
 {
-f.open("data/host/main/conf.svr", "rb");
+f.open(host_root + "main/conf.svr", "rb");
 string content=f.read();
 string[] prefs=string_split(content, "\r\n", true);
 string[] values;
@@ -98,15 +113,15 @@ f.close();
 was missing. This is the only routine rewrite -- owner changes still save immediately, and nothing else here changes
 at runtime, so the file is no longer rewritten on a timer (which used to overwrite a host's live edits). */
 writeprefs();
-    if(file_exists("data/host/main/motd.svr"))
+    if(file_exists(host_root + "main/motd.svr"))
     {
-        f.open("data/host/main/motd.svr", "r");
+        f.open(host_root + "main/motd.svr", "r");
         motd = f.read();
         f.close();
     }
     else
     {
-        f.open("data/host/main/motd.svr", "w");
+        f.open(host_root + "main/motd.svr", "w");
         f.write(motd);
         f.close();
     }
@@ -115,16 +130,20 @@ load_game_conf(); // read the game-tuning file (data/config/main/modes.ini): the
 load_game_effects(); // read the cave-acoustics presets (data/config/main/effects.ini), pushed to each client at spawn
 net.IPV6enabled = false; // use pure IPv4 (like BGT) so the server binds 0.0.0.0 and VPN/IPv4 clients (e.g. Radmin) can reach it; must be set before setup_server
 bool neth=net.setup_server(port, 5, 500);
+if(!offline_mode) // offline, the window belongs to the client, so the server must never retitle or hide it
+{
 show_game_window("CaveDefender server, version "+version+", hosted on port "+port+", user limit "+userlimit);
 if(!SCRIPT_COMPILED) hide_window(); // run interpreted from the cmd launcher, the server is headless (the cmd window is the UI), so hide the NVGT window; a compiled build keeps it visible.
 wait(500);
+}
 spawn_border_walls(0, 50, 100, 100, false); // the lobby (room_id 0) has indestructible structural walls.
-while(true)
+}
+/* One pass of the server: handle the network, then advance every game. main() runs it every 5 ms; offline play
+calls it once per client frame (the client's own loop does the waiting). */
+void server_tick()
 {
-wait(5);
 netloop();
 gametick();
-}
 }
 /* Persist the server-wide config. Called once at startup (to normalize + document the file) and whenever a setting
 changes at runtime (currently only the owner list) -- NOT on a timer, so a host's live edits aren't overwritten. The
@@ -133,7 +152,7 @@ lines, and comment text must never contain '=' (the loader splits each line on t
 void writeprefs()
 {
 file f;
-f.open("data/host/main/conf.svr", "wb");
+f.open(host_root + "main/conf.svr", "wb");
 string ownerlist="";
 for(uint i=0; i<owners.length(); i++) ownerlist+=(i>0 ? "," : "")+owners[i];
 string what="";

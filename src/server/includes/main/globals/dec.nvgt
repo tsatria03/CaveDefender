@@ -13,4 +13,9 @@ timer svruptimer;
 int peak_players=0;   // all-time peak of concurrent live players ever seen on this server; loaded from/saved to data/host/main/peak.svr (survives restarts)
 string peak_when="";  // the formatted local date/time that peak was reached (e.g. "12/22/2022 at 5:45 PM"); blank until the first peak is recorded
 file f;
-instance servstence("cavedefender_server"); // single-instance guard; own app id so it won't clash with the client's on one machine.
+instance@ servstence; // single-instance guard (own app id, so it won't clash with the client's on one machine). Created in main(), never by offline play, so an offline game can't lock a real server out.
+/* Offline play (the client running this code as a module). offline_mode stays false for the real server; the client
+sets it, and host_root, before calling server_init(). host_root is where the server-only data lives: data/host/ for the
+real server, the player's saves folder offline. Every host path in the code is built from it, ending in a slash. */
+bool offline_mode = false;
+string host_root = "data/host/";
