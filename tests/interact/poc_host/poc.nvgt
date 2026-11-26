@@ -110,7 +110,7 @@ void main()
 {
 	file clear;
 	if(clear.open("poc_progress.txt", "wb")) { clear.write("started\r\n"); clear.close(); }
-	string[] modcands = {"includes/module.nvgt", "../includes/module.nvgt"}; // script run (cwd tests/interact/poc_host), then the compiled pct folder one level down
+	string[] modcands = {"includes/module.nvgt", "../includes/module.nvgt"}; // script run (cwd tests/interact/poc_host), then the compiled poc folder one level down
 	string modpath = find_path(modcands);
 	if(modpath == "")
 	{

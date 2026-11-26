@@ -1,4 +1,4 @@
-/* Offline proof of concept: the stand-in "server" module. pct.nvgt loads this text as a second script
+/* Offline proof of concept: the stand-in "server" module. poc.nvgt loads this text as a second script
 module and calls into it. It deliberately reuses the names send and players, which the host also defines with
 different meanings, to prove the two modules keep their own names. Never run this file on its own. */
 #include "bgt_compat.nvgt" // the module can't see the host's helpers, so it brings its own copy, as the real server code does
