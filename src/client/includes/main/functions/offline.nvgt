@@ -1,0 +1,189 @@
+/* Offline play, the loader and bridge (offline mode, section 4b). Offline, the client runs the server's own code
+inside itself as a second script module and talks to it through the network wrapper (deps/game_network.nvgt)
+instead of enet, so the server never runs as a program and nothing touches the network.
+
+- offline_build() compiles the server code into the module, once per launch. Running from source it reads
+  src/server straight from disk (cwd is cf/client, so that's ../../src/server), following the #include lines the
+  way the engine does: each file becomes its own section (so a compile error names the real file and line), a file
+  comes before the files it includes, a folder glob takes its files in sorted order, and a file is only added once.
+  The module gets full engine access (a new module starts sandboxed) and its globals are set up by reset_globals().
+- offline_begin() starts a session: a fresh reset of the module's globals (so every offline game starts clean
+  without recompiling), plain text both ways, the wrapper switched to offline with its two hooks pointing here,
+  then the module's offline_start(), which sets up the server with the player's saves folder as its host folder.
+- offline_end() switches the wrapper back to online.
+- If the module ever fails (a build error, or a runtime exception in a call), offline_failed is set and
+  offline_error says why; the session code (4c) ends the session and tells the player. */
+
+string offline_saves_root = DIRECTORY_APPDATA + "tsatria03/CaveDefender/saves/"; // the offline server's host folder (profiles, its own conf/motd/peak)
+string offline_server_root = "../../src/server/"; // the server source, relative to cf/client, used when running from source
+script_module@ offline_module;
+script_function@ offline_fn_start;
+script_function@ offline_fn_tick;
+script_function@ offline_fn_receive;
+script_function@ offline_fn_next;
+bool offline_failed = false;
+string offline_error = "";
+
+// Record a failure once: the first error is the useful one.
+void offline_fail(const string &in why)
+{
+	if(offline_failed) return;
+	offline_failed = true;
+	offline_error = string_replace(string_replace(why, "\r", "", true), "\n", " ", true);
+}
+
+string offline_folder_of(const string &in path)
+{
+	for(int i = int(path.length()) - 1; i >= 0; i--)
+		if(path.substr(i, 1) == "/") return path.substr(0, i + 1);
+	return "";
+}
+
+/* Add one source file and, after it, everything it includes. Include lines are blanked rather than removed, so the
+line numbers in a compile error still match the real file. */
+bool offline_add_file(const string &in path, string[]@ names, string[]@ codes, string[]@ visited)
+{
+	string key = string_to_lower_case(path);
+	if(visited.find(key) >= 0) return true; // already added, like the engine's include-once rule
+	visited.insert_last(key);
+	file f;
+	if(!f.open(path, "rb")) { offline_fail("The offline game could not read " + path + "."); return false; }
+	string content = f.read();
+	f.close();
+	string[] lines = string_split(string_replace(content, "\r", "", true), "\n", false);
+	string[] targets;
+	for(uint i = 0; i < lines.length(); i++)
+	{
+		string t = lines[i].trim_whitespace();
+		if(string_left(t, 8) != "#include") continue;
+		int q1 = string_contains(t, "\"", 1);
+		int q2 = (q1 >= 0) ? string_contains(t.substr(q1 + 1), "\"", 1) : -1;
+		if(q1 >= 0 and q2 >= 0) targets.insert_last(t.substr(q1 + 1, q2));
+		lines[i] = "";
+	}
+	string code = "";
+	for(uint i = 0; i < lines.length(); i++) code += lines[i] + "\n";
+	names.insert_last(path);
+	codes.insert_last(code);
+	string dir = offline_folder_of(path);
+	for(uint i = 0; i < targets.length(); i++)
+	{
+		if(string_contains(targets[i], "*", 1) >= 0)
+		{
+			string pattern = dir + targets[i];
+			string pdir = offline_folder_of(pattern);
+			string[] found = find_files(pattern);
+			found.sort_ascending(); // the engine takes a glob's files in sorted path order
+			for(uint j = 0; j < found.length(); j++)
+				if(!offline_add_file(pdir + found[j], names, codes, visited)) return false;
+		}
+		else if(!offline_add_file(dir + targets[i], names, codes, visited)) return false;
+	}
+	return true;
+}
+
+bool offline_build()
+{
+	if(offline_module !is null) return true; // already built this launch
+	offline_failed = false;
+	offline_error = "";
+	string[] names, codes, visited;
+	if(!offline_add_file(offline_server_root + "cfs.nvgt", names, codes, visited)) return false;
+	script_module@ m = script_get_module("cavedefender_offline", 2); // 2 = always create a fresh module
+	if(m is null) { offline_fail("The offline game could not create its module."); return false; }
+	m.set_access_mask(0xFFFFFFFF); // a new module starts sandboxed; give it the same engine access as the main script
+	for(uint i = 0; i < names.length(); i++) m.add_section(names[i], codes[i]);
+	string[] errs;
+	if(m.build(errs) < 0)
+	{
+		offline_fail("The offline game failed to compile. " + (errs.length() > 0 ? errs[0] : ""));
+		m.discard();
+		return false;
+	}
+	@offline_fn_start = m.get_function_by_name("offline_start");
+	@offline_fn_tick = m.get_function_by_name("server_tick");
+	@offline_fn_receive = m.get_function_by_name("offline_receive");
+	@offline_fn_next = m.get_function_by_name("offline_next");
+	if(offline_fn_start is null or offline_fn_tick is null or offline_fn_receive is null or offline_fn_next is null)
+	{
+		offline_fail("The offline game is missing one of its bridge functions.");
+		m.discard();
+		return false;
+	}
+	@offline_module = m;
+	return true;
+}
+
+// Call a module function; on an exception record it and return null.
+dictionary@ offline_call(script_function@ f, dictionary@ args)
+{
+	if(offline_failed) return null;
+	string[] errs;
+	dictionary@ r = f.call(args, errs);
+	if(r is null) offline_fail("The offline game stopped with an error. " + (errs.length() > 0 ? errs[0] : ""));
+	return r;
+}
+
+bool offline_begin()
+{
+	if(!offline_build()) return false;
+	offline_failed = false;
+	offline_error = "";
+	string[] errs;
+	if(offline_module.reset_globals(errs) < 0) // NVGT doesn't set a module's globals up after building, and this also wipes the previous session
+	{
+		offline_fail("The offline game could not start. " + (errs.length() > 0 ? errs[0] : ""));
+		return false;
+	}
+	if(!directory_exists(DIRECTORY_APPDATA + "tsatria03")) directory_create(DIRECTORY_APPDATA + "tsatria03");
+	if(!directory_exists(DIRECTORY_APPDATA + "tsatria03/CaveDefender")) directory_create(DIRECTORY_APPDATA + "tsatria03/CaveDefender");
+	encrypting = false; // nothing crosses a network; the module's offline_start() turns its side off too
+	net.offline = true;
+	net.clear_offline_queues();
+	@net.send_hook = @offline_send_hook;
+	@net.pump_hook = @offline_pump_hook;
+	dictionary args;
+	args.set("1", offline_saves_root);
+	if(offline_call(offline_fn_start, args) is null)
+	{
+		offline_end();
+		return false;
+	}
+	return true;
+}
+
+void offline_end()
+{
+	net.offline = false;
+	@net.send_hook = null;
+	@net.pump_hook = null;
+	net.clear_offline_queues();
+	encrypting = true;
+}
+
+// The wrapper's send hook: every message the client sends goes straight into the module.
+void offline_send_hook(uint64 peer_id, const string &in message, uint8 channel)
+{
+	dictionary args;
+	args.set("1", int(channel));
+	args.set("2", message);
+	offline_call(offline_fn_receive, args);
+}
+
+/* The wrapper's pump hook, run at the start of every request(): one pass of the offline server, then everything it
+sent is moved into the client's queue, which request() hands out one event at a time. */
+void offline_pump_hook()
+{
+	if(offline_failed) return;
+	offline_call(offline_fn_tick, null);
+	while(!offline_failed)
+	{
+		dictionary@ r = offline_call(offline_fn_next, null);
+		if(r is null) return;
+		string s;
+		if(!r.get("0", s) or s == "") return;
+		int colon = string_contains(s, ":", 1);
+		if(colon < 1) continue;
+		net.queue_event(network_event_type::event_receive, 1, uint(string_to_number(string_left(s, colon))), s.substr(colon + 1));
+	}
+}

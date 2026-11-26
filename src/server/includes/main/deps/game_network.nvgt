@@ -1,11 +1,24 @@
-/* The network wrapper (offline mode, section 1). The game talks to the network only through `net` and `event`, and
-this class gives `net` the exact method names of the engine's network object, so no other code had to change.
-Online, every call forwards straight to the real enet network below, so behavior is identical to using it directly.
-Offline (a later section), the same calls will go to an in-memory bridge instead of enet.
+/* The network wrapper. The game talks to the network only through `net` and `event`, and this class gives `net` the
+exact method names of the engine's network object, so no other code had to change.
+
+Online (offline == false), every call forwards straight to the real enet network below, so behavior is identical to
+using it directly.
+
+Offline (offline == true) there is no network at all: the client runs the server's code inside itself as a second
+script module, and the two sides trade the same text messages through this class instead of enet.
+- connect() returns peer 1 at once, and setup and disconnect calls do nothing.
+- request() first runs the pump hook if one is set (the client uses it to run the offline server and collect what
+  it sent), then hands back the oldest queued event, or event_none when there's nothing.
+- send_reliable / send_unreliable hand the message to the send hook if one is set (the client uses it to deliver
+  into the offline server); with no hook (the server's side) the message waits in the outbox until the client
+  collects it with take_outgoing().
+Nothing here knows which side it's on, so this file stays identical on the client and the server.
 
 The engine's network_event fields are read-only, so script code can't build one by hand; game_network_event is a
-plain copy with the same field names (type, peer_id, channel, message), which an offline bridge can also fill in.
-This file is identical on the client and the server. */
+plain copy with the same field names (type, peer_id, channel, message), which the offline queue fills in too. */
+
+funcdef void game_network_send_hook(uint64 peer_id, const string &in message, uint8 channel);
+funcdef void game_network_pump_hook();
 
 class game_network_event
 {
@@ -18,6 +31,12 @@ class game_network_event
 class game_network
 {
 	network real; // the engine's enet network, used for all online play
+	bool offline = false; // true while an offline game is running (see the top of this file)
+	game_network_send_hook@ send_hook; // offline: where outgoing messages go (client side); null = keep them in the outbox
+	game_network_pump_hook@ pump_hook; // offline: run before each request() (client side); null = nothing to run
+	game_network_event@[] inbox; // offline: events waiting for request(), oldest first
+	string[] outbox_messages; // offline, no send hook: messages waiting for take_outgoing(), oldest first
+	uint8[] outbox_channels;  // the channel each outbox message was sent on
 
 	bool IPV6enabled
 	{
@@ -25,13 +44,21 @@ class game_network
 		set { real.IPV6enabled = value; }
 	}
 
-	bool setup_client(uint8 max_channels, uint16 max_peers) { return real.setup_client(max_channels, max_peers); }
-	bool setup_server(uint16 port, uint8 max_channels, uint16 max_peers) { return real.setup_server(port, max_channels, max_peers); }
-	uint64 connect(const string &in host, uint16 port) { return real.connect(host, port); }
+	bool setup_client(uint8 max_channels, uint16 max_peers) { if(offline) return true; return real.setup_client(max_channels, max_peers); }
+	bool setup_server(uint16 port, uint8 max_channels, uint16 max_peers) { if(offline) return true; return real.setup_server(port, max_channels, max_peers); }
+	uint64 connect(const string &in host, uint16 port) { if(offline) return 1; return real.connect(host, port); }
 
-	// One event from enet, copied into a game_network_event (event_none when nothing is waiting).
+	// One event: online, copied from enet; offline, the oldest queued one. event_none when nothing is waiting.
 	game_network_event@ request(uint timeout = 0)
 	{
+		if(offline)
+		{
+			if(pump_hook !is null) pump_hook();
+			if(inbox.length() == 0) return game_network_event();
+			game_network_event@ next = inbox[0];
+			inbox.remove_at(0);
+			return next;
+		}
 		game_network_event result;
 		const network_event@ e = real.request(timeout);
 		if(e !is null)
@@ -44,8 +71,49 @@ class game_network
 		return result;
 	}
 
-	bool send_reliable(uint64 peer_id, const string &in message, uint8 channel) { return real.send_reliable(peer_id, message, channel); }
-	bool send_unreliable(uint64 peer_id, const string &in message, uint8 channel) { return real.send_unreliable(peer_id, message, channel); }
-	bool disconnect_peer_softly(uint64 peer_id) { return real.disconnect_peer_softly(peer_id); }
-	bool disconnect_peer_forcefully(uint64 peer_id) { return real.disconnect_peer_forcefully(peer_id); }
+	bool send_reliable(uint64 peer_id, const string &in message, uint8 channel) { if(offline) return send_offline(peer_id, message, channel); return real.send_reliable(peer_id, message, channel); }
+	bool send_unreliable(uint64 peer_id, const string &in message, uint8 channel) { if(offline) return send_offline(peer_id, message, channel); return real.send_unreliable(peer_id, message, channel); }
+	bool disconnect_peer_softly(uint64 peer_id) { if(offline) return true; return real.disconnect_peer_softly(peer_id); }
+	bool disconnect_peer_forcefully(uint64 peer_id) { if(offline) return true; return real.disconnect_peer_forcefully(peer_id); }
+
+	// Offline: queue an event for request() to hand back (a received message, or the connect that starts a session).
+	void queue_event(network_event_type type, uint64 peer_id, uint channel, const string &in message)
+	{
+		game_network_event e;
+		e.type = type;
+		e.peer_id = peer_id;
+		e.channel = channel;
+		e.message = message;
+		inbox.insert_last(e);
+	}
+
+	// Offline, no send hook: take the oldest waiting outgoing message. False when there is none.
+	bool take_outgoing(string &out message, uint8 &out channel)
+	{
+		if(outbox_messages.length() == 0) return false;
+		message = outbox_messages[0];
+		channel = outbox_channels[0];
+		outbox_messages.remove_at(0);
+		outbox_channels.remove_at(0);
+		return true;
+	}
+
+	// Offline: forget everything queued in both directions, for a fresh session.
+	void clear_offline_queues()
+	{
+		inbox.resize(0);
+		outbox_messages.resize(0);
+		outbox_channels.resize(0);
+	}
+
+	bool send_offline(uint64 peer_id, const string &in message, uint8 channel)
+	{
+		if(send_hook !is null) send_hook(peer_id, message, channel);
+		else
+		{
+			outbox_messages.insert_last(message);
+			outbox_channels.insert_last(channel);
+		}
+		return true;
+	}
 }

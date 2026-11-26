@@ -19,3 +19,32 @@ string get_event_message()
 if(encryption) return string_decrypt(event.message, "rscs123");
 else return event.message;
 }
+/* The offline bridge: the three functions the client calls when it runs this code as a module for offline play.
+The real server never calls them. The single offline player is always peer 1 (both peer 1 and a peer-0 broadcast
+reach them, since the one client collects everything this side sends).
+- offline_start(saves_root): switch to offline (see dec.nvgt), keep the server-only files in the player's saves
+  folder, send plain text (nothing crosses a network, so no encryption on either side), clear anything queued by a
+  previous session, set everything up, and queue the connect that starts the session.
+- offline_receive(channel, message): one message from the client, handled on the next server_tick().
+- offline_next(): the oldest message for the client as "<channel>:<message>", or "" when there are none left. */
+void offline_start(const string &in saves_root)
+{
+offline_mode = true;
+host_root = saves_root;
+encryption = false;
+net.offline = true;
+net.clear_offline_queues();
+server_init();
+net.queue_event(network_event_type::event_connect, 1, 0, "");
+}
+void offline_receive(int channel, const string &in message)
+{
+net.queue_event(network_event_type::event_receive, 1, channel, message);
+}
+string offline_next()
+{
+string message;
+uint8 channel;
+if(!net.take_outgoing(message, channel)) return "";
+return "" + channel + ":" + message;
+}

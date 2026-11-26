@@ -1,4 +1,7 @@
+import os
+import re
 import sys
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -16,6 +19,12 @@ HERE = Path(__file__).resolve().parent
 SCRIPT = HERE.parent.parent / "src" / "server" / "downcheck.nvgt"
 VERSION_TXT = HERE.parent.parent / "build" / "version.txt"
 VERSION_NVGT = HERE.parent.parent / "src" / "server" / "includes" / "version.nvgt"
+SERVER_DIR = HERE.parent.parent / "src" / "server"
+SERVER_SCRIPT = SERVER_DIR / "cfs.nvgt"
+# Where a compile-error report is written: the folder cfs.py was launched from, the same as the client launcher.
+# Created only when the server fails to compile (a clean launch removes any stale copy first), so an absent
+# errors.txt means "no errors".
+ERRORS_PATH = os.path.join(os.getcwd(), "errors.txt")
 
 
 def sync_version():
@@ -52,7 +61,48 @@ if not SCRIPT.is_file():
     input("Press Enter to exit...")
     sys.exit(1)
 
+def compile_check():
+    # Compile the server once before handing it to downcheck. downcheck relaunches a server that exits, so a
+    # script with compile errors would otherwise just fail over and over in the background with nothing to read.
+    # "nvgt -c -q" only compiles (quiet unless something is wrong) and prints any errors; it writes a throwaway
+    # build folder (src/server/cfs) that is removed again straight after. Returns True when it compiled.
+    try:
+        os.remove(ERRORS_PATH)  # clear a report left by an earlier failed launch
+    except OSError:
+        pass
+    build_dir = SERVER_DIR / "cfs"
+    existed = build_dir.exists()
+    print("Checking the server script for errors...")
+    try:
+        result = subprocess.run([NVGT, "-c", "-q", SERVER_SCRIPT.name], cwd=str(SERVER_DIR), capture_output=True, timeout=300)
+    except Exception as error:
+        print("Could not run the compile check: %s" % error)
+        return True  # the check itself failed to start; let downcheck try the normal launch
+    finally:
+        if not existed and build_dir.exists():
+            shutil.rmtree(build_dir, ignore_errors=True)
+    if result.returncode == 0:
+        return True
+    raw = (result.stdout + result.stderr).decode("utf-8", "replace")
+    # Same tidy-up as cfc.py: drop the doubled carriage returns, collapse runs of blank lines to one blank between
+    # records, and put the leading "Compilation error:" on its own line so every record starts with "file:".
+    details = re.sub(r"\n{2,}", "\n\n", raw.replace("\r", ""))
+    details = details.replace("Compilation error: ", "Compilation error:\n").strip()
+    body = details if details else "(the server failed to compile with exit code %d but printed no output)" % result.returncode
+    try:
+        with open(ERRORS_PATH, "w", encoding="utf-8") as f:
+            f.write(body + "\n\n")
+    except OSError:
+        pass
+    print("The server failed to compile (exit code %d)." % result.returncode)
+    print("Details written to: " + ERRORS_PATH)
+    return False
+
+
 sync_version()
+if not compile_check():
+    input("Press Enter to exit...")
+    sys.exit(1)
 print("Started CaveDefender server (supervised by downcheck)")
 result = subprocess.run([NVGT, str(SCRIPT)], cwd=str(HERE))
 if result.returncode != 0:
