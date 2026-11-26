@@ -701,7 +701,7 @@ players[index].menu_actions.resize(0);
 string[] opts;
 opts.insert_last("Resume"); players[index].menu_actions.insert_last("resume");
 opts.insert_last("Leave game"); players[index].menu_actions.insert_last("leave");
-opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stop");
+if(!offline_mode) { opts.insert_last("Stop game"); players[index].menu_actions.insert_last("stop"); } // offline, leaving and stopping both just end the session, so only Leave game is offered
 send_menu(peer, "pause", "Game paused", opts);
 }
 /* The escape menu for anyone who can't pause (non-hosts, and the host when no round is running): just
@@ -711,7 +711,7 @@ void push_leave_menu(int index)
 int peer = players[index].peer_id;
 int gi = get_game_index(players[index].room_id);
 if(gi < 0) return;
-bool canstop = (games[gi].host_peer == peer or is_staff(players[index].rank));
+bool canstop = !offline_mode and (games[gi].host_peer == peer or is_staff(players[index].rank)); // offline only Leave game is offered (it does the same as Stop there)
 players[index].menu_actions.resize(0);
 string[] opts;
 opts.insert_last("Leave game"); players[index].menu_actions.insert_last("leave");

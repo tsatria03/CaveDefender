@@ -146,6 +146,7 @@ reconnect_phase=0;
 }
 void start_reconnect()
 {
+if(net.offline) { connected = false; return; } // offline never reconnects (it would dial the real server)
 reconnecting=true;
 reconnected=false;
 reconnect_aborted=false;
@@ -215,6 +216,7 @@ begin_reconnect_attempt(); // lost it again; start another attempt
 }
 void leave_server()
 {
+if(net.offline) { connected = false; return; } // offline there's no server to say goodbye to
 send(0, "disconnect", 0, true);
 timer leavetimer;
 leavetimer.restart();
@@ -338,6 +340,7 @@ void handle_roundover(string message)
 	dlgmessage(results);
 	// Milestone: a fresh personal-best round earned bonus starting wood for the next round.
 	if(bonus > 0) dlgmessage("Congratulations! You just gained " + bonus + " " + bonussize + " wood for reaching round " + milestone + ". Great job! Press enter to continue.");
+	if(net.offline) { resume_objects(); send(0, "playagain no", 0, true); return; } // offline: results only, then back to the game menu (no "Play again?")
 	setupmenu();
 	m.add_item("Yes");
 	m.add_item("No");
@@ -415,6 +418,7 @@ void handle_evp_over(string message)
 		}
 		dlgmessage("Congratulations! You reached a new best of " + milestone + (milestone == 1 ? " round" : " rounds") + ", earning " + bonus_list + " for your next game. Great job! Press enter to continue.");
 	}
+	if(net.offline) { resume_objects(); send(0, "playagain no", 0, true); return; } // offline: results only, then back to the game menu (no "Play again?")
 	setupmenu();
 	m.add_item("Yes");
 	m.add_item("No");
@@ -1830,6 +1834,27 @@ void netloop_impl()
 			}
 			lastx = int(me.x);
 			lasty = int(me.y);
+		}
+		else if (parsed[0] == "offlineend")
+		{
+			/* Offline only: the offline session is over (a game ended or was left, or the mode menu was escaped). The
+			server sends this instead of gameleft, so reset what gameleft resets, plus the room state, but silently: no
+			"You left the game." and no map redraw, since the player goes straight back to the game menu. Clearing
+			connected ends game(), and offline_session() then tidies up. */
+			clear_players();
+			in_game = false;
+			game_phase = "idle";
+			game_paused = false;
+			resume_pools();
+			game_outside = false;
+			current_game = 0;
+			current_game_host = "";
+			my_side = "";
+			watching = false;
+			current_room = 0;
+			current_room_private = false;
+			current_room_host = "";
+			connected = false;
 		}
 		else if (parsed[0] == "gameleft")
 		{

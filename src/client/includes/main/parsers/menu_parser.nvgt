@@ -43,6 +43,6 @@ void show_server_menu(string message)
 	bool issoundnav = (menuid == "soundnav");
 	// The pause menu (id "pause") and its non-host counterpart (id "leavemenu"): escaping resumes/closes the game rather than cancelling anything, so stay silent.
 	bool ispause = (menuid == "pause" or menuid == "leavemenu");
-	if((choice < 0 or (isconfirm and choice != 0)) and !isdatanav and !issoundnav and !ispause) speak("canceled");
+	if((choice < 0 or (isconfirm and choice != 0)) and !isdatanav and !issoundnav and !ispause and !net.offline) speak("canceled"); // offline the start-game menus step back silently, StrideRush-style
 	send(0, "menuresult " + menuid + " " + choice, 0, true);
 }

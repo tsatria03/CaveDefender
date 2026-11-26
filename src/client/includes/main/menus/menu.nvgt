@@ -426,12 +426,20 @@ void gamemenu()
 	{
 		setupmenu(true);
 		m.add_item("online menu", "online");
+		m.add_item("offline test", "offlinetest"); // TEMPORARY (offline mode 4c): replaced by section 5's play game menu
 		m.add_item("back", "back");
 		m.intro_text="Game menu.";
 		int mres=m.run();
 		string sel=mres<0?"back":m.selected_item_id;
 		if(sel=="back") return;
 		if(sel=="online") onlinemenu();
+		if(sel=="offlinetest")
+		{
+			m.fade_music();
+			string pn = vd.input_box("Offline test", "Enter a profile name, 6 to 24 letters, numbers, hyphens or underscores.", "");
+			if(pn == "") speak("canceled");
+			else offline_session(pn);
+		}
 	}
 }
 /* The online menu: sign in or create an account, and pick which server to connect to. When a session ends

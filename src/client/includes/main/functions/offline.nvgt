@@ -30,6 +30,7 @@ void offline_fail(const string &in why)
 	if(offline_failed) return;
 	offline_failed = true;
 	offline_error = string_replace(string_replace(why, "\r", "", true), "\n", " ", true);
+	if(net.offline) connected = false; // a running offline game can't go on without its server; this ends game() on its next frame
 }
 
 string offline_folder_of(const string &in path)
@@ -114,10 +115,13 @@ bool offline_build()
 	return true;
 }
 
-// Call a module function; on an exception record it and return null.
+/* Call a module function; on an exception record it and return null. Always pass a dictionary: the engine hands the
+result back in the same dictionary, so a function that returns nothing (server_tick) called with no dictionary comes
+back null even when it worked, which would look like a failure. */
 dictionary@ offline_call(script_function@ f, dictionary@ args)
 {
 	if(offline_failed) return null;
+	if(args is null) @args = dictionary();
 	string[] errs;
 	dictionary@ r = f.call(args, errs);
 	if(r is null) offline_fail("The offline game stopped with an error. " + (errs.length() > 0 ? errs[0] : ""));
@@ -152,6 +156,47 @@ bool offline_begin()
 	return true;
 }
 
+/* One offline session (offline mode, section 4c): sign in to the offline server as profile_name, play, and come
+back when the session ends (a finished or left game, or Escape at the mode menu, both arrive as "offlineend").
+It mirrors login()'s "done" path without any connecting: the wrapper's offline mode hands back peer 1 at once.
+The account name in `name` is swapped for the profile name for the session (game() and its messages use it) and
+put back afterwards. A failure to start or a module error is told with one dialog. */
+void offline_session(const string &in profile_name)
+{
+	if(!offline_begin())
+	{
+		dlgmessage(offline_error + " Press enter to continue.");
+		return;
+	}
+	string account_name = name;
+	name = profile_name;
+	justregistered = false;
+	serverpeer = net.connect("", 0);
+	connected = true;
+	send(0, "offlinelogin " + profile_name + " " + version, 0, true);
+	bool played = false;
+	while(connected and !offline_failed)
+	{
+		wait(5);
+		event = net.request();
+		if(event.type != event_receive) continue;
+		string msg = get_event_message();
+		if(msg == "done")
+		{
+			played = true;
+			game(); // returns when offlineend (or a failure) sets connected false
+			in_world = false;
+			voice_shutdown();
+			break;
+		}
+		if(string_contains(msg, "error:", 1) > -1) { dlgmessage(msg); break; }
+	}
+	connected = false;
+	name = account_name;
+	offline_end();
+	if(played) fade_multi_pool(fademode);
+	if(offline_failed) dlgmessage(offline_error + " Press enter to continue.");
+}
 void offline_end()
 {
 	net.offline = false;
