@@ -47,7 +47,14 @@ readpreffs();
 load_last_account(); // load the last-used (active) account so the online menu can offer "Sign in as <username>" right away
 net.IPV6enabled = false; // use pure IPv4 (like BGT) so VPN/IPv4 addresses such as Radmin work; must be set before setup_client
 net.setup_client(5, 500);
-wait(500);
+/* The startup pause (half a second before the main menu) doubles as the time to compile the offline server, so
+choosing offline is instant even the first time. The compile's own time comes off the pause, so startup is no
+slower unless the compile ever takes longer than the pause. A failed build stays silent here; it's retried, and
+reported, when the player actually chooses offline. */
+timer startup_pause;
+offline_build();
+int startup_rest = 500 - int(startup_pause.elapsed);
+if(startup_rest > 0) wait(startup_rest);
 mainmenu();
 }
 }

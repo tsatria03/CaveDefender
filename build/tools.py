@@ -1,5 +1,6 @@
 import subprocess
 import os
+import glob
 import sys
 import shutil
 import configparser
@@ -103,6 +104,79 @@ def sync_version_files(version):
         with open(path, "w", encoding="utf-8", newline="") as f:
             f.write(line)
     print(f"Synced version {version} into client and server version.nvgt.\n")
+
+# --- Offline mode: the server code built into the client (offline mode, section 6) ---
+# Offline play runs the server's own code inside the client as a second script module. Running from source the
+# client reads src/server from disk; a release can't, so the build joins the server into one text constant in
+# src/client/includes/scripts/server.nvgt just before compiling the client, then ALWAYS puts the empty placeholder
+# back (even if the compile fails), so the repo only ever holds the placeholder.
+OFFLINE_CODE_NVGT = os.path.join(SRC_CLIENT, "includes", "scripts", "server.nvgt")
+
+def join_server_sections():
+    # Follow src/server's #include lines the way the engine (and the client's from-source reader) does: a file
+    # comes before the files it includes, a folder glob takes its files in sorted path order, each file is added
+    # once, and include lines are blanked rather than removed so error line numbers still match the real file.
+    sections, visited = [], set()
+    def add(path):
+        key = os.path.normcase(os.path.abspath(path))
+        if key in visited:
+            return
+        visited.add(key)
+        with open(path, "rb") as f:
+            lines = f.read().decode("utf-8").replace("\r", "").split("\n")
+        targets = []
+        for i, line in enumerate(lines):
+            t = line.strip()
+            if t.startswith("#include"):
+                q = t.split('"')
+                if len(q) >= 3:
+                    targets.append(q[1])
+                lines[i] = ""
+        name = os.path.relpath(path, REPO_DIR).replace("\\", "/")
+        sections.append((name, "".join(l + "\n" for l in lines)))
+        folder = os.path.dirname(path)
+        for target in targets:
+            if "*" in target:
+                for found in sorted(glob.glob(os.path.join(folder, target))):
+                    if os.path.isfile(found):
+                        add(found)
+            else:
+                add(os.path.join(folder, target))
+    add(os.path.join(SRC_SERVER, SERVER_FILE))
+    return sections
+
+OFFLINE_PIECE = 8192  # characters per piece of the built-in server code
+
+def offline_code_source(sections):
+    # An AngelScript array of string constants, each piece on one line (the engine refuses strings that span lines),
+    # joined back together by the client. NOT one big string: a single ~800 KB string constant breaks the compiled
+    # bytecode (the exe fails with "LoadByteCode failed"), while 8 KB pieces load fine (tested 2026-11-25). Each
+    # section starts with "\n//@@section <name>\n", which the client splits on. Pieces are cut BEFORE escaping, so an
+    # escape sequence can never be split in two.
+    text = "".join("\n//@@section " + name + "\n" + code for name, code in sections)
+    bad = [c for c in set(text) if ord(c) < 32 and c not in "\n\r\t"]
+    if bad:
+        raise ValueError("unexpected control characters in the server code: %r" % bad)
+    def esc(s):
+        return s.replace("\\", "\\\\").replace('"', '\\"').replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
+    pieces = [text[i:i + OFFLINE_PIECE] for i in range(0, len(text), OFFLINE_PIECE)]
+    return "const string[] offline_server_code = {\r\n" + ",\r\n".join('"' + esc(p) + '"' for p in pieces) + "\r\n};\r\n"
+
+def compile_client_with_offline_code():
+    # Write the built-in server, compile the client, and always restore the placeholder afterwards.
+    with open(OFFLINE_CODE_NVGT, "rb") as f:
+        placeholder = f.read()
+    sections = join_server_sections()
+    source = offline_code_source(sections)
+    print(f"Building the offline server into the client ({len(sections)} server files, {len(source) // 1024} KB).")
+    try:
+        with open(OFFLINE_CODE_NVGT, "wb") as f:
+            f.write(source.encode("utf-8"))
+        return compile_side("client", CLIENT_FILE, SRC_CLIENT, CLIENT_BUNDLE, ASSETS_CLIENT, CLIENT_ASSETS, CLIENT_DEST, CLIENT_OUT, CLIENT_LOOSE)
+    finally:
+        with open(OFFLINE_CODE_NVGT, "wb") as f:
+            f.write(placeholder)
+        print("Restored the empty offline server placeholder.")
 
 def compile_side(label, nvgt_file, src_dir, bundle, assets_dir, asset_folders, dest, out_name, loose_files=None):
     # Compile one side from src/<side> (so the bundle lands there), copy its assets in, and move it into
@@ -486,7 +560,7 @@ def run_release(skip_compile, skip_package, skip_release, skip_empty_release, in
     if do_compile:
         # Keep both sides' version.nvgt in lockstep with version.txt before compiling.
         sync_version_files(version)
-        if not compile_side("client", CLIENT_FILE, SRC_CLIENT, CLIENT_BUNDLE, ASSETS_CLIENT, CLIENT_ASSETS, CLIENT_DEST, CLIENT_OUT, CLIENT_LOOSE):
+        if not compile_client_with_offline_code():  # the client carries the offline server inside cfc.exe
             return
         if not compile_side("server", SERVER_FILE, SRC_SERVER, SERVER_BUNDLE, ASSETS_SERVER, SERVER_ASSETS, SERVER_DEST, SERVER_OUT, SERVER_LOOSE):
             return

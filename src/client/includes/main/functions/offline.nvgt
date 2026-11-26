@@ -85,13 +85,30 @@ bool offline_add_file(const string &in path, string[]@ names, string[]@ codes, s
 	return true;
 }
 
+/* A release build carries the server inside cfc.exe as offline_server_code (scripts/server.nvgt, written by
+build/tools.py), an array of small pieces that join into one text: the same sections the from-source reader makes, in the same order, each one starting with a line
+"//@@section <file name>" so a compile error still names the real file. */
+void offline_split_builtin(string[]@ names, string[]@ codes)
+{
+	string whole = "";
+	for(uint i = 0; i < offline_server_code.length(); i++) whole += offline_server_code[i]; // the build stores it in small pieces (one huge string breaks the bytecode)
+	string[] parts = string_split(whole, "\n//@@section ", true);
+	for(uint i = 0; i < parts.length(); i++)
+	{
+		int nl = string_contains(parts[i], "\n", 1);
+		if(nl < 1) continue; // the empty piece before the first marker
+		names.insert_last(string_left(parts[i], nl));
+		codes.insert_last(parts[i].substr(nl + 1));
+	}
+}
 bool offline_build()
 {
 	if(offline_module !is null) return true; // already built this launch
 	offline_failed = false;
 	offline_error = "";
 	string[] names, codes, visited;
-	if(!offline_add_file(offline_server_root + "cfs.nvgt", names, codes, visited)) return false;
+	if(offline_server_code.length() > 0) offline_split_builtin(names, codes); // a release build: the server code is built into cfc.exe
+	else if(!offline_add_file(offline_server_root + "cfs.nvgt", names, codes, visited)) return false; // running from source: read src/server
 	script_module@ m = script_get_module("cavedefender_offline", 2); // 2 = always create a fresh module
 	if(m is null) { offline_fail("The offline game could not create its module."); return false; }
 	m.set_access_mask(0xFFFFFFFF); // a new module starts sandboxed; give it the same engine access as the main script

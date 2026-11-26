@@ -8,5 +8,6 @@
 #include"main/globals/*"
 #include"main/menus/*"
 #include"main/parsers/*"
+#include"scripts/*"
 
 typedef uint8 usmall; typedef int8 small;

@@ -1,0 +1,7 @@
+/* The offline server code, built into the client (offline mode, section 6). In the repo this is always empty:
+running from source, the client reads src/server straight from disk instead (functions/offline.nvgt). A release
+build (build/tools.py) fills it with the whole server, then puts this empty version back after compiling, so the
+filled copy only ever exists inside cfc.exe and players have no loose server file to see or delete. It is an array
+of small pieces, not one string: a single string constant of the server's size (about 800 KB) breaks the compiled
+bytecode, so the exe fails to load ("LoadByteCode failed"); 8 KB pieces load fine. */
+const string[] offline_server_code = {};
