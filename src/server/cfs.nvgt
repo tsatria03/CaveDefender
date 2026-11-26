@@ -109,6 +109,16 @@ if(autoafk<0) autoafk=0;                 // negative makes no sense; 0 already m
 if(autoafk>0 and autoafk<30) autoafk=30; // a positive idle timeout is floored at 30 seconds
 f.close();
 }
+/* Offline play has one player and no real host, so a few server-wide settings are fixed, whatever the saves
+folder's conf.svr says: no owners (a profile named like an owner must not become a developer with staff
+commands), no rules gate (the rules pages only ship with the server, so an offline player could never agree),
+and no auto-AFK (there's nobody to be away from). */
+if(offline_mode)
+{
+owners.resize(0);
+ruleswitch=0;
+autoafk=0;
+}
 /* Normalize the config once now: re-save it with the standard comments, creating it with documented defaults if it
 was missing. This is the only routine rewrite -- owner changes still save immediately, and nothing else here changes
 at runtime, so the file is no longer rewritten on a timer (which used to overwrite a host's live edits). */
@@ -129,7 +139,7 @@ load_game_data(); // read the data-driven weapon/item files (data/config/game/eq
 load_game_conf(); // read the game-tuning file (data/config/main/modes.ini): the item spawn economy and the wall base health
 load_game_effects(); // read the cave-acoustics presets (data/config/main/effects.ini), pushed to each client at spawn
 net.IPV6enabled = false; // use pure IPv4 (like BGT) so the server binds 0.0.0.0 and VPN/IPv4 clients (e.g. Radmin) can reach it; must be set before setup_server
-bool neth=net.setup_server(port, 5, 500);
+if(!offline_mode) net.setup_server(port, 5, 500); // offline never opens a port: the client talks to this code through an in-memory bridge instead
 if(!offline_mode) // offline, the window belongs to the client, so the server must never retitle or hide it
 {
 show_game_window("CaveDefender server, version "+version+", hosted on port "+port+", user limit "+userlimit);

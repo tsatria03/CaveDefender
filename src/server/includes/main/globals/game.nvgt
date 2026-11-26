@@ -298,6 +298,14 @@ string wn = wname + " stepped aside to watch.";
 for(uint i=0; i<players.length(); i++)
 if(players[i].room_id==games[gi].id and i!=uint(index)) send(players[i].peer_id, "misc "+wn, 0, true);
 }
+/* Tell a player they're out of their game. Online that's "gameleft", and the client returns to the room. Offline
+there is no room to return to: the session is over, so send "offlineend" instead, and the client goes back to
+its game menu (a game that ended still spoke its results first). The client would announce "You left the
+game." on gameleft, so offline skips it. */
+void send_gameleft(int peer)
+{
+send(peer, offline_mode ? "offlineend" : "gameleft", 0, true);
+}
 /* End a game for everyone: return each member to where they came from (a room member to the office, a
 lobby invitee to the lobby), drop the cavern walls, and remove the game. Used by Stop game and when the
 last player leaves. */
@@ -309,7 +317,7 @@ for(uint i=0; i<games[gindex].members.length(); i++)
 {
 int pi=get_player_index(games[gindex].members[i]);
 if(pi<0) continue;
-send(games[gindex].members[i], "gameleft", 0, true);
+send_gameleft(games[gindex].members[i]);
 set_room_scope(pi, players[pi].pregame_room);
 }
 eject_spectators(gid); // send any watchers back to their room before the game disappears
@@ -317,7 +325,7 @@ eject_spectators(gid); // send any watchers back to their room before the game d
 above didn't catch -- so Stop game can never leave a player stranded inside a game that no longer exists. (Both
 passes above move the players they handle out of the game's scope, so this only ever picks up stragglers.) */
 for(int i=int(players.length())-1; i>=0; i--)
-if(players[i].room_id==gid) { send(players[i].peer_id, "gameleft", 0, true); set_room_scope(int(i), players[i].pregame_room); }
+if(players[i].room_id==gid) { send_gameleft(players[i].peer_id); set_room_scope(int(i), players[i].pregame_room); }
 clear_walls(gid);
 clear_items(gid);
 clear_enemies(gid);
@@ -368,7 +376,7 @@ if(games[gi].phase=="over" and all_answered_playagain(gi)) reset_for_new_round(g
 }
 if(pi>-1)
 {
-send(peer, "gameleft", 0, true);
+send_gameleft(peer);
 set_room_scope(pi, players[pi].pregame_room); // back to where they came from: a room member to the room, a lobby invitee to the lobby
 }
 }

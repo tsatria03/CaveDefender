@@ -402,6 +402,43 @@ verified_logins.set(""+event.peer_id, name); // remember who this peer authentic
 send(event.peer_id, "done", 0,true);
 }
 }
+/* Offline sign-in ("offlinelogin <name> <version>", accepted only when offline_mode is set). Offline play has no
+password or email: the profile in the player's saves folder is simply theirs. A first sign-in creates it with the
+same starting fields a new account gets (minus email and password, which only login() needs), then the player is
+verified and told "done", so the client's normal spawn_player step follows exactly as online. The name rules match
+register_account()'s, as a second line of defense behind the client's name prompt. */
+void offline_login(string name)
+{
+if(name.length()<6 or name.length()>24)
+{
+send(event.peer_id, "error: usernames must be between 6 and 24 characters.", 0,true);
+return;
+}
+if(filterchar(name, true))
+{
+send(event.peer_id, "error: usernames may only contain letters, numbers, hyphens and underscores.", 0,true);
+return;
+}
+if(!account_exists(name))
+{
+bool ok = true;
+ok = write_field(name, "username", name) and ok;
+ok = write_field(name, "created", DATE_MONTH_NAME + " " + DATE_DAY + ", " + DATE_YEAR) and ok;
+ok = write_field(name, "nickname", name) and ok;
+ok = write_field(name, "language", "English") and ok;
+ok = write_field(name, "pronoun", default_pronoun()) and ok;
+ok = write_field(name, "rank", "player") and ok;
+if(!ok)
+{
+if(directory_exists(account_dir(name))) directory_delete(account_dir(name)); // roll back a half-made profile, as create_account does
+send(event.peer_id, "error: your offline profile could not be created.", 0,true);
+return;
+}
+}
+name = read_field(name, "username", name); // the stored casing, as login() does
+verified_logins.set(""+event.peer_id, name);
+send(event.peer_id, "done", 0,true);
+}
 void register_account(string name, string email, string password)
 {
 if(name.length()<6 or name.length()>24)
@@ -1236,6 +1273,22 @@ send(players[wm].peer_id, "footstep game/equipments/items/ammo/"+picked_type+"/t
 send_ammo_count(pindex);
 }
 }
+/* Offline play's allow list: the only channel-0 messages an offline game handles. Everything else (chat, the
+player lists, rooms, onoff sounds, the soundboard, staff and account tools, rules and help) is dropped silently,
+because offline has nobody else and no real host, and a key that can't work offline must not speak. Grouped by
+what they're for; keep this in step with the client's offline key list. */
+bool offline_allowed(const string &in keyword)
+{
+string[] allowed = {
+"offlinelogin", "spawn_player", "welcome", "ping_request", "disconnect", // signing in and staying connected
+"menuresult", "openmenu", "gameaction", "openpausemenu", "playagain", // menus
+"startgame", "beginround", "beginarena", "enablewalldamage", "leavegame", "stopgame", // starting and leaving games
+"move", "step", "setweapon", "fire", "reload", "reloadrelay", "attack", "reinforce", // playing
+"opencavern", "cavernbotcount", "cavernbuildercount", "cavernitemcount", "clearbotcount", "clearbuildercount", "clearitemcount", "setwallhealthpct", "spawntimesecs", // free play's cavern controls
+"afk", "afkreturn" // away status
+};
+return allowed.find(keyword) >= 0;
+}
 void netloop()
 {
 event = net.request();
@@ -1351,6 +1404,10 @@ developer's freeze/unfreeze and the login/spawn handshake (so a player can still
 arrival). This is the authoritative lockout -- movement, pings, and every other command are dead, even to a
 modified client, until a developer lifts the freeze. */
 }
+else if(offline_mode and !offline_allowed(parsed[0]))
+{
+/* Offline: anything not on the allow list (above netloop) is ignored, silently. */
+}
 else if(message=="ping_request")
 {
 send(event.peer_id, "ping_response", 0, true);
@@ -1365,6 +1422,11 @@ int uptime_seconds = svruptimer.elapsed / 1000;
 string uptime_message = format_uptime(uptime_seconds);
 if(peak_players > 0) uptime_message += " Peak of " + peak_players + (peak_players == 1 ? " player" : " players") + ", on " + peak_when + ".";
 send(event.peer_id, uptime_message, 0, true);
+}
+else if(parsed[0]=="offlinelogin" and parsed.length()>1 and offline_mode) // offline sign-in only; a real server never accepts it
+{
+if(parsed.length()>3) send(event.peer_id, "error: usernames cannot contain spaces.", 0,true); // "offlinelogin <name> <version>": more tokens mean a space in the name
+else offline_login(parsed[1]);
 }
 else if(parsed[0]=="login" and parsed.length()>3)
 {
@@ -1457,8 +1519,11 @@ send(event.peer_id, "fx "+effect_reverb_preset+" "+effect_muffle_preset, 0, true
 send(event.peer_id, "autoafk "+autoafk, 0, true); // the host's idle-timeout policy (conf.svr's autoafk): 0 = off, else the client auto-goes-AFK after this many idle seconds
 /* New accounts are announced at creation time (see register_account), so logging in for the first time
 is just a normal "online" notice like anyone else. */
+if(!offline_mode) // offline there's nobody to tell, and the online line would also make the client fetch its own connect sound
+{
 send(0, online_line(players[index].name, players[index].rank, players[index].nickname), 0,true);
 update_peak(); // a player joined -- bump the all-time concurrent-player record if this is a new high
+}
 /* Load each channel mute from disk so it's enforced, but DON'T notify the player: a mute set while they
 were offline shouldn't greet them with a message and sound every time they sign in (staff can still see
 it on the F6 card, and any attempt to chat in that channel is quietly refused as always). */
@@ -1477,9 +1542,12 @@ else set_player_mute(index, spchans[sc], mu);
 send(event.peer_id, "voicemutestate "+(is_muted_now(index, "voice") ? "1" : "0"), 0, true); // silent voice-mute state so the client can warn on O without opening the mic; no message or sound
 /* Recreate this host's saved rooms (recreate-on-login). They sit ready in the lobby's room list;
 the player themselves stays in the lobby until they Join one. */
+if(!offline_mode) // offline has no visible rooms; its one hidden room is made separately
+{
 if(get_saved_public(players[index].name)) create_room(players[index].name, event.peer_id, false, "");
 string savedpriv = get_saved_private(players[index].name);
 if(savedpriv != "") create_room(players[index].name, event.peer_id, true, savedpriv);
+}
 send_yourrooms(event.peer_id, players[index].name);
 // Tell everyone where the new player is, and tell the new player where everyone else is.
 broadcast_pos(index);
@@ -1490,6 +1558,7 @@ send(event.peer_id, pos_msg(int(i)), 0,true);
 }
 deliver_offline_pms(index); // hand over any private messages left for them while they were offline
 deliver_pending_warns(index); // and replay any warnings issued to them while they were offline
+if(offline_mode) enter_offline_room(index); // offline: straight into the hidden room and the start-game menus
 if(world_frozen) send(event.peer_id, "worldfreeze\nThe game is currently frozen.", 0, true); // joined during a developer world-stop: freeze them on arrival (no fresh "X has frozen" line -- that already happened)
 }
 }
@@ -3413,7 +3482,7 @@ server owns the "you can't do that now" reply so it's authoritative and matches 
 if(world_frozen) send(event.peer_id, "misc The game is currently frozen.", 0, true);
 }
 }
-if(event.type == event_receive && event.channel == 3 && !world_frozen) // world-stop: drop all voice while frozen (only a developer's channel-0 freeze/unfreeze is honored)
+if(event.type == event_receive && event.channel == 3 && !world_frozen && !offline_mode) // world-stop: drop all voice while frozen (only a developer's channel-0 freeze/unfreeze is honored)
 {
 int index=get_player_index(event.peer_id);
 if(index>-1)
@@ -3445,7 +3514,7 @@ send(players[i].peer_id, relay, 3, vrel); // live frame unreliable (real-time st
 }
 }
 }
-if(event.type == event_receive && event.channel == 1 && !world_frozen) // world-stop: drop all chat while frozen (freeze/unfreeze ride channel 0)
+if(event.type == event_receive && event.channel == 1 && !world_frozen && !offline_mode) // world-stop: drop all chat while frozen (freeze/unfreeze ride channel 0)
 {
     string message = get_event_message();
     bool messend = true;

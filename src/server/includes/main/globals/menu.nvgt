@@ -726,8 +726,8 @@ void push_start_gamemode(int index)
 string[] opts;
 opts.insert_last("EVP (Environment versus player)"); // option 0
 opts.insert_last("PVE (Player versus environment)"); // option 1
-opts.insert_last("PVP (Player versus player)"); // option 2
-opts.insert_last("Free play (Sandbox)"); // option 3 -- the sandbox, listed last
+if(!offline_mode) opts.insert_last("PVP (Player versus player)"); // option 2 -- not offline: PVP needs real players on both sides
+opts.insert_last("Free play (Sandbox)"); // option 3 online, option 2 offline -- the sandbox, listed last
 send_menu(players[index].peer_id, "startgamemode", "Choose a game mode to play.", opts);
 }
 // Start-game cascade, step 2: pick who can play (solo/open), then a size; the choice rides in menu_pending across the two.
@@ -2070,8 +2070,20 @@ else if(act == "stop") confirm_menu(peer, "stopgame", "Are you sure you want to 
 }
 else if(id == "startgamemode")
 {
-if(choice < 0) return; // cancelled the mode picker
+if(choice < 0)
+{
+if(offline_mode) send(peer, "offlineend", 0, true); // offline: backing out of the mode menu ends the offline session; the client returns to its play game menu
+return; // cancelled the mode picker
+}
+if(offline_mode and choice == 2) choice = 3; // offline lists no PVP, so its third item is Free play
 players[player_index].pending_mode = (choice == 0) ? "evp" : (choice == 1) ? "pve" : (choice == 2) ? "pvp" : "free"; // 0 EVP, 1 PVE, 2 PVP, 3 Free play
+if(offline_mode) // offline is always solo: skip who-can-play and the player cap, straight to the map size
+{
+players[player_index].menu_pending = "solo";
+players[player_index].pending_maxplayers = 1;
+push_start_size(player_index);
+return;
+}
 if(players[player_index].pending_mode == "pvp") { players[player_index].menu_pending = "open"; push_start_maxplayers(player_index); } // PVP is always multiplayer (1v1 or 2v2) -- skip the solo/open step, force Open, then ask its 2/4 player cap
 else push_start_mode(player_index); // on to who-can-play (every mode but PVP picks solo or open here, free play included)
 }
@@ -2091,7 +2103,7 @@ push_start_size(player_index);
 }
 else if(id == "startsize")
 {
-if(choice < 0) return;
+if(choice < 0) { if(offline_mode) push_start_gamemode(player_index); return; } // offline, Escape steps back one menu, to the mode menu
 int size;
 if(players[player_index].pending_mode == "pvp") // PVP: map the choice back through the configurable pvp_sizes list
 {
@@ -2107,7 +2119,7 @@ push_start_reinforce(player_index); // PVE/PVP: ask the wall reinforce limit nex
 }
 else if(id == "startreinforce")
 {
-if(choice < 0) return; // cancelled the reinforce picker
+if(choice < 0) { if(offline_mode) push_start_size(player_index); return; } // cancelled the reinforce picker; offline, back to the size menu
 int rein = (choice == 0) ? 2 : (choice == 1) ? 4 : (choice == 2) ? 8 : 0; // 200/400/800 percent, or 0 = no limit
 players[player_index].pending_reinforce = rein; // carried across the PVE pile-up step
 if(players[player_index].pending_mode == "pve")
@@ -2126,7 +2138,7 @@ send(peer, "misc The wall reinforce limit for this arena is now " + reinforce_ca
 }
 else if(id == "startpileup")
 {
-if(choice < 0) return; // cancelled the pile-up picker
+if(choice < 0) { if(offline_mode) push_start_reinforce(player_index); return; } // cancelled the pile-up picker; offline, back to the reinforce menu
 int pileup = (choice == 0) ? 1 : 0; // Yes (first) = pile up, No = leave
 send(peer, "runcommand startgame " + players[player_index].pending_size + " " + players[player_index].menu_pending + " " + players[player_index].pending_mode + " " + players[player_index].pending_reinforce + " " + pileup + " " + players[player_index].pending_maxplayers, 0, true); // last arg = player cap
 }

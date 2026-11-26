@@ -186,6 +186,18 @@ for(uint i=0; i<rooms.length(); i++)
 if(rooms[i].host_peer==peer and rooms[i].is_private==priv) return true;
 return false;
 }
+/* Offline play: put the player straight into a hidden private room of their own and open the start-game menus.
+No password prompt, no room announcement, no saved privroom.usr and no roomjoined message (the client would
+announce it): the room exists only so the normal start-game code, which needs one, works unchanged. */
+void enter_offline_room(int index)
+{
+int peer = players[index].peer_id;
+int rid = create_room(players[index].name, peer, true, "offline");
+int cri = get_room_index(rid);
+if(cri>-1) rooms[cri].members.insert_last(peer);
+set_room_scope(index, rid);
+push_start_gamemode(index);
+}
 // Create a room hosted by the given player and return its new id.
 int create_room(string hostname, int hostpeer, bool priv, string pass)
 {
