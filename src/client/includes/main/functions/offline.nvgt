@@ -14,6 +14,7 @@ instead of enet, so the server never runs as a program and nothing touches the n
 - If the module ever fails (a build error, or a runtime exception in a call), offline_failed is set and
   offline_error says why; the session code (4c) ends the session and tells the player. */
 
+string offline_name = ""; // the offline profile's name, saved in settings.cvf (offlinename) once it has been asked
 string offline_saves_root = DIRECTORY_APPDATA + "tsatria03/CaveDefender/saves/"; // the offline server's host folder (profiles, its own conf/motd/peak)
 string offline_server_root = "../../src/server/"; // the server source, relative to cf/client, used when running from source
 script_module@ offline_module;
@@ -196,6 +197,45 @@ void offline_session(const string &in profile_name)
 	offline_end();
 	if(played) fade_multi_pool(fademode);
 	if(offline_failed) dlgmessage(offline_error + " Press enter to continue.");
+}
+/* The offline name rule, the same as an online username's (the server's offline_login checks it again): 6 to 24
+characters, only letters, numbers, hyphens and underscores. Returns "" when it's fine, else the problem to say. */
+string offline_name_problem(const string &in n)
+{
+	if(n.length() < 6 or n.length() > 24) return "Your name must be between 6 and 24 characters.";
+	for(uint i = 0; i < n.length(); i++)
+	{
+		string c = n.substr(i, 1);
+		bool ok = (c >= "a" and c <= "z") or (c >= "A" and c <= "Z") or (c >= "0" and c <= "9") or c == "-" or c == "_";
+		if(!ok) return "Your name may only contain letters, numbers, hyphens and underscores.";
+	}
+	return "";
+}
+/* Offline from the play game menu: make sure there's a profile name, then play one session. The name is asked only
+while none is saved. If settings.cvf has lost it (a settings reset) but the saves folder already holds a profile,
+that profile is adopted instead, so offline progress is never stranded. Escape or an empty name says "canceled"
+and goes back to the play game menu. Returns true if a session ran. */
+bool offline_play()
+{
+	if(offline_name == "")
+	{
+		string[] existing = find_directories(offline_saves_root + "game/players/*");
+		existing.sort_ascending();
+		for(uint i = 0; i < existing.length() and offline_name == ""; i++)
+			if(offline_name_problem(existing[i]) == "") offline_name = existing[i];
+		if(offline_name != "") writepreffs();
+	}
+	while(offline_name == "")
+	{
+		string n = vd.input_box("Offline name", "Enter a name for your offline profile.", "").trim_whitespace();
+		if(n == "") { speak("canceled"); return false; }
+		string problem = offline_name_problem(n);
+		if(problem != "") { dlgmessage(problem + " Press enter to continue."); continue; }
+		offline_name = n;
+		writepreffs();
+	}
+	offline_session(offline_name);
+	return true;
 }
 void offline_end()
 {

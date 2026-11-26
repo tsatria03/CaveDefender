@@ -5,7 +5,6 @@ void mainmenu()
 		setupmenu(true);
 		m.add_item("documentation menu", "docs");
 		m.add_item("game menu", "connect");
-		m.add_item("learn sounds menu", "learn");
 		m.add_item("preferences menu", "settings");
 		m.add_item("test speakers", "st");
 		m.add_item("restart game", "rx");
@@ -20,11 +19,6 @@ void mainmenu()
 		else if(sel=="connect")
 		{
 			gamemenu();
-		}
-		else if(sel=="learn")
-		{
-			m.fade_music();
-			learnsoundsmenu();
 		}
 		else if(sel=="settings")
 		{
@@ -418,27 +412,48 @@ void open_rules_shortcut()
 	if(r < 0) { speak("canceled"); return; } // escape backs out; no explicit cancel item
 	send(0, "rules " + m.selected_item_id, 0, true);
 }
-/* The main menu's game menu: the doorway to the ways of playing. For now it holds only the online menu; it is
-kept as its own menu so more ways to play can sit beside it later. */
+/* The main menu's game menu: play game (online or offline) and the learn sounds browser, the same shape as
+StrideRush's game menu. Escape or back returns to the main menu. */
 void gamemenu()
 {
 	while(true)
 	{
 		setupmenu(true);
-		m.add_item("online menu", "online");
-		m.add_item("offline test", "offlinetest"); // TEMPORARY (offline mode 4c): replaced by section 5's play game menu
+		m.add_item("play game", "play");
+		m.add_item("learn sounds", "learn");
 		m.add_item("back", "back");
 		m.intro_text="Game menu.";
 		int mres=m.run();
 		string sel=mres<0?"back":m.selected_item_id;
 		if(sel=="back") return;
-		if(sel=="online") onlinemenu();
-		if(sel=="offlinetest")
+		if(sel=="play") playgamemenu();
+		else if(sel=="learn")
 		{
 			m.fade_music();
-			string pn = vd.input_box("Offline test", "Enter a profile name, 6 to 24 letters, numbers, hyphens or underscores.", "");
-			if(pn == "") speak("canceled");
-			else offline_session(pn);
+			learnsoundsmenu();
+		}
+	}
+}
+/* Play game: choose online (the online menu: sign in, accounts, server) or offline (no sign-in, no server, no
+network: offline_play() in functions/offline.nvgt). Escape or back returns to the game menu. When an offline
+session ends, the player lands back in the game menu, the way a StrideRush run returns to its game menu. */
+void playgamemenu()
+{
+	while(true)
+	{
+		setupmenu(true);
+		m.add_item("online", "online");
+		m.add_item("offline", "offline");
+		m.add_item("back", "back");
+		m.intro_text="Choose how you'd like to play.";
+		int mres=m.run();
+		string sel=mres<0?"back":m.selected_item_id;
+		if(sel=="back") return;
+		if(sel=="online") onlinemenu();
+		else if(sel=="offline")
+		{
+			m.fade_music();
+			if(offline_play()) return; // a session ran: back to the game menu, as StrideRush does after a run
 		}
 	}
 }

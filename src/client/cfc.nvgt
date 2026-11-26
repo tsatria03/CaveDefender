@@ -83,6 +83,7 @@ port=CENTRAL_PORT;
 server_custom=false; // and treats it as a chosen preset, not a manually entered custom server
 name="";
 password="";
+offline_name=""; // forgotten here, but offline_play() re-adopts an existing profile from the saves folder
 }
 
 /* Restart the client. Compiled: relaunch the exe (appid) from the bundle. Uncompiled: relaunch the pinned
