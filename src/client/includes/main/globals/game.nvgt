@@ -14,7 +14,7 @@ void game()
 	send(0, "spawn_player "+name+" "+version+(justregistered?" new":""), 0,true);
 	justregistered=false;
 	if(!net.offline) send(0, "welcome", 0,true); // offline there's no server to be welcomed to; its reply would be spoken
-	draw_map("lobby");
+	draw_map(net.offline ? "" : "lobby"); // offline never shows the lobby (straight into the start-game menus), so clear the old space but place nothing: no lobby ambience or music
 	in_world=true;            // we're now present in a shared space, so our typing may broadcast to nearby players
 	pinging=false;
 	players.resize(0);

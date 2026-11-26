@@ -452,8 +452,8 @@ void playgamemenu()
 		if(sel=="online") onlinemenu();
 		else if(sel=="offline")
 		{
-			m.fade_music();
-			if(offline_play()) return; // a session ran: back to the game menu, as StrideRush does after a run
+			// No fade here: the menu music carries on through the name prompt and the start-game menus, and fades when the game begins (gamejoined)
+			if(offline_play()) return; // a game was played: back to the game menu, as StrideRush does after a run; backing out of the mode menu stays here
 		}
 	}
 }

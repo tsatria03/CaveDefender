@@ -1790,6 +1790,7 @@ void netloop_impl()
 		}
 		else if (parsed[0] == "gamejoined" and parsed.length() > 5)
 		{
+			if(net.offline) { m.fade_music(); offline_game_started = true; } // offline the menu music has played through the start-game menus; the game's own sounds take over now
 			p.play_stationary("sounds/main/misc/joingame.ogg", false); // personal cue: you entered a game
 			clear_players();
 			int gsize = string_to_number(parsed[2]);

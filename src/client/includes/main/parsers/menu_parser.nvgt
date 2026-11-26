@@ -9,7 +9,7 @@ void show_server_menu(string message)
 	if(lines.length() < 3) return; // need the header line, a title, and at least one option
 	string[] header = string_split(lines[0], " ", true);
 	string menuid = header.length() > 1 ? header[1] : "0";
-	setupmenu();
+	setupmenu(net.offline and !in_game); // offline, the start-game menus keep the menu music going (it fades when the game begins); in a game, and online, server menus stay music-free
 	for(uint i = 2; i < lines.length(); i++)
 	{
 		/* A menu item may carry its keyboard shortcut after a tab: "<label>\t<shortcut>". Re-attach it as
