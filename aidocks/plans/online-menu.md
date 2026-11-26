@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-**Superseded in part (2026-11-25):** the [[offline-mode]] plan's final menu layout moves the online menu down a level: game menu = play game, learn sounds, back; play game = online, offline, back; online opens this plan's `onlinemenu()` unchanged. That menu section was built on 2026-11-25 (offline mode section 5), so the online menu is now reached through game menu > play game > online.
+**Superseded in part (2026-11-25):** the [[offline-mode]] plan's final menu layout moves the online menu down a level: game menu = play game, learn sounds, back; play game = online, offline, back; online opens this plan's `onlinemenu()` unchanged. That menu section was built on 2026-11-25 (offline mode section 5), so the online menu is now reached through game menu > play game > online. Since 2026-11-26 (dev-reported bug, not changelogged, "I can re-release"), leaving the server with Escape returns to the GAME menu (onlinemenu() returns true when login() does, and playgamemenu() then returns), matching offline; a kick, ban, error or dropped server still lands in the online menu, where the player would sign in again. The readme's Escape key line says game menu.
 
 **Idea (dev, 2026-11-25):** "put the options found in the game menu into a new online menu. So when you open game menu, you'll see online menu." It came out of a talk about offline play (LAN or localhost servers, no internet). The game menu is meant to have room for more items later, such as an offline option. Nothing offline is in scope here.
 

@@ -449,7 +449,7 @@ void playgamemenu()
 		int mres=m.run();
 		string sel=mres<0?"back":m.selected_item_id;
 		if(sel=="back") return;
-		if(sel=="online") onlinemenu();
+		if(sel=="online") { if(onlinemenu()) return; } // true = left the server with Escape: back to the game menu
 		else if(sel=="offline")
 		{
 			// No fade here: the menu music carries on through the name prompt and the start-game menus, and fades when the game begins (gamejoined)
@@ -457,9 +457,10 @@ void playgamemenu()
 		}
 	}
 }
-/* The online menu: sign in or create an account, and pick which server to connect to. When a session ends
-(exit, kick, drop), login() returns here, so the player lands back in this menu. */
-void onlinemenu()
+/* The online menu: sign in or create an account, and pick which server to connect to. When a session ends, login()
+returns here. Leaving the server yourself (Escape) returns true from here, so the player goes back to the game menu,
+as they do after an offline game; a kick, ban, error or dropped server keeps them in this menu to sign in again. */
+bool onlinemenu()
 {
 	while(true)
 	{
@@ -475,7 +476,7 @@ void onlinemenu()
 		m.intro_text="Online menu.";
 		int mres=m.run();
 		string sel=mres<0?"back":m.selected_item_id;
-		if(sel=="back") return;
+		if(sel=="back") return false;
 		if(sel=="changeip")
 		{
 			// Ad-hoc server address (no preset); saved at once so it sticks without opening settings.
@@ -513,7 +514,7 @@ m.fade_music();
 		{
 			// "Sign in as <username>" only appears when an active account exists, so just sign in with it.
 			registering=false;
-			login(); // when the session ends (exit/kick/drop), fall back to the online menu, not the main menu
+			if(login()) return true; // left the server with Escape: back to the game menu; a kick, ban, error or drop stays here
 		}
 		else if(sel=="setupaccount")
 		{
@@ -528,10 +529,11 @@ m.fade_music();
 			if(newaccountform())
 			{
 				registering=true;
-				login(); // when the session ends (exit/kick/drop), fall back to the online menu, not the main menu
+				if(login()) return true; // left the server with Escape: back to the game menu; a kick, ban, error or drop stays here
 			}
 		}
 	}
+	return false; // not reached (the loop only leaves by returning); keeps the compiler sure every path returns
 }
 bool signinasform()
 {

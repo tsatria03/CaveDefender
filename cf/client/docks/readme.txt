@@ -415,7 +415,7 @@ Alt plus K. Open the documentation menu without leaving, the changelog, credits,
 Alt plus L. Open the learn sounds menu without leaving, the same sound browser you reach from the game menu; every game sound pauses while it is open so the previews play cleanly, and they all resume the moment you close it. Plain L still lists who is in the lobby.
 Shift plus H. Open the help without typing the command; you go straight to the player help, while staff are first asked whether to view the player or the staff help.
 Shift plus U. Open the rules without typing the command; you go straight to the player rules, while staff are first asked which page to view.
-Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the online menu, asking you to confirm first if that setting is on.
+Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the game menu, asking you to confirm first if that setting is on.
 
 Script keys.
 
