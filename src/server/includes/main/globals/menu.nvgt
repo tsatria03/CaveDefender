@@ -1314,7 +1314,7 @@ int cban  = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;   // /ban has an o
 int cwarn = (other and vlevel>=2 and tlevel<=vlevel) ? 1 : 0;   // /warn works offline
 int cnotify = 0; // notify is online-only
 int cmute = (other and !is_staff(rk)) ? 1 : 0;                  // personal chat mute (client-side; never on a staff member)
-int cpm = 0;     // PM hidden on the offline card (dev's call)
+int cpm = (other and !account_ignores(name, players[viewer_index].name)) ? 1 : 0; // PM button, as on the online card: hidden only when this account has personally muted you (read from disk; staff exempt). /pm to an offline account is saved and delivered at their next sign-in
 int csilence = (other and vlevel>=2 and !is_staff(rk)) ? 1 : 0; // /mute has an offline branch
 int csetnick = (other and vlevel>=1) ? 1 : 0; // set-nickname now has an offline branch (apply_nickname_offline)
 int conoffmute = other ? 1 : 0; // personal onoff mute (client-side, works offline)

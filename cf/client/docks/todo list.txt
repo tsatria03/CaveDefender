@@ -1,9 +1,10 @@
 ####These are the things that need to be finished for future versions of the game.
 
-****Unfinished. Add the private message button to offline player cards.
+Nothing is waiting here right now. New bugs, planned changes and anything still to be decided will be listed here as they come up.
 
 ##These are the things that are already finished from earlier versions of the game.
 
+**Finished. Add the private message button to offline player cards.
 **Finished. Let pronoun codes be used inside script keys, passing through to fill in on a slash me emote or an online or offline message instead of being treated as prompts.
 **Finished. Make promote, demote, and set nickname work on offline players, and show those buttons on an offline player's card.
 **Finished. Add reset password and delete account buttons to a player's information card, for administrators, working whether the player is online or offline.
