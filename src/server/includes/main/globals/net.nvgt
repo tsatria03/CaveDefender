@@ -4,8 +4,8 @@ dictionary verified_logins;
 bool restart_pending=false; // a /restart countdown is in progress
 int restart_delay=0;        // how long (ms) the countdown runs before relaunch
 timer restart_timer;
-network net;
-network_event event;
+game_network net; // the network wrapper (deps/game_network.nvgt): same methods as the engine network
+game_network_event event;
 
 /* The standard "target not found" reply for a player-targeting command that requires an ONLINE target: a
 registered-but-offline account gets "not online", an unknown name gets "does not exist". (/unban is the one

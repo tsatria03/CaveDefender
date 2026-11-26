@@ -1,0 +1,51 @@
+/* The network wrapper (offline mode, section 1). The game talks to the network only through `net` and `event`, and
+this class gives `net` the exact method names of the engine's network object, so no other code had to change.
+Online, every call forwards straight to the real enet network below, so behavior is identical to using it directly.
+Offline (a later section), the same calls will go to an in-memory bridge instead of enet.
+
+The engine's network_event fields are read-only, so script code can't build one by hand; game_network_event is a
+plain copy with the same field names (type, peer_id, channel, message), which an offline bridge can also fill in.
+This file is identical on the client and the server. */
+
+class game_network_event
+{
+	network_event_type type = network_event_type::event_none; // the engine enum type, so comparisons like event.type == event_receive resolve exactly as before (form.nvgt's own enum also has an event_none, so the bare name is ambiguous)
+	uint64 peer_id = 0;
+	uint channel = 0;
+	string message = "";
+}
+
+class game_network
+{
+	network real; // the engine's enet network, used for all online play
+
+	bool IPV6enabled
+	{
+		get { return real.IPV6enabled; }
+		set { real.IPV6enabled = value; }
+	}
+
+	bool setup_client(uint8 max_channels, uint16 max_peers) { return real.setup_client(max_channels, max_peers); }
+	bool setup_server(uint16 port, uint8 max_channels, uint16 max_peers) { return real.setup_server(port, max_channels, max_peers); }
+	uint64 connect(const string &in host, uint16 port) { return real.connect(host, port); }
+
+	// One event from enet, copied into a game_network_event (event_none when nothing is waiting).
+	game_network_event@ request(uint timeout = 0)
+	{
+		game_network_event result;
+		const network_event@ e = real.request(timeout);
+		if(e !is null)
+		{
+			result.type = e.type;
+			result.peer_id = e.peer_id;
+			result.channel = e.channel;
+			result.message = e.message;
+		}
+		return result;
+	}
+
+	bool send_reliable(uint64 peer_id, const string &in message, uint8 channel) { return real.send_reliable(peer_id, message, channel); }
+	bool send_unreliable(uint64 peer_id, const string &in message, uint8 channel) { return real.send_unreliable(peer_id, message, channel); }
+	bool disconnect_peer_softly(uint64 peer_id) { return real.disconnect_peer_softly(peer_id); }
+	bool disconnect_peer_forcefully(uint64 peer_id) { return real.disconnect_peer_forcefully(peer_id); }
+}
