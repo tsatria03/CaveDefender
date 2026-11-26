@@ -5,6 +5,8 @@ metadata:
   type: project
 ---
 
+**Superseded in part (2026-11-25):** the [[offline-mode]] plan's final menu layout moves the online menu down a level: game menu = play game, learn sounds, back; play game = online, offline, back; online opens this plan's `onlinemenu()` unchanged. Until that plan's menu section is built, the game menu still works as this plan left it.
+
 **Idea (dev, 2026-11-25):** "put the options found in the game menu into a new online menu. So when you open game menu, you'll see online menu." It came out of a talk about offline play (LAN or localhost servers, no internet). The game menu is meant to have room for more items later, such as an offline option. Nothing offline is in scope here.
 
 **Today:** client `src/client/includes/main/menus/menu.nvgt`. `mainmenu()` line 7 lists "game menu" (id "connect") and calls `connectionmenu()` (line 421). That holds: Sign in as <name> (only when an account is set), Set up an existing account, New account, Account storage, change server IP, change server port, Server storage, back. Its intro is "Game menu.". `login()` returns into that menu's loop when a session ends (exit, kick, drop), so the player lands back there. `connectionmenu()` has only the one caller. The server's in-game "Game menu" (`send_menu(peer, "leavemenu", "Game menu", ...)` in server menu.nvgt) is a different menu and is not touched.
