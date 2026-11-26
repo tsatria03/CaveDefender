@@ -297,6 +297,7 @@ void dispatch_modal(string message)
 	string[] parsed = string_split(message, " ", true);
 	if(parsed[0]=="showmenu") show_server_menu(message);
 	else if(parsed[0]=="roundover") handle_roundover(message);
+	else if(parsed[0]=="evpover") handle_evp_over(message); // EVP results are deferred like roundover/pvpresult, so they must be replayed here too (they used to be dropped)
 	else if(parsed[0]=="pvpresult") handle_pvp_result(message);
 	else if(parsed[0]=="helptext") handle_helptext(message);
 	else if(parsed[0]=="rulestext") handle_rulestext(message);
