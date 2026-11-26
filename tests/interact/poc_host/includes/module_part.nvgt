@@ -1,0 +1,8 @@
+/* Offline proof of concept: the included part of the stand-in "server" module. module.nvgt pulls this in
+with #include, and pct.nvgt's joiner splices it in before building, the way the real server's include
+tree would have to be joined (script_module's add_section does not follow #include by itself). */
+
+string part_value()
+{
+	return "part ok";
+}

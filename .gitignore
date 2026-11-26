@@ -15,6 +15,9 @@ cf/server/lib/
 # Live player accounts (passwords, emails, stats). Private data; the repo is public.
 cf/server/data/host/game/players/
 
+# Test output (results and progress logs) written when a test under tests/ runs.
+tests/**/*.txt
+
 # Player-submitted feedback and reports, written by the running server. Private data.
 cf/server/data/host/main/feedback.svr
 cf/server/data/host/main/reports.svr

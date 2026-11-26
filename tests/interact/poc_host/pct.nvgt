@@ -1,0 +1,251 @@
+/* Offline proof of concept: the stand-in "client". It loads includes/module.nvgt as a second script module, runs eight
+checks, writes one PASS or FAIL line per check to poc_results.txt in the current folder, and says when it's done.
+It touches nothing in the game. Run it once as a script with C:\nvgt\nvgt.exe, then compile it and run the exe
+(check 8 is that second run giving the same results). */
+#include "includes/bgt_compat.nvgt" // string_split, string_contains, string_left, string_replace, string_to_number (copied from CaveDefender)
+
+int players = 7;   // same name as the module's string[] players (check 4)
+string[] inbox;    // messages the module pushed to us through host_receive (check 3b)
+string[] results;  // one line per check
+int passed = 0;
+
+// Same name as the module's send(), different meaning (check 4).
+string send(const string &in m)
+{
+	return "host:" + m;
+}
+
+// The module imports this from "nvgt_game" and calls it (check 3b).
+void host_receive(const string &in msg)
+{
+	inbox.insert_last(msg);
+}
+
+/* Crash tracing: each step is appended to poc_progress.txt and the file is closed straight away, so if the
+program ever vanishes without the Done alert, the last line there shows how far it got. */
+void step(const string &in what)
+{
+	file f;
+	if(f.open("poc_progress.txt", "ab")) { f.write(what + "\r\n"); f.close(); }
+}
+
+void record(int n, const string &in name, bool ok, const string &in detail)
+{
+	step("recorded check " + n + ": " + (ok ? "PASS" : "FAIL"));
+	if(ok) passed++;
+	results.insert_last("Check " + n + ", " + name + ": " + (ok ? "PASS" : "FAIL") + ". " + detail);
+}
+
+string join_lines(string[]@ items, const string &in sep)
+{
+	string out_text = "";
+	for(uint i = 0; i < items.length(); i++)
+	{
+		if(i > 0) out_text += sep;
+		out_text += items[i];
+	}
+	return out_text;
+}
+
+// The first path that exists, or "". Covers running as a script (cwd = user/poc) and from a compiled bundle folder.
+string find_path(string[]@ candidates)
+{
+	for(uint i = 0; i < candidates.length(); i++)
+		if(file_exists(candidates[i])) return candidates[i];
+	return "";
+}
+
+string read_text(const string &in path)
+{
+	file f;
+	if(!f.open(path, "rb")) return "";
+	string content = f.read();
+	f.close();
+	return string_replace(content, "\r", "", true);
+}
+
+// The include joiner: replaces each #include "name" line with that file's text (recursively), so the module
+// becomes one block of code for add_section, which does not follow #include itself.
+string join_includes(const string &in path, const string &in dir)
+{
+	string[] lines = string_split(read_text(path), "\n", true);
+	string out_text = "";
+	for(uint i = 0; i < lines.length(); i++)
+	{
+		string ln = lines[i].trim_whitespace();
+		if(string_left(ln, 8) == "#include")
+		{
+			int q1 = string_contains(ln, "\"", 1);
+			int q2 = (q1 >= 0) ? string_contains(ln.substr(q1 + 1), "\"", 1) : -1;
+			if(q1 >= 0 and q2 >= 0)
+			{
+				out_text += join_includes(dir + ln.substr(q1 + 1, q2), dir) + "\n";
+				continue;
+			}
+		}
+		out_text += lines[i] + "\n";
+	}
+	return out_text;
+}
+
+// Call a module function with one string argument (or none) and return its string result, or "<failed>".
+string call_s(script_function@ f, const string &in arg, bool has_arg, string[]@ errs)
+{
+	if(f is null) return "<no such function>";
+	dictionary d;
+	if(has_arg) d.set("1", arg);
+	dictionary@ r = f.call(d, errs);
+	if(r is null) return "<failed>";
+	string s;
+	if(!r.get("0", s)) return "<no return value>";
+	return s;
+}
+
+string flat(string[]@ errs)
+{
+	return string_replace(string_replace(join_lines(errs, " | "), "\r", "", true), "\n", " ", true);
+}
+
+void main()
+{
+	file clear;
+	if(clear.open("poc_progress.txt", "wb")) { clear.write("started\r\n"); clear.close(); }
+	string[] modcands = {"includes/module.nvgt", "../includes/module.nvgt"}; // script run (cwd tests/interact/poc_host), then the compiled pct folder one level down
+	string modpath = find_path(modcands);
+	if(modpath == "")
+	{
+		record(1, "Load", false, "includes/module.nvgt was not found from this folder or the one above it.");
+		finish();
+		return;
+	}
+	string dir = ""; // the module's own folder, so its #include lines resolve next to it
+	for(int i = int(modpath.length()) - 1; i >= 0; i--)
+		if(modpath.substr(i, 1) == "/") { dir = modpath.substr(0, i + 1); break; }
+
+	// Check 6, part 1: join the include tree into one text.
+	step("found the module at " + modpath);
+	string code = join_includes(modpath, dir);
+	step("joined the includes, " + code.length() + " characters");
+	// Only an #include LINE counts: comments may still mention the word (module_part.nvgt's own comment does).
+	bool include_line_left = false;
+	string[] joined_lines = string_split(code, "\n", true);
+	for(uint i = 0; i < joined_lines.length(); i++)
+		if(string_left(joined_lines[i].trim_whitespace(), 8) == "#include") include_line_left = true;
+	bool joined_ok = string_contains(code, "part_value", 1) >= 0 and !include_line_left;
+
+	// Check 1: build the second module.
+	script_module@ mod = script_get_module("poc_offline", 2); // 2 = always create a fresh module
+	if(mod is null)
+	{
+		record(1, "Load", false, "script_get_module returned nothing.");
+		finish();
+		return;
+	}
+	// A new module starts sandboxed: it may only use the engine's general, data and date-time parts. Open it to
+	// everything, the same mask NVGT gives the main script, so files, sound, timers and the rest are available.
+	step("created the module");
+	mod.set_access_mask(0xFFFFFFFF);
+	step("set the access mask");
+	string[] errs;
+	int r1 = mod.add_section("module", code);
+	step("added the section");
+	int r2 = mod.build(errs);
+	step("build finished");
+	record(1, "Load", r1 >= 0 and r2 >= 0, "add_section returned " + r1 + ", build returned " + r2 + ", compiler messages: " + errs.length() + (errs.length() > 0 ? " (" + flat(errs) + ")" : ""));
+	if(r2 < 0)
+	{
+		finish();
+		return;
+	}
+	// NVGT turns off AngelScript's automatic global setup after a build (nvgt_angelscript.cpp line 370) and sets up
+	// the main script's globals itself, so a new module's globals (arrays, strings) stay uninitialized until this
+	// call. Touching one before it crashes the program outright.
+	string[] eg;
+	int rg = mod.reset_globals(eg);
+	step("initialized the module's globals, result " + rg + (eg.length() > 0 ? ", messages: " + flat(eg) : ""));
+	if(rg < 0)
+	{
+		record(1, "Load (globals)", false, "reset_globals returned " + rg + (eg.length() > 0 ? ": " + flat(eg) : ""));
+		finish();
+		return;
+	}
+	int rb = mod.bind_all_imported_functions();
+	step("bound imported functions");
+
+	// Check 2: call in.
+	step("starting check 2");
+	string[] e2;
+	string got = call_s(mod.get_function_by_name("echo"), "hello", true, e2);
+	record(2, "Call in", got == "module got: hello", "echo returned \"" + got + "\"" + (e2.length() > 0 ? ", errors: " + flat(e2) : ""));
+
+	// Check 3a: the module queues messages, the host collects them.
+	step("starting check 3a");
+	string[] e3;
+	string queued = call_s(mod.get_function_by_name("queue_three"), "", false, e3);
+	string polled = call_s(mod.get_function_by_name("poll"), "", false, e3);
+	string[] msgs = string_split(polled, "\n", true);
+	record(3, "Call back out by polling", queued == "3" and msgs.length() == 3 and msgs[0] == "wall north 90", "queued " + queued + ", collected " + msgs.length() + ": " + join_lines(msgs, "; ") + (e3.length() > 0 ? ", errors: " + flat(e3) : ""));
+
+	// Check 3b: the module calls the host directly through an imported function.
+	step("starting check 3b");
+	string[] e3b;
+	string sent = call_s(mod.get_function_by_name("call_back"), "ping", true, e3b);
+	bool direct_ok = rb >= 0 and sent == "sent" and inbox.length() == 1 and inbox[0] == "from module: ping";
+	record(3, "Call back out directly", direct_ok, "bind_all_imported_functions returned " + rb + ", call_back returned \"" + sent + "\", host inbox: " + join_lines(inbox, "; ") + (e3b.length() > 0 ? ", errors: " + flat(e3b) : ""));
+
+	// Check 4: same names, separate meanings.
+	step("starting check 4");
+	string[] e4;
+	string iso = call_s(mod.get_function_by_name("isolation"), "", false, e4);
+	string hostsend = send("x");
+	record(4, "Isolation", iso == "players=3 outbox=1" and players == 7 and hostsend == "host:x", "module said \"" + iso + "\", host players is " + players + ", host send gave \"" + hostsend + "\"" + (e4.length() > 0 ? ", errors: " + flat(e4) : ""));
+
+	// Check 5: engine features inside the module.
+	step("starting check 5");
+	string[] cfgcands = {"../../../cf/client/data/config/main/modes.ini", "../../../../cf/client/data/config/main/modes.ini"};
+	string cfgpath = find_path(cfgcands);
+	string[] e5;
+	string firstline = (cfgpath == "") ? "not found" : call_s(mod.get_function_by_name("read_config"), cfgpath, true, e5);
+	string waited = call_s(mod.get_function_by_name("timer_check"), "", false, e5);
+	bool cfg_ok = string_contains(firstline, "=", 1) > 0;
+	bool timer_ok = string_to_number(waited) >= 25;
+	record(5, "Files and timers", cfg_ok and timer_ok, "modes.ini at " + (cfgpath == "" ? "(not found)" : cfgpath) + ", first setting \"" + firstline + "\", timer measured " + waited + " ms for a 30 ms wait" + (e5.length() > 0 ? ", errors: " + flat(e5) : ""));
+
+	// Check 6, part 2: the included file's function runs.
+	step("starting check 6");
+	string[] e6;
+	string part = call_s(mod.get_function_by_name("part_check"), "", false, e6);
+	record(6, "Include joining", joined_ok and part == "part ok", "joined text has no #include left: " + (joined_ok ? "yes" : "no") + ", part_check returned \"" + part + "\"");
+
+	// Check 7: speed, 10,000 calls each way.
+	step("starting check 7");
+	script_function@ echo_f = mod.get_function_by_name("echo");
+	script_function@ back_f = mod.get_function_by_name("call_back");
+	string[] e7;
+	timer t;
+	for(int i = 0; i < 10000; i++) call_s(echo_f, "x", true, e7);
+	double in_ms = t.elapsed;
+	step("check 7: calls in done");
+	inbox.resize(0);
+	t.restart();
+	for(int i = 0; i < 10000; i++) call_s(back_f, "x", true, e7);
+	double back_ms = t.elapsed;
+	record(7, "Speed", in_ms < 1000 and back_ms < 1000 and inbox.length() == 10000, "10,000 calls in took " + in_ms + " ms, 10,000 round trips back out took " + back_ms + " ms (passes under 1000 ms each)" + (e7.length() > 0 ? ", errors: " + flat(e7) : ""));
+
+	step("all checks done");
+	mod.discard();
+	finish();
+}
+
+// Check 8 is not measured here: it is this same file compiled into an exe giving the same results.
+void finish()
+{
+	results.insert_last("Check 8, Compiled: compare this file from the script run with the one from the compiled exe.");
+	file f;
+	if(f.open("poc_results.txt", "wb"))
+	{
+		f.write(join_lines(results, "\r\n") + "\r\n");
+		f.close();
+	}
+	alert("Offline proof of concept", "Done. " + passed + " of 8 measured checks passed. The details are in poc_results.txt.");
+}

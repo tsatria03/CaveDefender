@@ -1,0 +1,97 @@
+/* Offline proof of concept: the stand-in "server" module. pct.nvgt loads this text as a second script
+module and calls into it. It deliberately reuses the names send and players, which the host also defines with
+different meanings, to prove the two modules keep their own names. Never run this file on its own. */
+#include "bgt_compat.nvgt" // the module can't see the host's helpers, so it brings its own copy, as the real server code does
+#include "module_part.nvgt"
+
+// The host's function this module calls back into (check 3b). Bound by the host with bind_all_imported_functions.
+import void host_receive(const string &in msg) from "nvgt_game";
+
+string[] players; // same name as the host's int players, different type (check 4)
+string[] outbox;  // messages waiting for the host to collect (check 3a)
+
+// Same name as the host's send(), but here it queues a message for the host, as offline gameplay would.
+void send(const string &in msg)
+{
+	outbox.insert_last(msg);
+}
+
+// Check 2: call in with an argument and return a value.
+string echo(const string &in msg)
+{
+	return "module got: " + msg;
+}
+
+// Check 3a: queue three messages, then the host collects them with poll().
+string queue_three()
+{
+	send("wall north 90");
+	send("wall south 80");
+	send("bot moved 3 4");
+	return "" + outbox.length();
+}
+
+// Hands every queued message to the host as one text, one message per line, and empties the queue.
+string poll()
+{
+	string joined = "";
+	for(uint i = 0; i < outbox.length(); i++)
+	{
+		if(i > 0) joined += "\n";
+		joined += outbox[i];
+	}
+	outbox.resize(0);
+	return joined;
+}
+
+// Check 3b: the module calls the host directly through the imported function.
+string call_back(const string &in msg)
+{
+	host_receive("from module: " + msg);
+	return "sent";
+}
+
+// Check 4: use this module's own players and send.
+string isolation()
+{
+	players.resize(0);
+	players.insert_last("a");
+	players.insert_last("b");
+	players.insert_last("c");
+	send("iso");
+	string result = "players=" + players.length() + " outbox=" + outbox.length();
+	outbox.resize(0);
+	return result;
+}
+
+// Check 5: read a real data file through a cwd-relative path; returns the first setting line, skipping comments.
+string read_config(const string &in path)
+{
+	if(!file_exists(path)) return "missing";
+	file f;
+	if(!f.open(path, "rb")) return "unopenable";
+	string content = f.read();
+	f.close();
+	string[] lines = string_split(content, "\n", true);
+	for(uint i = 0; i < lines.length(); i++)
+	{
+		string ln = lines[i].trim_whitespace();
+		if(ln == "" or string_left(ln, 1) == ";" or string_left(ln, 1) == "#") continue;
+		return ln;
+	}
+	return "no settings found";
+}
+
+// Check 5: a timer runs inside the module.
+string timer_check()
+{
+	timer t;
+	wait(30);
+	return "" + t.elapsed;
+}
+
+// Check 6: the function defined in the included part file.
+string part_check()
+{
+	return part_value();
+}

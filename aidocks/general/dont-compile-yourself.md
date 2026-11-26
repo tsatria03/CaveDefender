@@ -12,3 +12,5 @@ Do NOT compile the game yourself — don't run `cfcm.py`/`cfsm.py`, `nvgt -c`, o
 **Why:** the user prefers to control the build/verify step themselves (and compiling spawns the pinned `C:\nvgt` runtime, see [[engine-pinned-legacy-nvgt]]).
 
 **How to apply:** after editing `.nvgt` (or build) files, just report the change and the Files changed / Relaunch list. It's fine to read code, reason about correctness, and note "this should compile," but never actually run a compile to check. (Running other read-only diagnostics is still fine.)
+
+**Exception: only when the dev explicitly asks.** On 2026-11-25 the dev asked Claude to compile the offline proof-of-concept test in user/poc ("Please try to compile it using this. C:\nvgt\nvgt.exe"), and Claude ran `C:\nvgt\nvgt.exe -c poc_host.nvgt` once. That was a one-off for a standalone test, not a standing permission: never compile the game (client or server) unless asked again, and don't run the resulting exe if it would block on a dialog; let the dev run it.
