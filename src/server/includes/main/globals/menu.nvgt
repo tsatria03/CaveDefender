@@ -1481,6 +1481,7 @@ the player who climbed hears lbrank, everyone else hears lbupdate. board is the 
 client adds the line to its mutable "leaderboards" buffer. send() drops held sessions on its own. */
 void announce_rankup(int achiever, string mode, string board, int rank)
 {
+if(offline_mode) return; // the leaderboards are an online feature: offline there's no one to announce to, and an offline profile isn't on them
 string text = display_name_flagged_for(players[achiever].name) + " has reached rank " + rank + " on the " + mode + " " + board + " leaderboard!";
 for(uint i=0; i<players.length(); i++) send(players[i].peer_id, "lbannounce " + (int(i)==achiever ? "1" : "0") + " " + text, 0, true);
 }

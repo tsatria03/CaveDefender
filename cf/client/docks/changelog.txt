@@ -1,4 +1,5 @@
 New in 5.3.
+Offline games now ask whether you want to play again after showing your results, the same as online, instead of going straight back to the game menu. Your offline best rounds and totals also stay off the online leaderboards, so they no longer post rank-up announcements, and the offline game is ready the moment you choose it, with no wait the first time.
 You can now play offline, on your own with no internet, account, or server: choose play game, then offline, and pick environment versus player, player versus environment, or free play and a map size. The first time, you give a name for your offline profile, which keeps your best rounds and totals between sessions, separate from any online account.
 An offline player's information card now has the private message button too, so you can leave them a message straight from their card; it is saved and delivered the next time they sign in.
 Fixed the results of an environment versus player game going missing when the game ended while another menu, such as the round menu or the pause menu, was open. The results and the play again question now appear as soon as that menu closes.

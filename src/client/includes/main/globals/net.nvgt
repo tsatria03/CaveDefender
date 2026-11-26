@@ -340,7 +340,6 @@ void handle_roundover(string message)
 	dlgmessage(results);
 	// Milestone: a fresh personal-best round earned bonus starting wood for the next round.
 	if(bonus > 0) dlgmessage("Congratulations! You just gained " + bonus + " " + bonussize + " wood for reaching round " + milestone + ". Great job! Press enter to continue.");
-	if(net.offline) { resume_objects(); send(0, "playagain no", 0, true); return; } // offline: results only, then back to the game menu (no "Play again?")
 	setupmenu();
 	m.add_item("Yes");
 	m.add_item("No");
@@ -418,7 +417,6 @@ void handle_evp_over(string message)
 		}
 		dlgmessage("Congratulations! You reached a new best of " + milestone + (milestone == 1 ? " round" : " rounds") + ", earning " + bonus_list + " for your next game. Great job! Press enter to continue.");
 	}
-	if(net.offline) { resume_objects(); send(0, "playagain no", 0, true); return; } // offline: results only, then back to the game menu (no "Play again?")
 	setupmenu();
 	m.add_item("Yes");
 	m.add_item("No");
