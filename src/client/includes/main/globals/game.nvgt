@@ -86,28 +86,28 @@ buffercheck();
 			shown a menu can still communicate and review messages while they wait: the chat keys work here,
 			and the buffer navigation keys are already handled by buffercheck() at the top of the loop. Audio
 			was suspended on the gamepaused message, so everything else is skipped by the continue below. */
-			if(key_pressed(KEY_SLASH))
+			if(!net.offline and key_pressed(KEY_SLASH)) // the chat keys do nothing offline (offline mode 4d)
 			{
 				string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg);
 				else speak("canceled");
 				continue;
 			}
-			if(key_pressed(KEY_APOSTROPHE) and myrank != "player")
+			if(!net.offline and key_pressed(KEY_APOSTROPHE) and myrank != "player")
 			{
 				string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "staff");
 				else speak("canceled");
 				continue;
 			}
-			if(!watching and game_mode == "pvp" and key_pressed(KEY_SEMICOLON))
+			if(!net.offline and !watching and game_mode == "pvp" and key_pressed(KEY_SEMICOLON))
 			{
 				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "team");
 				else speak("canceled");
 				continue;
 			}
-			if(key_pressed(KEY_BACKSLASH) and !shift_is_down())
+			if(!net.offline and key_pressed(KEY_BACKSLASH) and !shift_is_down())
 			{
 				string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "local");
@@ -209,7 +209,7 @@ buffercheck();
 		/* Script keys (Alt / Alt+Shift + the number row): run a line of data/scriptkeys.srk as if typed. Checked here, in the
 		active state only (the frozen and paused branches above already continued), so they work anywhere you have normal
 		control -- lobby, room, game, watching. A handled press swallows the frame so it doesn't also move or equip. */
-		if(scriptkey_loop()) continue;
+		if(!net.offline and scriptkey_loop()) continue; // script keys only run chat commands, so they're off offline
 		/* Auto-running (toggle with Alt+R): when on you run by default and holding a modifier walks; when
 		off it's the reverse (walk by default, modifier runs). Mirrors how SimpleFighter inverts with alt. */
 		bool running = autorun;
@@ -224,7 +224,7 @@ buffercheck();
 			Each key is read once and branched on Shift (one-shot keys). The create keys send the same menuresult the
 			matching lobby menu item sends; the join keys send rejoinlast, which the server rejoins directly (public) or
 			through a prefilled password box (private), and says so if you haven't joined that kind of room yet. */
-			if (current_room==0 and !in_game and control_is_down())
+			if (!net.offline and current_room==0 and !in_game and control_is_down()) // offline has no lobby or rooms
 			{
 				if (key_pressed(KEY_C)) send(0, shift_is_down() ? "menuresult lobby 1" : "menuresult lobby 0", 0, true); // create private / public room
 				if (key_pressed(KEY_J)) send(0, shift_is_down() ? "rejoinlast private" : "rejoinlast public", 0, true); // quick-rejoin the last private / public room joined this session
@@ -232,7 +232,7 @@ buffercheck();
 			/* Room quick-actions (in a room, not a game): Ctrl+<key> runs the matching room-menu action without opening the
 			menu. Each key read once; Ctrl+S start and Ctrl+Shift+S stop share S. Sent by action name (roomaction <act>),
 			which the server dispatches through the same do_room_action the menu uses (host/private checks re-validated there). */
-			if (current_room!=0 and !in_game and control_is_down())
+			if (!net.offline and current_room!=0 and !in_game and control_is_down())
 			{
 				if (key_pressed(KEY_S)) send(0, shift_is_down() ? "roomaction stopgame" : "roomaction startgame", 0, true); // stop / start game
 				if (key_pressed(KEY_J)) send(0, "roomaction joingame", 0, true);
@@ -248,7 +248,7 @@ buffercheck();
 				pending room or game invitation, sending the same acceptinvite/rejectinvite the server validates. Alt keeps
 				them clear of the Ctrl room hotkeys (Ctrl+D deletes a room); with no invite pending the server just says so.
 				Gated to !in_game since you never receive an invite while in a game. Each key read once. */
-				if (!in_game and alt_is_down() and !control_is_down())
+				if (!net.offline and !in_game and alt_is_down() and !control_is_down())
 				{
 					if (key_pressed(KEY_A)) send(0, "acceptinvite", 0, true); // accept a pending room/game invite (the removed /accept)
 					if (key_pressed(KEY_D)) send(0, "rejectinvite", 0, true); // deny a pending room/game invite (the removed /reject)
@@ -259,9 +259,9 @@ buffercheck();
 			if (in_game and (game_mode=="pve" or game_mode=="evp") and current_game_host==name and control_is_down())
 			{
 				if (game_phase=="idle" and key_pressed(KEY_B)) send(0, "gameaction beginround", 0, true); // only before the round starts, so a wrong-phase press is silent
-				if (game_phase=="build" and key_pressed(KEY_S)) send(0, "gameaction skipbuild", 0, true); // only during the build phase, so a wrong-phase press is silent
-				if (key_pressed(KEY_I)) send(0, "gameaction gameinvite", 0, true);
-				if (key_pressed(KEY_K)) send(0, "gameaction gamekick", 0, true);
+				if (!net.offline and game_phase=="build" and key_pressed(KEY_S)) send(0, "gameaction skipbuild", 0, true); // only during the build phase, so a wrong-phase press is silent; off offline (staff only)
+				if (!net.offline and key_pressed(KEY_I)) send(0, "gameaction gameinvite", 0, true); // invite and kick: off offline (nobody to invite)
+				if (!net.offline and key_pressed(KEY_K)) send(0, "gameaction gamekick", 0, true);
 			}
 			/* Free play arena hotkey (host only; solo for now): Ctrl+B begins the arena. Enable wall damage, cavern controls, and invite/kick come in later slices. */
 			if (in_game and game_mode=="free" and current_game_host==name and control_is_down())
@@ -293,11 +293,11 @@ buffercheck();
 			if (!control_is_down() and key_pressed(KEY_P)) // read P once (one-shot key): Alt+P opens client preferences, plain P locates players; !control leaves Ctrl+P for the room set-password hotkey
 			{
 				if(alt_is_down()) settingsmenu(); // client preferences, in-session: settingsmenu() returns to whoever called it, so it drops back into the game here rather than the main menu
-				else track_players();
+				else if(!net.offline) track_players(); // locating other players: nobody else offline
 			}
 		if (!control_is_down() and alt_is_down() and key_pressed(KEY_K)) docsmenu(false); // Alt+K opens the client documentation menu in-session, music-less so it doesn't play over the game; returns back into the game, like Alt+P. !control leaves Ctrl+K for the room/game kick hotkeys, plain K is unused
-			if (shift_is_down() and !control_is_down() and !alt_is_down() and key_pressed(KEY_H)) open_help_shortcut(); // Shift+H: open the help anywhere (player help, or a staff picker menu). While AFK the afk block wakes you on H instead, per design
-			if (shift_is_down() and !control_is_down() and !alt_is_down() and key_pressed(KEY_U)) open_rules_shortcut(); // Shift+U: open the rules anywhere (player rules, or a staff picker menu). While AFK the afk block wakes you on U instead
+			if (!net.offline and shift_is_down() and !control_is_down() and !alt_is_down() and key_pressed(KEY_H)) open_help_shortcut(); // help and rules are the server's pages: off offline // Shift+H: open the help anywhere (player help, or a staff picker menu). While AFK the afk block wakes you on H instead, per design
+			if (!net.offline and shift_is_down() and !control_is_down() and !alt_is_down() and key_pressed(KEY_U)) open_rules_shortcut(); // Shift+U: open the rules anywhere (player rules, or a staff picker menu). While AFK the afk block wakes you on U instead
 			if (in_game and (game_outside or game_mode=="free") and !shift_is_down() and !control_is_down() and key_pressed(KEY_B)) track_bots(); // EVP and Free play: locate the builder bots in 3D; !shift keeps Shift+B as the buffer menu, !control frees Ctrl+B for the EVP begin-round hotkey. (Free play's per-wall attacker-bot tally now lives on the Clear cavern attacker bots menu option.)
 		if (!control_is_down() and key_pressed(KEY_R)) // !control frees Ctrl+R for the room retrieve-password hotkey; read once: key_pressed is one-shot, so a second read in the same frame misses it
 		{
@@ -311,6 +311,7 @@ buffercheck();
 				speak(autorun ? "auto running enabled" : "auto running disabled");
 				writepreffs();
 			}
+			else if(net.offline) {} // plain R lists who's around: nobody offline, so it does nothing
 			else if(in_game)
 			{
 				// In a game, R reports who's standing in the game's room (its office), handy for inviting people in.
@@ -319,8 +320,8 @@ buffercheck();
 			else if(current_room != 0) announce_members("scopemembers", "in this room");
 			else announce_rooms();
 		}
-		if (!control_is_down() and key_pressed(KEY_L)) { if(alt_is_down()) { mute_pools(); learnsoundsmenu(); unmute_pools(); } else announce_members("scopemembers 0", "in the lobby"); } // read L once, then branch: Alt+L opens the learn sounds menu with every game sound pool MUTED while it's open (muting the pool mixer silences current AND freshly-spawned sounds -- e.g. bot footsteps arriving over the network -- with no timing gap; restored on exit), plain L lists the lobby. !control frees Ctrl+L for the room leave hotkey; works anywhere in-session
-		if (key_pressed(KEY_G))
+		if (!control_is_down() and key_pressed(KEY_L)) { if(alt_is_down()) { mute_pools(); learnsoundsmenu(); unmute_pools(); } else if(!net.offline) announce_members("scopemembers 0", "in the lobby"); } // read L once, then branch: Alt+L opens the learn sounds menu with every game sound pool MUTED while it's open (muting the pool mixer silences current AND freshly-spawned sounds -- e.g. bot footsteps arriving over the network -- with no timing gap; restored on exit), plain L lists the lobby. !control frees Ctrl+L for the room leave hotkey; works anywhere in-session
+		if (!net.offline and key_pressed(KEY_G)) // game and member lists: off offline
 		{
 			if(in_game) announce_members("scopemembers", "in this game");
 			else if(current_room != 0) announce_games("roomgamemembers", "in this room");
@@ -385,16 +386,16 @@ buffercheck();
 			lasty=int(me.y);
 			send(0, "move "+lastx+" "+lasty, 0, true);
 		}
-		recordcheck(); // all O-key voice handling (live capture, opus encode, send, optional self-monitor) lives in recfuncts.nvgt
-		if(key_pressed(KEY_F1))
+		if(!net.offline) recordcheck(); // off offline (no voice chat); all O-key voice handling (live capture, opus encode, send, optional self-monitor) lives in recfuncts.nvgt
+		if(!net.offline and key_pressed(KEY_F1)) // F1 to F7 are server and player features: all off offline
 		{
 			send(0,"who",0,true);
 		}
-		if(key_pressed(KEY_F2))
+		if(!net.offline and key_pressed(KEY_F2))
 		{
 			send(0, "/getmotd", 0, true);
 		}
-		if(key_pressed(KEY_F3) and !pinging)
+		if(!net.offline and key_pressed(KEY_F3) and !pinging)
 		{
 			pinging=true;
 			pingtimer.restart();
@@ -408,11 +409,11 @@ buffercheck();
 			p.play_stationary("sounds/main/misc/pingstop.ogg", false);
 			add_buffer_item("connections", "Ping lost");
 		}
-		if(key_pressed(KEY_F4))
+		if(!net.offline and key_pressed(KEY_F4))
 		{
 			send(0, "/serveruptime", 0, true);
 		}
-		if(key_pressed(KEY_F5))
+		if(!net.offline and key_pressed(KEY_F5))
 		{
 			beacons_enabled=!beacons_enabled;
 			if(beacons_enabled)
@@ -426,11 +427,11 @@ buffercheck();
 				speak("beacons disabled");
 			}
 		}
-		if(key_pressed(KEY_F6))
+		if(!net.offline and key_pressed(KEY_F6))
 		{
 			send(0, "playerlist", 0, true); // open the server-pushed player roster menu (like F1's who, but viewable)
 		}
-		if(key_pressed(KEY_F7)) onoff_sounds_form(); // open the online and offline sounds settings form, in-session (also reachable from the player panel)
+		if(!net.offline and key_pressed(KEY_F7)) onoff_sounds_form(); // open the online and offline sounds settings form, in-session (also reachable from the player panel)
 		/* Live world-volume keys: Page up/down adjust music ("track"), Home/End adjust ambience ("source"). One
 		dB per step on the Windows key repeat (key_repeating), clamped to -100..0. Each change is spoken and logged to
 		the misc buffer as the raw dB value, e.g. "track -10"; at either end a press does nothing and says nothing.
@@ -441,25 +442,25 @@ buffercheck();
 		else if(key_repeating(KEY_HOME)) { if(ambvolume<0) { set_ambience_volume(ambvolume+1); volchanged=true; add_buffer_item("misc", "source "+int(ambvolume)); } }
 		else if(key_repeating(KEY_END)) { if(ambvolume>-100) { set_ambience_volume(ambvolume-1); volchanged=true; add_buffer_item("misc", "source "+int(ambvolume)); } }
 		if(volchanged) writepreffs();
-		if(key_pressed(KEY_SLASH))
+		if(!net.offline and key_pressed(KEY_SLASH)) // the four chat keys: off offline
 		{
 			string msg=vd.input_box("Global chat", "Type a global message, or a slash command.", "", multiline: true);
 			if(msg!="") comparse(msg);
 			else speak("canceled");
 		}
-		if(key_pressed(KEY_APOSTROPHE) and myrank != "player")
+		if(!net.offline and key_pressed(KEY_APOSTROPHE) and myrank != "player")
 		{
 			string msg=vd.input_box("Staff chat", "Type a staff message, or a slash command.", "", multiline: true);
 			if(msg!="") comparse(msg, "staff");
 			else speak("canceled");
 		}
-		if(in_game and !watching and game_mode == "pvp" and key_pressed(KEY_SEMICOLON))
+		if(!net.offline and in_game and !watching and game_mode == "pvp" and key_pressed(KEY_SEMICOLON))
 			{
 				string msg=vd.input_box("Team chat", "Type a team message, or a slash command.", "", multiline: true);
 				if(msg!="") comparse(msg, "team");
 				else speak("canceled");
 			}
-			if(key_pressed(KEY_BACKSLASH))
+			if(!net.offline and key_pressed(KEY_BACKSLASH))
 		{
 			string msg=vd.input_box("Local chat", "Type a local message, or a slash command.", "", multiline: true);
 			if(msg!="") comparse(msg, "local");
@@ -479,12 +480,13 @@ direction sent here is just a legacy hint it ignores (facing no longer matters).
 				}
 				else if(!watching and (current_game_host == name or game_mode == "pvp")) send(0, "openmenu", 0, true); // plain Enter opens the round menu: the host in any mode, and every PVP player (for Choose your side / Watch instead). The server shows nothing if there's nothing to do, so a non-host in PVE/EVP still gets no menu.
 			}
-			else send(0, shift_is_down() ? "openpanel account" : (current_room==0 ? "openpanel lobby" : "openpanel room"), 0, true); // lobby/room: Enter jumps straight to the location panel (lobby or room), Shift+Enter to the Account panel -- these replace the old two-item Actions menu chooser
+			else if(!net.offline) send(0, shift_is_down() ? "openpanel account" : (current_room==0 ? "openpanel lobby" : "openpanel room"), 0, true); // lobby/room: Enter jumps straight to the location panel (lobby or room), Shift+Enter to the Account panel -- these replace the old two-item Actions menu chooser
 		}
 		if(key_pressed(KEY_TAB) and in_game) { if(game_mode=="free" and !watching) send(0, "opencavern", 0, true); else speak_game_status(); } // Tab: a free-play PLAYER opens the server-side cavern controls; a free-play watcher (who can't) and every other mode speak the status instead (speak_game_status reports the arena state for free play)
 		if(key_pressed(KEY_ESCAPE))
 		{
 			if(in_game) { if(watching) stop_watching_prompt(); else send(0, "openpausemenu", 0, true); continue; } // spectators leave the watch; players get the pause menu
+			if(net.offline) continue; // offline, outside a game there's no server to leave: the start-game menus handle Escape themselves
 			bool doexit=true;
 			if(gamxit==1)
 			{
