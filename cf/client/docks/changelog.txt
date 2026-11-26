@@ -1,7 +1,8 @@
 New in 5.3.
+You can now play offline, on your own with no internet, account, or server: choose play game, then offline, and pick environment versus player, player versus environment, or free play and a map size. The first time, you give a name for your offline profile, which keeps your best rounds and totals between sessions, separate from any online account.
 An offline player's information card now has the private message button too, so you can leave them a message straight from their card; it is saved and delivered the next time they sign in.
 Fixed the results of an environment versus player game going missing when the game ended while another menu, such as the round menu or the pause menu, was open. The results and the play again question now appear as soon as that menu closes.
-The game menu on the main menu now opens an online menu, which holds signing in, creating an account, and choosing your server, so the game menu has room for more ways to play.
+The game menu now holds play game and learn sounds, which has moved there from the main menu. Play game asks whether to play online, which opens the new online menu for signing in, creating an account, and choosing your server, or offline.
 The volume keys now say what they change: Page up and Page down announce track followed by the music level, and Home and End announce source followed by the ambience level, each also added to the misc buffer. Each press now moves the volume by a single step, and holding a key repeats at your keyboard's own repeat speed.
 Game sounds now ship as an ordinary folder beside the game instead of being packed inside it, so you can see every sound the game uses.
 Server hosts can now edit the server's help and rules pages, which now ship as ordinary files beside the server instead of being packed inside it.

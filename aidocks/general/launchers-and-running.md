@@ -16,3 +16,5 @@ There is **no test suite and no linter** — running is scripted by the Python l
 Remember [[dont-compile-yourself]]: never run the launchers/compilers; the dev builds and verifies.
 
 **How the dev tests (dev, 2026-11-25):** "I always run the .py file, aka the .nvgt script that python launches. I never compile the game. Unless I'm ready to release it." So every test is a source run through cfc.py / cfs.py (interpreted, SCRIPT_COMPILED false, cwd cf/<side>). Anything that only happens in a compiled build (SCRIPT_COMPILED branches, bundle-only paths, the offline server code built into cfc.exe) goes untested until a release build, so flag it plainly when a change depends on that. "Restart the client/server" means rerun the .py.
+
+**Client startup compiles the offline server (2026-11-26, [[offline-mode]]):** cfc.nvgt's half-second pause before the main menu now times offline_build() and waits only the rest of the 500 ms, so the offline module is ready before the player picks offline (startup is no slower while that compile stays under 500 ms). A failed build stays silent there and is reported when offline is chosen.

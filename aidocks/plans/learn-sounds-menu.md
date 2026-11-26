@@ -83,3 +83,5 @@ Paths relative to `cf/client/sounds/`. `audio_prefix = "sounds/"`, each dictiona
 **Numbered-variant entries (for-loop + "multiple variants" note):** melee `fire1–3` & `hit1–3`, wallwood `hurt1–3`, surfaces `step1–5`, crossbow `rico1–2`, pistol/mg `rico1–12` & `shell1–2`. Everything else is a single file.
 
 Related: [[game-mode-free]] name-drops this as the "future home" of learn-sounds; [[audio-and-sounds]] has the folder layout; [[no-sound-pack-support]]; [[launchers-and-running]] (cwd = `cf/client`, so `sounds/…` paths resolve there).
+
+**Moved (2026-11-25, [[offline-mode]] section 5):** the main menu no longer lists the learn sounds menu; it is now the "learn sounds" item in the game menu (main menu > game menu > learn sounds), still `learnsoundsmenu()`. Alt+L in a session is unchanged.

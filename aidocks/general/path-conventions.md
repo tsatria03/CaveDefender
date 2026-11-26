@@ -34,3 +34,5 @@ metadata:
 **No engine DLL.** `GameEngine64.dll` was replaced by the native tile store in client `game/platform.nvgt` on 2026-07-14 ([[game-engine-dll]]); `oggenc2.exe` went with the 2026-06-19 live-voice recode ([[opus-voice-engine]]).
 
 The offline Wallbreaker reference lives at `C:\Users\tonys\OneDrive\Desktop\Sammy Center` ([[game-vision-wallbreaker]]).
+
+**Offline mode (2026-11-25/26, [[offline-mode]]):** the client runs the server's own code as a second script module. Running from source it reads `../../src/server` (cwd cf/client) straight from disk; a release carries it inside cfc.exe as `offline_server_code`, a `const string[]` in `src/client/includes/scripts/server.nvgt` (committed as an EMPTY array; build/tools.py fills it just before compiling the client and always restores the placeholder). Offline reads the client's own `data/config` copy of the game rules. The offline profile and the offline server's own settings live in appdata `tsatria03/CaveDefender/saves/` (the offline server's host_root: `saves/main/` conf/motd/peak, `saves/game/players/<name>/info/`), and the profile name is `offlinename` in `preffs/settings.cvf`.

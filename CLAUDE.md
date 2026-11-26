@@ -32,6 +32,8 @@ Two halves of one game, separate codebases sharing only a message protocol and a
 
 Each has its own `net.nvgt` with near-identical `send()`/`get_event_message()` but mirror-image `netloop()`s (client presents; server dispatches).
 
+**Offline mode** (main menu > game menu > play game > offline): the client runs the unchanged server code as a second script module and talks to it in memory through the `game_network` wrapper, with no sign-in, server program or networking; the server code behaves differently only behind its `offline_mode` flag. How it fits together: **[[offline-mode]]**.
+
 ## Where the detail lives (read before working in an area)
 
 - **Running & launchers** (how the game starts/compiles, the client `errors.txt` watch, no test suite) → **[[launchers-and-running]]**. Never compile yourself: **[[dont-compile-yourself]]**.

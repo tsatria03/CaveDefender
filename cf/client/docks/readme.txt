@@ -1,14 +1,14 @@
 Welcome to CaveDefender!
 
-CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in the player versus player mode, take one side of the walls and fight other players across them, or, in free play, stock your own sandbox cavern and both attack and defend the walls at once. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help. For the full list of the keys the game uses, see the keyboard commands section near the end of this readme.
+CaveDefender is an online, audio only game. You sign in to an account on a server and share a world with other players: you chat, move around together, make rooms, and play the cave defender game, where you gather wood and defend four walls against waves of enemies, or, in the reverse mode, attack the walls from outside while bots defend them, or, in the player versus player mode, take one side of the walls and fight other players across them, or, in free play, stock your own sandbox cavern and both attack and defend the walls at once. This readme explains how everything works. For the list of typed chat commands, type /help in the game, which opens the player help. For the full list of the keys the game uses, see the keyboard commands section near the end of this readme. You can also play on your own, with no internet, account, or server, as described under playing offline.
 
 Connecting and signing in.
 
-When you start the game you land on the main menu. Choose the game menu, then the online menu, where you pick a server and sign in. The other main menu options are the documentation menu, which holds this readme, the changelog, and more, the learn sounds menu described just below, and the preferences menu for your sound and other settings.
+When you start the game you land on the main menu. Choose the game menu, then play game, which asks whether to play online or offline. Online opens the online menu, where you pick a server and sign in; offline is described in its own section below. The game menu also holds the learn sounds menu described just below. The other main menu options are the documentation menu, which holds this readme, the changelog, and more, and the preferences menu for your sound and other settings.
 
 Learn sounds.
 
-The main menu also has a learn sounds menu, a place to get familiar with the game's audio before you play. It works offline, so you can browse it without signing in. The sounds are grouped into categories, weapon, wood, ammo, wall, surface, and interface cues; choose a category, then move through its list and press enter on any sound to hear it. Each sound's name tells you where it is used in the game, such as which mode it belongs to, so you learn the cue and its meaning together, and sounds that come in several variations play a random one each time so you can hear how they differ. Choose go back, or press escape, to step out of a category, and again to leave the menu.
+The game menu also has a learn sounds menu, a place to get familiar with the game's audio before you play. It works offline, so you can browse it without signing in. The sounds are grouped into categories, weapon, wood, ammo, wall, surface, and interface cues; choose a category, then move through its list and press enter on any sound to hear it. Each sound's name tells you where it is used in the game, such as which mode it belongs to, so you learn the cue and its meaning together, and sounds that come in several variations play a random one each time so you can hear how they differ. Choose go back, or press escape, to step out of a category, and again to leave the menu.
 
 The online menu shows the server address and port it will connect to, and you can change either directly with change server IP and change server port. If you play on more than one server, open Server storage to keep them as presets: add a server by giving it a name, an address, and a port, and edit or remove your saved ones from the same place. Select a server then picks which saved server to use. The list always includes a built-in Central server, the game's official server, ready to pick without your having to add it; you can edit its address or port if you ever need to, but it cannot be removed. At the bottom of the list is a Custom entry that simply keeps whatever address you typed in by hand, so a server you did not save reads as Custom. You cannot save two servers with the same name or the same address.
 
@@ -17,6 +17,14 @@ You reach a server with an account, and there are a few ways on. Sign in as, fol
 If you use more than one account on this computer, Account storage keeps them for you: add, edit, or remove your saved accounts there, and Select an account chooses which one is active, the one that Sign in as will use. After you set up or create an account, the game also offers to save it here. As with servers, you cannot save the same account twice.
 
 An account can only be signed in from one place at a time. If you sign in while it is already signed in on another device, that other device is signed out and told it lost its connection, and your new sign-in takes over right where that session was, in the same room or game.
+
+Playing offline.
+
+Choose play game, then offline, to play on your own with no internet connection, no account, and no server. The first time, the game asks for a name for your offline profile, which follows the same rules as a username: 6 to 24 characters, using only letters, numbers, hyphens, and underscores. After that it goes straight in. You then choose a mode, environment versus player, player versus environment, or free play, and a map size, plus the wall reinforce limit and the bot pile-up question for player versus environment, just as when you start a game online. Player versus player needs real players on both sides, so it is not offered offline.
+
+An offline game plays like a solo game online. When it ends you hear your results and return to the game menu; leaving from the pause menu does the same, and pressing escape at the mode menu takes you back to play game. Your offline profile keeps your best rounds and totals between sessions, separate from any online account, in a folder called saves in your Windows application data folder, under tsatria03, then CaveDefender.
+
+Everything that needs other people or a server is switched off offline, and its keys simply do nothing: the four chat keys, voice chat, F1 to F7, locating and listing players with P, R, L, and G, script keys, help, rules, and the room shortcuts. Offline games use the game rules files that come with the game, described under game rules files below.
 
 The server rules.
 
@@ -273,7 +281,7 @@ Game rules files.
 
 A server keeps its game rules in two ini files, in the config slash main folder inside its data folder, which its host can edit to change how games play. modes dot ini tunes the modes: how much wood and ammo drop on each map size and how often, how many pieces may lie on the ground at once, the walls' full strength in every mode, how fast environment versus player walls grow tougher each round, the environment versus player round timer, and the map sizes offered for player versus player. effects dot ini sets how the cave sounds: the reverberation inside the cavern and the muffling of sounds heard through a wall.
 
-In both files, a line beginning with a semicolon is a comment the game skips, and every other line is a setting written as a name, an equals sign, and a value. Both are read when the server starts, so a change takes effect once the server restarts. Each setting is explained in the comments inside the file, and in the server's help for hosts.
+In both files, a line beginning with a semicolon is a comment the game skips, and every other line is a setting written as a name, an equals sign, and a value. Both are read when the server starts, so a change takes effect once the server restarts. Each setting is explained in the comments inside the file, and in the server's help for hosts. The game keeps its own copy of both files, in the same config slash main folder inside its own data folder, and offline games read those, each time you start one.
 
 Keyboard commands.
 
@@ -404,7 +412,7 @@ Enter. In the lobby or a room, open the panel for where you are, the lobby panel
 Shift plus enter. In the lobby or a room, open the player panel, your personal settings in one place.
 Alt plus P. Open your preferences without leaving, the same settings you reach from the main menu; saving or canceling returns you to where you were.
 Alt plus K. Open the documentation menu without leaving, the changelog, credits, readme, and todo list you also reach from the main menu; closing it returns you to where you were.
-Alt plus L. Open the learn sounds menu without leaving, the same sound browser you reach from the main menu; every game sound pauses while it is open so the previews play cleanly, and they all resume the moment you close it. Plain L still lists who is in the lobby.
+Alt plus L. Open the learn sounds menu without leaving, the same sound browser you reach from the game menu; every game sound pauses while it is open so the previews play cleanly, and they all resume the moment you close it. Plain L still lists who is in the lobby.
 Shift plus H. Open the help without typing the command; you go straight to the player help, while staff are first asked whether to view the player or the staff help.
 Shift plus U. Open the rules without typing the command; you go straight to the player rules, while staff are first asked which page to view.
 Escape. In a game, open the pause menu, or stop watching if you are a spectator. Anywhere else, leave the server and return to the online menu, asking you to confirm first if that setting is on.
